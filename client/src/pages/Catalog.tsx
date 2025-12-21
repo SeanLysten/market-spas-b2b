@@ -7,6 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { Search, Package, ShoppingCart, Filter, ArrowLeft, Euro, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 export default function Catalog() {
   const { user } = useAuth();
@@ -18,6 +19,17 @@ export default function Catalog() {
     categoryId: selectedCategory,
     limit: 50,
   });
+
+  const addToCartMutation = trpc.cart.add.useMutation();
+
+  const handleAddToCart = async (productId: number) => {
+    try {
+      await addToCartMutation.mutateAsync({ productId, quantity: 1 });
+      toast.success("Produit ajouté au panier");
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de l'ajout au panier");
+    }
+  };
 
   const getPartnerPrice = (product: any) => {
     // TODO: Apply partner level discount
@@ -147,7 +159,11 @@ export default function Catalog() {
                       Détails
                     </Button>
                   </Link>
-                  <Button className="flex-1 gap-2">
+                  <Button 
+                    className="flex-1 gap-2"
+                    onClick={() => handleAddToCart(product.id)}
+                    disabled={addToCartMutation.isPending || (product.trackStock === true && (product.stockQuantity || 0) <= 0)}
+                  >
                     <ShoppingCart className="w-4 h-4" />
                     Ajouter
                   </Button>

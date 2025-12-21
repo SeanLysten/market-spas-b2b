@@ -179,3 +179,14 @@
 - [ ] Gestion des variantes de produits
 
 - [x] Ajouter un bouton dans le header pour accéder à l'interface admin (visible uniquement pour les super admins)
+
+
+## Développement des fonctionnalités restantes
+- [x] Page de gestion des produits admin avec formulaire complet
+- [x] Système de panier d'achat avec gestion des quantités
+- [ ] Page de checkout avec calcul des remises
+- [ ] Intégration Stripe pour paiement d'acompte
+- [ ] Page de gestion des partenaires admin
+- [x] Ajouter des données de démonstration (produits, ressources, commandes)
+- [ ] Améliorer la page de détail produit
+- [ ] Système de notifications en temps réel

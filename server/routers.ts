@@ -334,6 +334,39 @@ export const appRouter = router({
   }),
 
   // ============================================
+  // CART & CHECKOUT
+  // ============================================
+  cart: router({ get: protectedProcedure.query(async ({ ctx }) => {
+      if (!ctx.user.partnerId) {
+        return { items: [], subtotalHT: 0, discountPercent: 0, discountAmount: 0, vatAmount: 0, totalTTC: 0 };
+      }
+      return await db.getCart(ctx.user.id);
+    }),
+
+    add: protectedProcedure
+      .input(z.object({ productId: z.number(), quantity: z.number().min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.addToCart(ctx.user.id, input.productId, input.quantity);
+      }),
+
+    updateQuantity: protectedProcedure
+      .input(z.object({ productId: z.number(), quantity: z.number().min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.updateCartQuantity(ctx.user.id, input.productId, input.quantity);
+      }),
+
+    removeItem: protectedProcedure
+      .input(z.object({ productId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.removeFromCart(ctx.user.id, input.productId);
+      }),
+
+    clear: protectedProcedure.mutation(async ({ ctx }) => {
+      return await db.clearCart(ctx.user.id);
+    }),
+  }),
+
+  // ============================================
   // ADMIN ROUTES
   // ============================================
   admin: router({

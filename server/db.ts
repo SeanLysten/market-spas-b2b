@@ -634,3 +634,105 @@ export async function deleteProduct(id: number) {
 
   await db.delete(products).where(eq(products.id, id));
 }
+
+
+// ============================================
+// CART FUNCTIONS (Simple in-memory implementation)
+// ============================================
+
+// Simple cart storage (in production, use Redis or database)
+const cartStorage = new Map<number, Array<{ productId: number; quantity: number }>>();
+
+export async function getCart(userId: number) {
+  const db = await getDb();
+  if (!db) return { items: [], subtotalHT: 0, discountPercent: 0, discountAmount: 0, vatAmount: 0, totalTTC: 0 };
+
+  const cartItems = cartStorage.get(userId) || [];
+  
+  if (cartItems.length === 0) {
+    return { items: [], subtotalHT: 0, discountPercent: 0, discountAmount: 0, vatAmount: 0, totalTTC: 0 };
+  }
+
+  // Get product details
+  const items = [];
+  for (const item of cartItems) {
+    const product = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
+    if (product[0]) {
+      items.push({
+        id: item.productId,
+        productId: item.productId,
+        quantity: item.quantity,
+        product: product[0],
+        unitPriceHT: product[0].pricePublicHT || 0,
+      });
+    }
+  }
+
+  // Get user's partner discount
+  const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  let discountPercent = 0;
+  
+  if (user[0]?.partnerId) {
+    const partner = await db.select().from(partners).where(eq(partners.id, user[0].partnerId)).limit(1);
+    discountPercent = typeof partner[0]?.discountPercent === 'string' ? parseFloat(partner[0].discountPercent) : (partner[0]?.discountPercent || 0);
+  }
+
+  // Calculate totals
+  let subtotalHT = 0;
+  for (const item of items) {
+    const price = typeof item.unitPriceHT === 'string' ? parseFloat(item.unitPriceHT) : item.unitPriceHT;
+    subtotalHT += price * item.quantity;
+  }
+
+  const discountAmount = (subtotalHT * discountPercent) / 100;
+  const subtotalAfterDiscount = subtotalHT - discountAmount;
+  const vatAmount = subtotalAfterDiscount * 0.21; // Default 21% VAT
+  const totalTTC = subtotalAfterDiscount + vatAmount;
+
+  return {
+    items,
+    subtotalHT,
+    discountPercent,
+    discountAmount,
+    vatAmount,
+    totalTTC,
+  };
+}
+
+export async function addToCart(userId: number, productId: number, quantity: number) {
+  const cartItems = cartStorage.get(userId) || [];
+  const existing = cartItems.find(item => item.productId === productId);
+
+  if (existing) {
+    existing.quantity += quantity;
+  } else {
+    cartItems.push({ productId, quantity });
+  }
+
+  cartStorage.set(userId, cartItems);
+  return { success: true };
+}
+
+export async function updateCartQuantity(userId: number, productId: number, quantity: number) {
+  const cartItems = cartStorage.get(userId) || [];
+  const existing = cartItems.find(item => item.productId === productId);
+
+  if (existing) {
+    existing.quantity = quantity;
+    cartStorage.set(userId, cartItems);
+  }
+
+  return { success: true };
+}
+
+export async function removeFromCart(userId: number, productId: number) {
+  const cartItems = cartStorage.get(userId) || [];
+  const filtered = cartItems.filter(item => item.productId !== productId);
+  cartStorage.set(userId, filtered);
+  return { success: true };
+}
+
+export async function clearCart(userId: number) {
+  cartStorage.delete(userId);
+  return { success: true };
+}
