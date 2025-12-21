@@ -11,6 +11,8 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminPartners from "@/pages/admin/AdminPartners";
 import AdminReports from "@/pages/admin/AdminReports";
+import AdminOrders from "@/pages/admin/AdminOrders";
+import AdminSettings from "@/pages/admin/AdminSettings";
 import Dashboard from "./pages/Dashboard";
 import Catalog from "./pages/Catalog";
 import Orders from "./pages/Orders";
@@ -22,6 +24,7 @@ import Profile from "./pages/Profile";
 import ProductDetail from "./pages/ProductDetail";
 import PartnerOnboarding from "./pages/PartnerOnboarding";
 import PartnerPending from "./pages/PartnerPending";
+import OrderTracking from "./pages/OrderTracking";
 
 function Router() {
   return (
@@ -38,12 +41,15 @@ function Router() {
       <Route path="/product/:id" component={ProductDetail} />
       <Route path="/partner-onboarding" component={PartnerOnboarding} />
       <Route path="/partner-pending" component={PartnerPending} />
+      <Route path="/order/:orderId" component={OrderTracking} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/resources" component={AdminResources} />
       <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/products" component={AdminProducts} />
       <Route path="/admin/partners" component={AdminPartners} />
       <Route path="/admin/reports" component={AdminReports} />
+      <Route path="/admin/orders" component={AdminOrders} />
+      <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

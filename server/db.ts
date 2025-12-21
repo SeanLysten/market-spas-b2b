@@ -1263,13 +1263,16 @@ export async function getOrderWithItems(orderId: number) {
   };
 }
 
-export async function updateOrderStatus(orderId: number, status: string) {
+export async function updateOrderStatus(orderId: number, status: string, note?: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
   await db
     .update(orders)
-    .set({ status: status as any })
+    .set({ 
+      status: status as any,
+      updatedAt: new Date(),
+    })
     .where(eq(orders.id, orderId));
 
   return { success: true };

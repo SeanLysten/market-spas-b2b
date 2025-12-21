@@ -391,9 +391,10 @@ export const appRouter = router({
       .input(z.object({
         orderId: z.number(),
         status: z.string(),
+        note: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        return await db.updateOrderStatus(input.orderId, input.status);
+        return await db.updateOrderStatus(input.orderId, input.status, input.note);
       }),
   }),
 
