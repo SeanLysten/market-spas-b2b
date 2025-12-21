@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
-import { Minus, Plus, ShoppingCart, Trash2, ArrowRight } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2, ArrowRight, TruckIcon, Package } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 export default function Cart() {
   const { user } = useAuth();
@@ -19,6 +22,7 @@ export default function Cart() {
     try {
       await updateQuantityMutation.mutateAsync({ productId, quantity });
       refetch();
+      toast.success("Quantité mise à jour");
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la mise à jour");
     }
@@ -32,6 +36,10 @@ export default function Cart() {
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la suppression");
     }
+  };
+
+  const formatPrice = (price: number) => {
+    return price.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   if (!user) {
@@ -55,6 +63,8 @@ export default function Cart() {
   }
 
   const isEmpty = !cart || !cart.items || cart.items.length === 0;
+  const inStockItems = cart?.items?.filter((item: any) => !item.isPreorder) || [];
+  const preorderItems = cart?.items?.filter((item: any) => item.isPreorder) || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -100,86 +110,181 @@ export default function Cart() {
         ) : (
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Cart Items */}
-            <div className="lg:col-span-2 space-y-4">
-              {cart.items.map((item: any) => (
-                <Card key={item.id}>
-                  <CardContent className="p-6">
-                    <div className="flex gap-6">
-                      {/* Product Image */}
-                      <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                        {item.product.imageUrl ? (
-                          <img
-                            src={item.product.imageUrl}
-                            alt={item.product.name}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                        ) : (
-                          <ShoppingCart className="w-8 h-8 text-muted-foreground" />
-                        )}
-                      </div>
-
-                      {/* Product Info */}
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="font-semibold text-lg">{item.product.name}</h3>
-                            <p className="text-sm text-muted-foreground">SKU: {item.product.sku}</p>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveItem(item.productId)}
-                            disabled={removeItemMutation.isPending}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
+            <div className="lg:col-span-2 space-y-6">
+              {/* In Stock Items */}
+              {inStockItems.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <Package className="w-5 h-5 text-green-600" />
+                      <CardTitle>Produits en stock</CardTitle>
+                      <Badge variant="default" className="bg-green-600">
+                        {inStockItems.length}
+                      </Badge>
+                    </div>
+                    <CardDescription>
+                      Expédition immédiate après validation de la commande
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {inStockItems.map((item: any) => (
+                      <div key={item.productId} className="flex gap-4 p-4 rounded-lg border">
+                        {/* Product Image */}
+                        <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                          {item.product?.imageUrl ? (
+                            <img
+                              src={item.product.imageUrl}
+                              alt={item.product.name}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                          ) : (
+                            <Package className="w-8 h-8 text-muted-foreground" />
+                          )}
                         </div>
 
-                        <div className="flex items-center justify-between mt-4">
-                          {/* Quantity Controls */}
+                        {/* Product Info */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold line-clamp-1">{item.product?.name}</h3>
+                          <p className="text-sm text-muted-foreground">SKU: {item.product?.sku}</p>
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="text-lg font-bold text-primary">
+                              {formatPrice(item.unitPriceHT)} €
+                            </span>
+                            <span className="text-sm text-muted-foreground">HT</span>
+                          </div>
+                        </div>
+
+                        {/* Quantity Controls */}
+                        <div className="flex flex-col items-end gap-2">
                           <div className="flex items-center gap-2">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
-                              disabled={item.quantity <= 1 || updateQuantityMutation.isPending}
+                              disabled={item.quantity <= 1}
                             >
                               <Minus className="w-4 h-4" />
                             </Button>
                             <Input
                               type="number"
-                              value={item.quantity}
-                              onChange={(e) => {
-                                const qty = parseInt(e.target.value);
-                                if (qty > 0) handleUpdateQuantity(item.productId, qty);
-                              }}
-                              className="w-16 text-center"
                               min="1"
+                              value={item.quantity}
+                              onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value) || 1)}
+                              className="w-16 text-center"
                             />
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}
-                              disabled={updateQuantityMutation.isPending}
                             >
                               <Plus className="w-4 h-4" />
                             </Button>
                           </div>
-
-                          {/* Price */}
-                          <div className="text-right">
-                            <p className="text-sm text-muted-foreground">Prix unitaire HT</p>
-                            <p className="text-lg font-bold">{item.unitPriceHT.toFixed(2)} €</p>
-                            <p className="text-sm font-medium text-primary">
-                              Total: {(item.unitPriceHT * item.quantity).toFixed(2)} €
-                            </p>
-                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveItem(item.productId)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Retirer
+                          </Button>
                         </div>
                       </div>
-                    </div>
+                    ))}
                   </CardContent>
                 </Card>
-              ))}
+              )}
+
+              {/* Preorder Items */}
+              {preorderItems.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <TruckIcon className="w-5 h-5 text-orange-600" />
+                      <CardTitle>Pré-réservations</CardTitle>
+                      <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                        {preorderItems.length}
+                      </Badge>
+                    </div>
+                    <CardDescription>
+                      Produits en arrivage - Expédition dès réception du stock
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {preorderItems.map((item: any) => (
+                      <div key={`preorder-${item.productId}`} className="flex gap-4 p-4 rounded-lg border border-orange-200 bg-orange-50/50">
+                        {/* Product Image */}
+                        <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                          {item.product?.imageUrl ? (
+                            <img
+                              src={item.product.imageUrl}
+                              alt={item.product.name}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                          ) : (
+                            <TruckIcon className="w-8 h-8 text-muted-foreground" />
+                          )}
+                        </div>
+
+                        {/* Product Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start gap-2">
+                            <h3 className="font-semibold line-clamp-1 flex-1">{item.product?.name}</h3>
+                            <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs">
+                              Arrivage prévu
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">SKU: {item.product?.sku}</p>
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="text-lg font-bold text-primary">
+                              {formatPrice(item.unitPriceHT)} €
+                            </span>
+                            <span className="text-sm text-muted-foreground">HT</span>
+                          </div>
+                        </div>
+
+                        {/* Quantity Controls */}
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
+                              disabled={item.quantity <= 1}
+                            >
+                              <Minus className="w-4 h-4" />
+                            </Button>
+                            <Input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value) || 1)}
+                              className="w-16 text-center"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveItem(item.productId)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Retirer
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Order Summary */}
@@ -192,48 +297,42 @@ export default function Cart() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Sous-total HT</span>
-                      <span className="font-medium">{cart.subtotalHT?.toFixed(2) || "0.00"} €</span>
+                      <span className="font-medium">{formatPrice(cart.subtotalHT)} €</span>
                     </div>
-                    
-                    {cart.discountAmount && cart.discountAmount > 0 && (
+                    {cart.discountPercent > 0 && (
                       <div className="flex justify-between text-sm text-green-600">
-                        <span>Remise ({cart.discountPercent}%)</span>
-                        <span>-{cart.discountAmount.toFixed(2)} €</span>
+                        <span>Remise partenaire ({cart.discountPercent}%)</span>
+                        <span>-{formatPrice(cart.discountAmount)} €</span>
                       </div>
                     )}
-
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">TVA</span>
-                      <span className="font-medium">{cart.vatAmount?.toFixed(2) || "0.00"} €</span>
+                      <span className="text-muted-foreground">TVA (21%)</span>
+                      <span className="font-medium">{formatPrice(cart.vatAmount)} €</span>
                     </div>
-
-                    <div className="border-t pt-2">
-                      <div className="flex justify-between">
-                        <span className="font-semibold">Total TTC</span>
-                        <span className="text-2xl font-bold text-primary">
-                          {cart.totalTTC?.toFixed(2) || "0.00"} €
-                        </span>
-                      </div>
+                    <Separator />
+                    <div className="flex justify-between text-lg font-bold">
+                      <span>Total TTC</span>
+                      <span className="text-primary">{formatPrice(cart.totalTTC)} €</span>
                     </div>
                   </div>
 
-                  {cart.discountPercent && cart.discountPercent > 0 && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-sm text-green-800 font-medium">
-                        🎉 Remise partenaire de {cart.discountPercent}% appliquée
+                  {preorderItems.length > 0 && (
+                    <div className="p-3 rounded-lg bg-orange-50 border border-orange-200">
+                      <p className="text-xs text-orange-800">
+                        <TruckIcon className="w-4 h-4 inline mr-1" />
+                        Votre commande contient {preorderItems.length} pré-réservation(s). 
+                        L'expédition sera effectuée dès réception du stock.
                       </p>
                     </div>
                   )}
                 </CardContent>
-                <CardFooter className="flex-col gap-3">
-                  <Link href="/checkout" className="w-full">
-                    <Button className="w-full gap-2" size="lg">
-                      Passer la commande
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  </Link>
+                <CardFooter className="flex-col gap-2">
+                  <Button className="w-full gap-2" size="lg">
+                    Valider la commande
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
                   <Link href="/catalog" className="w-full">
-                    <Button variant="outline" className="w-full" size="lg">
+                    <Button variant="outline" className="w-full" size="sm">
                       Continuer mes achats
                     </Button>
                   </Link>

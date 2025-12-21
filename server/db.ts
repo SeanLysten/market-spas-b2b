@@ -641,7 +641,7 @@ export async function deleteProduct(id: number) {
 // ============================================
 
 // Simple cart storage (in production, use Redis or database)
-const cartStorage = new Map<number, Array<{ productId: number; quantity: number }>>();
+const cartStorage = new Map<number, Array<{ productId: number; quantity: number; isPreorder?: boolean }>>();
 
 export async function getCart(userId: number) {
   const db = await getDb();
@@ -699,14 +699,14 @@ export async function getCart(userId: number) {
   };
 }
 
-export async function addToCart(userId: number, productId: number, quantity: number) {
+export async function addToCart(userId: number, productId: number, quantity: number, isPreorder: boolean = false) {
   const cartItems = cartStorage.get(userId) || [];
-  const existing = cartItems.find(item => item.productId === productId);
+  const existing = cartItems.find(item => item.productId === productId && item.isPreorder === isPreorder);
 
   if (existing) {
     existing.quantity += quantity;
   } else {
-    cartItems.push({ productId, quantity });
+    cartItems.push({ productId, quantity, isPreorder });
   }
 
   cartStorage.set(userId, cartItems);

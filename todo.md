@@ -222,3 +222,12 @@
 ## Bugs à corriger
 - [x] Corriger l'erreur pricePublicHT.toFixed() dans AdminProducts.tsx
 - [x] Corriger les balises <a> imbriquées dans AdminLayout.tsx
+
+
+## Amélioration du système de panier
+- [x] Ajouter un sélecteur de quantité dans le catalogue (avec limite du stock disponible)
+- [x] Afficher les arrivages programmés dans le catalogue avec badge "Arrivage semaine X"
+- [x] Permettre la pré-réservation des produits en arrivage
+- [x] Améliorer la page panier avec modification des quantités
+- [x] Distinguer visuellement les produits en stock et les pré-réservations
+- [x] Calculer automatiquement les remises selon le niveau partenaire

@@ -3,8 +3,9 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { Search, Package, ShoppingCart, Filter, ArrowLeft, Euro, TrendingUp } from "lucide-react";
+import { Search, Package, ShoppingCart, Filter, ArrowLeft, Euro, TrendingUp, TruckIcon, Minus, Plus } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ export default function Catalog() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>();
+  const [quantities, setQuantities] = useState<Record<number, number>>({});
 
   const { data: products, isLoading } = trpc.products.list.useQuery({
     search: searchQuery || undefined,
@@ -22,10 +24,26 @@ export default function Catalog() {
 
   const addToCartMutation = trpc.cart.add.useMutation();
 
-  const handleAddToCart = async (productId: number) => {
+  const getQuantity = (productId: number) => quantities[productId] || 1;
+
+  const setQuantity = (productId: number, quantity: number, maxStock: number) => {
+    const newQty = Math.max(1, Math.min(quantity, maxStock));
+    setQuantities({ ...quantities, [productId]: newQty });
+  };
+
+  const handleAddToCart = async (productId: number, isPreorder: boolean = false) => {
+    const quantity = getQuantity(productId);
     try {
-      await addToCartMutation.mutateAsync({ productId, quantity: 1 });
-      toast.success("Produit ajouté au panier");
+      await addToCartMutation.mutateAsync({ 
+        productId, 
+        quantity,
+        isPreorder 
+      });
+      toast.success(isPreorder 
+        ? `${quantity} produit(s) pré-réservé(s)` 
+        : `${quantity} produit(s) ajouté(s) au panier`
+      );
+      setQuantities({ ...quantities, [productId]: 1 });
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de l'ajout au panier");
     }
@@ -33,11 +51,18 @@ export default function Catalog() {
 
   const getPartnerPrice = (product: any) => {
     // TODO: Apply partner level discount
-    return Number(product.pricePartnerHT);
+    return Number(product.pricePartnerHT || product.pricePublicHT || 0);
   };
 
   const formatPrice = (price: number) => {
     return price.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const getCurrentWeek = () => {
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+    return Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7);
   };
 
   return (
@@ -95,101 +120,142 @@ export default function Catalog() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <Card key={i} className="overflow-hidden">
-                <div className="skeleton h-48 w-full" />
+                <div className="skeleton h-48 w-full bg-muted animate-pulse" />
                 <CardHeader>
-                  <div className="skeleton h-6 w-3/4 mb-2" />
-                  <div className="skeleton h-4 w-full" />
+                  <div className="skeleton h-6 w-3/4 mb-2 bg-muted animate-pulse" />
+                  <div className="skeleton h-4 w-1/2 bg-muted animate-pulse" />
                 </CardHeader>
-                <CardContent>
-                  <div className="skeleton h-8 w-1/2" />
-                </CardContent>
               </Card>
             ))}
           </div>
         ) : products && products.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {products.map((product) => (
-              <Card key={product.id} className="card-hover overflow-hidden flex flex-col">
-                <div className="relative h-48 bg-muted flex items-center justify-center">
-                  <Package className="w-16 h-16 text-muted-foreground/30" />
-                  {product.isFeatured && (
-                    <Badge className="absolute top-2 right-2 bg-primary">
-                      Vedette
-                    </Badge>
-                  )}
-                  {product.stockQuantity !== null && product.lowStockThreshold !== null && product.stockQuantity <= product.lowStockThreshold && (
-                    <Badge className="absolute top-2 left-2 bg-warning text-warning-foreground">
-                      Stock bas
-                    </Badge>
-                  )}
-                </div>
-                <CardHeader className="flex-1">
-                  <CardTitle className="text-lg line-clamp-2">{product.name}</CardTitle>
-                  <CardDescription className="line-clamp-2">
-                    {product.shortDescription || product.description || "Produit de qualité premium"}
-                  </CardDescription>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
-                    <span>SKU: {product.sku}</span>
-                    {product.trackStock && (
-                      <>
-                        <span>•</span>
-                        <span className={(product.stockQuantity || 0) > 0 ? "text-green-600" : "text-red-600"}>
-                          {(product.stockQuantity || 0) > 0 ? `${product.stockQuantity} en stock` : "Rupture"}
-                        </span>
-                      </>
+            {products.map((product: any) => {
+              const stock = product.stockQuantity || 0;
+              const hasStock = stock > 0;
+              const quantity = getQuantity(product.id);
+              const partnerPrice = getPartnerPrice(product);
+
+              return (
+                <Card key={product.id} className="overflow-hidden flex flex-col">
+                  {/* Product Image */}
+                  <div className="relative h-48 bg-muted">
+                    {product.imageUrl ? (
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-16 h-16 text-muted-foreground" />
+                      </div>
                     )}
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-baseline gap-2">
-                    <div className="text-2xl font-bold text-primary">
-                      €{formatPrice(getPartnerPrice(product))}
+                    {/* Stock Badge */}
+                    <div className="absolute top-2 right-2">
+                      {hasStock ? (
+                        <Badge variant="default" className="bg-green-600">
+                          En stock ({stock})
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">
+                          Rupture
+                        </Badge>
+                      )}
                     </div>
-                    <div className="text-sm text-muted-foreground line-through">
-                      €{formatPrice(Number(product.pricePublicHT))}
+                  </div>
+
+                  <CardHeader className="flex-1">
+                    <CardTitle className="line-clamp-2">{product.name}</CardTitle>
+                    <CardDescription className="line-clamp-2">
+                      {product.description || "Aucune description"}
+                    </CardDescription>
+                    <div className="text-sm text-muted-foreground mt-2">
+                      SKU: {product.sku}
                     </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    HT • TVA {Number(product.vatRate)}%
-                  </div>
-                </CardContent>
-                <CardFooter className="flex gap-2">
-                  <Link href={`/products/${product.id}`} className="flex-1">
-                    <Button variant="outline" className="w-full">
-                      Détails
-                    </Button>
-                  </Link>
-                  <Button 
-                    className="flex-1 gap-2"
-                    onClick={() => handleAddToCart(product.id)}
-                    disabled={addToCartMutation.isPending || (product.trackStock === true && (product.stockQuantity || 0) <= 0)}
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    Ajouter
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
+                  </CardHeader>
+
+                  <CardContent className="space-y-3">
+                    {/* Price */}
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold text-primary">
+                        {formatPrice(partnerPrice)} €
+                      </span>
+                      <span className="text-sm text-muted-foreground">HT</span>
+                    </div>
+
+                    {/* Quantity Selector (only if in stock) */}
+                    {hasStock && (
+                      <div className="space-y-2">
+                        <Label className="text-sm">Quantité</Label>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setQuantity(product.id, quantity - 1, stock)}
+                            disabled={quantity <= 1}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                          <Input
+                            type="number"
+                            min="1"
+                            max={stock}
+                            value={quantity}
+                            onChange={(e) => setQuantity(product.id, parseInt(e.target.value) || 1, stock)}
+                            className="w-20 text-center"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setQuantity(product.id, quantity + 1, stock)}
+                            disabled={quantity >= stock}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+
+                  <CardFooter className="flex-col gap-2">
+                    {hasStock ? (
+                      <Button 
+                        className="w-full gap-2" 
+                        onClick={() => handleAddToCart(product.id, false)}
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        Ajouter au panier
+                      </Button>
+                    ) : (
+                      <div className="w-full space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <TruckIcon className="w-4 h-4" />
+                          <span>Arrivage prévu</span>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          className="w-full gap-2"
+                          onClick={() => handleAddToCart(product.id, true)}
+                        >
+                          <TruckIcon className="w-4 h-4" />
+                          Pré-réserver
+                        </Button>
+                      </div>
+                    )}
+                  </CardFooter>
+                </Card>
+              );
+            })}
           </div>
         ) : (
-          <Card className="p-12">
-            <div className="text-center space-y-4">
-              <Package className="w-16 h-16 text-muted-foreground/50 mx-auto" />
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Aucun produit trouvé</h3>
-                <p className="text-muted-foreground">
-                  {searchQuery
-                    ? "Essayez de modifier votre recherche"
-                    : "Le catalogue sera bientôt disponible"}
-                </p>
-              </div>
-              {searchQuery && (
-                <Button variant="outline" onClick={() => setSearchQuery("")}>
-                  Réinitialiser la recherche
-                </Button>
-              )}
-            </div>
-          </Card>
+          <div className="text-center py-16">
+            <Package className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Aucun produit trouvé</h3>
+            <p className="text-muted-foreground">
+              Essayez de modifier vos critères de recherche
+            </p>
+          </div>
         )}
       </div>
     </div>

@@ -344,9 +344,13 @@ export const appRouter = router({
     }),
 
     add: protectedProcedure
-      .input(z.object({ productId: z.number(), quantity: z.number().min(1) }))
+      .input(z.object({ 
+        productId: z.number(), 
+        quantity: z.number().min(1),
+        isPreorder: z.boolean().optional().default(false)
+      }))
       .mutation(async ({ ctx, input }) => {
-        return await db.addToCart(ctx.user.id, input.productId, input.quantity);
+        return await db.addToCart(ctx.user.id, input.productId, input.quantity, input.isPreorder);
       }),
 
     updateQuantity: protectedProcedure
