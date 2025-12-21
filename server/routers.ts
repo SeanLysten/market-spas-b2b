@@ -526,6 +526,64 @@ export const appRouter = router({
           return { success: true };
         }),
     }),
+
+    incomingStock: router({
+      list: adminProcedure
+        .input(
+          z.object({
+            productId: z.number().optional(),
+            variantId: z.number().optional(),
+            status: z.string().optional(),
+          })
+        )
+        .query(async ({ input }) => {
+          return await db.getIncomingStock(input);
+        }),
+
+      create: adminProcedure
+        .input(
+          z.object({
+            productId: z.number().optional(),
+            variantId: z.number().optional(),
+            quantity: z.number(),
+            expectedWeek: z.number().min(1).max(53),
+            expectedYear: z.number(),
+            notes: z.string().optional(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          return await db.createIncomingStock(input);
+        }),
+
+      update: adminProcedure
+        .input(
+          z.object({
+            id: z.number(),
+            quantity: z.number().optional(),
+            expectedWeek: z.number().min(1).max(53).optional(),
+            expectedYear: z.number().optional(),
+            status: z.string().optional(),
+            notes: z.string().optional(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          const { id, ...data } = input;
+          await db.updateIncomingStock(id, data);
+          return { success: true };
+        }),
+
+      delete: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.deleteIncomingStock(input.id);
+          return { success: true };
+        }),
+
+      processArrived: adminProcedure
+        .mutation(async () => {
+          return await db.processArrivedStock();
+        }),
+    }),
   }),
 });
 

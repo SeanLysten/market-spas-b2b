@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -853,4 +853,153 @@ export async function deleteProductVariant(id: number) {
   
   // Delete variant
   await db.delete(productVariants).where(eq(productVariants.id, id));
+}
+
+
+// ============================================
+// INCOMING STOCK FUNCTIONS
+// ============================================
+
+export async function getIncomingStock(filters?: {
+  productId?: number;
+  variantId?: number;
+  status?: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(incomingStock);
+
+  const conditions = [];
+  if (filters?.productId) {
+    conditions.push(eq(incomingStock.productId, filters.productId));
+  }
+  if (filters?.variantId) {
+    conditions.push(eq(incomingStock.variantId, filters.variantId));
+  }
+  if (filters?.status) {
+    conditions.push(eq(incomingStock.status, filters.status as any));
+  }
+
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+
+  return await query.orderBy(desc(incomingStock.expectedYear), desc(incomingStock.expectedWeek));
+}
+
+export async function createIncomingStock(data: {
+  productId?: number;
+  variantId?: number;
+  quantity: number;
+  expectedWeek: number;
+  expectedYear: number;
+  notes?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(incomingStock).values({
+    productId: data.productId || null,
+    variantId: data.variantId || null,
+    quantity: data.quantity,
+    expectedWeek: data.expectedWeek,
+    expectedYear: data.expectedYear,
+    notes: data.notes || null,
+    status: "PENDING",
+  });
+
+  return { id: result[0].insertId };
+}
+
+export async function updateIncomingStock(
+  id: number,
+  data: {
+    quantity?: number;
+    expectedWeek?: number;
+    expectedYear?: number;
+    status?: string;
+    notes?: string;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateData: any = {};
+  if (data.quantity !== undefined) updateData.quantity = data.quantity;
+  if (data.expectedWeek !== undefined) updateData.expectedWeek = data.expectedWeek;
+  if (data.expectedYear !== undefined) updateData.expectedYear = data.expectedYear;
+  if (data.status !== undefined) updateData.status = data.status;
+  if (data.notes !== undefined) updateData.notes = data.notes;
+
+  await db.update(incomingStock).set(updateData).where(eq(incomingStock.id, id));
+}
+
+export async function deleteIncomingStock(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(incomingStock).where(eq(incomingStock.id, id));
+}
+
+// Process incoming stock that has arrived (called by cron job or manually)
+export async function processArrivedStock() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Get current ISO week and year
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const startOfYear = new Date(currentYear, 0, 1);
+  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+  const currentWeek = Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7);
+
+  // Find all pending incoming stock that should have arrived
+  const arrivedStock = await db
+    .select()
+    .from(incomingStock)
+    .where(
+      and(
+        eq(incomingStock.status, "PENDING"),
+        or(
+          sql`${incomingStock.expectedYear} < ${currentYear}`,
+          and(
+            eq(incomingStock.expectedYear, currentYear),
+            sql`${incomingStock.expectedWeek} <= ${currentWeek}`
+          )
+        )
+      )
+    );
+
+  // Update stock quantities and mark as arrived
+  for (const stock of arrivedStock) {
+    if (stock.variantId) {
+      // Update variant stock
+      await db
+        .update(productVariants)
+        .set({
+          stockQuantity: sql`${productVariants.stockQuantity} + ${stock.quantity}`,
+        })
+        .where(eq(productVariants.id, stock.variantId));
+    } else if (stock.productId) {
+      // Update product stock
+      await db
+        .update(products)
+        .set({
+          stockQuantity: sql`${products.stockQuantity} + ${stock.quantity}`,
+        })
+        .where(eq(products.id, stock.productId));
+    }
+
+    // Mark as arrived
+    await db
+      .update(incomingStock)
+      .set({
+        status: "ARRIVED",
+        arrivedAt: new Date(),
+      })
+      .where(eq(incomingStock.id, stock.id));
+  }
+
+  return { processed: arrivedStock.length };
 }

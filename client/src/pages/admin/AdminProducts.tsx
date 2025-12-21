@@ -22,15 +22,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { Plus, Edit, Trash2, Package } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Palette, TruckIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function AdminProducts() {
-  const [open, setOpen] = useState(false);
+  const [productDialogOpen, setProductDialogOpen] = useState(false);
+  const [variantDialogOpen, setVariantDialogOpen] = useState(false);
+  const [incomingDialogOpen, setIncomingDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [formData, setFormData] = useState({
+
+  const [productForm, setProductForm] = useState({
     sku: "",
     name: "",
     description: "",
@@ -43,81 +48,104 @@ export default function AdminProducts() {
     isVisible: true,
   });
 
-  const { data: products, isLoading, refetch } = trpc.admin.products.list.useQuery({});
-  const createMutation = trpc.admin.products.create.useMutation();
-  const updateMutation = trpc.admin.products.update.useMutation();
-  const deleteMutation = trpc.admin.products.delete.useMutation();
+  const [variantForm, setVariantForm] = useState({
+    sku: "",
+    name: "",
+    color: "",
+    size: "",
+    voltage: "",
+    material: "",
+    stockQuantity: "0",
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const [incomingForm, setIncomingForm] = useState({
+    productId: "",
+    variantId: "",
+    quantity: "",
+    expectedWeek: "",
+    expectedYear: new Date().getFullYear().toString(),
+    notes: "",
+  });
+
+  const { data: products, isLoading, refetch } = trpc.admin.products.list.useQuery({});
+  const createProductMutation = trpc.admin.products.create.useMutation();
+  const updateProductMutation = trpc.admin.products.update.useMutation();
+  const deleteProductMutation = trpc.admin.products.delete.useMutation();
+
+  const handleProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       const data = {
-        sku: formData.sku,
-        name: formData.name,
-        description: formData.description || undefined,
-        priceHT: parseFloat(formData.priceHT),
-        vatRate: parseFloat(formData.vatRate),
-        stockQuantity: parseInt(formData.stockQuantity),
-        weight: formData.weight ? parseFloat(formData.weight) : undefined,
-        imageUrl: formData.imageUrl || undefined,
-        isActive: formData.isActive,
-        isVisible: formData.isVisible,
+        sku: productForm.sku,
+        name: productForm.name,
+        description: productForm.description || undefined,
+        priceHT: parseFloat(productForm.priceHT),
+        vatRate: parseFloat(productForm.vatRate),
+        stockQuantity: parseInt(productForm.stockQuantity),
+        weight: productForm.weight ? parseFloat(productForm.weight) : undefined,
+        imageUrl: productForm.imageUrl || undefined,
+        isActive: productForm.isActive,
+        isVisible: productForm.isVisible,
       };
 
       if (editingProduct) {
-        await updateMutation.mutateAsync({
+        await updateProductMutation.mutateAsync({
           id: editingProduct.id,
           ...data,
         });
         toast.success("Produit modifié avec succès");
       } else {
-        await createMutation.mutateAsync(data);
+        await createProductMutation.mutateAsync(data);
         toast.success("Produit créé avec succès");
       }
 
-      setOpen(false);
+      setProductDialogOpen(false);
       setEditingProduct(null);
-      setFormData({
-        sku: "",
-        name: "",
-        description: "",
-        priceHT: "",
-        vatRate: "21",
-        stockQuantity: "0",
-        weight: "",
-        imageUrl: "",
-        isActive: true,
-        isVisible: true,
-      });
+      resetProductForm();
       refetch();
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de l'enregistrement");
     }
   };
 
-  const handleEdit = (product: any) => {
-    setEditingProduct(product);
-    setFormData({
-      sku: product.sku,
-      name: product.name,
-      description: product.description || "",
-      priceHT: product.pricePublicHT || "",
-      vatRate: product.vatRate || "21",
-      stockQuantity: product.stockQuantity?.toString() || "0",
-      weight: product.weight || "",
-      imageUrl: product.imageUrl || "",
-      isActive: product.isActive !== false,
-      isVisible: product.isVisible !== false,
+  const resetProductForm = () => {
+    setProductForm({
+      sku: "",
+      name: "",
+      description: "",
+      priceHT: "",
+      vatRate: "21",
+      stockQuantity: "0",
+      weight: "",
+      imageUrl: "",
+      isActive: true,
+      isVisible: true,
     });
-    setOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleEditProduct = (product: any) => {
+    setEditingProduct(product);
+    setProductForm({
+      sku: product.sku || "",
+      name: product.name || "",
+      description: product.description || "",
+      priceHT: product.pricePublicHT?.toString() || "",
+      vatRate: product.vatRate?.toString() || "21",
+      stockQuantity: product.stockQuantity?.toString() || "0",
+      weight: product.weight?.toString() || "",
+      imageUrl: product.imageUrl || "",
+      isActive: product.isActive ?? true,
+      isVisible: product.isVisible ?? true,
+    });
+    setProductDialogOpen(true);
+  };
+
+  const handleDeleteProduct = async (id: number) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce produit ?")) return;
 
     try {
-      await deleteMutation.mutateAsync({ id });
+      await deleteProductMutation.mutateAsync({ id });
       toast.success("Produit supprimé");
       refetch();
     } catch (error: any) {
@@ -125,186 +153,128 @@ export default function AdminProducts() {
     }
   };
 
-  const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
-    if (!newOpen) {
-      setEditingProduct(null);
-      setFormData({
-        sku: "",
-        name: "",
-        description: "",
-        priceHT: "",
-        vatRate: "21",
-        stockQuantity: "0",
-        weight: "",
-        imageUrl: "",
-        isActive: true,
-        isVisible: true,
-      });
-    }
+  const handleManageVariants = (product: any) => {
+    setSelectedProduct(product);
   };
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Gestion des produits</h1>
-            <p className="text-muted-foreground mt-2">
-              Ajoutez et gérez le catalogue de produits
+            <p className="text-muted-foreground mt-1">
+              Gérez vos produits, variantes et arrivages programmés
             </p>
           </div>
-          <Dialog open={open} onOpenChange={handleOpenChange}>
+          <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Ajouter un produit
+              <Button onClick={() => { setEditingProduct(null); resetProductForm(); }}>
+                <Plus className="mr-2 h-4 w-4" />
+                Nouveau produit
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <form onSubmit={handleSubmit}>
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingProduct ? "Modifier le produit" : "Ajouter un nouveau produit"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Renseignez les informations du produit
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="sku">SKU *</Label>
-                      <Input
-                        id="sku"
-                        value={formData.sku}
-                        onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                        placeholder="PROD-001"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nom du produit *</Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Spa 4 places"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Description détaillée du produit..."
-                      rows={4}
+              <DialogHeader>
+                <DialogTitle>
+                  {editingProduct ? "Modifier le produit" : "Nouveau produit"}
+                </DialogTitle>
+                <DialogDescription>
+                  Remplissez les informations du produit
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleProductSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="sku">SKU *</Label>
+                    <Input
+                      id="sku"
+                      value={productForm.sku}
+                      onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
+                      required
                     />
                   </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="priceHT">Prix HT (€) *</Label>
-                      <Input
-                        id="priceHT"
-                        type="number"
-                        step="0.01"
-                        value={formData.priceHT}
-                        onChange={(e) => setFormData({ ...formData, priceHT: e.target.value })}
-                        placeholder="1999.99"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="vatRate">TVA (%) *</Label>
-                      <Input
-                        id="vatRate"
-                        type="number"
-                        step="0.01"
-                        value={formData.vatRate}
-                        onChange={(e) => setFormData({ ...formData, vatRate: e.target.value })}
-                        placeholder="21"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="stockQuantity">Stock *</Label>
-                      <Input
-                        id="stockQuantity"
-                        type="number"
-                        value={formData.stockQuantity}
-                        onChange={(e) => setFormData({ ...formData, stockQuantity: e.target.value })}
-                        placeholder="10"
-                        required
-                      />
-                    </div>
+                  <div>
+                    <Label htmlFor="name">Nom *</Label>
+                    <Input
+                      id="name"
+                      value={productForm.name}
+                      onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                      required
+                    />
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="weight">Poids (kg)</Label>
-                      <Input
-                        id="weight"
-                        type="number"
-                        step="0.01"
-                        value={formData.weight}
-                        onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                        placeholder="150"
-                      />
-                    </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={productForm.description}
+                    onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="imageUrl">URL de l'image</Label>
-                      <Input
-                        id="imageUrl"
-                        type="url"
-                        value={formData.imageUrl}
-                        onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                        placeholder="https://..."
-                      />
-                    </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="priceHT">Prix HT *</Label>
+                    <Input
+                      id="priceHT"
+                      type="number"
+                      step="0.01"
+                      value={productForm.priceHT}
+                      onChange={(e) => setProductForm({ ...productForm, priceHT: e.target.value })}
+                      required
+                    />
                   </div>
+                  <div>
+                    <Label htmlFor="vatRate">TVA (%)</Label>
+                    <Input
+                      id="vatRate"
+                      type="number"
+                      step="0.01"
+                      value={productForm.vatRate}
+                      onChange={(e) => setProductForm({ ...productForm, vatRate: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="stockQuantity">Stock</Label>
+                    <Input
+                      id="stockQuantity"
+                      type="number"
+                      value={productForm.stockQuantity}
+                      onChange={(e) => setProductForm({ ...productForm, stockQuantity: e.target.value })}
+                    />
+                  </div>
+                </div>
 
-                  <div className="flex gap-6">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="isActive"
-                        checked={formData.isActive}
-                        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                        className="w-4 h-4"
-                      />
-                      <Label htmlFor="isActive" className="cursor-pointer">Actif</Label>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="isVisible"
-                        checked={formData.isVisible}
-                        onChange={(e) => setFormData({ ...formData, isVisible: e.target.checked })}
-                        className="w-4 h-4"
-                      />
-                      <Label htmlFor="isVisible" className="cursor-pointer">Visible</Label>
-                    </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="weight">Poids (kg)</Label>
+                    <Input
+                      id="weight"
+                      type="number"
+                      step="0.01"
+                      value={productForm.weight}
+                      onChange={(e) => setProductForm({ ...productForm, weight: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="imageUrl">URL image</Label>
+                    <Input
+                      id="imageUrl"
+                      value={productForm.imageUrl}
+                      onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
+                    />
                   </div>
                 </div>
 
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+                  <Button type="button" variant="outline" onClick={() => setProductDialogOpen(false)}>
                     Annuler
                   </Button>
-                  <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                    {createMutation.isPending || updateMutation.isPending ? "Enregistrement..." : "Enregistrer"}
+                  <Button type="submit">
+                    {editingProduct ? "Modifier" : "Créer"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -312,91 +282,428 @@ export default function AdminProducts() {
           </Dialog>
         </div>
 
-        {/* Products Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Liste des produits</CardTitle>
-            <CardDescription>
-              {products?.length || 0} produit(s) dans le catalogue
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="skeleton h-16 w-full" />
-                ))}
-              </div>
-            ) : products && products.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>SKU</TableHead>
-                    <TableHead>Nom</TableHead>
-                    <TableHead>Prix HT</TableHead>
-                    <TableHead>TVA</TableHead>
-                    <TableHead>Stock</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products.map((product: any) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-mono text-sm">{product.sku}</TableCell>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>{product.pricePublicHT ? `${product.pricePublicHT} €` : "—"}</TableCell>
-                      <TableCell>{product.vatRate ? `${product.vatRate}%` : "—"}</TableCell>
-                      <TableCell>
-                        <Badge variant={product.stockQuantity > 0 ? "default" : "destructive"}>
-                          {product.stockQuantity || 0}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          {product.isActive && (
-                            <Badge className="bg-green-100 text-green-800">Actif</Badge>
-                          )}
-                          {product.isVisible && (
-                            <Badge className="bg-blue-100 text-blue-800">Visible</Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(product)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(product.id)}
-                            disabled={deleteMutation.isPending}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+        {selectedProduct ? (
+          <ProductVariantsManager
+            product={selectedProduct}
+            onBack={() => setSelectedProduct(null)}
+          />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Liste des produits</CardTitle>
+              <CardDescription>
+                {products?.length || 0} produit(s) au total
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Chargement...</div>
+              ) : products && products.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>SKU</TableHead>
+                      <TableHead>Nom</TableHead>
+                      <TableHead>Prix HT</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-12">
-                <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Aucun produit trouvé</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Commencez par ajouter votre premier produit
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {products.map((product: any) => (
+                      <TableRow key={product.id}>
+                        <TableCell className="font-mono text-sm">{product.sku}</TableCell>
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell>{product.pricePublicHT?.toFixed(2)} €</TableCell>
+                        <TableCell>
+                          <Badge variant={product.stockQuantity > 0 ? "default" : "secondary"}>
+                            {product.stockQuantity}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {product.isActive ? (
+                            <Badge variant="default">Actif</Badge>
+                          ) : (
+                            <Badge variant="secondary">Inactif</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleManageVariants(product)}
+                          >
+                            <Palette className="h-4 w-4 mr-1" />
+                            Variantes
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditProduct(product)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteProduct(product.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  Aucun produit. Créez-en un pour commencer.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </AdminLayout>
+  );
+}
+
+function ProductVariantsManager({ product, onBack }: { product: any; onBack: () => void }) {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="outline" onClick={onBack}>
+          ← Retour
+        </Button>
+        <div>
+          <h2 className="text-2xl font-bold">{product.name}</h2>
+          <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+        </div>
+      </div>
+
+      <Tabs defaultValue="variants" className="w-full">
+        <TabsList>
+          <TabsTrigger value="variants">Variantes</TabsTrigger>
+          <TabsTrigger value="incoming">Arrivages programmés</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="variants">
+          <VariantsTab productId={product.id} />
+        </TabsContent>
+
+        <TabsContent value="incoming">
+          <IncomingStockTab productId={product.id} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function VariantsTab({ productId }: { productId: number }) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState({
+    sku: "",
+    name: "",
+    color: "",
+    size: "",
+    voltage: "",
+    material: "",
+    stockQuantity: "0",
+  });
+
+  const { data: variants, refetch } = trpc.admin.products.getVariants.useQuery({ productId });
+  const createMutation = trpc.admin.products.createVariant.useMutation();
+  const deleteMutation = trpc.admin.products.deleteVariant.useMutation();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const options = [];
+      if (form.color) options.push({ optionName: "Couleur", optionValue: form.color });
+      if (form.size) options.push({ optionName: "Taille", optionValue: form.size });
+      if (form.voltage) options.push({ optionName: "Voltage", optionValue: form.voltage });
+      if (form.material) options.push({ optionName: "Matériau", optionValue: form.material });
+
+      await createMutation.mutateAsync({
+        productId,
+        sku: form.sku,
+        name: form.name,
+        stockQuantity: parseInt(form.stockQuantity),
+        options,
+      });
+
+      toast.success("Variante créée");
+      setDialogOpen(false);
+      setForm({
+        sku: "",
+        name: "",
+        color: "",
+        size: "",
+        voltage: "",
+        material: "",
+        stockQuantity: "0",
+      });
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur");
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Supprimer cette variante ?")) return;
+
+    try {
+      await deleteMutation.mutateAsync({ id });
+      toast.success("Variante supprimée");
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur");
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Variantes du produit</CardTitle>
+            <CardDescription>Gérez les différentes variantes (couleurs, tailles, etc.)</CardDescription>
+          </div>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Nouvelle variante
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nouvelle variante</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="variant-sku">SKU *</Label>
+                  <Input
+                    id="variant-sku"
+                    value={form.sku}
+                    onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="variant-name">Nom *</Label>
+                  <Input
+                    id="variant-name"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="color">Couleur</Label>
+                    <Input
+                      id="color"
+                      value={form.color}
+                      onChange={(e) => setForm({ ...form, color: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="size">Taille</Label>
+                    <Input
+                      id="size"
+                      value={form.size}
+                      onChange={(e) => setForm({ ...form, size: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="voltage">Voltage</Label>
+                    <Input
+                      id="voltage"
+                      value={form.voltage}
+                      onChange={(e) => setForm({ ...form, voltage: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="material">Matériau</Label>
+                    <Input
+                      id="material"
+                      value={form.material}
+                      onChange={(e) => setForm({ ...form, material: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="variant-stock">Stock</Label>
+                  <Input
+                    id="variant-stock"
+                    type="number"
+                    value={form.stockQuantity}
+                    onChange={(e) => setForm({ ...form, stockQuantity: e.target.value })}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="submit">Créer</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {variants && variants.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>SKU</TableHead>
+                <TableHead>Nom</TableHead>
+                <TableHead>Options</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {variants.map((variant: any) => (
+                <TableRow key={variant.id}>
+                  <TableCell className="font-mono text-sm">{variant.sku}</TableCell>
+                  <TableCell>{variant.name}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {variant.color && <Badge variant="outline">Couleur: {variant.color}</Badge>}
+                      {variant.size && <Badge variant="outline">Taille: {variant.size}</Badge>}
+                      {variant.voltage && <Badge variant="outline">Voltage: {variant.voltage}</Badge>}
+                      {variant.material && <Badge variant="outline">Matériau: {variant.material}</Badge>}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={variant.stockQuantity > 0 ? "default" : "secondary"}>
+                      {variant.stockQuantity}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDelete(variant.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            Aucune variante. Créez-en une pour commencer.
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function IncomingStockTab({ productId }: { productId: number }) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState({
+    variantId: "",
+    quantity: "",
+    expectedWeek: "",
+    expectedYear: new Date().getFullYear().toString(),
+    notes: "",
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Arrivages programmés</CardTitle>
+            <CardDescription>
+              Gérez les arrivages de spas en production avec leur semaine d'arrivée prévue
+            </CardDescription>
+          </div>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <TruckIcon className="mr-2 h-4 w-4" />
+                Nouvel arrivage
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Programmer un arrivage</DialogTitle>
+                <DialogDescription>
+                  Les produits seront automatiquement ajoutés au stock à la semaine indiquée
+                </DialogDescription>
+              </DialogHeader>
+              <form className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="quantity">Quantité *</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      value={form.quantity}
+                      onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="expectedWeek">Semaine *</Label>
+                    <Input
+                      id="expectedWeek"
+                      type="number"
+                      min="1"
+                      max="53"
+                      placeholder="1-53"
+                      value={form.expectedWeek}
+                      onChange={(e) => setForm({ ...form, expectedWeek: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="expectedYear">Année</Label>
+                  <Input
+                    id="expectedYear"
+                    type="number"
+                    value={form.expectedYear}
+                    onChange={(e) => setForm({ ...form, expectedYear: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={form.notes}
+                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="submit">Programmer</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="text-center py-8 text-muted-foreground">
+          Fonctionnalité en cours de développement
+        </div>
+      </CardContent>
+    </Card>
   );
 }

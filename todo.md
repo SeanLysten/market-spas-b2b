@@ -200,3 +200,20 @@
 - [ ] Interface admin pour créer/gérer les variantes d'un produit
 - [ ] Afficher les variantes dans le catalogue avec sélecteur
 - [ ] Adapter le panier pour gérer les variantes sélectionnées
+
+
+## Système d'arrivages programmés
+- [x] Créer la table incoming_stock pour les arrivages programmés
+- [x] Ajouter les champs expectedWeek et expectedYear dans la table
+- [x] Routes API pour créer/gérer les arrivages programmés
+- [x] Système automatique d'actualisation des arrivages (fonction processArrivedStock)
+- [ ] Afficher les arrivages prévus dans le catalogue pour les revendeurs
+- [x] Interface admin pour ajouter des arrivages avec semaine prévue
+
+## Interface admin produits et variantes
+- [x] Rendre visible la page AdminProducts dans le menu admin
+- [x] Formulaire complet d'ajout de produit avec tous les champs
+- [x] Section de gestion des variantes dans la page produit
+- [x] Formulaire d'ajout de variante avec options (couleur, taille, voltage, matériau)
+- [x] Gestion du stock par variante
+- [x] Interface de gestion des arrivages programmés par produit

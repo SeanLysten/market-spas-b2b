@@ -1014,6 +1014,37 @@ export const activityLogs = mysqlTable(
 );
 
 // ============================================
+// INCOMING STOCK (ARRIVAGES)
+// ============================================
+
+export const incomingStock = mysqlTable(
+  "incoming_stock",
+  {
+    id: int("id").autoincrement().primaryKey(),
+
+    productId: int("productId"),
+    variantId: int("variantId"),
+
+    quantity: int("quantity").notNull(),
+    expectedWeek: int("expectedWeek").notNull(),
+    expectedYear: int("expectedYear").notNull(),
+
+    status: mysqlEnum("status", ["PENDING", "ARRIVED", "CANCELLED"]).default("PENDING"),
+    notes: text("notes"),
+
+    arrivedAt: timestamp("arrivedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    productIdIdx: index("productId_idx").on(table.productId),
+    variantIdIdx: index("variantId_idx").on(table.variantId),
+    expectedWeekIdx: index("expectedWeek_idx").on(table.expectedWeek, table.expectedYear),
+    statusIdx: index("status_idx").on(table.status),
+  })
+);
+
+// ============================================
 // TYPE EXPORTS
 // ============================================
 
@@ -1037,3 +1068,6 @@ export type InsertResource = typeof resources.$inferInsert;
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
+
+export type IncomingStock = typeof incomingStock.$inferSelect;
+export type InsertIncomingStock = typeof incomingStock.$inferInsert;
