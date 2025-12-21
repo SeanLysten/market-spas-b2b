@@ -231,3 +231,10 @@
 - [x] Améliorer la page panier avec modification des quantités
 - [x] Distinguer visuellement les produits en stock et les pré-réservations
 - [x] Calculer automatiquement les remises selon le niveau partenaire
+
+
+## Développement en cours
+- [x] Créer la page de checkout avec paiements directs (virement, à la livraison)
+- [ ] Implémenter la création de commande avec génération de devis Odoo
+- [ ] Implémenter la synchronisation Google Sheets (toutes les 5 min)
+- [ ] Créer le job cron hebdomadaire d'actualisation des arrivages

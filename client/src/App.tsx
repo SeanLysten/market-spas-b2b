@@ -14,6 +14,7 @@ import Catalog from "./pages/Catalog";
 import Orders from "./pages/Orders";
 import Resources from "./pages/Resources";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/orders" component={Orders} />
       <Route path="/resources" component={Resources} />
       <Route path="/cart" component={Cart} />
+      <Route path="/checkout" component={Checkout} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/resources" component={AdminResources} />
       <Route path="/admin/users" component={AdminUsers} />

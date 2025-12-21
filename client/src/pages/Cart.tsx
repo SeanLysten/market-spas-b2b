@@ -327,10 +327,12 @@ export default function Cart() {
                   )}
                 </CardContent>
                 <CardFooter className="flex-col gap-2">
-                  <Button className="w-full gap-2" size="lg">
-                    Valider la commande
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
+                  <Link href="/checkout" className="w-full">
+                    <Button className="w-full gap-2" size="lg">
+                      Valider la commande
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </Link>
                   <Link href="/catalog" className="w-full">
                     <Button variant="outline" className="w-full" size="sm">
                       Continuer mes achats

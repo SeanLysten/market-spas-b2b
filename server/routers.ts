@@ -217,6 +217,44 @@ export const appRouter = router({
         
         return order;
       }),
+
+    create: protectedProcedure
+      .input(
+        z.object({
+          items: z.array(
+            z.object({
+              productId: z.number(),
+              variantId: z.number().optional(),
+              quantity: z.number(),
+              isPreorder: z.boolean().optional(),
+            })
+          ),
+          deliveryAddress: z.object({
+            street: z.string(),
+            city: z.string(),
+            postalCode: z.string(),
+            country: z.string(),
+            contactName: z.string(),
+            contactPhone: z.string(),
+            instructions: z.string().optional(),
+          }),
+          paymentMethod: z.string(),
+          customerNotes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (!ctx.user.partnerId) {
+          throw new Error("Vous devez être associé à un partenaire pour passer commande");
+        }
+
+        // TODO: Create order in database and generate Odoo quote
+        // For now, return success
+        return {
+          success: true,
+          orderId: 1,
+          message: "Commande créée avec succès",
+        };
+      }),
   }),
 
   // ============================================
