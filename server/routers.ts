@@ -4,6 +4,8 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import * as db from "./db";
+import { storagePut } from "./storage";
+import { nanoid } from "nanoid";
 
 export const appRouter = router({
   system: systemRouter,
@@ -566,6 +568,38 @@ export const appRouter = router({
         .mutation(async ({ input }) => {
           await db.deleteProductVariant(input.id);
           return { success: true };
+        }),
+
+      // Image upload
+      uploadImage: adminProcedure
+        .input(
+          z.object({
+            productId: z.number().optional(),
+            variantId: z.number().optional(),
+            imageData: z.string(), // base64 encoded image
+            fileName: z.string(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          // Convert base64 to buffer
+          const base64Data = input.imageData.replace(/^data:image\/\w+;base64,/, "");
+          const buffer = Buffer.from(base64Data, "base64");
+
+          // Generate unique file key
+          const fileExtension = input.fileName.split(".").pop() || "jpg";
+          const fileKey = `products/${input.productId || "general"}/${nanoid()}.${fileExtension}`;
+
+          // Upload to S3
+          const { url } = await storagePut(fileKey, buffer, `image/${fileExtension}`);
+
+          // Update product or variant with image URL
+          if (input.variantId) {
+            await db.updateProductVariant(input.variantId, { imageUrl: url });
+          } else if (input.productId) {
+            await db.updateProduct(input.productId, { imageUrl: url });
+          }
+
+          return { success: true, url };
         }),
     }),
 

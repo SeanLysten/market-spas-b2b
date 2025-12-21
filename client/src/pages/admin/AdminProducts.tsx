@@ -27,6 +27,7 @@ import { trpc } from "@/lib/trpc";
 import { Plus, Edit, Trash2, Package, Palette, TruckIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/ImageUpload";
 
 export default function AdminProducts() {
   const [productDialogOpen, setProductDialogOpen] = useState(false);
@@ -56,6 +57,7 @@ export default function AdminProducts() {
     voltage: "",
     material: "",
     stockQuantity: "0",
+    imageUrl: "",
   });
 
   const [incomingForm, setIncomingForm] = useState({
@@ -248,25 +250,24 @@ export default function AdminProducts() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="weight">Poids (kg)</Label>
-                    <Input
-                      id="weight"
-                      type="number"
-                      step="0.01"
-                      value={productForm.weight}
-                      onChange={(e) => setProductForm({ ...productForm, weight: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="imageUrl">URL image</Label>
-                    <Input
-                      id="imageUrl"
-                      value={productForm.imageUrl}
-                      onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
-                    />
-                  </div>
+                <div>
+                  <Label htmlFor="weight">Poids (kg)</Label>
+                  <Input
+                    id="weight"
+                    type="number"
+                    step="0.01"
+                    value={productForm.weight}
+                    onChange={(e) => setProductForm({ ...productForm, weight: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <Label>Image du produit</Label>
+                  <ImageUpload
+                    currentImageUrl={productForm.imageUrl}
+                    onImageUploaded={(url) => setProductForm({ ...productForm, imageUrl: url })}
+                    productId={editingProduct?.id}
+                  />
                 </div>
 
                 <DialogFooter>
@@ -410,6 +411,7 @@ function VariantsTab({ productId }: { productId: number }) {
     voltage: "",
     material: "",
     stockQuantity: "0",
+    imageUrl: "",
   });
 
   const { data: variants, refetch } = trpc.admin.products.getVariants.useQuery({ productId });
@@ -444,6 +446,7 @@ function VariantsTab({ productId }: { productId: number }) {
         voltage: "",
         material: "",
         stockQuantity: "0",
+        imageUrl: "",
       });
       refetch();
     } catch (error: any) {
@@ -546,6 +549,16 @@ function VariantsTab({ productId }: { productId: number }) {
                     onChange={(e) => setForm({ ...form, stockQuantity: e.target.value })}
                   />
                 </div>
+
+                <div>
+                  <Label>Image de la variante</Label>
+                  <ImageUpload
+                    currentImageUrl={form.imageUrl}
+                    onImageUploaded={(url) => setForm({ ...form, imageUrl: url })}
+                    productId={productId}
+                  />
+                </div>
+
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                     Annuler

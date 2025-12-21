@@ -29,6 +29,13 @@
       "when": 1766279284121,
       "tag": "0003_flat_skullbuster",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1766281394189,
+      "tag": "0004_cute_squadron_supreme",
+      "breakpoints": true
     }
   ]
 }

@@ -825,6 +825,7 @@ export async function updateProductVariant(
     voltage?: string;
     material?: string;
     stockQuantity?: number;
+    imageUrl?: string;
     isActive?: boolean;
   }
 ) {

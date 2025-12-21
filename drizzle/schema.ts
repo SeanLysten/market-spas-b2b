@@ -513,6 +513,9 @@ export const productVariants = mysqlTable(
     sheetsRowId: int("sheetsRowId"),
     odooProductId: int("odooProductId"),
 
+    // Image
+    imageUrl: text("imageUrl"),
+
     // Status
     isActive: boolean("isActive").default(true),
 

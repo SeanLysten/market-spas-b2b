@@ -254,3 +254,14 @@
 - [x] Interface admin pour produits, variantes et arrivages
 - [x] Page de checkout avec formulaire d'adresse et sélection de paiement
 - [x] Tâche planifiée hebdomadaire pour actualiser le stock des arrivages
+
+
+## Système d'upload d'images
+- [x] Créer les routes API pour l'upload d'images vers S3
+- [x] Ajouter le composant d'upload d'images dans AdminProducts
+- [x] Intégrer le composant ImageUpload dans le formulaire de création de produit
+- [x] Intégrer le composant ImageUpload dans le formulaire de création de variante
+- [x] Permettre l'upload d'images spécifiques par variante (colonne imageUrl ajoutée)
+- [ ] Permettre l'upload de plusieurs images par produit (galerie)
+- [ ] Afficher les images dans le catalogue produits
+- [x] Gérer la suppression d'images (bouton X sur l'aperçu)
