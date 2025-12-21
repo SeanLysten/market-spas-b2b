@@ -1013,3 +1013,5 @@ export async function deletePartner(id: number) {
 
   await db.delete(partners).where(eq(partners.id, id));
 }
+
+

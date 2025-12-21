@@ -238,3 +238,19 @@
 - [ ] Implémenter la création de commande avec génération de devis Odoo
 - [ ] Implémenter la synchronisation Google Sheets (toutes les 5 min)
 - [ ] Créer le job cron hebdomadaire d'actualisation des arrivages
+
+- [x] Créer une tâche planifiée hebdomadaire pour transférer automatiquement le stock des arrivages
+
+- [ ] Finaliser la fonction createOrder() en adaptant aux noms de colonnes réels de la table orders
+- [ ] Créer les lignes de commande (order_items) avec les produits du panier
+- [ ] Générer un numéro de commande unique
+- [ ] Créer la page de confirmation de commande
+- [ ] Vider le panier après validation de commande
+- [ ] (Optionnel) Intégrer l'API Odoo pour générer automatiquement les devis
+
+## Fonctionnalités complétées
+- [x] Système de panier avec sélection de quantité et pré-réservations
+- [x] Catalogue avec affichage des arrivages programmés
+- [x] Interface admin pour produits, variantes et arrivages
+- [x] Page de checkout avec formulaire d'adresse et sélection de paiement
+- [x] Tâche planifiée hebdomadaire pour actualiser le stock des arrivages
