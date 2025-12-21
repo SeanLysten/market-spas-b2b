@@ -15,6 +15,13 @@
       "when": 1766277530842,
       "tag": "0001_nice_wolverine",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1766278995621,
+      "tag": "0002_hard_joystick",
+      "breakpoints": true
     }
   ]
 }

@@ -525,6 +525,21 @@ export const productVariants = mysqlTable(
   })
 );
 
+export const variantOptions = mysqlTable(
+  "variant_options",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    variantId: int("variantId").notNull(),
+    optionName: varchar("optionName", { length: 100 }).notNull(),
+    optionValue: varchar("optionValue", { length: 255 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    variantIdIdx: index("variantId_idx").on(table.variantId),
+    optionNameIdx: index("optionName_idx").on(table.optionName),
+  })
+);
+
 export const productImages = mysqlTable(
   "product_images",
   {

@@ -190,3 +190,13 @@
 - [x] Ajouter des données de démonstration (produits, ressources, commandes)
 - [ ] Améliorer la page de détail produit
 - [ ] Système de notifications en temps réel
+
+
+## Système de variantes de produits
+- [x] Créer les tables pour les variantes (product_variants, variant_options)
+- [x] Ajouter les migrations SQL pour les variantes
+- [x] Routes API pour créer/gérer les variantes
+- [x] Ajouter des données de démonstration avec variantes (3 couleurs pour SPA-001)
+- [ ] Interface admin pour créer/gérer les variantes d'un produit
+- [ ] Afficher les variantes dans le catalogue avec sélecteur
+- [ ] Adapter le panier pour gérer les variantes sélectionnées

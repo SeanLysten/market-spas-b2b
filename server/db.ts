@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -735,4 +735,122 @@ export async function removeFromCart(userId: number, productId: number) {
 export async function clearCart(userId: number) {
   cartStorage.delete(userId);
   return { success: true };
+}
+
+
+// ============================================
+// PRODUCT VARIANTS FUNCTIONS
+// ============================================
+
+export async function getProductVariants(productId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const variants = await db
+    .select()
+    .from(productVariants)
+    .where(eq(productVariants.productId, productId));
+
+  // Get options for each variant
+  const variantsWithOptions = [];
+  for (const variant of variants) {
+    const options = await db
+      .select()
+      .from(variantOptions)
+      .where(eq(variantOptions.variantId, variant.id));
+    
+    variantsWithOptions.push({
+      ...variant,
+      options,
+    });
+  }
+
+  return variantsWithOptions;
+}
+
+export async function createProductVariant(data: {
+  productId: number;
+  sku: string;
+  name: string;
+  priceAdjustmentHT?: number;
+  stockQuantity?: number;
+  isDefault?: boolean;
+  options: Array<{ optionName: string; optionValue: string }>;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Extract specific options for the existing structure
+  const color = data.options.find(o => o.optionName === "Couleur" || o.optionName === "Color")?.optionValue;
+  const size = data.options.find(o => o.optionName === "Taille" || o.optionName === "Size")?.optionValue;
+  const voltage = data.options.find(o => o.optionName === "Voltage")?.optionValue;
+  const material = data.options.find(o => o.optionName === "Matériau" || o.optionName === "Material")?.optionValue;
+
+  // Insert variant using existing structure
+  const result = await db.insert(productVariants).values({
+    productId: data.productId,
+    sku: data.sku,
+    name: data.name,
+    color: color || null,
+    size: size || null,
+    voltage: voltage || null,
+    material: material || null,
+    stockQuantity: data.stockQuantity || 0,
+    isActive: true,
+  });
+
+  const variantId = result[0].insertId;
+
+  // Also insert in variant_options for flexibility
+  if (data.options && data.options.length > 0) {
+    for (const option of data.options) {
+      await db.insert(variantOptions).values({
+        variantId,
+        optionName: option.optionName,
+        optionValue: option.optionValue,
+      });
+    }
+  }
+
+  return { id: variantId };
+}
+
+export async function updateProductVariant(
+  id: number,
+  data: {
+    sku?: string;
+    name?: string;
+    color?: string;
+    size?: string;
+    voltage?: string;
+    material?: string;
+    stockQuantity?: number;
+    isActive?: boolean;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateData: any = {};
+  if (data.sku !== undefined) updateData.sku = data.sku;
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.color !== undefined) updateData.color = data.color;
+  if (data.size !== undefined) updateData.size = data.size;
+  if (data.voltage !== undefined) updateData.voltage = data.voltage;
+  if (data.material !== undefined) updateData.material = data.material;
+  if (data.stockQuantity !== undefined) updateData.stockQuantity = data.stockQuantity;
+  if (data.isActive !== undefined) updateData.isActive = data.isActive;
+
+  await db.update(productVariants).set(updateData).where(eq(productVariants.id, id));
+}
+
+export async function deleteProductVariant(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Delete options first (cascade should handle this, but being explicit)
+  await db.delete(variantOptions).where(eq(variantOptions.variantId, id));
+  
+  // Delete variant
+  await db.delete(productVariants).where(eq(productVariants.id, id));
 }

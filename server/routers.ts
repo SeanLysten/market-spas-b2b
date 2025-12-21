@@ -472,6 +472,59 @@ export const appRouter = router({
           await db.deleteProduct(input.id);
           return { success: true };
         }),
+
+      // Variants management
+      getVariants: adminProcedure
+        .input(z.object({ productId: z.number() }))
+        .query(async ({ input }) => {
+          return await db.getProductVariants(input.productId);
+        }),
+
+      createVariant: adminProcedure
+        .input(
+          z.object({
+            productId: z.number(),
+            sku: z.string(),
+            name: z.string(),
+            priceAdjustmentHT: z.number().optional(),
+            stockQuantity: z.number().optional(),
+            isDefault: z.boolean().optional(),
+            options: z.array(
+              z.object({
+                optionName: z.string(),
+                optionValue: z.string(),
+              })
+            ),
+          })
+        )
+        .mutation(async ({ input }) => {
+          return await db.createProductVariant(input);
+        }),
+
+      updateVariant: adminProcedure
+        .input(
+          z.object({
+            id: z.number(),
+            sku: z.string().optional(),
+            name: z.string().optional(),
+            priceAdjustmentHT: z.number().optional(),
+            stockQuantity: z.number().optional(),
+            isActive: z.boolean().optional(),
+            isDefault: z.boolean().optional(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          const { id, ...data } = input;
+          await db.updateProductVariant(id, data);
+          return { success: true };
+        }),
+
+      deleteVariant: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.deleteProductVariant(input.id);
+          return { success: true };
+        }),
     }),
   }),
 });
