@@ -1003,3 +1003,13 @@ export async function processArrivedStock() {
 
   return { processed: arrivedStock.length };
 }
+
+
+
+
+export async function deletePartner(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(partners).where(eq(partners.id, id));
+}
