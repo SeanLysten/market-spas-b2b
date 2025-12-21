@@ -432,6 +432,48 @@ export async function incrementResourceDownload(id: number) {
     .where(eq(resources.id, id));
 }
 
+export async function createResource(data: {
+  title: string;
+  description: string | null;
+  category: string;
+  language: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+  isPublic: boolean;
+  isActive: boolean;
+  requiredPartnerLevel: string;
+  uploadedBy: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(resources).values({
+    title: data.title,
+    description: data.description,
+    category: data.category as any,
+    language: data.language,
+    fileUrl: data.fileUrl,
+    fileType: data.fileType,
+    fileSize: data.fileSize,
+    isPublic: data.isPublic,
+    isActive: data.isActive,
+    requiredPartnerLevel: data.requiredPartnerLevel as any,
+    uploadedById: data.uploadedBy,
+    downloadCount: 0,
+    viewCount: 0,
+  });
+
+  return result;
+}
+
+export async function deleteResource(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(resources).where(eq(resources.id, id));
+}
+
 // ============================================
 // STATS QUERIES
 // ============================================
@@ -481,4 +523,114 @@ export async function getDashboardStats(partnerId?: number) {
   stats.totalProducts = productsResult[0]?.count || 0;
 
   return stats;
+}
+
+
+// ============================================
+// USER ADMIN QUERIES
+// ============================================
+
+export async function getAllUsers() {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select().from(users).orderBy(desc(users.createdAt));
+}
+
+export async function updateUserStatus(userId: number, isActive: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(users).set({ isActive }).where(eq(users.id, userId));
+}
+
+// ============================================
+// PRODUCT ADMIN QUERIES
+// ============================================
+
+export async function createProduct(data: {
+  sku: string;
+  name: string;
+  description?: string;
+  category?: string;
+  brand?: string;
+  priceHT: number;
+  vatRate: number;
+  stockQuantity: number;
+  minOrderQuantity?: number;
+  weight?: number;
+  dimensions?: string;
+  imageUrl?: string;
+  isActive?: boolean;
+  isVisible?: boolean;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(products).values({
+    sku: data.sku,
+    name: data.name,
+    description: data.description || null,
+    shortDescription: data.description || null,
+    pricePublicHT: data.priceHT.toString(),
+    pricePartnerHT: data.priceHT.toString(),
+    vatRate: data.vatRate.toString(),
+    stockQuantity: data.stockQuantity,
+    weight: data.weight ? data.weight.toString() : null,
+    isActive: data.isActive !== undefined ? data.isActive : true,
+    isVisible: data.isVisible !== undefined ? data.isVisible : true,
+  });
+
+  return result;
+}
+
+export async function updateProduct(id: number, data: Partial<{
+  sku: string;
+  name: string;
+  description: string;
+  category: string;
+  brand: string;
+  priceHT: number;
+  vatRate: number;
+  stockQuantity: number;
+  minOrderQuantity: number;
+  weight: number;
+  dimensions: string;
+  imageUrl: string;
+  isActive: boolean;
+  isVisible: boolean;
+}>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateData: any = {};
+  
+  if (data.sku !== undefined) updateData.sku = data.sku;
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.category !== undefined) updateData.category = data.category;
+  if (data.brand !== undefined) updateData.brand = data.brand;
+  if (data.priceHT !== undefined) {
+    updateData.priceHT = data.priceHT.toString();
+    if (data.vatRate !== undefined) {
+      updateData.priceTTC = ((data.priceHT * (1 + data.vatRate / 100))).toString();
+    }
+  }
+  if (data.vatRate !== undefined) updateData.vatRate = data.vatRate.toString();
+  if (data.stockQuantity !== undefined) updateData.stockQuantity = data.stockQuantity;
+  if (data.minOrderQuantity !== undefined) updateData.minOrderQuantity = data.minOrderQuantity;
+  if (data.weight !== undefined) updateData.weight = data.weight;
+  if (data.dimensions !== undefined) updateData.dimensions = data.dimensions;
+  if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl;
+  if (data.isActive !== undefined) updateData.isActive = data.isActive;
+  if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
+
+  await db.update(products).set(updateData).where(eq(products.id, id));
+}
+
+export async function deleteProduct(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(products).where(eq(products.id, id));
 }

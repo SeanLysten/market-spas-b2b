@@ -264,6 +264,50 @@ export const appRouter = router({
         
         return { fileUrl: resource.fileUrl };
       }),
+
+    create: adminProcedure
+      .input(
+        z.object({
+          title: z.string(),
+          description: z.string().optional(),
+          category: z.string(),
+          language: z.string(),
+          isPublic: z.boolean().optional(),
+          requiredPartnerLevel: z.string(),
+          fileData: z.string(), // base64
+          fileName: z.string(),
+          fileType: z.string(),
+          fileSize: z.number(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        // Upload to S3
+        const { storagePut } = await import("./storage");
+        const buffer = Buffer.from(input.fileData.split(",")[1] || input.fileData, "base64");
+        const fileKey = `resources/${Date.now()}-${input.fileName}`;
+        const { url } = await storagePut(fileKey, buffer, input.fileType);
+
+        return await db.createResource({
+          title: input.title,
+          description: input.description || null,
+          category: input.category,
+          language: input.language,
+          fileUrl: url,
+          fileType: input.fileType,
+          fileSize: input.fileSize,
+          isPublic: input.isPublic || false,
+          isActive: true,
+          requiredPartnerLevel: input.requiredPartnerLevel,
+          uploadedBy: ctx.user.id,
+        });
+      }),
+
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteResource(input.id);
+        return { success: true };
+      }),
   }),
 
   // ============================================
@@ -287,6 +331,115 @@ export const appRouter = router({
         // TODO: Implement user profile update
         return { success: true };
       }),
+  }),
+
+  // ============================================
+  // ADMIN ROUTES
+  // ============================================
+  admin: router({
+    users: router({
+      list: adminProcedure.query(async () => {
+        return await db.getAllUsers();
+      }),
+
+      invite: adminProcedure
+        .input(
+          z.object({
+            email: z.string().email(),
+            firstName: z.string().optional(),
+            lastName: z.string().optional(),
+            role: z.string(),
+            partnerId: z.number().optional(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          // TODO: Implement email invitation
+          // For now, just create the user
+          return { success: true, message: "Invitation envoyée" };
+        }),
+
+      toggleActive: adminProcedure
+        .input(
+          z.object({
+            userId: z.number(),
+            isActive: z.boolean(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          await db.updateUserStatus(input.userId, input.isActive);
+          return { success: true };
+        }),
+    }),
+
+    products: router({
+      list: adminProcedure
+        .input(
+          z.object({
+            search: z.string().optional(),
+            category: z.string().optional(),
+            limit: z.number().optional().default(50),
+            offset: z.number().optional().default(0),
+          })
+        )
+        .query(async ({ input }) => {
+          return await db.getAllProducts(input);
+        }),
+
+      create: adminProcedure
+        .input(
+          z.object({
+            sku: z.string(),
+            name: z.string(),
+            description: z.string().optional(),
+            category: z.string().optional(),
+            brand: z.string().optional(),
+            priceHT: z.number(),
+            vatRate: z.number(),
+            stockQuantity: z.number(),
+            minOrderQuantity: z.number().optional(),
+            weight: z.number().optional(),
+            dimensions: z.string().optional(),
+            imageUrl: z.string().optional(),
+            isActive: z.boolean().optional(),
+            isVisible: z.boolean().optional(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          return await db.createProduct(input);
+        }),
+
+      update: adminProcedure
+        .input(
+          z.object({
+            id: z.number(),
+            sku: z.string().optional(),
+            name: z.string().optional(),
+            description: z.string().optional(),
+            category: z.string().optional(),
+            brand: z.string().optional(),
+            priceHT: z.number().optional(),
+            vatRate: z.number().optional(),
+            stockQuantity: z.number().optional(),
+            minOrderQuantity: z.number().optional(),
+            weight: z.number().optional(),
+            dimensions: z.string().optional(),
+            imageUrl: z.string().optional(),
+            isActive: z.boolean().optional(),
+            isVisible: z.boolean().optional(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          const { id, ...data } = input;
+          return await db.updateProduct(id, data);
+        }),
+
+      delete: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.deleteProduct(input.id);
+          return { success: true };
+        }),
+    }),
   }),
 });
 

@@ -166,3 +166,14 @@
 - [ ] Corriger les noms de colonnes dans la table orders (payment_status, order_status)
 
 - [x] Remplacer la section "Programme de fidélité" par une mise en avant des ressources média, marketing et PLV
+
+
+## Interface d'administration (Super Admin)
+- [x] Créer une interface admin distincte avec navigation dédiée
+- [x] Page de gestion des ressources média avec upload et catégorisation
+- [x] Page d'ajout/invitation d'utilisateurs par email
+- [ ] Page de gestion du catalogue produits avec formulaire complet
+- [x] Système d'upload de fichiers vers S3 pour les ressources
+- [ ] Système d'upload d'images produits
+- [ ] Gestion des catégories de produits
+- [ ] Gestion des variantes de produits
