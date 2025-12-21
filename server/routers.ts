@@ -60,8 +60,8 @@ export const appRouter = router({
 
     markNotificationRead: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
-        await db.markNotificationAsRead(input.id);
+      .mutation(async ({ ctx, input }) => {
+        await db.markNotificationAsRead(input.id, ctx.user.id);
         return { success: true };
       }),
   }),
@@ -174,6 +174,18 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await db.getProductBySku(input.sku);
       }),
+
+    getVariants: protectedProcedure
+      .input(z.object({ productId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getProductVariants(input.productId);
+      }),
+
+    getIncomingStock: protectedProcedure
+      .input(z.object({ productId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getIncomingStock({ productId: input.productId, status: "PENDING" });
+      }),
   }),
 
   // ============================================
@@ -233,6 +245,7 @@ export const appRouter = router({
           ),
           deliveryAddress: z.object({
             street: z.string(),
+            street2: z.string().optional(),
             city: z.string(),
             postalCode: z.string(),
             country: z.string(),
@@ -249,13 +262,97 @@ export const appRouter = router({
           throw new Error("Vous devez être associé à un partenaire pour passer commande");
         }
 
-        // TODO: Create order in database and generate Odoo quote
-        // For now, return success
+        // Get partner discount
+        const partner = await db.getPartnerById(ctx.user.partnerId);
+        const discountPercent = partner?.discountPercent ? parseFloat(partner.discountPercent) : 0;
+
+        // Build order items with product details
+        const orderItems = [];
+        for (const item of input.items) {
+          const product = await db.getProductById(item.productId);
+          if (!product) {
+            throw new Error(`Produit ${item.productId} non trouvé`);
+          }
+
+          let sku = product.sku;
+          let name = product.name;
+          let unitPriceHT = parseFloat(product.pricePartnerHT);
+          let vatRate = parseFloat(product.vatRate || "21");
+
+          // If variant is specified, get variant details
+          if (item.variantId) {
+            const variant = await db.getProductVariantById(item.variantId);
+            if (variant) {
+              sku = variant.sku;
+              name = `${product.name} - ${variant.name}`;
+              if (variant.pricePartnerHT) {
+                unitPriceHT = parseFloat(variant.pricePartnerHT);
+              }
+            }
+          }
+
+          orderItems.push({
+            productId: item.productId,
+            variantId: item.variantId,
+            sku,
+            name,
+            quantity: item.quantity,
+            unitPriceHT,
+            vatRate,
+            discountPercent,
+            isPreorder: item.isPreorder,
+          });
+        }
+
+        // Create the order
+        const result = await db.createOrder({
+          partnerId: ctx.user.partnerId,
+          createdById: ctx.user.id,
+          items: orderItems,
+          deliveryAddress: input.deliveryAddress,
+          paymentMethod: input.paymentMethod,
+          customerNotes: input.customerNotes,
+          discountPercent,
+        });
+
+        // Clear the cart after successful order
+        await db.clearCart(ctx.user.id);
+
         return {
           success: true,
-          orderId: 1,
+          orderId: result.orderId,
+          orderNumber: result.orderNumber,
+          totalHT: result.totalHT,
+          totalTTC: result.totalTTC,
+          depositAmount: result.depositAmount,
           message: "Commande créée avec succès",
         };
+      }),
+
+    getWithItems: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const order = await db.getOrderWithItems(input.id);
+        
+        if (!order) return null;
+        
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        
+        // Partners can only view their own orders
+        if (!isAdmin && order.partnerId !== ctx.user.partnerId) {
+          throw new Error("Unauthorized");
+        }
+        
+        return order;
+      }),
+
+    updateStatus: adminProcedure
+      .input(z.object({
+        orderId: z.number(),
+        status: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        return await db.updateOrderStatus(input.orderId, input.status);
       }),
   }),
 
@@ -385,12 +482,13 @@ export const appRouter = router({
 
     add: protectedProcedure
       .input(z.object({ 
-        productId: z.number(), 
+        productId: z.number(),
+        variantId: z.number().optional(),
         quantity: z.number().min(1),
         isPreorder: z.boolean().optional().default(false)
       }))
       .mutation(async ({ ctx, input }) => {
-        return await db.addToCart(ctx.user.id, input.productId, input.quantity, input.isPreorder);
+        return await db.addToCart(ctx.user.id, input.productId, input.quantity, input.isPreorder, input.variantId);
       }),
 
     updateQuantity: protectedProcedure
@@ -407,6 +505,38 @@ export const appRouter = router({
 
     clear: protectedProcedure.mutation(async ({ ctx }) => {
       return await db.clearCart(ctx.user.id);
+    }),
+  }),
+
+  // ============================================
+  // NOTIFICATIONS
+  // ============================================
+  notifications: router({
+    list: protectedProcedure
+      .input(
+        z.object({
+          limit: z.number().optional().default(20),
+          unreadOnly: z.boolean().optional().default(false),
+        })
+      )
+      .query(async ({ ctx, input }) => {
+        return await db.getUserNotifications(ctx.user.id, input);
+      }),
+
+    markAsRead: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.markNotificationAsRead(input.id, ctx.user.id);
+        return { success: true };
+      }),
+
+    markAllAsRead: protectedProcedure.mutation(async ({ ctx }) => {
+      await db.markAllNotificationsAsRead(ctx.user.id);
+      return { success: true };
+    }),
+
+    getUnreadCount: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getUnreadNotificationCount(ctx.user.id);
     }),
   }),
 
@@ -661,7 +791,86 @@ export const appRouter = router({
         }),
     }),
 
+    partners: router({
+      list: adminProcedure
+        .input(
+          z.object({
+            search: z.string().optional(),
+            status: z.string().optional(),
+            level: z.string().optional(),
+          })
+        )
+        .query(async ({ input }) => {
+          return await db.getAllPartners(input);
+        }),
 
+      create: adminProcedure
+        .input(
+          z.object({
+            companyName: z.string(),
+            tradeName: z.string().optional(),
+            vatNumber: z.string(),
+            addressStreet: z.string().optional(),
+            addressCity: z.string().optional(),
+            addressPostalCode: z.string().optional(),
+            addressCountry: z.string().optional(),
+            primaryContactName: z.string().optional(),
+            primaryContactEmail: z.string(),
+            primaryContactPhone: z.string().optional(),
+            level: z.enum(["BRONZE", "SILVER", "GOLD", "PLATINUM", "VIP"]).optional(),
+            discountPercent: z.number().optional(),
+            status: z.enum(["PENDING", "APPROVED", "SUSPENDED", "TERMINATED"]).optional(),
+            internalNotes: z.string().optional(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          return await db.createPartner(input);
+        }),
+
+      update: adminProcedure
+        .input(
+          z.object({
+            id: z.number(),
+            companyName: z.string().optional(),
+            tradeName: z.string().optional(),
+            vatNumber: z.string().optional(),
+            addressStreet: z.string().optional(),
+            addressCity: z.string().optional(),
+            addressPostalCode: z.string().optional(),
+            addressCountry: z.string().optional(),
+            primaryContactName: z.string().optional(),
+            primaryContactEmail: z.string().optional(),
+            primaryContactPhone: z.string().optional(),
+            level: z.enum(["BRONZE", "SILVER", "GOLD", "PLATINUM", "VIP"]).optional(),
+            discountPercent: z.number().optional(),
+            status: z.enum(["PENDING", "APPROVED", "SUSPENDED", "TERMINATED"]).optional(),
+            internalNotes: z.string().optional(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          const { id, discountPercent, ...rest } = input;
+          const data = {
+            ...rest,
+            discountPercent: discountPercent !== undefined ? discountPercent.toString() : undefined,
+          };
+          await db.updatePartner(id, data);
+          return { success: true };
+        }),
+
+      delete: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.deletePartner(input.id);
+          return { success: true };
+        }),
+
+      approve: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.updatePartner(input.id, { status: "APPROVED" });
+          return { success: true };
+        }),
+    }),
   }),
 });
 

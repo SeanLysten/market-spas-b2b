@@ -12,6 +12,7 @@ import {
   X,
   Image as ImageIcon,
   ShoppingBag,
+  Building2,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -78,7 +79,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     {
       name: "Partenaires",
       href: "/admin/partners",
-      icon: Users,
+      icon: Building2,
     },
     {
       name: "Paramètres",

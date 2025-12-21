@@ -2,6 +2,8 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getLoginUrl } from "@/const";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 import { 
   Package, 
   ShoppingCart, 
@@ -16,6 +18,7 @@ import { Link } from "wouter";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
+  const { t } = useTranslation();
 
   if (loading) {
     return (
@@ -49,17 +52,18 @@ export default function Home() {
                   <p className="text-sm font-medium">{user.name || user.email}</p>
                   <p className="text-xs text-muted-foreground capitalize">{user.role?.toLowerCase().replace('_', ' ')}</p>
                 </div>
+                <LanguageSwitcher />
                 {user.role === 'SUPER_ADMIN' && (
                   <Link href="/admin">
                     <Button variant="outline" className="gap-2">
                       <Users className="w-4 h-4" />
-                      Administration
+                      {t('nav.admin')}
                     </Button>
                   </Link>
                 )}
                 <Link href="/dashboard">
                   <Button>
-                    Accéder au portail
+                    {t('home.accessPortal')}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>

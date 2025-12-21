@@ -9,12 +9,16 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminResources from "./pages/admin/AdminResources";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminProducts from "./pages/admin/AdminProducts";
+import AdminPartners from "./pages/admin/AdminPartners";
 import Dashboard from "./pages/Dashboard";
 import Catalog from "./pages/Catalog";
 import Orders from "./pages/Orders";
 import Resources from "./pages/Resources";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import OrderConfirmation from "./pages/OrderConfirmation";
+import Profile from "./pages/Profile";
+import ProductDetail from "./pages/ProductDetail";
 
 function Router() {
   return (
@@ -26,10 +30,14 @@ function Router() {
       <Route path="/resources" component={Resources} />
       <Route path="/cart" component={Cart} />
       <Route path="/checkout" component={Checkout} />
+      <Route path="/order-confirmation/:orderId" component={OrderConfirmation} />
+      <Route path="/profile" component={Profile} />
+      <Route path="/product/:id" component={ProductDetail} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/resources" component={AdminResources} />
       <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/products" component={AdminProducts} />
+      <Route path="/admin/partners" component={AdminPartners} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

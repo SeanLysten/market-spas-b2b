@@ -61,7 +61,7 @@ export default function Checkout() {
     }
 
     try {
-      await createOrderMutation.mutateAsync({
+      const result = await createOrderMutation.mutateAsync({
         items: cartItems.map(item => ({
           productId: item.productId,
           variantId: (item as any).variantId,
@@ -81,10 +81,8 @@ export default function Checkout() {
         customerNotes: deliveryAddress.instructions,
       });
 
-      await clearCartMutation.mutateAsync();
-      
-      toast.success("Commande créée avec succès ! Vous recevrez un devis par email.");
-      setLocation("/orders");
+      toast.success("Commande créée avec succès !");
+      setLocation(`/order-confirmation/${result.orderId}`);
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la création de la commande");
     }

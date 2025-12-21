@@ -1,0 +1,422 @@
+import { useState } from "react";
+import { useParams, Link } from "wouter";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ArrowLeft,
+  Package,
+  ShoppingCart,
+  Minus,
+  Plus,
+  Truck,
+  Calendar,
+  CheckCircle,
+  Info,
+} from "lucide-react";
+import { toast } from "sonner";
+
+export default function ProductDetail() {
+  const params = useParams<{ id: string }>();
+  const productId = parseInt(params.id || "0");
+  const { user } = useAuth();
+
+  const [quantity, setQuantity] = useState(1);
+  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
+
+  const { data: product, isLoading } = trpc.products.getById.useQuery(
+    { id: productId },
+    { enabled: productId > 0 }
+  );
+
+  const { data: variants } = trpc.products.getVariants.useQuery(
+    { productId },
+    { enabled: productId > 0 }
+  );
+
+  const { data: incomingStock } = trpc.products.getIncomingStock.useQuery(
+    { productId },
+    { enabled: productId > 0 }
+  );
+
+  const addToCartMutation = trpc.cart.add.useMutation();
+
+  const selectedVariant = variants?.find((v: any) => v.id === selectedVariantId);
+  
+  const getStock = () => {
+    if (selectedVariant) {
+      return selectedVariant.stockQuantity || 0;
+    }
+    return product?.stockQuantity || 0;
+  };
+
+  const getPrice = () => {
+    if (selectedVariant?.pricePartnerHT) {
+      return parseFloat(selectedVariant.pricePartnerHT);
+    }
+    return parseFloat(product?.pricePartnerHT || product?.pricePublicHT || "0");
+  };
+
+  const stock = getStock();
+  const hasStock = stock > 0;
+  const price = getPrice();
+
+  const handleQuantityChange = (newQty: number) => {
+    const maxQty = hasStock ? stock : 100; // Allow up to 100 for preorders
+    setQuantity(Math.max(1, Math.min(newQty, maxQty)));
+  };
+
+  const handleAddToCart = async (isPreorder: boolean = false) => {
+    try {
+      await addToCartMutation.mutateAsync({
+        productId,
+        variantId: selectedVariantId || undefined,
+        quantity,
+        isPreorder,
+      });
+      toast.success(
+        isPreorder
+          ? `${quantity} produit(s) pré-réservé(s)`
+          : `${quantity} produit(s) ajouté(s) au panier`
+      );
+      setQuantity(1);
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de l'ajout au panier");
+    }
+  };
+
+  const formatPrice = (price: number) => {
+    return price.toLocaleString("fr-FR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  const getCurrentWeek = () => {
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const dayOfYear = Math.floor(
+      (now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000)
+    );
+    return Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <Package className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <p className="text-gray-600">Produit non trouvé</p>
+            <Link href="/catalog">
+              <Button className="mt-4">Retour au catalogue</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
+      {/* Header */}
+      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link href="/catalog">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Catalogue
+                </Button>
+              </Link>
+            </div>
+            <Link href="/cart">
+              <Button className="gap-2">
+                <ShoppingCart className="w-4 h-4" />
+                Panier
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main className="container py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Product Image */}
+          <div className="space-y-4">
+            <div className="aspect-square bg-white rounded-xl border overflow-hidden">
+              {(selectedVariant?.imageUrl || (product as any).imageUrl) ? (
+                <img
+                  src={selectedVariant?.imageUrl || (product as any).imageUrl}
+                  alt={product.name}
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                  <Package className="w-32 h-32 text-gray-300" />
+                </div>
+              )}
+            </div>
+
+            {/* Variant Images */}
+            {variants && variants.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                <button
+                  onClick={() => setSelectedVariantId(null)}
+                  className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden ${
+                    !selectedVariantId ? "border-blue-600" : "border-gray-200"
+                  }`}
+                >
+                  {(product as any).imageUrl ? (
+                    <img
+                      src={(product as any).imageUrl}
+                      alt="Default"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                      <Package className="w-8 h-8 text-gray-300" />
+                    </div>
+                  )}
+                </button>
+                {variants.map((variant: any) => (
+                  <button
+                    key={variant.id}
+                    onClick={() => setSelectedVariantId(variant.id)}
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden ${
+                      selectedVariantId === variant.id
+                        ? "border-blue-600"
+                        : "border-gray-200"
+                    }`}
+                  >
+                    {variant.imageUrl ? (
+                      <img
+                        src={variant.imageUrl}
+                        alt={variant.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                        <span className="text-xs text-gray-500">{variant.name}</span>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Product Info */}
+          <div className="space-y-6">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline">{product.sku}</Badge>
+                {hasStock ? (
+                  <Badge className="bg-green-600">En stock ({stock})</Badge>
+                ) : (
+                  <Badge variant="secondary">Rupture de stock</Badge>
+                )}
+              </div>
+              <h1 className="text-3xl font-bold">{product.name}</h1>
+              {selectedVariant && (
+                <p className="text-lg text-muted-foreground mt-1">
+                  Variante: {selectedVariant.name}
+                </p>
+              )}
+            </div>
+
+            {/* Price */}
+            <div className="bg-blue-50 rounded-xl p-6">
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-blue-600">
+                  {formatPrice(price)} €
+                </span>
+                <span className="text-lg text-gray-500">HT</span>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                Prix TTC: {formatPrice(price * 1.21)} € (TVA 21%)
+              </p>
+            </div>
+
+            {/* Variants Selector */}
+            {variants && variants.length > 0 && (
+              <div className="space-y-2">
+                <Label>Variante</Label>
+                <Select
+                  value={selectedVariantId?.toString() || "default"}
+                  onValueChange={(value) =>
+                    setSelectedVariantId(value === "default" ? null : parseInt(value))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une variante" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Standard</SelectItem>
+                    {variants.map((variant: any) => (
+                      <SelectItem key={variant.id} value={variant.id.toString()}>
+                        {variant.name} - Stock: {variant.stockQuantity || 0}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Quantity */}
+            <div className="space-y-2">
+              <Label>Quantité</Label>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleQuantityChange(quantity - 1)}
+                  disabled={quantity <= 1}
+                >
+                  <Minus className="w-4 h-4" />
+                </Button>
+                <Input
+                  type="number"
+                  min="1"
+                  max={hasStock ? stock : 100}
+                  value={quantity}
+                  onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+                  className="w-24 text-center"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleQuantityChange(quantity + 1)}
+                  disabled={hasStock && quantity >= stock}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Add to Cart */}
+            <div className="space-y-3">
+              {hasStock ? (
+                <Button
+                  size="lg"
+                  className="w-full gap-2"
+                  onClick={() => handleAddToCart(false)}
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  Ajouter au panier
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => handleAddToCart(true)}
+                >
+                  <Truck className="w-5 h-5" />
+                  Pré-réserver
+                </Button>
+              )}
+            </div>
+
+            {/* Incoming Stock */}
+            {incomingStock && incomingStock.length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    Arrivages programmés
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {incomingStock.map((stock: any) => (
+                    <div
+                      key={stock.id}
+                      className="flex items-center justify-between text-sm bg-blue-50 rounded-lg p-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Truck className="w-4 h-4 text-blue-600" />
+                        <span>Semaine {stock.expectedWeek}</span>
+                      </div>
+                      <Badge variant="secondary">{stock.quantity} unités</Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+
+        {/* Product Details Tabs */}
+        <div className="mt-12">
+          <Tabs defaultValue="description">
+            <TabsList>
+              <TabsTrigger value="description">Description</TabsTrigger>
+              <TabsTrigger value="specs">Caractéristiques</TabsTrigger>
+            </TabsList>
+            <TabsContent value="description" className="mt-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-gray-600 whitespace-pre-wrap">
+                    {product.description || "Aucune description disponible."}
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="specs" className="mt-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="text-gray-500">SKU</span>
+                      <span className="font-medium">{product.sku}</span>
+                    </div>
+                    {product.weight && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-500">Poids</span>
+                        <span className="font-medium">{product.weight} kg</span>
+                      </div>
+                    )}
+                    {(product.length || product.width || product.height) && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-500">Dimensions</span>
+                        <span className="font-medium">
+                          {product.length}x{product.width}x{product.height} cm
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="text-gray-500">TVA</span>
+                      <span className="font-medium">{product.vatRate}%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </main>
+    </div>
+  );
+}

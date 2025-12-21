@@ -173,11 +173,43 @@ export async function getAllPartners(filters?: {
   return await query;
 }
 
-export async function createPartner(data: typeof partners.$inferInsert) {
+export async function createPartner(data: {
+  companyName: string;
+  vatNumber: string;
+  primaryContactEmail: string;
+  tradeName?: string;
+  addressStreet?: string;
+  addressCity?: string;
+  addressPostalCode?: string;
+  addressCountry?: string;
+  primaryContactName?: string;
+  primaryContactPhone?: string;
+  level?: "BRONZE" | "SILVER" | "GOLD" | "PLATINUM" | "VIP";
+  discountPercent?: number;
+  status?: "PENDING" | "APPROVED" | "SUSPENDED" | "TERMINATED";
+  internalNotes?: string;
+}) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const result = await db.insert(partners).values(data);
+  const insertData: typeof partners.$inferInsert = {
+    companyName: data.companyName,
+    vatNumber: data.vatNumber,
+    primaryContactEmail: data.primaryContactEmail,
+    tradeName: data.tradeName || null,
+    addressStreet: data.addressStreet || "N/A",
+    addressCity: data.addressCity || "N/A",
+    addressPostalCode: data.addressPostalCode || "N/A",
+    addressCountry: data.addressCountry || "BE",
+    primaryContactName: data.primaryContactName || "N/A",
+    primaryContactPhone: data.primaryContactPhone || "N/A",
+    level: data.level || "BRONZE",
+    discountPercent: data.discountPercent?.toString() || "0",
+    status: data.status || "PENDING",
+    internalNotes: data.internalNotes || null,
+  };
+
+  const result = await db.insert(partners).values(insertData);
   return result;
 }
 
@@ -344,22 +376,8 @@ export async function getUnreadNotificationsCount(userId: number) {
   return result[0]?.count || 0;
 }
 
-export async function markNotificationAsRead(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  await db
-    .update(notifications)
-    .set({ isRead: true, readAt: new Date() })
-    .where(eq(notifications.id, id));
-}
-
-export async function createNotification(data: typeof notifications.$inferInsert) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  await db.insert(notifications).values(data);
-}
+// Note: markNotificationAsRead and createNotification are defined at the end of the file
+// with enhanced functionality
 
 // ============================================
 // RESOURCE QUERIES
@@ -641,7 +659,7 @@ export async function deleteProduct(id: number) {
 // ============================================
 
 // Simple cart storage (in production, use Redis or database)
-const cartStorage = new Map<number, Array<{ productId: number; quantity: number; isPreorder?: boolean }>>();
+const cartStorage = new Map<number, Array<{ productId: number; quantity: number; isPreorder?: boolean; variantId?: number }>>();
 
 export async function getCart(userId: number) {
   const db = await getDb();
@@ -699,14 +717,18 @@ export async function getCart(userId: number) {
   };
 }
 
-export async function addToCart(userId: number, productId: number, quantity: number, isPreorder: boolean = false) {
+export async function addToCart(userId: number, productId: number, quantity: number, isPreorder: boolean = false, variantId?: number) {
   const cartItems = cartStorage.get(userId) || [];
-  const existing = cartItems.find(item => item.productId === productId && item.isPreorder === isPreorder);
+  const existing = cartItems.find(item => 
+    item.productId === productId && 
+    item.isPreorder === isPreorder && 
+    item.variantId === variantId
+  );
 
   if (existing) {
     existing.quantity += quantity;
   } else {
-    cartItems.push({ productId, quantity, isPreorder });
+    cartItems.push({ productId, quantity, isPreorder, variantId });
   }
 
   cartStorage.set(userId, cartItems);
@@ -741,6 +763,19 @@ export async function clearCart(userId: number) {
 // ============================================
 // PRODUCT VARIANTS FUNCTIONS
 // ============================================
+
+export async function getProductVariantById(variantId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(productVariants)
+    .where(eq(productVariants.id, variantId))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : null;
+}
 
 export async function getProductVariants(productId: number) {
   const db = await getDb();
@@ -1016,3 +1051,387 @@ export async function deletePartner(id: number) {
 }
 
 
+
+// ============================================
+// ORDER CREATION
+// ============================================
+
+import { orderItems } from "../drizzle/schema";
+
+export async function generateOrderNumber(): Promise<string> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
+  
+  // Get the count of orders created today
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(orders)
+    .where(
+      and(
+        sql`${orders.createdAt} >= ${startOfDay}`,
+        sql`${orders.createdAt} < ${endOfDay}`
+      )
+    );
+  
+  const count = (result[0]?.count || 0) + 1;
+  const sequence = count.toString().padStart(4, "0");
+  
+  return `CMD-${dateStr}-${sequence}`;
+}
+
+export interface CreateOrderInput {
+  partnerId: number;
+  createdById: number;
+  items: Array<{
+    productId: number;
+    variantId?: number;
+    sku: string;
+    name: string;
+    quantity: number;
+    unitPriceHT: number;
+    vatRate: number;
+    discountPercent?: number;
+    isPreorder?: boolean;
+  }>;
+  deliveryAddress: {
+    street: string;
+    street2?: string;
+    city: string;
+    postalCode: string;
+    country: string;
+    contactName: string;
+    contactPhone: string;
+    instructions?: string;
+  };
+  paymentMethod: string;
+  customerNotes?: string;
+  discountPercent?: number;
+}
+
+export async function createOrder(input: CreateOrderInput) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Generate order number
+  const orderNumber = await generateOrderNumber();
+
+  // Calculate totals
+  let subtotalHT = 0;
+  const itemsWithTotals = input.items.map((item) => {
+    const itemDiscountPercent = item.discountPercent || input.discountPercent || 0;
+    const itemDiscountAmount = (item.unitPriceHT * item.quantity * itemDiscountPercent) / 100;
+    const itemTotalHT = item.unitPriceHT * item.quantity - itemDiscountAmount;
+    const itemTotalVAT = (itemTotalHT * item.vatRate) / 100;
+    const itemTotalTTC = itemTotalHT + itemTotalVAT;
+
+    subtotalHT += itemTotalHT;
+
+    return {
+      ...item,
+      discountPercent: itemDiscountPercent,
+      discountAmount: itemDiscountAmount,
+      totalHT: itemTotalHT,
+      totalVAT: itemTotalVAT,
+      totalTTC: itemTotalTTC,
+    };
+  });
+
+  const orderDiscountPercent = input.discountPercent || 0;
+  const orderDiscountAmount = (subtotalHT * orderDiscountPercent) / 100;
+  const totalHT = subtotalHT - orderDiscountAmount;
+  
+  // Calculate VAT (average rate from items)
+  const totalVAT = itemsWithTotals.reduce((sum, item) => sum + item.totalVAT, 0);
+  const totalTTC = totalHT + totalVAT;
+
+  // Deposit (30% by default)
+  const depositPercent = 30;
+  const depositAmount = (totalTTC * depositPercent) / 100;
+  const balanceAmount = totalTTC - depositAmount;
+
+  // Create the order
+  await db.insert(orders).values({
+    orderNumber,
+    partnerId: input.partnerId,
+    createdById: input.createdById,
+    subtotalHT: subtotalHT.toFixed(2),
+    discountAmount: orderDiscountAmount.toFixed(2),
+    discountPercent: orderDiscountPercent.toFixed(2),
+    shippingHT: "0.00",
+    totalHT: totalHT.toFixed(2),
+    totalVAT: totalVAT.toFixed(2),
+    totalTTC: totalTTC.toFixed(2),
+    depositPercent: depositPercent.toFixed(2),
+    depositAmount: depositAmount.toFixed(2),
+    depositPaid: false,
+    balanceAmount: balanceAmount.toFixed(2),
+    balancePaid: false,
+    currency: "EUR",
+    deliveryStreet: input.deliveryAddress.street,
+    deliveryStreet2: input.deliveryAddress.street2 || null,
+    deliveryCity: input.deliveryAddress.city,
+    deliveryPostalCode: input.deliveryAddress.postalCode,
+    deliveryCountry: input.deliveryAddress.country,
+    deliveryContactName: input.deliveryAddress.contactName,
+    deliveryContactPhone: input.deliveryAddress.contactPhone,
+    deliveryInstructions: input.deliveryAddress.instructions || null,
+    paymentMethod: input.paymentMethod,
+    status: "PENDING_APPROVAL",
+    customerNotes: input.customerNotes || null,
+  });
+
+  // Get the created order by orderNumber
+  const createdOrder = await db.select().from(orders).where(eq(orders.orderNumber, orderNumber)).limit(1);
+  const orderId = createdOrder[0].id;
+
+  // Create order items
+  for (const item of itemsWithTotals) {
+    await db.insert(orderItems).values({
+      orderId,
+      productId: item.productId,
+      variantId: item.variantId || null,
+      sku: item.sku,
+      name: item.name,
+      quantity: item.quantity,
+      unitPriceHT: item.unitPriceHT.toFixed(2),
+      discountPercent: item.discountPercent.toFixed(2),
+      discountAmount: item.discountAmount.toFixed(2),
+      totalHT: item.totalHT.toFixed(2),
+      vatRate: item.vatRate.toFixed(2),
+      totalVAT: item.totalVAT.toFixed(2),
+      totalTTC: item.totalTTC.toFixed(2),
+    });
+
+    // Update stock if not a preorder
+    if (!item.isPreorder) {
+      if (item.variantId) {
+        await db
+          .update(productVariants)
+          .set({
+            stockQuantity: sql`${productVariants.stockQuantity} - ${item.quantity}`,
+          })
+          .where(eq(productVariants.id, item.variantId));
+      } else {
+        await db
+          .update(products)
+          .set({
+            stockQuantity: sql`${products.stockQuantity} - ${item.quantity}`,
+          })
+          .where(eq(products.id, item.productId));
+      }
+    }
+  }
+
+  // Update partner stats
+  await db
+    .update(partners)
+    .set({
+      totalOrders: sql`${partners.totalOrders} + 1`,
+      lastOrderAt: new Date(),
+    })
+    .where(eq(partners.id, input.partnerId));
+
+  return {
+    orderId,
+    orderNumber,
+    totalHT,
+    totalVAT,
+    totalTTC,
+    depositAmount,
+    balanceAmount,
+  };
+}
+
+export async function getOrderWithItems(orderId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const order = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  if (order.length === 0) return null;
+
+  const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+
+  return {
+    ...order[0],
+    items,
+  };
+}
+
+export async function updateOrderStatus(orderId: number, status: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(orders)
+    .set({ status: status as any })
+    .where(eq(orders.id, orderId));
+
+  return { success: true };
+}
+
+
+// ============================================
+// NOTIFICATION FUNCTIONS
+// ============================================
+
+export async function getUserNotifications(
+  userId: number,
+  options: { limit?: number; unreadOnly?: boolean }
+) {
+  const db = await getDb();
+  if (!db) return [];
+
+  if (options.unreadOnly) {
+    return await db
+      .select()
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.userId, userId),
+          eq(notifications.isRead, false)
+        )
+      )
+      .orderBy(desc(notifications.createdAt))
+      .limit(options.limit || 20);
+  }
+
+  return await db
+    .select()
+    .from(notifications)
+    .where(eq(notifications.userId, userId))
+    .orderBy(desc(notifications.createdAt))
+    .limit(options.limit || 20);
+}
+
+export async function markNotificationAsRead(notificationId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(notifications)
+    .set({ isRead: true, readAt: new Date() })
+    .where(
+      and(
+        eq(notifications.id, notificationId),
+        eq(notifications.userId, userId)
+      )
+    );
+}
+
+export async function markAllNotificationsAsRead(userId: number) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(notifications)
+    .set({ isRead: true, readAt: new Date() })
+    .where(
+      and(
+        eq(notifications.userId, userId),
+        eq(notifications.isRead, false)
+      )
+    );
+}
+
+export async function getUnreadNotificationCount(userId: number) {
+  const db = await getDb();
+  if (!db) return { count: 0 };
+
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(notifications)
+    .where(
+      and(
+        eq(notifications.userId, userId),
+        eq(notifications.isRead, false)
+      )
+    );
+
+  return { count: result[0]?.count || 0 };
+}
+
+type NotificationType = "ORDER_CREATED" | "ORDER_STATUS_CHANGED" | "PAYMENT_RECEIVED" | "PAYMENT_FAILED" | "INVOICE_READY" | "STOCK_LOW" | "NEW_PARTNER" | "PARTNER_APPROVED" | "NEW_RESOURCE" | "SYSTEM_ALERT";
+
+export async function createNotification(data: {
+  userId: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  linkUrl?: string;
+  linkText?: string;
+}) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.insert(notifications).values({
+    userId: data.userId,
+    type: data.type,
+    title: data.title,
+    message: data.message,
+    linkUrl: data.linkUrl || null,
+    linkText: data.linkText || null,
+  });
+}
+
+// Helper to notify all admins
+export async function notifyAdmins(data: {
+  type: NotificationType;
+  title: string;
+  message: string;
+  linkUrl?: string;
+  linkText?: string;
+}) {
+  const db = await getDb();
+  if (!db) return;
+
+  const admins = await db
+    .select()
+    .from(users)
+    .where(
+      or(
+        eq(users.role, "SUPER_ADMIN"),
+        eq(users.role, "ADMIN")
+      )
+    );
+
+  for (const admin of admins) {
+    await createNotification({
+      userId: admin.id,
+      type: data.type,
+      title: data.title,
+      message: data.message,
+      linkUrl: data.linkUrl,
+      linkText: data.linkText,
+    });
+  }
+}
+
+// Helper to notify partner users
+export async function notifyPartnerUsers(partnerId: number, data: {
+  type: NotificationType;
+  title: string;
+  message: string;
+  linkUrl?: string;
+  linkText?: string;
+}) {
+  const db = await getDb();
+  if (!db) return;
+
+  const partnerUsers = await db
+    .select()
+    .from(users)
+    .where(eq(users.partnerId, partnerId));
+
+  for (const user of partnerUsers) {
+    await createNotification({
+      userId: user.id,
+      ...data,
+    });
+  }
+}
