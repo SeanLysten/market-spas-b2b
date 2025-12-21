@@ -49,6 +49,14 @@ export default function Home() {
                   <p className="text-sm font-medium">{user.name || user.email}</p>
                   <p className="text-xs text-muted-foreground capitalize">{user.role?.toLowerCase().replace('_', ' ')}</p>
                 </div>
+                {user.role === 'SUPER_ADMIN' && (
+                  <Link href="/admin">
+                    <Button variant="outline" className="gap-2">
+                      <Users className="w-4 h-4" />
+                      Administration
+                    </Button>
+                  </Link>
+                )}
                 <Link href="/dashboard">
                   <Button>
                     Accéder au portail

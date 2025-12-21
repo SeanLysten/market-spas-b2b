@@ -177,3 +177,5 @@
 - [ ] Système d'upload d'images produits
 - [ ] Gestion des catégories de produits
 - [ ] Gestion des variantes de produits
+
+- [x] Ajouter un bouton dans le header pour accéder à l'interface admin (visible uniquement pour les super admins)

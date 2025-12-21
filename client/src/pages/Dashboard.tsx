@@ -77,6 +77,14 @@ export default function Dashboard() {
                   </span>
                 )}
               </Button>
+              {user?.role === 'SUPER_ADMIN' && (
+                <Link href="/admin">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Users className="w-4 h-4" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
               <Link href="/">
                 <Button variant="ghost" size="sm">Accueil</Button>
               </Link>
