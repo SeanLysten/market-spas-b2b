@@ -128,7 +128,14 @@ export const users = mysqlTable(
     timezone: varchar("timezone", { length: 50 }).default("Europe/Brussels"),
 
     // Role & Access
-    role: userRoleEnum.default("PARTNER_USER").notNull(),
+    role: mysqlEnum("role", [
+      "SUPER_ADMIN",
+      "ADMIN",
+      "SALES_MANAGER",
+      "SALES_REP",
+      "PARTNER_ADMIN",
+      "PARTNER_USER",
+    ]).default("PARTNER_USER").notNull(),
     partnerId: int("partnerId"),
     loginMethod: varchar("loginMethod", { length: 64 }),
 
@@ -672,14 +679,34 @@ export const orders = mysqlTable(
     // Payment
     paymentMethod: varchar("paymentMethod", { length: 50 }),
     stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
-    stripePaymentStatus: paymentStatusEnum,
+    stripePaymentStatus: mysqlEnum("stripePaymentStatus", [
+      "PENDING",
+      "PROCESSING",
+      "SUCCEEDED",
+      "FAILED",
+      "REFUNDED",
+      "PARTIALLY_REFUNDED",
+    ]),
 
     // Odoo
     odooQuoteId: int("odooQuoteId"),
     odooQuoteNumber: varchar("odooQuoteNumber", { length: 100 }),
 
     // Status
-    status: orderStatusEnum.default("DRAFT").notNull(),
+    status: mysqlEnum("status", [
+      "DRAFT",
+      "PENDING_APPROVAL",
+      "PENDING_DEPOSIT",
+      "DEPOSIT_PAID",
+      "IN_PRODUCTION",
+      "READY_TO_SHIP",
+      "PARTIALLY_SHIPPED",
+      "SHIPPED",
+      "DELIVERED",
+      "COMPLETED",
+      "CANCELLED",
+      "REFUNDED",
+    ]).default("DRAFT").notNull(),
 
     // Notes
     internalNotes: text("internalNotes"),
@@ -902,7 +929,18 @@ export const notifications = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
 
     userId: int("userId").notNull(),
-    type: notificationTypeEnum.notNull(),
+    type: mysqlEnum("type", [
+      "ORDER_CREATED",
+      "ORDER_STATUS_CHANGED",
+      "PAYMENT_RECEIVED",
+      "PAYMENT_FAILED",
+      "INVOICE_READY",
+      "STOCK_LOW",
+      "NEW_PARTNER",
+      "PARTNER_APPROVED",
+      "NEW_RESOURCE",
+      "SYSTEM_ALERT",
+    ]).notNull(),
 
     title: varchar("title", { length: 255 }).notNull(),
     message: text("message").notNull(),

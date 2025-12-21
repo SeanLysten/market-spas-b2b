@@ -8,6 +8,13 @@
       "when": 1766263950375,
       "tag": "0000_supreme_katie_power",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1766277530842,
+      "tag": "0001_nice_wolverine",
+      "breakpoints": true
     }
   ]
 }

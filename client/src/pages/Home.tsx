@@ -8,7 +8,7 @@ import {
   FileText, 
   TrendingUp, 
   Users, 
-  Award,
+  Image,
   ArrowRight,
   CheckCircle2
 } from "lucide-react";
@@ -156,17 +156,25 @@ export default function Home() {
                 </CardHeader>
               </Card>
 
-              <Card className="card-hover border-2">
-                <CardHeader>
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                    <Award className="w-6 h-6 text-primary" />
-                  </div>
-                  <CardTitle>Programme de fidélité</CardTitle>
-                  <CardDescription>
-                    Bénéficiez de remises selon votre niveau partenaire
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+              <Link href="/resources" className="block">
+                <Card className="card-hover border-2 h-full transition-all hover:border-primary">
+                  <CardHeader>
+                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                      <Image className="w-6 h-6 text-primary" />
+                    </div>
+                    <CardTitle>Ressources média & PLV</CardTitle>
+                    <CardDescription>
+                      Accédez à tous vos contenus marketing, catalogues et supports PLV
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button variant="ghost" size="sm" className="w-full">
+                      Voir les ressources
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Link>
             </div>
           </div>
         </section>
@@ -202,7 +210,7 @@ export default function Home() {
         <div className="container">
           <div className="max-w-3xl mx-auto text-center space-y-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-              <Award className="w-4 h-4" />
+              <Package className="w-4 h-4" />
               Plateforme B2B professionnelle
             </div>
             <h1 className="text-5xl lg:text-6xl font-bold tracking-tight">
@@ -267,9 +275,9 @@ export default function Home() {
                 description: "Ajoutez vos collaborateurs avec des rôles personnalisés et gérez les permissions d'accès facilement."
               },
               {
-                icon: Award,
-                title: "Programme de fidélité",
-                description: "Profitez de remises croissantes selon votre niveau partenaire : Bronze, Silver, Gold, Platinum ou VIP."
+                icon: Image,
+                title: "Ressources média & PLV",
+                description: "Accédez à une bibliothèque complète de contenus marketing, catalogues, vidéos tutoriels et supports PLV pour votre point de vente."
               },
             ].map((feature, index) => (
               <Card key={index} className="card-hover border-2">

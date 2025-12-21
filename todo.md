@@ -158,3 +158,11 @@
 - [x] Créer la page bibliothèque de ressources avec catégories
 - [x] Configurer les routes tRPC pour toutes les fonctionnalités
 - [x] Implémenter les helpers de base de données
+
+
+## Bugs à corriger
+- [x] Corriger l'erreur "OAuth callback failed" lors de la connexion
+- [ ] Corriger les noms de colonnes dans la table notifications (notification_type)
+- [ ] Corriger les noms de colonnes dans la table orders (payment_status, order_status)
+
+- [x] Remplacer la section "Programme de fidélité" par une mise en avant des ressources média, marketing et PLV
