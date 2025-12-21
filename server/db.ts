@@ -1,4 +1,4 @@
-import { eq, and, desc, sql, or, like } from "drizzle-orm";
+import { eq, and, desc, sql, or, like, lte, gte, asc, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -1434,4 +1434,260 @@ export async function notifyPartnerUsers(partnerId: number, data: {
       ...data,
     });
   }
+}
+
+
+// ============================================
+// STOCK ALERTS
+// ============================================
+
+const LOW_STOCK_THRESHOLD = 5;
+
+export async function getLowStockProducts(threshold: number = LOW_STOCK_THRESHOLD) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db
+    .select()
+    .from(products)
+    .where(
+      and(
+        lte(products.stockQuantity, threshold),
+        eq(products.isActive, true)
+      )
+    )
+    .orderBy(asc(products.stockQuantity));
+
+  return result;
+}
+
+export async function getLowStockVariants(threshold: number = LOW_STOCK_THRESHOLD) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db
+    .select({
+      variant: productVariants,
+      product: products,
+    })
+    .from(productVariants)
+    .innerJoin(products, eq(productVariants.productId, products.id))
+    .where(
+      and(
+        lte(productVariants.stockQuantity, threshold),
+        eq(productVariants.isActive, true)
+      )
+    )
+    .orderBy(asc(productVariants.stockQuantity));
+
+  return result;
+}
+
+export async function checkAndCreateStockAlerts() {
+  const db = await getDb();
+  if (!db) return { created: 0, products: [] };
+
+  const lowStockProducts = await getLowStockProducts();
+  const lowStockVariants = await getLowStockVariants();
+  
+  const alerts: { name: string; sku: string; stock: number; type: string }[] = [];
+
+  // Create notifications for low stock products
+  for (const product of lowStockProducts) {
+    alerts.push({
+      name: product.name,
+      sku: product.sku,
+      stock: product.stockQuantity || 0,
+      type: 'product',
+    });
+  }
+
+  // Create notifications for low stock variants
+  for (const { variant, product } of lowStockVariants) {
+    alerts.push({
+      name: `${product.name} - ${variant.name}`,
+      sku: variant.sku,
+      stock: variant.stockQuantity || 0,
+      type: 'variant',
+    });
+  }
+
+  return { created: alerts.length, products: alerts };
+}
+
+// ============================================
+// ADMIN DASHBOARD STATS
+// ============================================
+
+export async function getAdminDashboardStats() {
+  const db = await getDb();
+  if (!db) return null;
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+  // Total partners
+  const totalPartnersResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(partners);
+  const totalPartners = totalPartnersResult[0]?.count || 0;
+
+  // Active partners (approved)
+  const activePartnersResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(partners)
+    .where(eq(partners.status, 'APPROVED'));
+  const activePartners = activePartnersResult[0]?.count || 0;
+
+  // Pending partners
+  const pendingPartnersResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(partners)
+    .where(eq(partners.status, 'PENDING'));
+  const pendingPartners = pendingPartnersResult[0]?.count || 0;
+
+  // Total products
+  const totalProductsResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(products)
+    .where(eq(products.isActive, true));
+  const totalProducts = totalProductsResult[0]?.count || 0;
+
+  // Low stock products count
+  const lowStockResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(products)
+    .where(
+      and(
+        lte(products.stockQuantity, LOW_STOCK_THRESHOLD),
+        eq(products.isActive, true)
+      )
+    );
+  const lowStockCount = lowStockResult[0]?.count || 0;
+
+  // Total orders this month
+  const ordersThisMonthResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(orders)
+    .where(gte(orders.createdAt, startOfMonth));
+  const ordersThisMonth = ordersThisMonthResult[0]?.count || 0;
+
+  // Total orders last month
+  const ordersLastMonthResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(orders)
+    .where(
+      and(
+        gte(orders.createdAt, startOfLastMonth),
+        lte(orders.createdAt, endOfLastMonth)
+      )
+    );
+  const ordersLastMonth = ordersLastMonthResult[0]?.count || 0;
+
+  // Revenue this month
+  const revenueThisMonthResult = await db
+    .select({ total: sql<number>`COALESCE(SUM(total_ttc), 0)` })
+    .from(orders)
+    .where(
+      and(
+        gte(orders.createdAt, startOfMonth),
+        sql`status != 'CANCELLED'`
+      )
+    );
+  const revenueThisMonth = Number(revenueThisMonthResult[0]?.total || 0);
+
+  // Revenue last month
+  const revenueLastMonthResult = await db
+    .select({ total: sql<number>`COALESCE(SUM(total_ttc), 0)` })
+    .from(orders)
+    .where(
+      and(
+        gte(orders.createdAt, startOfLastMonth),
+        lte(orders.createdAt, endOfLastMonth),
+        sql`status != 'CANCELLED'`
+      )
+    );
+  const revenueLastMonth = Number(revenueLastMonthResult[0]?.total || 0);
+
+  // Pending orders
+  const pendingOrdersResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(orders)
+    .where(eq(orders.status, 'PENDING_APPROVAL'));
+  const pendingOrders = pendingOrdersResult[0]?.count || 0;
+
+  return {
+    partners: {
+      total: totalPartners,
+      active: activePartners,
+      pending: pendingPartners,
+    },
+    products: {
+      total: totalProducts,
+      lowStock: lowStockCount,
+    },
+    orders: {
+      thisMonth: ordersThisMonth,
+      lastMonth: ordersLastMonth,
+      pending: pendingOrders,
+      growth: ordersLastMonth > 0 
+        ? ((ordersThisMonth - ordersLastMonth) / ordersLastMonth * 100).toFixed(1)
+        : '0',
+    },
+    revenue: {
+      thisMonth: revenueThisMonth,
+      lastMonth: revenueLastMonth,
+      growth: revenueLastMonth > 0 
+        ? ((revenueThisMonth - revenueLastMonth) / revenueLastMonth * 100).toFixed(1)
+        : '0',
+    },
+  };
+}
+
+// ============================================
+// ACTIVITY LOGS
+// ============================================
+
+export async function getRecentActivity(limit: number = 20) {
+  const db = await getDb();
+  if (!db) return [];
+
+  // Get recent orders
+  const recentOrders = await db
+    .select({
+      id: orders.id,
+      type: sql<string>`'order'`,
+      title: sql<string>`CONCAT('Commande #', order_number)`,
+      description: sql<string>`CONCAT('Statut: ', status)`,
+      createdAt: orders.createdAt,
+    })
+    .from(orders)
+    .orderBy(desc(orders.createdAt))
+    .limit(limit);
+
+  // Get recent partner registrations
+  const recentPartners = await db
+    .select({
+      id: partners.id,
+      type: sql<string>`'partner'`,
+      title: sql<string>`CONCAT('Nouveau partenaire: ', company_name)`,
+      description: sql<string>`CONCAT('Statut: ', status)`,
+      createdAt: partners.createdAt,
+    })
+    .from(partners)
+    .orderBy(desc(partners.createdAt))
+    .limit(limit);
+
+  // Combine and sort by date
+  const combined = [...recentOrders, ...recentPartners]
+    .sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    })
+    .slice(0, limit);
+
+  return combined;
 }

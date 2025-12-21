@@ -13,6 +13,7 @@ import {
   Image as ImageIcon,
   ShoppingBag,
   Building2,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -80,6 +81,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: "Partenaires",
       href: "/admin/partners",
       icon: Building2,
+    },
+    {
+      name: "Rapports",
+      href: "/admin/reports",
+      icon: FileSpreadsheet,
     },
     {
       name: "Paramètres",

@@ -197,3 +197,21 @@
 - [x] Gérer la suppression d'images (bouton X sur l'aperçu)
 - [ ] Permettre l'upload de plusieurs images par produit (galerie)
 - [ ] Afficher les images dans le catalogue produits
+
+
+## Tâches complétées récemment (session actuelle)
+- [x] Intégrer Stripe pour les paiements d'acompte (module stripe.ts + routes tRPC)
+- [x] Compléter les traductions FR/NL/EN pour toute l'interface
+- [x] Afficher les images produits dans le catalogue
+- [x] Ajouter les alertes de stock bas (dashboard admin)
+- [x] Créer les rapports exportables (CSV/Excel) - page AdminReports
+- [x] Améliorer le dashboard admin avec KPIs et alertes
+- [x] Créer l'interface d'onboarding partenaire (PartnerOnboarding.tsx)
+- [x] Créer le module d'emails transactionnels (email.ts)
+
+## Tâches restantes (optionnelles)
+- [ ] Implémenter le suivi de statut des commandes en temps réel
+- [ ] Ajouter les logs d'activité et audit trail
+- [ ] Créer la page de paramètres système admin
+- [ ] Intégration complète Odoo pour facturation
+- [ ] Configuration BullMQ pour jobs en arrière-plan

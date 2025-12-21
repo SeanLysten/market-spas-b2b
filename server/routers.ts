@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
@@ -138,6 +139,46 @@ export const appRouter = router({
       )
       .mutation(async ({ input }) => {
         await db.updatePartner(input.id, input.data);
+        return { success: true };
+      }),
+
+    // Public registration for new partners
+    register: publicProcedure
+      .input(
+        z.object({
+          companyName: z.string(),
+          tradeName: z.string().optional(),
+          vatNumber: z.string(),
+          contactName: z.string(),
+          contactEmail: z.string().email(),
+          contactPhone: z.string(),
+          street: z.string(),
+          street2: z.string().optional(),
+          city: z.string(),
+          postalCode: z.string(),
+          country: z.string().default("BE"),
+          website: z.string().optional(),
+          businessDescription: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        // Create partner with PENDING status
+        await db.createPartner({
+          companyName: input.companyName,
+          tradeName: input.tradeName || null,
+          vatNumber: input.vatNumber,
+          addressStreet: input.street,
+          addressStreet2: input.street2 || null,
+          addressCity: input.city,
+          addressPostalCode: input.postalCode,
+          addressCountry: input.country,
+          primaryContactName: input.contactName,
+          primaryContactEmail: input.contactEmail,
+          primaryContactPhone: input.contactPhone,
+          website: input.website || null,
+          status: "PENDING",
+          partnerLevel: "BRONZE",
+        } as any);
         return { success: true };
       }),
   }),
@@ -788,6 +829,33 @@ export const appRouter = router({
       processArrived: adminProcedure
         .mutation(async () => {
           return await db.processArrivedStock();
+        }),
+    }),
+
+    // Stripe payments
+    payments: router({
+      createPaymentIntent: adminProcedure
+        .input(
+          z.object({
+            orderId: z.number(),
+            amount: z.number(), // Amount in cents
+          })
+        )
+        .mutation(async ({ input }) => {
+          const { createPaymentIntent } = await import("./stripe");
+          const order = await db.getOrderById(input.orderId);
+          if (!order) {
+            throw new TRPCError({ code: "NOT_FOUND", message: "Commande non trouvée" });
+          }
+          
+          const result = await createPaymentIntent({
+            amount: input.amount,
+            orderId: input.orderId,
+            orderNumber: order.orderNumber,
+            description: `Acompte commande ${order.orderNumber}`,
+          });
+          
+          return result;
         }),
     }),
 

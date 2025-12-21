@@ -257,6 +257,19 @@ export default function Checkout() {
                       </div>
                     </Label>
                   </div>
+
+                  <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors border-primary bg-primary/5">
+                    <RadioGroupItem value="CARD_DEPOSIT" id="card" />
+                    <Label htmlFor="card" className="flex-1 cursor-pointer">
+                      <div className="font-medium flex items-center gap-2">
+                        Paiement par carte (acompte 30%)
+                        <span className="text-xs bg-primary text-white px-2 py-0.5 rounded">Recommandé</span>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Payez un acompte de 30% maintenant par carte bancaire
+                      </div>
+                    </Label>
+                  </div>
                 </RadioGroup>
               </CardContent>
             </Card>
