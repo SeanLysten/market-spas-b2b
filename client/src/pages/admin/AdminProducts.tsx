@@ -315,7 +315,7 @@ export default function AdminProducts() {
                       <TableRow key={product.id}>
                         <TableCell className="font-mono text-sm">{product.sku}</TableCell>
                         <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>{product.pricePublicHT?.toFixed(2)} €</TableCell>
+                        <TableCell>{typeof product.pricePublicHT === 'number' ? product.pricePublicHT.toFixed(2) : '0.00'} €</TableCell>
                         <TableCell>
                           <Badge variant={product.stockQuantity > 0 ? "default" : "secondary"}>
                             {product.stockQuantity}

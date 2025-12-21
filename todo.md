@@ -217,3 +217,8 @@
 - [x] Formulaire d'ajout de variante avec options (couleur, taille, voltage, matériau)
 - [x] Gestion du stock par variante
 - [x] Interface de gestion des arrivages programmés par produit
+
+
+## Bugs à corriger
+- [x] Corriger l'erreur pricePublicHT.toFixed() dans AdminProducts.tsx
+- [x] Corriger les balises <a> imbriquées dans AdminLayout.tsx
