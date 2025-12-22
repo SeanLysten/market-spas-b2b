@@ -11,7 +11,9 @@ import {
   Truck,
   FileText,
   Download,
-  Eye
+  Eye,
+  RefreshCw,
+  Heart
 } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +34,19 @@ export default function Orders() {
     status: statusFilter,
     limit: 50,
   });
+
+  const reorderMutation = trpc.orders.reorder.useMutation({
+    onSuccess: () => {
+      alert("Les articles ont été ajoutés à votre panier !");
+    },
+    onError: (error) => {
+      alert("Erreur: " + error.message);
+    },
+  });
+
+  const handleReorder = (orderId: number) => {
+    reorderMutation.mutate({ orderId });
+  };
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -187,13 +202,22 @@ export default function Orders() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Link href={`/orders/${order.id}`}>
-                          <Button variant="ghost" size="sm">
+                        <Link href={`/order/${order.id}`}>
+                          <Button variant="ghost" size="sm" title="Voir les détails">
                             <Eye className="w-4 h-4" />
                           </Button>
                         </Link>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          title="Recommander"
+                          onClick={() => handleReorder(order.id)}
+                          disabled={reorderMutation.isPending}
+                        >
+                          <RefreshCw className={`w-4 h-4 ${reorderMutation.isPending ? 'animate-spin' : ''}`} />
+                        </Button>
                         {order.status !== "DRAFT" && (
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" title="Facture">
                             <FileText className="w-4 h-4" />
                           </Button>
                         )}

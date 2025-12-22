@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { Search, Package, ShoppingCart, Filter, ArrowLeft, Euro, TrendingUp, TruckIcon, Minus, Plus } from "lucide-react";
+import { Search, Package, ShoppingCart, Filter, ArrowLeft, Euro, TrendingUp, TruckIcon, Minus, Plus, Heart } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -85,12 +85,20 @@ export default function Catalog() {
                 </p>
               </div>
             </div>
-            <Link href="/cart">
-              <Button className="gap-2">
-                <ShoppingCart className="w-4 h-4" />
-                Panier
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link href="/favorites">
+                <Button variant="outline" className="gap-2">
+                  <Heart className="w-4 h-4 text-red-500" />
+                  Favoris
+                </Button>
+              </Link>
+              <Link href="/cart">
+                <Button className="gap-2">
+                  <ShoppingCart className="w-4 h-4" />
+                  Panier
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </header>

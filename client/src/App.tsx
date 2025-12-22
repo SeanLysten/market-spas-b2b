@@ -25,6 +25,7 @@ import ProductDetail from "./pages/ProductDetail";
 import PartnerOnboarding from "./pages/PartnerOnboarding";
 import PartnerPending from "./pages/PartnerPending";
 import OrderTracking from "./pages/OrderTracking";
+import Favorites from "./pages/Favorites";
 
 function Router() {
   return (
@@ -42,6 +43,7 @@ function Router() {
       <Route path="/partner-onboarding" component={PartnerOnboarding} />
       <Route path="/partner-pending" component={PartnerPending} />
       <Route path="/order/:orderId" component={OrderTracking} />
+      <Route path="/favorites" component={Favorites} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/resources" component={AdminResources} />
       <Route path="/admin/users" component={AdminUsers} />

@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like, lte, gte, asc, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -655,33 +655,43 @@ export async function deleteProduct(id: number) {
 
 
 // ============================================
-// CART FUNCTIONS (Simple in-memory implementation)
+// CART FUNCTIONS (Persistent database implementation)
 // ============================================
-
-// Simple cart storage (in production, use Redis or database)
-const cartStorage = new Map<number, Array<{ productId: number; quantity: number; isPreorder?: boolean; variantId?: number }>>();
 
 export async function getCart(userId: number) {
   const db = await getDb();
   if (!db) return { items: [], subtotalHT: 0, discountPercent: 0, discountAmount: 0, vatAmount: 0, totalTTC: 0 };
 
-  const cartItems = cartStorage.get(userId) || [];
+  // Get cart items from database
+  const dbCartItems = await db.select().from(cartItems).where(eq(cartItems.userId, userId));
   
-  if (cartItems.length === 0) {
+  if (dbCartItems.length === 0) {
     return { items: [], subtotalHT: 0, discountPercent: 0, discountAmount: 0, vatAmount: 0, totalTTC: 0 };
   }
 
   // Get product details
   const items = [];
-  for (const item of cartItems) {
+  for (const item of dbCartItems) {
     const product = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
     if (product[0]) {
+      // Get variant if specified
+      let variant = null;
+      if (item.variantId) {
+        const variantResult = await db.select().from(productVariants).where(eq(productVariants.id, item.variantId)).limit(1);
+        variant = variantResult[0] || null;
+      }
+      
+      const unitPrice = variant?.pricePartnerHT || product[0].pricePartnerHT || product[0].pricePublicHT || 0;
+      
       items.push({
-        id: item.productId,
+        id: item.id,
         productId: item.productId,
+        variantId: item.variantId,
         quantity: item.quantity,
+        isPreorder: item.isPreorder,
         product: product[0],
-        unitPriceHT: product[0].pricePublicHT || 0,
+        variant: variant,
+        unitPriceHT: unitPrice,
       });
     }
   }
@@ -718,45 +728,169 @@ export async function getCart(userId: number) {
 }
 
 export async function addToCart(userId: number, productId: number, quantity: number, isPreorder: boolean = false, variantId?: number) {
-  const cartItems = cartStorage.get(userId) || [];
-  const existing = cartItems.find(item => 
-    item.productId === productId && 
-    item.isPreorder === isPreorder && 
-    item.variantId === variantId
-  );
+  const db = await getDb();
+  if (!db) return { success: false, error: "Database not available" };
 
-  if (existing) {
-    existing.quantity += quantity;
-  } else {
-    cartItems.push({ productId, quantity, isPreorder, variantId });
+  try {
+    // Check if item already exists in cart
+    const existing = await db.select().from(cartItems).where(
+      and(
+        eq(cartItems.userId, userId),
+        eq(cartItems.productId, productId),
+        variantId ? eq(cartItems.variantId, variantId) : sql`${cartItems.variantId} IS NULL`
+      )
+    ).limit(1);
+
+    if (existing[0]) {
+      // Update quantity
+      await db.update(cartItems)
+        .set({ quantity: existing[0].quantity + quantity })
+        .where(eq(cartItems.id, existing[0].id));
+    } else {
+      // Insert new item
+      await db.insert(cartItems).values({
+        userId,
+        productId,
+        variantId: variantId || null,
+        quantity,
+        isPreorder,
+      });
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error adding to cart:", error);
+    return { success: false, error: error.message };
   }
-
-  cartStorage.set(userId, cartItems);
-  return { success: true };
 }
 
-export async function updateCartQuantity(userId: number, productId: number, quantity: number) {
-  const cartItems = cartStorage.get(userId) || [];
-  const existing = cartItems.find(item => item.productId === productId);
+export async function updateCartQuantity(userId: number, productId: number, quantity: number, variantId?: number) {
+  const db = await getDb();
+  if (!db) return { success: false };
 
-  if (existing) {
-    existing.quantity = quantity;
-    cartStorage.set(userId, cartItems);
+  try {
+    await db.update(cartItems)
+      .set({ quantity })
+      .where(
+        and(
+          eq(cartItems.userId, userId),
+          eq(cartItems.productId, productId),
+          variantId ? eq(cartItems.variantId, variantId) : sql`${cartItems.variantId} IS NULL`
+        )
+      );
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating cart quantity:", error);
+    return { success: false };
   }
-
-  return { success: true };
 }
 
-export async function removeFromCart(userId: number, productId: number) {
-  const cartItems = cartStorage.get(userId) || [];
-  const filtered = cartItems.filter(item => item.productId !== productId);
-  cartStorage.set(userId, filtered);
-  return { success: true };
+export async function removeFromCart(userId: number, productId: number, variantId?: number) {
+  const db = await getDb();
+  if (!db) return { success: false };
+
+  try {
+    await db.delete(cartItems).where(
+      and(
+        eq(cartItems.userId, userId),
+        eq(cartItems.productId, productId),
+        variantId ? eq(cartItems.variantId, variantId) : sql`${cartItems.variantId} IS NULL`
+      )
+    );
+    return { success: true };
+  } catch (error) {
+    console.error("Error removing from cart:", error);
+    return { success: false };
+  }
 }
 
 export async function clearCart(userId: number) {
-  cartStorage.delete(userId);
-  return { success: true };
+  const db = await getDb();
+  if (!db) return { success: false };
+
+  try {
+    await db.delete(cartItems).where(eq(cartItems.userId, userId));
+    return { success: true };
+  } catch (error) {
+    console.error("Error clearing cart:", error);
+    return { success: false };
+  }
+}
+
+// ============================================
+// FAVORITES FUNCTIONS
+// ============================================
+
+export async function getFavorites(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const favs = await db.select().from(favorites).where(eq(favorites.userId, userId));
+  
+  // Get product details for each favorite
+  const result = [];
+  for (const fav of favs) {
+    const product = await db.select().from(products).where(eq(products.id, fav.productId)).limit(1);
+    if (product[0]) {
+      result.push({
+        id: fav.id,
+        productId: fav.productId,
+        product: product[0],
+        createdAt: fav.createdAt,
+      });
+    }
+  }
+  
+  return result;
+}
+
+export async function addToFavorites(userId: number, productId: number) {
+  const db = await getDb();
+  if (!db) return { success: false };
+
+  try {
+    await db.insert(favorites).values({ userId, productId });
+    return { success: true };
+  } catch (error: any) {
+    // Ignore duplicate key error
+    if (error.code === 'ER_DUP_ENTRY') {
+      return { success: true, alreadyExists: true };
+    }
+    console.error("Error adding to favorites:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function removeFromFavorites(userId: number, productId: number) {
+  const db = await getDb();
+  if (!db) return { success: false };
+
+  try {
+    await db.delete(favorites).where(
+      and(
+        eq(favorites.userId, userId),
+        eq(favorites.productId, productId)
+      )
+    );
+    return { success: true };
+  } catch (error) {
+    console.error("Error removing from favorites:", error);
+    return { success: false };
+  }
+}
+
+export async function isFavorite(userId: number, productId: number) {
+  const db = await getDb();
+  if (!db) return false;
+
+  const result = await db.select().from(favorites).where(
+    and(
+      eq(favorites.userId, userId),
+      eq(favorites.productId, productId)
+    )
+  ).limit(1);
+  
+  return result.length > 0;
 }
 
 
@@ -1693,4 +1827,190 @@ export async function getRecentActivity(limit: number = 20) {
     .slice(0, limit);
 
   return combined;
+}
+
+
+// ============================================
+// FAVORITES (extended)
+// ============================================
+
+export async function getUserFavorites(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db
+    .select({
+      id: favorites.id,
+      productId: favorites.productId,
+      createdAt: favorites.createdAt,
+      product: {
+        id: products.id,
+        name: products.name,
+        sku: products.sku,
+        pricePublicHT: products.pricePublicHT,
+        pricePartnerHT: products.pricePartnerHT,
+        stockQuantity: products.stockQuantity,
+        categoryId: products.categoryId,
+      }
+    })
+    .from(favorites)
+    .innerJoin(products, eq(favorites.productId, products.id))
+    .where(eq(favorites.userId, userId))
+    .orderBy(desc(favorites.createdAt));
+
+  return result;
+}
+
+
+// ============================================
+// REORDER FROM PREVIOUS ORDER
+// ============================================
+
+export async function reorderFromOrder(userId: number, orderId: number) {
+  const db = await getDb();
+  if (!db) return { success: false, message: 'Database not available' };
+
+  // Get order items
+  const orderItems = await db
+    .select()
+    .from(sql`order_items`)
+    .where(sql`order_id = ${orderId}`);
+
+  if (orderItems.length === 0) {
+    return { success: false, message: 'Order not found or empty' };
+  }
+
+  // Add each item to cart
+  for (const item of orderItems) {
+    await addToCart(userId, (item as any).product_id, (item as any).quantity, false, (item as any).variant_id);
+  }
+
+  return { success: true, itemsAdded: orderItems.length };
+}
+
+// ============================================
+// QUICK SEARCH BY SKU
+// ============================================
+
+export async function searchProductsBySku(searchTerm: string, limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db
+    .select()
+    .from(products)
+    .where(
+      or(
+        sql`sku LIKE ${`%${searchTerm}%`}`,
+        sql`name LIKE ${`%${searchTerm}%`}`
+      )
+    )
+    .limit(limit);
+
+  return result;
+}
+
+// ============================================
+// TODAY'S ORDERS FOR ADMIN
+// ============================================
+
+export async function getTodayOrders() {
+  const db = await getDb();
+  if (!db) return [];
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const result = await db
+    .select({
+      id: orders.id,
+      orderNumber: orders.orderNumber,
+      status: orders.status,
+      totalTTC: orders.totalTTC,
+      createdAt: orders.createdAt,
+      partnerId: orders.partnerId,
+    })
+    .from(orders)
+    .where(gte(orders.createdAt, today))
+    .orderBy(desc(orders.createdAt));
+
+  return result;
+}
+
+// ============================================
+// QUICK ORDER VALIDATION
+// ============================================
+
+export async function quickValidateOrder(orderId: number, adminUserId: number) {
+  const db = await getDb();
+  if (!db) return { success: false, message: 'Database not available' };
+
+  // Update order status to DEPOSIT_PAID (validated)
+  await db
+    .update(orders)
+    .set({ 
+      status: 'DEPOSIT_PAID',
+      updatedAt: new Date(),
+    })
+    .where(eq(orders.id, orderId));
+
+  // Create notification for the partner
+  const order = await db
+    .select({ partnerId: orders.partnerId, orderNumber: orders.orderNumber })
+    .from(orders)
+    .where(eq(orders.id, orderId))
+    .limit(1);
+
+  if (order[0]?.partnerId) {
+    // Get partner's user
+    const partnerUsers = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.partnerId, order[0].partnerId))
+      .limit(1);
+
+    if (partnerUsers[0]) {
+      await createNotification({
+        userId: partnerUsers[0].id,
+        type: 'ORDER_STATUS_CHANGED',
+        title: 'Commande approuvée',
+        message: `Votre commande #${order[0].orderNumber} a été approuvée et est en cours de traitement.`,
+        linkUrl: `/orders/${orderId}`,
+      });
+    }
+  }
+
+  return { success: true, message: 'Order validated successfully' };
+}
+
+// ============================================
+// EXPORT TODAY'S ORDERS AS CSV DATA
+// ============================================
+
+export async function getTodayOrdersForExport() {
+  const db = await getDb();
+  if (!db) return [];
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const result = await db
+    .select({
+      orderNumber: orders.orderNumber,
+      status: orders.status,
+      totalHT: orders.totalHT,
+      totalTTC: orders.totalTTC,
+      createdAt: orders.createdAt,
+      partnerName: partners.companyName,
+      partnerEmail: partners.primaryContactEmail,
+      deliveryStreet: orders.deliveryStreet,
+      deliveryCity: orders.deliveryCity,
+      deliveryPostalCode: orders.deliveryPostalCode,
+    })
+    .from(orders)
+    .leftJoin(partners, eq(orders.partnerId, partners.id))
+    .where(gte(orders.createdAt, today))
+    .orderBy(desc(orders.createdAt));
+
+  return result;
 }

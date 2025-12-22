@@ -232,3 +232,28 @@
 - [x] Améliorer la page de profil avec gestion des adresses
 - [x] Finaliser la page de ressources avec téléchargement fonctionnel
 - [x] Ajouter les notifications toast pour les actions utilisateur
+
+
+## Bugs identifiés lors de l'audit
+
+- [x] BUG: Le bouton "Ajouter au panier" ne fonctionne pas - CORRIGÉ (table cart_items persistante créée)
+- [x] Vérifier la route cart.add et la mutation tRPC - FONCTIONNEL
+- [x] Ajouter un feedback visuel (toast) lors de l'ajout au panier - FONCTIONNEL
+- [x] Vérifier le fonctionnement du checkout complet - FONCTIONNEL
+
+## Fonctionnalités pour usage quotidien - COMPLÉTÉES
+
+### Revendeurs
+- [x] Recherche rapide par SKU/référence produit (route products.quickSearch)
+- [x] Système de favoris pour produits fréquents (page Favorites.tsx + table favorites)
+- [x] Bouton "Recommander" sur commandes précédentes (route orders.reorder)
+- [x] Lien vers les favoris dans le catalogue et le dashboard
+- [ ] Téléchargement de devis PDF avant validation (optionnel)
+- [ ] Alertes email de disponibilité produit (optionnel)
+- [ ] Contact support direct depuis l'app (optionnel)
+
+### Admin
+- [x] Vue des commandes du jour sur le dashboard (route orders.getToday)
+- [x] Alertes visuelles de stock critique (dashboard admin)
+- [x] Validation rapide des commandes en attente (route orders.quickValidate)
+- [x] Export CSV des commandes du jour (route orders.exportToday)

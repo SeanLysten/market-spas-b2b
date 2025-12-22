@@ -1017,6 +1017,47 @@ export const activityLogs = mysqlTable(
 );
 
 // ============================================
+// CART (PANIER)
+// ============================================
+
+export const cartItems = mysqlTable(
+  "cart_items",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    productId: int("productId").notNull(),
+    variantId: int("variantId"),
+    quantity: int("quantity").notNull().default(1),
+    isPreorder: boolean("isPreorder").default(false),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("userId_idx").on(table.userId),
+    productIdIdx: index("productId_idx").on(table.productId),
+    userProductUniq: unique("user_product_variant_uniq").on(table.userId, table.productId, table.variantId),
+  })
+);
+
+// ============================================
+// FAVORITES (FAVORIS)
+// ============================================
+
+export const favorites = mysqlTable(
+  "favorites",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    productId: int("productId").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("userId_idx").on(table.userId),
+    userProductUniq: unique("user_product_uniq").on(table.userId, table.productId),
+  })
+);
+
+// ============================================
 // INCOMING STOCK (ARRIVAGES)
 // ============================================
 
@@ -1074,3 +1115,9 @@ export type InsertNotification = typeof notifications.$inferInsert;
 
 export type IncomingStock = typeof incomingStock.$inferSelect;
 export type InsertIncomingStock = typeof incomingStock.$inferInsert;
+
+export type CartItem = typeof cartItems.$inferSelect;
+export type InsertCartItem = typeof cartItems.$inferInsert;
+
+export type Favorite = typeof favorites.$inferSelect;
+export type InsertFavorite = typeof favorites.$inferInsert;

@@ -14,6 +14,8 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
+  Heart,
+  FileText,
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -337,11 +339,19 @@ export default function Dashboard() {
                 </Button>
               </Link>
 
-              <Link href="/orders/new">
+              <Link href="/cart">
                 <Button variant="outline" className="w-full h-auto py-6 flex-col gap-2">
                   <ShoppingCart className="w-8 h-8 text-primary" />
-                  <span className="font-semibold">Nouvelle commande</span>
-                  <span className="text-xs text-muted-foreground">Passer une commande</span>
+                  <span className="font-semibold">Mon panier</span>
+                  <span className="text-xs text-muted-foreground">Voir mon panier</span>
+                </Button>
+              </Link>
+
+              <Link href="/favorites">
+                <Button variant="outline" className="w-full h-auto py-6 flex-col gap-2">
+                  <Heart className="w-8 h-8 text-red-500" />
+                  <span className="font-semibold">Mes favoris</span>
+                  <span className="text-xs text-muted-foreground">Produits favoris</span>
                 </Button>
               </Link>
 

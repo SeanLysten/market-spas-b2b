@@ -227,6 +227,37 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await db.getIncomingStock({ productId: input.productId, status: "PENDING" });
       }),
+
+    // Quick search by SKU or name
+    quickSearch: protectedProcedure
+      .input(z.object({ query: z.string(), limit: z.number().optional().default(10) }))
+      .query(async ({ input }) => {
+        return await db.searchProductsBySku(input.query, input.limit);
+      }),
+
+    // Favorites
+    getFavorites: protectedProcedure
+      .query(async ({ ctx }) => {
+        return await db.getUserFavorites(ctx.user.id);
+      }),
+
+    addFavorite: protectedProcedure
+      .input(z.object({ productId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.addToFavorites(ctx.user.id, input.productId);
+      }),
+
+    removeFavorite: protectedProcedure
+      .input(z.object({ productId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.removeFromFavorites(ctx.user.id, input.productId);
+      }),
+
+    isFavorite: protectedProcedure
+      .input(z.object({ productId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return await db.isFavorite(ctx.user.id, input.productId);
+      }),
   }),
 
   // ============================================
@@ -396,6 +427,32 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         return await db.updateOrderStatus(input.orderId, input.status, input.note);
       }),
+
+    // Reorder from previous order
+    reorder: protectedProcedure
+      .input(z.object({ orderId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.reorderFromOrder(ctx.user.id, input.orderId);
+      }),
+
+    // Get today's orders (admin only)
+    getToday: adminProcedure
+      .query(async () => {
+        return await db.getTodayOrders();
+      }),
+
+    // Quick validate order (admin only)
+    quickValidate: adminProcedure
+      .input(z.object({ orderId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.quickValidateOrder(input.orderId, ctx.user.id);
+      }),
+
+    // Export today's orders as CSV data (admin only)
+    exportToday: adminProcedure
+      .query(async () => {
+        return await db.getTodayOrdersForExport();
+      }),
   }),
 
   // ============================================
@@ -516,9 +573,7 @@ export const appRouter = router({
   // CART & CHECKOUT
   // ============================================
   cart: router({ get: protectedProcedure.query(async ({ ctx }) => {
-      if (!ctx.user.partnerId) {
-        return { items: [], subtotalHT: 0, discountPercent: 0, discountAmount: 0, vatAmount: 0, totalTTC: 0 };
-      }
+      // Allow all authenticated users to have a cart (admins can test the system)
       return await db.getCart(ctx.user.id);
     }),
 
