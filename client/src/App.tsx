@@ -13,6 +13,7 @@ import AdminPartners from "@/pages/admin/AdminPartners";
 import AdminReports from "@/pages/admin/AdminReports";
 import AdminOrders from "@/pages/admin/AdminOrders";
 import AdminSettings from "@/pages/admin/AdminSettings";
+import AdminLeads from "@/pages/admin/AdminLeads";
 import Dashboard from "./pages/Dashboard";
 import Catalog from "./pages/Catalog";
 import Orders from "./pages/Orders";
@@ -26,6 +27,8 @@ import PartnerOnboarding from "./pages/PartnerOnboarding";
 import PartnerPending from "./pages/PartnerPending";
 import OrderTracking from "./pages/OrderTracking";
 import Favorites from "./pages/Favorites";
+import Calendar from "./pages/Calendar";
+import Leads from "./pages/Leads";
 
 function Router() {
   return (
@@ -44,6 +47,8 @@ function Router() {
       <Route path="/partner-pending" component={PartnerPending} />
       <Route path="/order/:orderId" component={OrderTracking} />
       <Route path="/favorites" component={Favorites} />
+      <Route path="/calendar" component={Calendar} />
+      <Route path="/leads" component={Leads} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/resources" component={AdminResources} />
       <Route path="/admin/users" component={AdminUsers} />
@@ -52,6 +57,7 @@ function Router() {
       <Route path="/admin/reports" component={AdminReports} />
       <Route path="/admin/orders" component={AdminOrders} />
       <Route path="/admin/settings" component={AdminSettings} />
+      <Route path="/admin/leads" component={AdminLeads} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

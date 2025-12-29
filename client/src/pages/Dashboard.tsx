@@ -3,60 +3,33 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import {
-  TrendingUp,
   Package,
   ShoppingCart,
   Users,
-  Euro,
   Bell,
   ArrowUpRight,
-  ArrowDownRight,
   Clock,
   CheckCircle2,
   AlertCircle,
   Heart,
   FileText,
+  Video,
+  Wrench,
+  Calendar,
+  Megaphone,
+  Gift,
+  Target,
 } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { data: stats, isLoading: statsLoading } = trpc.dashboard.stats.useQuery();
-  const { data: recentOrders, isLoading: ordersLoading } = trpc.dashboard.recentOrders.useQuery({ limit: 5 });
   const { data: notifications } = trpc.dashboard.notifications.useQuery({ limit: 5 });
   const { data: unreadCount } = trpc.dashboard.unreadCount.useQuery();
+  // Les événements seront chargés une fois le router events créé
+  const upcomingEvents: any[] = [];
 
   const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN";
-
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      DRAFT: "text-gray-600 bg-gray-100",
-      PENDING_DEPOSIT: "text-yellow-600 bg-yellow-100",
-      DEPOSIT_PAID: "text-blue-600 bg-blue-100",
-      IN_PRODUCTION: "text-purple-600 bg-purple-100",
-      SHIPPED: "text-green-600 bg-green-100",
-      DELIVERED: "text-green-700 bg-green-200",
-      COMPLETED: "text-green-800 bg-green-300",
-      CANCELLED: "text-red-600 bg-red-100",
-    };
-    return colors[status] || "text-gray-600 bg-gray-100";
-  };
-
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      DRAFT: "Brouillon",
-      PENDING_APPROVAL: "En attente d'approbation",
-      PENDING_DEPOSIT: "En attente d'acompte",
-      DEPOSIT_PAID: "Acompte payé",
-      IN_PRODUCTION: "En production",
-      READY_TO_SHIP: "Prêt à expédier",
-      SHIPPED: "Expédié",
-      DELIVERED: "Livré",
-      COMPLETED: "Terminé",
-      CANCELLED: "Annulé",
-    };
-    return labels[status] || status;
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -79,7 +52,7 @@ export default function Dashboard() {
                   </span>
                 )}
               </Button>
-              {user?.role === 'SUPER_ADMIN' && (
+              {isAdmin && (
                 <Link href="/admin">
                   <Button variant="outline" size="sm" className="gap-2">
                     <Users className="w-4 h-4" />
@@ -96,108 +69,98 @@ export default function Dashboard() {
       </header>
 
       <div className="container py-8 space-y-8">
-        {/* KPI Cards */}
+        {/* Accès rapides principaux */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="card-hover">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Commandes totales
-              </CardTitle>
-              <ShoppingCart className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {statsLoading ? (
-                  <div className="skeleton h-9 w-20" />
-                ) : (
-                  stats?.totalOrders || 0
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3 text-green-600" />
-                <span className="text-green-600">+12%</span> ce mois
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="card-hover">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Chiffre d'affaires
-              </CardTitle>
-              <Euro className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {statsLoading ? (
-                  <div className="skeleton h-9 w-32" />
-                ) : (
-                  `€${(stats?.totalRevenue || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}`
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3 text-green-600" />
-                <span className="text-green-600">+8%</span> ce mois
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="card-hover">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Produits disponibles
-              </CardTitle>
-              <Package className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {statsLoading ? (
-                  <div className="skeleton h-9 w-20" />
-                ) : (
-                  stats?.totalProducts || 0
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Catalogue complet
-              </p>
-            </CardContent>
-          </Card>
-
-          {isAdmin && (
-            <Card className="card-hover">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Partenaires actifs
-                </CardTitle>
-                <Users className="w-4 h-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">
-                  {statsLoading ? (
-                    <div className="skeleton h-9 w-20" />
-                  ) : (
-                    stats?.totalPartners || 0
-                  )}
+          <Link href="/catalog">
+            <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
+              <CardContent className="pt-6 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Package className="w-8 h-8 text-primary" />
                 </div>
-                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3 text-green-600" />
-                  <span className="text-green-600">+3</span> ce mois
+                <h3 className="font-semibold text-lg mb-2">Catalogue Produits</h3>
+                <p className="text-sm text-muted-foreground">
+                  Stock en temps réel et arrivages programmés
                 </p>
               </CardContent>
             </Card>
-          )}
+          </Link>
+
+          <Link href="/resources">
+            <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
+              <CardContent className="pt-6 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-500/10 flex items-center justify-center">
+                  <FileText className="w-8 h-8 text-purple-500" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">Ressources Médias</h3>
+                <p className="text-sm text-muted-foreground">
+                  PLV, catalogues et supports marketing
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/resources?category=technical">
+            <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
+              <CardContent className="pt-6 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-500/10 flex items-center justify-center">
+                  <Wrench className="w-8 h-8 text-orange-500" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">Ressources Techniques</h3>
+                <p className="text-sm text-muted-foreground">
+                  Guides de réparation et vidéos tutoriels
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/calendar">
+            <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
+              <CardContent className="pt-6 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <Calendar className="w-8 h-8 text-green-500" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">Calendrier</h3>
+                <p className="text-sm text-muted-foreground">
+                  Événements et promotions à venir
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
+        {/* Section Leads (si disponible) */}
+        <Link href="/leads">
+          <Card className="card-hover cursor-pointer hover:border-primary/50 transition-all bg-gradient-to-r from-blue-500/5 to-purple-500/5">
+            <CardContent className="py-6">
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                  <Target className="w-8 h-8 text-blue-500" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg mb-1">Mes Leads</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Gérez les prospects de votre zone et suivez vos opportunités commerciales
+                  </p>
+                </div>
+                <ArrowUpRight className="w-6 h-6 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Recent Orders */}
+          {/* Événements à venir */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Commandes récentes</CardTitle>
-                  <CardDescription>Vos dernières commandes</CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-primary" />
+                    Événements à venir
+                  </CardTitle>
+                  <CardDescription>Promotions et annonces</CardDescription>
                 </div>
-                <Link href="/orders">
+                <Link href="/calendar">
                   <Button variant="ghost" size="sm">
                     Voir tout
                     <ArrowUpRight className="w-4 h-4 ml-1" />
@@ -206,37 +169,32 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              {ordersLoading ? (
+              {upcomingEvents && upcomingEvents.length > 0 ? (
                 <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="skeleton h-20 w-full" />
-                  ))}
-                </div>
-              ) : recentOrders && recentOrders.length > 0 ? (
-                <div className="space-y-3">
-                  {recentOrders.map((order) => (
+                  {upcomingEvents.map((event: any) => (
                     <div
-                      key={order.id}
-                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
+                      key={event.id}
+                      className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
                     >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium">{order.orderNumber}</p>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(order.status)}`}>
-                            {getStatusLabel(order.status)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(order.createdAt).toLocaleDateString('fr-FR', {
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        event.type === 'PROMOTION' ? 'bg-green-500/10' :
+                        event.type === 'EVENT' ? 'bg-blue-500/10' :
+                        'bg-orange-500/10'
+                      }`}>
+                        {event.type === 'PROMOTION' && <Gift className="w-5 h-5 text-green-500" />}
+                        {event.type === 'EVENT' && <Calendar className="w-5 h-5 text-blue-500" />}
+                        {event.type === 'ANNOUNCEMENT' && <Megaphone className="w-5 h-5 text-orange-500" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium mb-1">{event.title}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>
+                        <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {new Date(event.startDate).toLocaleDateString('fr-FR', {
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric'
                           })}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold">
-                          €{Number(order.totalTTC).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
                         </p>
                       </div>
                     </div>
@@ -244,13 +202,11 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <ShoppingCart className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                  <p className="text-muted-foreground">Aucune commande pour le moment</p>
-                  <Link href="/catalog">
-                    <Button className="mt-4" size="sm">
-                      Parcourir le catalogue
-                    </Button>
-                  </Link>
+                  <Calendar className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-muted-foreground">Aucun événement à venir</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Consultez le calendrier pour voir toutes les dates importantes
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -261,7 +217,10 @@ export default function Dashboard() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Notifications</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="w-5 h-5 text-primary" />
+                    Notifications
+                  </CardTitle>
                   <CardDescription>Dernières mises à jour</CardDescription>
                 </div>
                 {unreadCount && unreadCount > 0 && (
@@ -277,7 +236,7 @@ export default function Dashboard() {
                   {notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`flex gap-3 p-4 rounded-lg border transition-colors ${
+                      className={`flex items-start gap-3 p-4 rounded-lg border transition-colors ${
                         notification.isRead ? 'bg-card' : 'bg-accent/5 border-primary/20'
                       }`}
                     >
@@ -323,19 +282,19 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Quick Actions */}
+        {/* Actions secondaires */}
         <Card>
           <CardHeader>
-            <CardTitle>Actions rapides</CardTitle>
-            <CardDescription>Accédez rapidement aux fonctionnalités principales</CardDescription>
+            <CardTitle>Autres accès</CardTitle>
+            <CardDescription>Gérez vos commandes et favoris</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Link href="/catalog">
+              <Link href="/orders">
                 <Button variant="outline" className="w-full h-auto py-6 flex-col gap-2">
-                  <Package className="w-8 h-8 text-primary" />
-                  <span className="font-semibold">Catalogue</span>
-                  <span className="text-xs text-muted-foreground">Parcourir les produits</span>
+                  <ShoppingCart className="w-8 h-8 text-primary" />
+                  <span className="font-semibold">Mes commandes</span>
+                  <span className="text-xs text-muted-foreground">Historique et suivi</span>
                 </Button>
               </Link>
 
@@ -343,7 +302,7 @@ export default function Dashboard() {
                 <Button variant="outline" className="w-full h-auto py-6 flex-col gap-2">
                   <ShoppingCart className="w-8 h-8 text-primary" />
                   <span className="font-semibold">Mon panier</span>
-                  <span className="text-xs text-muted-foreground">Voir mon panier</span>
+                  <span className="text-xs text-muted-foreground">Articles en cours</span>
                 </Button>
               </Link>
 
@@ -351,30 +310,47 @@ export default function Dashboard() {
                 <Button variant="outline" className="w-full h-auto py-6 flex-col gap-2">
                   <Heart className="w-8 h-8 text-red-500" />
                   <span className="font-semibold">Mes favoris</span>
-                  <span className="text-xs text-muted-foreground">Produits favoris</span>
+                  <span className="text-xs text-muted-foreground">Produits sauvegardés</span>
                 </Button>
               </Link>
 
-              <Link href="/resources">
+              <Link href="/profile">
                 <Button variant="outline" className="w-full h-auto py-6 flex-col gap-2">
-                  <Package className="w-8 h-8 text-primary" />
-                  <span className="font-semibold">Ressources</span>
-                  <span className="text-xs text-muted-foreground">Documentation & médias</span>
+                  <Users className="w-8 h-8 text-primary" />
+                  <span className="font-semibold">Mon profil</span>
+                  <span className="text-xs text-muted-foreground">Paramètres du compte</span>
                 </Button>
               </Link>
-
-              {isAdmin && (
-                <Link href="/admin">
-                  <Button variant="outline" className="w-full h-auto py-6 flex-col gap-2">
-                    <Users className="w-8 h-8 text-primary" />
-                    <span className="font-semibold">Administration</span>
-                    <span className="text-xs text-muted-foreground">Gérer le portail</span>
-                  </Button>
-                </Link>
-              )}
             </div>
           </CardContent>
         </Card>
+
+        {/* Lien admin si applicable */}
+        {isAdmin && (
+          <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+            <CardContent className="py-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Users className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Accès Administration</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Gérer les produits, partenaires, leads et statistiques
+                    </p>
+                  </div>
+                </div>
+                <Link href="/admin">
+                  <Button>
+                    Ouvrir l'admin
+                    <ArrowUpRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

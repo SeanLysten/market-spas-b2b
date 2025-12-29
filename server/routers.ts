@@ -995,6 +995,111 @@ export const appRouter = router({
           return { success: true };
         }),
     }),
+
+    // Events management
+    events: router({
+      list: adminProcedure
+        .input(z.object({ type: z.string().optional() }).optional())
+        .query(async ({ input }) => {
+          return await db.getEvents(input);
+        }),
+
+      create: adminProcedure
+        .input(
+          z.object({
+            title: z.string(),
+            description: z.string().optional(),
+            type: z.enum(['PROMOTION', 'EVENT', 'ANNOUNCEMENT', 'TRAINING', 'WEBINAR']),
+            startDate: z.date(),
+            endDate: z.date().optional(),
+            allDay: z.boolean().optional(),
+            imageUrl: z.string().optional(),
+            discountPercent: z.number().optional(),
+            promoCode: z.string().optional(),
+            isPublished: z.boolean().optional(),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          return await db.createEvent({ ...input, createdBy: ctx.user.id });
+        }),
+
+      delete: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.deleteEvent(input.id);
+          return { success: true };
+        }),
+    }),
+
+    // Leads management
+    leads: router({
+      list: adminProcedure
+        .input(
+          z.object({
+            status: z.string().optional(),
+            partnerId: z.number().optional(),
+            source: z.string().optional(),
+          }).optional()
+        )
+        .query(async ({ input }) => {
+          return await db.getLeads(input);
+        }),
+
+      getById: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .query(async ({ input }) => {
+          return await db.getLeadById(input.id);
+        }),
+
+      stats: adminProcedure
+        .input(z.object({ partnerId: z.number().optional() }).optional())
+        .query(async ({ input }) => {
+          return await db.getLeadStats(input?.partnerId);
+        }),
+
+      create: adminProcedure
+        .input(
+          z.object({
+            firstName: z.string().optional(),
+            lastName: z.string().optional(),
+            email: z.string().optional(),
+            phone: z.string().optional(),
+            city: z.string().optional(),
+            postalCode: z.string().optional(),
+            source: z.enum(['META_ADS', 'GOOGLE_ADS', 'WEBSITE', 'REFERRAL', 'PHONE', 'EMAIL', 'TRADE_SHOW', 'OTHER']),
+            productInterest: z.string().optional(),
+            budget: z.string().optional(),
+            message: z.string().optional(),
+            assignedPartnerId: z.number().optional(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          return await db.createLead(input);
+        }),
+
+      updateStatus: adminProcedure
+        .input(
+          z.object({
+            id: z.number(),
+            status: z.string(),
+            notes: z.string().optional(),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          return await db.updateLeadStatus(input.id, input.status, ctx.user.id, input.notes);
+        }),
+
+      assign: adminProcedure
+        .input(
+          z.object({
+            leadId: z.number(),
+            partnerId: z.number(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          return await db.assignLeadToPartner(input.leadId, input.partnerId);
+        }),
+    }),
   }),
 });
 

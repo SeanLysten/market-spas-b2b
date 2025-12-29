@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like, lte, gte, asc, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -2013,4 +2013,280 @@ export async function getTodayOrdersForExport() {
     .orderBy(desc(orders.createdAt));
 
   return result;
+}
+
+
+// ==================== EVENTS ====================
+
+export async function getEvents(filters?: { type?: string }) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(events);
+  
+  if (filters?.type && filters.type !== 'all') {
+    query = query.where(eq(events.type, filters.type as any)) as any;
+  }
+  
+  return query.orderBy(desc(events.startDate));
+}
+
+export async function getUpcomingEvents(limit = 5) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const now = new Date();
+  return db.select()
+    .from(events)
+    .where(gte(events.startDate, now))
+    .orderBy(asc(events.startDate))
+    .limit(limit);
+}
+
+export async function createEvent(data: {
+  title: string;
+  description?: string;
+  type: 'PROMOTION' | 'EVENT' | 'ANNOUNCEMENT' | 'TRAINING' | 'WEBINAR';
+  startDate: Date;
+  endDate?: Date;
+  allDay?: boolean;
+  imageUrl?: string;
+  discountPercent?: number;
+  promoCode?: string;
+  isPublished?: boolean;
+  createdBy?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(events).values({
+    title: data.title,
+    description: data.description || null,
+    type: data.type,
+    startDate: data.startDate,
+    endDate: data.endDate || null,
+    allDay: data.allDay || false,
+    imageUrl: data.imageUrl || null,
+    discountPercent: data.discountPercent?.toString() || null,
+    promoCode: data.promoCode || null,
+    isPublished: data.isPublished || false,
+    createdBy: data.createdBy || null,
+  });
+  return result;
+}
+
+export async function deleteEvent(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.delete(events).where(eq(events.id, id));
+}
+
+// ==================== LEADS ====================
+
+export async function getLeads(filters?: { 
+  status?: string; 
+  partnerId?: number; 
+  source?: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select({
+    lead: leads,
+    partner: partners,
+  })
+  .from(leads)
+  .leftJoin(partners, eq(leads.assignedPartnerId, partners.id));
+  
+  const conditions = [];
+  
+  if (filters?.status && filters.status !== 'all') {
+    conditions.push(eq(leads.status, filters.status as any));
+  }
+  if (filters?.partnerId) {
+    conditions.push(eq(leads.assignedPartnerId, filters.partnerId));
+  }
+  if (filters?.source && filters.source !== 'all') {
+    conditions.push(eq(leads.source, filters.source as any));
+  }
+  
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  
+  return query.orderBy(desc(leads.receivedAt));
+}
+
+export async function getLeadById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select({
+    lead: leads,
+    partner: partners,
+  })
+  .from(leads)
+  .leftJoin(partners, eq(leads.assignedPartnerId, partners.id))
+  .where(eq(leads.id, id))
+  .limit(1);
+  
+  return result[0] || null;
+}
+
+export async function getLeadsByPartnerId(partnerId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select()
+    .from(leads)
+    .where(eq(leads.assignedPartnerId, partnerId))
+    .orderBy(desc(leads.receivedAt));
+}
+
+export async function createLead(data: {
+  metaLeadgenId?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  source: 'META_ADS' | 'GOOGLE_ADS' | 'WEBSITE' | 'REFERRAL' | 'PHONE' | 'EMAIL' | 'TRADE_SHOW' | 'OTHER';
+  metaCampaignId?: string;
+  metaAdsetId?: string;
+  metaAdId?: string;
+  metaFormId?: string;
+  productInterest?: string;
+  budget?: string;
+  message?: string;
+  assignedPartnerId?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(leads).values({
+    metaLeadgenId: data.metaLeadgenId || null,
+    firstName: data.firstName || null,
+    lastName: data.lastName || null,
+    email: data.email || null,
+    phone: data.phone || null,
+    city: data.city || null,
+    postalCode: data.postalCode || null,
+    country: data.country || 'Belgium',
+    source: data.source,
+    metaCampaignId: data.metaCampaignId || null,
+    metaAdsetId: data.metaAdsetId || null,
+    metaAdId: data.metaAdId || null,
+    metaFormId: data.metaFormId || null,
+    productInterest: data.productInterest || null,
+    budget: data.budget || null,
+    message: data.message || null,
+    assignedPartnerId: data.assignedPartnerId || null,
+    status: data.assignedPartnerId ? 'ASSIGNED' : 'NEW',
+    contactAttempts: 0,
+  });
+  
+  return result;
+}
+
+export async function updateLeadStatus(
+  id: number, 
+  status: string, 
+  userId: number,
+  notes?: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Mettre à jour le lead
+  const updateData: any = {
+    status,
+    updatedAt: new Date(),
+  };
+  
+  // Si c'est le premier contact
+  if (status === 'CONTACTED') {
+    const lead = await db.select().from(leads).where(eq(leads.id, id)).limit(1);
+    if (lead[0] && !lead[0].firstContactAt) {
+      updateData.firstContactAt = new Date();
+    }
+  }
+  
+  // Incrémenter les tentatives de contact
+  if (status === 'NO_RESPONSE') {
+    await db.update(leads)
+      .set({ contactAttempts: sql`contact_attempts + 1` })
+      .where(eq(leads.id, id));
+  }
+  
+  await db.update(leads)
+    .set(updateData)
+    .where(eq(leads.id, id));
+  
+  // Ajouter à l'historique
+  await db.insert(leadStatusHistory).values({
+    leadId: id,
+    newStatus: status as any,
+    changedBy: userId,
+    notes: notes || null,
+  });
+  
+  return { success: true };
+}
+
+export async function assignLeadToPartner(leadId: number, partnerId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(leads)
+    .set({ 
+      assignedPartnerId: partnerId, 
+      status: 'ASSIGNED',
+      assignedAt: new Date(),
+    })
+    .where(eq(leads.id, leadId));
+  
+  return { success: true };
+}
+
+export async function getLeadStats(partnerId?: number) {
+  const db = await getDb();
+  if (!db) return {
+    total: 0,
+    new: 0,
+    assigned: 0,
+    contacted: 0,
+    qualified: 0,
+    converted: 0,
+    lost: 0,
+    conversionRate: 0,
+    contactRate: 0,
+  };
+
+  let query = db.select().from(leads);
+  if (partnerId) {
+    query = query.where(eq(leads.assignedPartnerId, partnerId)) as any;
+  }
+  
+  const allLeads = await query;
+  
+  const stats = {
+    total: allLeads.length,
+    new: allLeads.filter(l => l.status === 'NEW').length,
+    assigned: allLeads.filter(l => l.status === 'ASSIGNED').length,
+    contacted: allLeads.filter(l => l.firstContactAt !== null).length,
+    qualified: allLeads.filter(l => l.status === 'QUALIFIED').length,
+    converted: allLeads.filter(l => l.status === 'CONVERTED').length,
+    lost: allLeads.filter(l => l.status === 'LOST').length,
+    conversionRate: allLeads.length > 0 
+      ? Math.round((allLeads.filter(l => l.status === 'CONVERTED').length / allLeads.length) * 100) 
+      : 0,
+    contactRate: allLeads.length > 0
+      ? Math.round((allLeads.filter(l => l.firstContactAt !== null).length / allLeads.length) * 100)
+      : 0,
+  };
+  
+  return stats;
 }

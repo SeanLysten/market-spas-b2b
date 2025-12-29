@@ -1089,6 +1089,228 @@ export const incomingStock = mysqlTable(
 );
 
 // ============================================
+// EVENTS & CALENDAR
+// ============================================
+
+export const eventTypeEnum = mysqlEnum("event_type", [
+  "PROMOTION",
+  "EVENT",
+  "ANNOUNCEMENT",
+  "TRAINING",
+  "WEBINAR",
+]);
+
+export const events = mysqlTable(
+  "events",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    type: eventTypeEnum.notNull(),
+    
+    // Dates
+    startDate: timestamp("startDate").notNull(),
+    endDate: timestamp("endDate"),
+    allDay: boolean("allDay").default(false),
+    
+    // Promotion details
+    discountPercent: decimal("discountPercent", { precision: 5, scale: 2 }),
+    promoCode: varchar("promoCode", { length: 50 }),
+    
+    // Media
+    imageUrl: varchar("imageUrl", { length: 500 }),
+    attachmentUrl: varchar("attachmentUrl", { length: 500 }),
+    
+    // Visibility
+    isPublished: boolean("isPublished").default(false),
+    targetPartnerLevels: text("targetPartnerLevels"), // JSON array of levels
+    
+    // Metadata
+    createdBy: int("createdBy"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    startDateIdx: index("startDate_idx").on(table.startDate),
+    typeIdx: index("type_idx").on(table.type),
+    isPublishedIdx: index("isPublished_idx").on(table.isPublished),
+  })
+);
+
+// ============================================
+// LEADS MANAGEMENT (Meta Ads Integration)
+// ============================================
+
+export const leadStatusEnum = mysqlEnum("lead_status", [
+  "NEW",
+  "ASSIGNED",
+  "CONTACTED",
+  "NO_RESPONSE",
+  "QUALIFIED",
+  "NOT_QUALIFIED",
+  "MEETING_SCHEDULED",
+  "QUOTE_SENT",
+  "NEGOTIATION",
+  "CONVERTED",
+  "LOST",
+]);
+
+export const leadSourceEnum = mysqlEnum("lead_source", [
+  "META_ADS",
+  "GOOGLE_ADS",
+  "WEBSITE",
+  "REFERRAL",
+  "PHONE",
+  "EMAIL",
+  "TRADE_SHOW",
+  "OTHER",
+]);
+
+export const leads = mysqlTable(
+  "leads",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    
+    // Contact info
+    firstName: varchar("firstName", { length: 100 }),
+    lastName: varchar("lastName", { length: 100 }),
+    email: varchar("email", { length: 255 }),
+    phone: varchar("phone", { length: 50 }),
+    
+    // Address
+    address: varchar("address", { length: 255 }),
+    city: varchar("city", { length: 100 }),
+    postalCode: varchar("postalCode", { length: 20 }),
+    country: varchar("country", { length: 100 }).default("Belgium"),
+    
+    // Lead details
+    status: leadStatusEnum.default("NEW").notNull(),
+    source: leadSourceEnum.default("META_ADS").notNull(),
+    
+    // Meta Ads specific
+    metaLeadgenId: varchar("metaLeadgenId", { length: 100 }),
+    metaFormId: varchar("metaFormId", { length: 100 }),
+    metaAdId: varchar("metaAdId", { length: 100 }),
+    metaAdsetId: varchar("metaAdsetId", { length: 100 }),
+    metaCampaignId: varchar("metaCampaignId", { length: 100 }),
+    metaPageId: varchar("metaPageId", { length: 100 }),
+    
+    // Custom fields from form
+    productInterest: varchar("productInterest", { length: 255 }),
+    budget: varchar("budget", { length: 100 }),
+    timeline: varchar("timeline", { length: 100 }),
+    message: text("message"),
+    customFields: text("customFields"), // JSON for additional form fields
+    
+    // Assignment
+    assignedPartnerId: int("assignedPartnerId"),
+    assignedAt: timestamp("assignedAt"),
+    assignmentReason: varchar("assignmentReason", { length: 255 }), // e.g., "postal_code_match"
+    
+    // Tracking
+    firstContactAt: timestamp("firstContactAt"),
+    lastContactAt: timestamp("lastContactAt"),
+    contactAttempts: int("contactAttempts").default(0),
+    
+    // Conversion
+    convertedAt: timestamp("convertedAt"),
+    convertedOrderId: int("convertedOrderId"),
+    estimatedValue: decimal("estimatedValue", { precision: 12, scale: 2 }),
+    actualValue: decimal("actualValue", { precision: 12, scale: 2 }),
+    
+    // Notes
+    notes: text("notes"),
+    lostReason: varchar("lostReason", { length: 255 }),
+    
+    // Timestamps
+    receivedAt: timestamp("receivedAt").defaultNow().notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    statusIdx: index("status_idx").on(table.status),
+    sourceIdx: index("source_idx").on(table.source),
+    assignedPartnerIdIdx: index("assignedPartnerId_idx").on(table.assignedPartnerId),
+    postalCodeIdx: index("postalCode_idx").on(table.postalCode),
+    metaLeadgenIdIdx: index("metaLeadgenId_idx").on(table.metaLeadgenId),
+    receivedAtIdx: index("receivedAt_idx").on(table.receivedAt),
+  })
+);
+
+export const leadStatusHistory = mysqlTable(
+  "lead_status_history",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    leadId: int("leadId").notNull(),
+    
+    previousStatus: leadStatusEnum,
+    newStatus: leadStatusEnum.notNull(),
+    
+    changedBy: int("changedBy"), // userId
+    notes: text("notes"),
+    
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    leadIdIdx: index("leadId_idx").on(table.leadId),
+    createdAtIdx: index("createdAt_idx").on(table.createdAt),
+  })
+);
+
+// Partner postal code coverage for lead distribution
+export const partnerPostalCodes = mysqlTable(
+  "partner_postal_codes",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    partnerId: int("partnerId").notNull(),
+    postalCode: varchar("postalCode", { length: 20 }).notNull(),
+    priority: int("priority").default(1), // Higher = preferred
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    partnerIdIdx: index("partnerId_idx").on(table.partnerId),
+    postalCodeIdx: index("postalCode_idx").on(table.postalCode),
+    uniquePartnerPostal: unique("unique_partner_postal").on(table.partnerId, table.postalCode),
+  })
+);
+
+// Meta Ads campaign tracking
+export const metaCampaigns = mysqlTable(
+  "meta_campaigns",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    
+    metaCampaignId: varchar("metaCampaignId", { length: 100 }).notNull().unique(),
+    name: varchar("name", { length: 255 }).notNull(),
+    
+    // Budget
+    dailyBudget: decimal("dailyBudget", { precision: 12, scale: 2 }),
+    lifetimeBudget: decimal("lifetimeBudget", { precision: 12, scale: 2 }),
+    
+    // Stats (updated periodically)
+    totalSpend: decimal("totalSpend", { precision: 12, scale: 2 }).default("0"),
+    totalImpressions: int("totalImpressions").default(0),
+    totalClicks: int("totalClicks").default(0),
+    totalLeads: int("totalLeads").default(0),
+    costPerLead: decimal("costPerLead", { precision: 10, scale: 2 }),
+    
+    // Status
+    status: varchar("status", { length: 50 }).default("ACTIVE"),
+    
+    // Sync
+    lastSyncedAt: timestamp("lastSyncedAt"),
+    
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    metaCampaignIdIdx: index("metaCampaignId_idx").on(table.metaCampaignId),
+    statusIdx: index("status_idx").on(table.status),
+  })
+);
+
+// ============================================
 // TYPE EXPORTS
 // ============================================
 
@@ -1121,3 +1343,18 @@ export type InsertCartItem = typeof cartItems.$inferInsert;
 
 export type Favorite = typeof favorites.$inferSelect;
 export type InsertFavorite = typeof favorites.$inferInsert;
+
+export type Event = typeof events.$inferSelect;
+export type InsertEvent = typeof events.$inferInsert;
+
+export type Lead = typeof leads.$inferSelect;
+export type InsertLead = typeof leads.$inferInsert;
+
+export type LeadStatusHistory = typeof leadStatusHistory.$inferSelect;
+export type InsertLeadStatusHistory = typeof leadStatusHistory.$inferInsert;
+
+export type PartnerPostalCode = typeof partnerPostalCodes.$inferSelect;
+export type InsertPartnerPostalCode = typeof partnerPostalCodes.$inferInsert;
+
+export type MetaCampaign = typeof metaCampaigns.$inferSelect;
+export type InsertMetaCampaign = typeof metaCampaigns.$inferInsert;

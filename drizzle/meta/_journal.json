@@ -43,6 +43,13 @@
       "when": 1766392210982,
       "tag": "0005_bizarre_bloodaxe",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1767027227473,
+      "tag": "0006_wonderful_blackheart",
+      "breakpoints": true
     }
   ]
 }

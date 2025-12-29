@@ -257,3 +257,28 @@
 - [x] Alertes visuelles de stock critique (dashboard admin)
 - [x] Validation rapide des commandes en attente (route orders.quickValidate)
 - [x] Export CSV des commandes du jour (route orders.exportToday)
+
+
+## Nouvelle session - Modifications majeures demandées - COMPLÉTÉES
+
+### Simplification interface utilisateur
+- [x] Supprimer les analytics/statistiques du dashboard utilisateur
+- [x] Garder uniquement : catalogue produits (stock + arrivages), ressources médias/PLV, ressources techniques
+- [x] Créer une section ressources techniques (réparation spas, vidéos présentation)
+
+### Calendrier événements et promotions
+- [x] Créer la table events dans le schéma
+- [x] Créer la page calendrier avec vue annuelle (Calendar.tsx)
+- [x] Permettre aux admins de créer des événements/promotions
+- [x] Afficher les événements à venir sur le dashboard utilisateur
+
+### Système de gestion de leads
+- [x] Rechercher les meilleures pratiques pour l'intégration Meta Ads
+- [x] Concevoir le schéma de base de données pour les leads (tables leads, lead_status_history)
+- [x] Créer l'endpoint webhook pour recevoir les leads Meta (meta-leads.ts)
+- [x] Implémenter la distribution automatique des leads par code postal (findPartnerByPostalCode)
+- [x] Créer l'interface de gestion des leads pour les revendeurs (Leads.tsx)
+- [x] Ajouter les statuts de lead (NEW, ASSIGNED, CONTACTED, NO_RESPONSE, QUALIFIED, NOT_QUALIFIED, CONVERTED, LOST)
+- [x] Créer le dashboard admin pour les statistiques de leads (AdminLeads.tsx)
+- [x] Afficher les budgets et métriques des campagnes Meta (intégration API préparée)
+- [x] Tracker les interactions des revendeurs avec leurs leads (lead_status_history)

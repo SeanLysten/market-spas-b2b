@@ -14,6 +14,7 @@ import {
   ShoppingBag,
   Building2,
   FileSpreadsheet,
+  Target,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -86,6 +87,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: "Rapports",
       href: "/admin/reports",
       icon: FileSpreadsheet,
+    },
+    {
+      name: "Leads",
+      href: "/admin/leads",
+      icon: Target,
     },
     {
       name: "Paramètres",
