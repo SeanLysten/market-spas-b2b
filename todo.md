@@ -317,3 +317,9 @@
 - [x] Ajouter des événements dans le calendrier (8 événements créés)
 - [x] Ajouter des leads de test (3 leads créés avec statuts différents)
 - [x] Vérifier les ressources disponibles (1 ressource Logo Market Spas)
+
+## Modifications demandées
+
+### Options de paiement
+- [x] Supprimer les options virement bancaire, paiement à la livraison, facturation 30 jours
+- [x] Garder uniquement paiement par carte avec 2 options : 100% ou 30% d'acompte

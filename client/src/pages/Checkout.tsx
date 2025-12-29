@@ -16,7 +16,7 @@ import { toast } from "sonner";
 export default function Checkout() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [paymentMethod, setPaymentMethod] = useState<string>("BANK_TRANSFER");
+  const [paymentMethod, setPaymentMethod] = useState<string>("CARD_FULL");
   const [deliveryAddress, setDeliveryAddress] = useState({
     street: "",
     city: "",
@@ -228,47 +228,35 @@ export default function Checkout() {
               </CardHeader>
               <CardContent>
                 <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors">
-                    <RadioGroupItem value="BANK_TRANSFER" id="bank" />
-                    <Label htmlFor="bank" className="flex-1 cursor-pointer">
-                      <div className="font-medium">Virement bancaire</div>
-                      <div className="text-sm text-muted-foreground">
-                        Vous recevrez nos coordonnées bancaires par email
-                      </div>
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors">
-                    <RadioGroupItem value="ON_DELIVERY" id="delivery" />
-                    <Label htmlFor="delivery" className="flex-1 cursor-pointer">
-                      <div className="font-medium">Paiement à la livraison</div>
-                      <div className="text-sm text-muted-foreground">
-                        Payez directement au livreur
-                      </div>
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors">
-                    <RadioGroupItem value="INVOICE_30_DAYS" id="invoice" />
-                    <Label htmlFor="invoice" className="flex-1 cursor-pointer">
-                      <div className="font-medium">Facturation à 30 jours</div>
-                      <div className="text-sm text-muted-foreground">
-                        Paiement sous 30 jours après réception de la facture
-                      </div>
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors border-primary bg-primary/5">
-                    <RadioGroupItem value="CARD_DEPOSIT" id="card" />
-                    <Label htmlFor="card" className="flex-1 cursor-pointer">
+                  <div className={`flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors ${paymentMethod === 'CARD_FULL' ? 'border-primary bg-primary/5' : ''}`}>
+                    <RadioGroupItem value="CARD_FULL" id="card-full" />
+                    <Label htmlFor="card-full" className="flex-1 cursor-pointer">
                       <div className="font-medium flex items-center gap-2">
-                        Paiement par carte (acompte 30%)
-                        <span className="text-xs bg-primary text-white px-2 py-0.5 rounded">Recommandé</span>
+                        Paiement par carte (100%)
+                        <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">Recommandé</span>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Payez un acompte de 30% maintenant par carte bancaire
+                        Payez la totalité de votre commande maintenant par carte bancaire
                       </div>
                     </Label>
+                    <div className="text-right">
+                      <div className="font-bold text-primary">{formatPrice(totalTTC)} €</div>
+                      <div className="text-xs text-muted-foreground">TTC</div>
+                    </div>
+                  </div>
+
+                  <div className={`flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors ${paymentMethod === 'CARD_DEPOSIT' ? 'border-primary bg-primary/5' : ''}`}>
+                    <RadioGroupItem value="CARD_DEPOSIT" id="card-deposit" />
+                    <Label htmlFor="card-deposit" className="flex-1 cursor-pointer">
+                      <div className="font-medium">Paiement par carte (acompte 30%)</div>
+                      <div className="text-sm text-muted-foreground">
+                        Payez un acompte de 30% maintenant, le solde à la livraison
+                      </div>
+                    </Label>
+                    <div className="text-right">
+                      <div className="font-bold text-primary">{formatPrice(totalTTC * 0.3)} €</div>
+                      <div className="text-xs text-muted-foreground">Acompte</div>
+                    </div>
                   </div>
                 </RadioGroup>
               </CardContent>
