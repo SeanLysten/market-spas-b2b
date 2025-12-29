@@ -327,6 +327,10 @@
 ### Intégration Facebook Lead Ads
 - [x] Créer l'endpoint webhook pour recevoir les leads Facebook
 - [x] Ajouter la vérification du token Facebook
+- [x] Configurer les secrets Meta (App ID, App Secret, Page Access Token)
+- [x] Valider le token avec l'API Facebook (Page: Sean Lysten)
+- [x] Documenter la configuration Facebook (GUIDE-CONFIGURATION-FACEBOOK.md)
+- [x] Documenter la configuration du webhook (GUIDE-CONFIGURER-WEBHOOK-FACEBOOK.md)
+- [ ] Configurer le webhook dans Facebook (action utilisateur)
 - [ ] Créer la route pour récupérer les statistiques Meta Ads
 - [ ] Mettre à jour la page Leads pour afficher les données Facebook
-- [x] Documenter la configuration Facebook (GUIDE-CONFIGURATION-FACEBOOK.md)
