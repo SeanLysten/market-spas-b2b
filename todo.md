@@ -323,3 +323,10 @@
 ### Options de paiement
 - [x] Supprimer les options virement bancaire, paiement à la livraison, facturation 30 jours
 - [x] Garder uniquement paiement par carte avec 2 options : 100% ou 30% d'acompte
+
+### Intégration Facebook Lead Ads
+- [x] Créer l'endpoint webhook pour recevoir les leads Facebook
+- [x] Ajouter la vérification du token Facebook
+- [ ] Créer la route pour récupérer les statistiques Meta Ads
+- [ ] Mettre à jour la page Leads pour afficher les données Facebook
+- [x] Documenter la configuration Facebook (GUIDE-CONFIGURATION-FACEBOOK.md)
