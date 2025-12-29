@@ -12,6 +12,25 @@ export const appRouter = router({
   system: systemRouter,
 
   // ============================================
+  // EVENTS (public for authenticated users)
+  // ============================================
+  events: router({
+    list: protectedProcedure
+      .input(z.object({ type: z.string().optional() }).optional())
+      .query(async ({ input }) => {
+        // Only return published events for non-admin users
+        const allEvents = await db.getEvents(input);
+        return allEvents.filter((e: any) => e.isPublished);
+      }),
+
+    upcoming: protectedProcedure
+      .input(z.object({ limit: z.number().optional().default(10) }))
+      .query(async ({ input }) => {
+        return await db.getUpcomingEvents(input.limit);
+      }),
+  }),
+
+  // ============================================
   // AUTHENTICATION
   // ============================================
   auth: router({

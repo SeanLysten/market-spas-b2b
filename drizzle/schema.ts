@@ -1107,7 +1107,7 @@ export const events = mysqlTable(
     
     title: varchar("title", { length: 255 }).notNull(),
     description: text("description"),
-    type: eventTypeEnum.notNull(),
+    type: mysqlEnum("type", ["PROMOTION", "EVENT", "ANNOUNCEMENT", "TRAINING", "WEBINAR"]).notNull(),
     
     // Dates
     startDate: timestamp("startDate").notNull(),

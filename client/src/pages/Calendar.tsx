@@ -16,7 +16,8 @@ import {
   Star,
   MapPin,
   Clock,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -26,8 +27,8 @@ interface Event {
   title: string;
   description: string | null;
   type: "PROMOTION" | "EVENT" | "ANNOUNCEMENT" | "TRAINING" | "WEBINAR";
-  startDate: string;
-  endDate: string | null;
+  startDate: string | Date;
+  endDate: string | Date | null;
   allDay: boolean;
   discountPercent: string | null;
   promoCode: string | null;
@@ -56,10 +57,22 @@ export default function Calendar() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [viewMode, setViewMode] = useState<"month" | "list">("month");
 
-  // Récupérer les événements de l'année en cours
-  const year = currentDate.getFullYear();
-  // Les événements seront chargés une fois le router events créé
-  const events: Event[] = [];
+  // Récupérer les événements via tRPC
+  const { data: eventsData, isLoading } = trpc.events.list.useQuery({});
+  const { data: upcomingEventsData } = trpc.events.upcoming.useQuery({ limit: 10 });
+
+  // Convertir les données en format Event
+  const events: Event[] = (eventsData || []).map((e: any) => ({
+    ...e,
+    startDate: e.startDate instanceof Date ? e.startDate.toISOString() : e.startDate,
+    endDate: e.endDate ? (e.endDate instanceof Date ? e.endDate.toISOString() : e.endDate) : null,
+  }));
+
+  const upcomingEvents: Event[] = (upcomingEventsData || []).map((e: any) => ({
+    ...e,
+    startDate: e.startDate instanceof Date ? e.startDate.toISOString() : e.startDate,
+    endDate: e.endDate ? (e.endDate instanceof Date ? e.endDate.toISOString() : e.endDate) : null,
+  }));
 
   // Navigation
   const goToPreviousMonth = () => {
@@ -100,8 +113,17 @@ export default function Calendar() {
       const dayEvents = events.filter((event: Event) => {
         const eventStart = new Date(event.startDate);
         const eventEnd = event.endDate ? new Date(event.endDate) : eventStart;
-        return date >= new Date(eventStart.setHours(0, 0, 0, 0)) && 
-               date <= new Date(eventEnd.setHours(23, 59, 59, 999));
+        const dateStart = new Date(date);
+        dateStart.setHours(0, 0, 0, 0);
+        const dateEnd = new Date(date);
+        dateEnd.setHours(23, 59, 59, 999);
+        
+        const eventStartDate = new Date(eventStart);
+        eventStartDate.setHours(0, 0, 0, 0);
+        const eventEndDate = new Date(eventEnd);
+        eventEndDate.setHours(23, 59, 59, 999);
+        
+        return dateStart <= eventEndDate && dateEnd >= eventStartDate;
       });
       days.push({ date, events: dayEvents });
     }
@@ -113,13 +135,7 @@ export default function Calendar() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Événements à venir (prochains 30 jours)
-  const upcomingEvents = events
-    .filter((event: Event) => new Date(event.startDate) >= today)
-    .sort((a: Event, b: Event) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-    .slice(0, 10);
-
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | Date) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("fr-FR", { 
       weekday: "long", 
@@ -129,10 +145,18 @@ export default function Calendar() {
     });
   };
 
-  const formatTime = (dateStr: string) => {
+  const formatTime = (dateStr: string | Date) => {
     const date = new Date(dateStr);
     return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -260,48 +284,53 @@ export default function Calendar() {
                     {events.length === 0 ? (
                       <div className="text-center py-12 text-gray-500">
                         <CalendarIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p>Aucun événement prévu cette année</p>
+                        <p>Aucun événement prévu</p>
                       </div>
                     ) : (
                       events
                         .sort((a: Event, b: Event) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
                         .map((event: Event) => {
                           const typeConfig = EVENT_TYPES[event.type];
-                          const Icon = typeConfig.icon;
-                          const isPast = new Date(event.startDate) < today;
+                          const TypeIcon = typeConfig.icon;
                           
                           return (
-                            <div
-                              key={event.id}
-                              className={`flex items-start gap-4 p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${
-                                isPast ? "opacity-60" : ""
-                              }`}
+                            <Card 
+                              key={event.id} 
+                              className="cursor-pointer hover:shadow-md transition-shadow"
                               onClick={() => setSelectedEvent(event)}
                             >
-                              <div className={`p-2 rounded-lg ${typeConfig.color}`}>
-                                <Icon className="w-5 h-5" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="font-medium text-gray-900">{event.title}</h3>
-                                  <Badge variant="outline" className={typeConfig.color}>
-                                    {typeConfig.label}
-                                  </Badge>
+                              <CardContent className="p-4">
+                                <div className="flex items-start gap-4">
+                                  <div className={`p-2 rounded-lg ${typeConfig.color}`}>
+                                    <TypeIcon className="w-5 h-5" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h3 className="font-semibold">{event.title}</h3>
+                                      <Badge variant="outline" className={typeConfig.color}>
+                                        {typeConfig.label}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-sm text-gray-500 mb-2">
+                                      {formatDate(event.startDate)}
+                                      {event.endDate && ` - ${formatDate(event.endDate)}`}
+                                    </p>
+                                    {event.description && (
+                                      <p className="text-sm text-gray-600 line-clamp-2">
+                                        {event.description}
+                                      </p>
+                                    )}
+                                    {event.promoCode && (
+                                      <div className="mt-2 inline-flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm">
+                                        <Gift className="w-4 h-4" />
+                                        Code: <span className="font-mono font-bold">{event.promoCode}</span>
+                                        {event.discountPercent && ` (-${event.discountPercent}%)`}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                                <p className="text-sm text-gray-500 mb-2">
-                                  {formatDate(event.startDate)}
-                                  {!event.allDay && ` à ${formatTime(event.startDate)}`}
-                                </p>
-                                {event.description && (
-                                  <p className="text-sm text-gray-600 line-clamp-2">{event.description}</p>
-                                )}
-                              </div>
-                              {event.discountPercent && (
-                                <Badge className="bg-green-600 text-white">
-                                  -{event.discountPercent}%
-                                </Badge>
-                              )}
-                            </div>
+                              </CardContent>
+                            </Card>
                           );
                         })
                     )}
@@ -311,12 +340,12 @@ export default function Calendar() {
             </Card>
           </div>
 
-          {/* Sidebar - Événements à venir */}
+          {/* Sidebar */}
           <div className="space-y-6">
             {/* Légende */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Légende</CardTitle>
+                <CardTitle className="text-lg">Légende</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {Object.entries(EVENT_TYPES).map(([key, config]) => {
@@ -324,9 +353,9 @@ export default function Calendar() {
                   return (
                     <div key={key} className="flex items-center gap-2">
                       <div className={`p-1 rounded ${config.color}`}>
-                        <Icon className="w-3 h-3" />
+                        <Icon className="w-4 h-4" />
                       </div>
-                      <span className="text-sm text-gray-600">{config.label}</span>
+                      <span className="text-sm">{config.label}</span>
                     </div>
                   );
                 })}
@@ -336,7 +365,7 @@ export default function Calendar() {
             {/* Prochains événements */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Prochains événements</CardTitle>
+                <CardTitle className="text-lg">Prochains événements</CardTitle>
                 <CardDescription>Les 10 prochains</CardDescription>
               </CardHeader>
               <CardContent>
@@ -346,32 +375,21 @@ export default function Calendar() {
                   </p>
                 ) : (
                   <div className="space-y-3">
-                    {upcomingEvents.map((event: Event) => {
+                    {upcomingEvents.map(event => {
                       const typeConfig = EVENT_TYPES[event.type];
-                      const Icon = typeConfig.icon;
-                      
                       return (
                         <button
                           key={event.id}
                           onClick={() => setSelectedEvent(event)}
                           className="w-full text-left p-2 rounded-lg hover:bg-gray-50 transition-colors"
                         >
-                          <div className="flex items-start gap-2">
-                            <div className={`p-1 rounded ${typeConfig.color}`}>
-                              <Icon className="w-3 h-3" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {event.title}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {new Date(event.startDate).toLocaleDateString("fr-FR", {
-                                  day: "numeric",
-                                  month: "short"
-                                })}
-                              </p>
-                            </div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className={`w-2 h-2 rounded-full ${typeConfig.color.split(' ')[0]}`} />
+                            <span className="text-sm font-medium truncate">{event.title}</span>
                           </div>
+                          <p className="text-xs text-gray-500 pl-4">
+                            {formatDate(event.startDate)}
+                          </p>
                         </button>
                       );
                     })}
@@ -383,79 +401,97 @@ export default function Calendar() {
         </div>
       </main>
 
-      {/* Modal détail événement */}
+      {/* Modal de détail d'événement */}
       <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
         <DialogContent className="max-w-lg">
           {selectedEvent && (
             <>
               <DialogHeader>
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge className={EVENT_TYPES[selectedEvent.type].color}>
-                    {EVENT_TYPES[selectedEvent.type].label}
-                  </Badge>
-                  {selectedEvent.discountPercent && (
-                    <Badge className="bg-green-600 text-white">
-                      -{selectedEvent.discountPercent}% de réduction
-                    </Badge>
-                  )}
-                </div>
-                <DialogTitle className="text-xl">{selectedEvent.title}</DialogTitle>
-                <DialogDescription asChild>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <CalendarIcon className="w-4 h-4" />
-                      <span>{formatDate(selectedEvent.startDate)}</span>
-                    </div>
-                    {!selectedEvent.allDay && (
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Clock className="w-4 h-4" />
-                        <span>{formatTime(selectedEvent.startDate)}</span>
-                        {selectedEvent.endDate && (
-                          <span>- {formatTime(selectedEvent.endDate)}</span>
-                        )}
+                <div className="flex items-center gap-3">
+                  {(() => {
+                    const typeConfig = EVENT_TYPES[selectedEvent.type];
+                    const TypeIcon = typeConfig.icon;
+                    return (
+                      <div className={`p-2 rounded-lg ${typeConfig.color}`}>
+                        <TypeIcon className="w-6 h-6" />
                       </div>
-                    )}
+                    );
+                  })()}
+                  <div>
+                    <DialogTitle>{selectedEvent.title}</DialogTitle>
+                    <Badge variant="outline" className={EVENT_TYPES[selectedEvent.type].color}>
+                      {EVENT_TYPES[selectedEvent.type].label}
+                    </Badge>
                   </div>
-                </DialogDescription>
+                </div>
               </DialogHeader>
               
-              {selectedEvent.imageUrl && (
-                <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
-                  <img
-                    src={selectedEvent.imageUrl}
-                    alt={selectedEvent.title}
-                    className="w-full h-full object-cover"
-                  />
+              <div className="space-y-4">
+                {/* Dates */}
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Clock className="w-4 h-4" />
+                  <span>
+                    {formatDate(selectedEvent.startDate)}
+                    {!selectedEvent.allDay && ` à ${formatTime(selectedEvent.startDate)}`}
+                    {selectedEvent.endDate && (
+                      <>
+                        {" - "}
+                        {formatDate(selectedEvent.endDate)}
+                        {!selectedEvent.allDay && ` à ${formatTime(selectedEvent.endDate)}`}
+                      </>
+                    )}
+                  </span>
                 </div>
-              )}
-              
-              {selectedEvent.description && (
-                <div className="prose prose-sm max-w-none">
-                  <p className="text-gray-600">{selectedEvent.description}</p>
-                </div>
-              )}
-              
-              {selectedEvent.promoCode && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="text-sm text-green-800 font-medium mb-1">Code promo</p>
-                  <p className="text-lg font-mono font-bold text-green-900">
-                    {selectedEvent.promoCode}
-                  </p>
-                </div>
-              )}
-              
-              <div className="flex gap-2 pt-4">
-                {selectedEvent.attachmentUrl && (
-                  <Button asChild variant="outline" className="flex-1">
-                    <a href={selectedEvent.attachmentUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Voir le document
-                    </a>
-                  </Button>
+
+                {/* Description */}
+                {selectedEvent.description && (
+                  <p className="text-gray-700">{selectedEvent.description}</p>
                 )}
-                <Button onClick={() => setSelectedEvent(null)} className="flex-1">
-                  Fermer
-                </Button>
+
+                {/* Code promo */}
+                {selectedEvent.promoCode && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Gift className="w-5 h-5 text-green-600" />
+                      <span className="font-semibold text-green-800">Offre promotionnelle</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <p className="text-sm text-green-700">Code promo:</p>
+                        <p className="font-mono font-bold text-lg text-green-900">
+                          {selectedEvent.promoCode}
+                        </p>
+                      </div>
+                      {selectedEvent.discountPercent && (
+                        <div className="bg-green-600 text-white px-3 py-1 rounded-full font-bold">
+                          -{selectedEvent.discountPercent}%
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Image */}
+                {selectedEvent.imageUrl && (
+                  <img 
+                    src={selectedEvent.imageUrl} 
+                    alt={selectedEvent.title}
+                    className="w-full rounded-lg"
+                  />
+                )}
+
+                {/* Pièce jointe */}
+                {selectedEvent.attachmentUrl && (
+                  <a 
+                    href={selectedEvent.attachmentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-primary hover:underline"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Voir le document
+                  </a>
+                )}
               </div>
             </>
           )}

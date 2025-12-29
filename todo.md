@@ -282,3 +282,38 @@
 - [x] Créer le dashboard admin pour les statistiques de leads (AdminLeads.tsx)
 - [x] Afficher les budgets et métriques des campagnes Meta (intégration API préparée)
 - [x] Tracker les interactions des revendeurs avec leurs leads (lead_status_history)
+
+
+## Finalisation complète du portail - Session actuelle
+
+### Audit des pages utilisateur
+- [x] Dashboard utilisateur - Vérifier affichage et liens (tous les liens fonctionnels)
+- [x] Catalogue produits - Vérifier recherche, filtres, ajout panier (16 produits, prix affichés)
+- [x] Panier - Vérifier ajout, modification quantité, suppression (calcul TVA correct)
+- [ ] Checkout - Vérifier formulaire et paiement
+- [ ] Commandes - Vérifier historique et détails
+- [ ] Leads - Vérifier affichage et gestion des statuts
+- [x] Calendrier - Vérifier affichage des événements (8 événements affichés)
+- [ ] Ressources - Vérifier téléchargement des fichiers
+- [ ] Favoris - Vérifier ajout et suppression
+- [ ] Profil - Vérifier modification des informations
+
+### Audit des pages admin
+- [x] Dashboard admin - Vérifier KPIs et alertes (16 produits, alertes stock)
+- [x] Gestion produits - Vérifier CRUD complet (16 produits affichés)
+- [ ] Gestion commandes - Vérifier changement de statut
+- [x] Gestion partenaires - Vérifier approbation et modification (4 partenaires, 1 approuvé)
+- [x] Gestion leads - Vérifier statistiques et attribution (3 leads, filtres fonctionnels)
+- [ ] Rapports - Vérifier export CSV/Excel
+- [ ] Paramètres - Vérifier sauvegarde des configurations
+
+### Bugs à corriger
+- [ ] Vérifier tous les liens de navigation
+- [ ] Vérifier tous les formulaires
+- [ ] Vérifier les messages d'erreur
+- [ ] Vérifier les états de chargement
+
+### Données de démonstration
+- [x] Ajouter des événements dans le calendrier (8 événements créés)
+- [ ] Ajouter des leads de test
+- [ ] Vérifier les ressources disponibles

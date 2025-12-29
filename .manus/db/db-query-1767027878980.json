@@ -1,0 +1,130 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'events' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'events' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "EVENT_CATALOG"
+    },
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "EVENT_SCHEMA"
+    },
+    {
+      "COLUMN_NAME": "title"
+    },
+    {
+      "COLUMN_NAME": "EVENT_NAME"
+    },
+    {
+      "COLUMN_NAME": "description"
+    },
+    {
+      "COLUMN_NAME": "DEFINER"
+    },
+    {
+      "COLUMN_NAME": "type"
+    },
+    {
+      "COLUMN_NAME": "TIME_ZONE"
+    },
+    {
+      "COLUMN_NAME": "startDate"
+    },
+    {
+      "COLUMN_NAME": "EVENT_BODY"
+    },
+    {
+      "COLUMN_NAME": "endDate"
+    },
+    {
+      "COLUMN_NAME": "allDay"
+    },
+    {
+      "COLUMN_NAME": "EVENT_DEFINITION"
+    },
+    {
+      "COLUMN_NAME": "discountPercent"
+    },
+    {
+      "COLUMN_NAME": "EVENT_TYPE"
+    },
+    {
+      "COLUMN_NAME": "promoCode"
+    },
+    {
+      "COLUMN_NAME": "EXECUTE_AT"
+    },
+    {
+      "COLUMN_NAME": "imageUrl"
+    },
+    {
+      "COLUMN_NAME": "INTERVAL_VALUE"
+    },
+    {
+      "COLUMN_NAME": "INTERVAL_FIELD"
+    },
+    {
+      "COLUMN_NAME": "attachmentUrl"
+    },
+    {
+      "COLUMN_NAME": "isPublished"
+    },
+    {
+      "COLUMN_NAME": "SQL_MODE"
+    },
+    {
+      "COLUMN_NAME": "targetPartnerLevels"
+    },
+    {
+      "COLUMN_NAME": "STARTS"
+    },
+    {
+      "COLUMN_NAME": "createdBy"
+    },
+    {
+      "COLUMN_NAME": "ENDS"
+    },
+    {
+      "COLUMN_NAME": "STATUS"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    },
+    {
+      "COLUMN_NAME": "ON_COMPLETION"
+    },
+    {
+      "COLUMN_NAME": "updatedAt"
+    },
+    {
+      "COLUMN_NAME": "CREATED"
+    },
+    {
+      "COLUMN_NAME": "LAST_ALTERED"
+    },
+    {
+      "COLUMN_NAME": "LAST_EXECUTED"
+    },
+    {
+      "COLUMN_NAME": "EVENT_COMMENT"
+    },
+    {
+      "COLUMN_NAME": "ORIGINATOR"
+    },
+    {
+      "COLUMN_NAME": "CHARACTER_SET_CLIENT"
+    },
+    {
+      "COLUMN_NAME": "COLLATION_CONNECTION"
+    },
+    {
+      "COLUMN_NAME": "DATABASE_COLLATION"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nEVENT_CATALOG\nid\nEVENT_SCHEMA\ntitle\nEVENT_NAME\ndescription\nDEFINER\ntype\nTIME_ZONE\nstartDate\nEVENT_BODY\nendDate\nallDay\nEVENT_DEFINITION\ndiscountPercent\nEVENT_TYPE\npromoCode\nEXECUTE_AT\nimageUrl\nINTERVAL_VALUE\nINTERVAL_FIELD\nattachmentUrl\nisPublished\nSQL_MODE\ntargetPartnerLevels\nSTARTS\ncreatedBy\nENDS\nSTATUS\ncreatedAt\nON_COMPLETION\nupdatedAt\nCREATED\nLAST_ALTERED\nLAST_EXECUTED\nEVENT_COMMENT\nORIGINATOR\nCHARACTER_SET_CLIENT\nCOLLATION_CONNECTION\nDATABASE_COLLATION\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

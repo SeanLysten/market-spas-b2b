@@ -1,0 +1,74 @@
+{
+  "query": "SELECT id, title FROM events ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, title FROM events ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "title": "Promotion Nouvel An 2025"
+    },
+    {
+      "id": "2",
+      "title": "Formation Technique Saunas"
+    },
+    {
+      "id": "3",
+      "title": "Webinaire: Nouveautés 2025"
+    },
+    {
+      "id": "4",
+      "title": "Salon Piscine & Spa Bruxelles"
+    },
+    {
+      "id": "5",
+      "title": "Promotion Saint-Valentin"
+    },
+    {
+      "id": "6",
+      "title": "Lancement Swim Spa 2025"
+    },
+    {
+      "id": "7",
+      "title": "Formation Installation Jacuzzis"
+    },
+    {
+      "id": "8",
+      "title": "Promotion Printemps"
+    },
+    {
+      "id": "9",
+      "title": "Promotion Nouvel An 2025"
+    },
+    {
+      "id": "10",
+      "title": "Formation Technique Saunas"
+    },
+    {
+      "id": "11",
+      "title": "Webinaire: Nouveautés 2025"
+    },
+    {
+      "id": "12",
+      "title": "Salon Piscine & Spa Bruxelles"
+    },
+    {
+      "id": "13",
+      "title": "Promotion Saint-Valentin"
+    },
+    {
+      "id": "14",
+      "title": "Lancement Swim Spa 2025"
+    },
+    {
+      "id": "15",
+      "title": "Formation Installation Jacuzzis"
+    },
+    {
+      "id": "16",
+      "title": "Promotion Printemps"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\n1\tPromotion Nouvel An 2025\n2\tFormation Technique Saunas\n3\tWebinaire: Nouveautés 2025\n4\tSalon Piscine & Spa Bruxelles\n5\tPromotion Saint-Valentin\n6\tLancement Swim Spa 2025\n7\tFormation Installation Jacuzzis\n8\tPromotion Printemps\n9\tPromotion Nouvel An 2025\n10\tFormation Technique Saunas\n11\tWebinaire: Nouveautés 2025\n12\tSalon Piscine & Spa Bruxelles\n13\tPromotion Saint-Valentin\n14\tLancement Swim Spa 2025\n15\tFormation Installation Jacuzzis\n16\tPromotion Printemps\n",
+  "stderr": "",
+  "execution_time_ms": 71
+}
