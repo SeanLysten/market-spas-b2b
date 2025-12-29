@@ -1,0 +1,30 @@
+{
+  "query": "SELECT * FROM resources LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT * FROM resources LIMIT 5;",
+  "rows": [
+    {
+      "id": "2",
+      "title": "Logo Market Spas",
+      "description": "Logo orignial en .png ",
+      "category": "MARKETING_IMAGE",
+      "fileUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/resources/1766333117913-logo marketspa copie.PNG",
+      "fileType": "image/png",
+      "fileSize": "1072796",
+      "thumbnailUrl": "NULL",
+      "isPublic": "0",
+      "requiredPartnerLevel": "BRONZE",
+      "tags": "NULL",
+      "language": "fr",
+      "downloadCount": "0",
+      "viewCount": "0",
+      "isActive": "1",
+      "uploadedById": "1",
+      "createdAt": "2025-12-21 16:05:18",
+      "updatedAt": "2025-12-21 16:05:18"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tdescription\tcategory\tfileUrl\tfileType\tfileSize\tthumbnailUrl\tisPublic\trequiredPartnerLevel\ttags\tlanguage\tdownloadCount\tviewCount\tisActive\tuploadedById\tcreatedAt\tupdatedAt\n2\tLogo Market Spas\tLogo orignial en .png \tMARKETING_IMAGE\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/resources/1766333117913-logo marketspa copie.PNG\timage/png\t1072796\tNULL\t0\tBRONZE\tNULL\tfr\t0\t0\t1\t1\t2025-12-21 16:05:18\t2025-12-21 16:05:18\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

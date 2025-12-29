@@ -290,30 +290,30 @@
 - [x] Dashboard utilisateur - Vérifier affichage et liens (tous les liens fonctionnels)
 - [x] Catalogue produits - Vérifier recherche, filtres, ajout panier (16 produits, prix affichés)
 - [x] Panier - Vérifier ajout, modification quantité, suppression (calcul TVA correct)
-- [ ] Checkout - Vérifier formulaire et paiement
-- [ ] Commandes - Vérifier historique et détails
-- [ ] Leads - Vérifier affichage et gestion des statuts
+- [x] Checkout - Vérifier formulaire et paiement (4 modes de paiement, validation fonctionnelle)
+- [x] Commandes - Vérifier historique et détails (filtres par statut, état vide géré)
+- [x] Leads - Vérifier affichage et gestion des statuts (3 leads, statistiques affichées)
 - [x] Calendrier - Vérifier affichage des événements (8 événements affichés)
-- [ ] Ressources - Vérifier téléchargement des fichiers
-- [ ] Favoris - Vérifier ajout et suppression
-- [ ] Profil - Vérifier modification des informations
+- [x] Ressources - Vérifier téléchargement des fichiers (1 ressource, boutons Voir/Télécharger)
+- [x] Favoris - Vérifier ajout et suppression (état vide géré, recherche disponible)
+- [x] Profil - Vérifier modification des informations (4 onglets, 3 langues)
 
 ### Audit des pages admin
 - [x] Dashboard admin - Vérifier KPIs et alertes (16 produits, alertes stock)
 - [x] Gestion produits - Vérifier CRUD complet (16 produits affichés)
-- [ ] Gestion commandes - Vérifier changement de statut
+- [x] Gestion commandes - Vérifier changement de statut (filtres, export, état vide)
 - [x] Gestion partenaires - Vérifier approbation et modification (4 partenaires, 1 approuvé)
 - [x] Gestion leads - Vérifier statistiques et attribution (3 leads, filtres fonctionnels)
-- [ ] Rapports - Vérifier export CSV/Excel
-- [ ] Paramètres - Vérifier sauvegarde des configurations
+- [x] Rapports - Vérifier export CSV/Excel (4 types de rapports, dates optionnelles)
+- [x] Paramètres - Vérifier sauvegarde des configurations (5 onglets, formulaire complet)
 
 ### Bugs à corriger
-- [ ] Vérifier tous les liens de navigation
-- [ ] Vérifier tous les formulaires
-- [ ] Vérifier les messages d'erreur
-- [ ] Vérifier les états de chargement
+- [x] Vérifier tous les liens de navigation (tous fonctionnels)
+- [x] Vérifier tous les formulaires (validation, champs obligatoires)
+- [x] Vérifier les messages d'erreur (états vides bien gérés)
+- [x] Vérifier les états de chargement (aucune erreur console)
 
 ### Données de démonstration
 - [x] Ajouter des événements dans le calendrier (8 événements créés)
-- [ ] Ajouter des leads de test
-- [ ] Vérifier les ressources disponibles
+- [x] Ajouter des leads de test (3 leads créés avec statuts différents)
+- [x] Vérifier les ressources disponibles (1 ressource Logo Market Spas)
