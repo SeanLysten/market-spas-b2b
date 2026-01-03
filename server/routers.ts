@@ -5,6 +5,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import * as db from "./db";
+import * as territoriesDb from "./territories-db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 
@@ -1117,6 +1118,95 @@ export const appRouter = router({
         )
         .mutation(async ({ input }) => {
           return await db.assignLeadToPartner(input.leadId, input.partnerId);
+        }),
+    }),
+
+    // Territory management
+    territories: router({
+      // Get all countries
+      countries: adminProcedure.query(async () => {
+        return await territoriesDb.getAllCountries();
+      }),
+
+      // Get regions by country
+      regionsByCountry: adminProcedure
+        .input(z.object({ countryId: z.number() }))
+        .query(async ({ input }) => {
+          return await territoriesDb.getRegionsByCountry(input.countryId);
+        }),
+
+      // Get all regions with country info
+      allRegions: adminProcedure.query(async () => {
+        return await territoriesDb.getAllRegionsWithCountry();
+      }),
+
+      // Get postal code ranges by region
+      postalCodeRanges: adminProcedure
+        .input(z.object({ regionId: z.number() }))
+        .query(async ({ input }) => {
+          return await territoriesDb.getPostalCodeRangesByRegion(input.regionId);
+        }),
+
+      // Get partner territories
+      partnerTerritories: adminProcedure
+        .input(z.object({ partnerId: z.number() }))
+        .query(async ({ input }) => {
+          return await territoriesDb.getPartnerTerritories(input.partnerId);
+        }),
+
+      // Get all partner territories
+      allPartnerTerritories: adminProcedure.query(async () => {
+        return await territoriesDb.getAllPartnerTerritories();
+      }),
+
+      // Assign territory to partner
+      assign: adminProcedure
+        .input(
+          z.object({
+            partnerId: z.number(),
+            regionId: z.number(),
+            priority: z.number().optional().default(1),
+            isExclusive: z.boolean().optional().default(false),
+            notes: z.string().optional(),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          return await territoriesDb.assignTerritoryToPartner(
+            input.partnerId,
+            input.regionId,
+            input.priority,
+            input.isExclusive,
+            ctx.user.id,
+            input.notes
+          );
+        }),
+
+      // Remove territory from partner
+      remove: adminProcedure
+        .input(z.object({ territoryId: z.number() }))
+        .mutation(async ({ input }) => {
+          await territoriesDb.removeTerritoryFromPartner(input.territoryId);
+          return { success: true };
+        }),
+
+      // Update territory priority
+      updatePriority: adminProcedure
+        .input(
+          z.object({
+            territoryId: z.number(),
+            priority: z.number(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          await territoriesDb.updateTerritoryPriority(input.territoryId, input.priority);
+          return { success: true };
+        }),
+
+      // Find best partner for postal code
+      findPartnerForPostalCode: adminProcedure
+        .input(z.object({ postalCode: z.string() }))
+        .query(async ({ input }) => {
+          return await territoriesDb.findBestPartnerForPostalCode(input.postalCode);
         }),
     }),
   }),

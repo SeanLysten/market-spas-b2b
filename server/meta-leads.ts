@@ -195,6 +195,7 @@ async function createLeadFromMeta(
 
 /**
  * Distribue un lead au partenaire approprié selon le code postal
+ * Utilise le nouveau système de territoires par régions
  */
 export async function distributeLeadToPartner(leadId: number): Promise<void> {
   const db = await getDb();
@@ -208,31 +209,18 @@ export async function distributeLeadToPartner(leadId: number): Promise<void> {
     return;
   }
 
-  // Chercher un partenaire qui couvre ce code postal
-  const [postalCodeMatch] = await db
-    .select({
-      partnerId: partnerPostalCodes.partnerId,
-      priority: partnerPostalCodes.priority,
-    })
-    .from(partnerPostalCodes)
-    .innerJoin(partners, eq(partners.id, partnerPostalCodes.partnerId))
-    .where(
-      and(
-        eq(partnerPostalCodes.postalCode, lead.postalCode),
-        eq(partners.status, "APPROVED")
-      )
-    )
-    .orderBy(desc(partnerPostalCodes.priority))
-    .limit(1);
+  // Utiliser le nouveau système de territoires
+  const { findBestPartnerForPostalCode } = await import("./territories-db");
+  const partnerMatch = await findBestPartnerForPostalCode(lead.postalCode);
 
-  if (postalCodeMatch) {
+  if (partnerMatch) {
     // Assigner le lead au partenaire
     await db
       .update(leads)
       .set({
-        assignedPartnerId: postalCodeMatch.partnerId,
+        assignedPartnerId: partnerMatch.partnerId,
         assignedAt: new Date(),
-        assignmentReason: "postal_code_match",
+        assignmentReason: `territory_match_${partnerMatch.region}_${partnerMatch.country}`,
         status: "ASSIGNED",
       })
       .where(eq(leads.id, leadId));
@@ -242,15 +230,24 @@ export async function distributeLeadToPartner(leadId: number): Promise<void> {
       leadId,
       previousStatus: "NEW",
       newStatus: "ASSIGNED",
-      notes: `Assigné automatiquement au partenaire ${postalCodeMatch.partnerId} (code postal ${lead.postalCode})`,
+      notes: `Assigné automatiquement à ${partnerMatch.partnerName} (${partnerMatch.region}, ${partnerMatch.country} - code postal ${lead.postalCode})`,
     });
 
     // Notifier le partenaire
-    await notifyPartnerNewLead(postalCodeMatch.partnerId, lead);
+    await notifyPartnerNewLead(partnerMatch.partnerId, lead);
     
-    console.log(`[Lead] Lead ${leadId} assigné au partenaire ${postalCodeMatch.partnerId}`);
+    console.log(`[Lead] Lead ${leadId} assigné au partenaire ${partnerMatch.partnerId} (${partnerMatch.partnerName})`);
   } else {
     console.log(`[Lead] Aucun partenaire trouvé pour le code postal ${lead.postalCode}`);
+    
+    // Marquer le lead comme non assigné
+    await db
+      .update(leads)
+      .set({
+        assignmentReason: `no_partner_for_postal_code_${lead.postalCode}`,
+        // Garder le statut NEW si aucun partenaire n'est trouvé
+      })
+      .where(eq(leads.id, leadId));
   }
 }
 

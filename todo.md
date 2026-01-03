@@ -334,3 +334,12 @@
 - [ ] Configurer le webhook dans Facebook (action utilisateur)
 - [ ] Créer la route pour récupérer les statistiques Meta Ads
 - [ ] Mettre à jour la page Leads pour afficher les données Facebook
+
+### Gestion des Territoires et Attribution des Leads
+- [x] Créer les tables pour les pays, régions et codes postaux (countries, regions, postal_code_ranges, partner_territories)
+- [x] Ajouter les données de référence (5 pays: BE, CH, ES, FR, DE avec 22 régions et 78 plages de codes postaux)
+- [x] Créer les routes tRPC pour la gestion des territoires (admin.territories)
+- [x] Créer l'interface admin pour assigner des territoires aux partenaires (Territories.tsx)
+- [x] Implémenter la logique d'attribution automatique par code postal (findBestPartnerForPostalCode)
+- [x] Mettre à jour meta-leads.ts pour utiliser le nouveau système de territoires
+- [ ] Tester l'attribution automatique avec différents codes postaux

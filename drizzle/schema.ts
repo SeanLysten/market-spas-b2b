@@ -1358,3 +1358,94 @@ export type InsertPartnerPostalCode = typeof partnerPostalCodes.$inferInsert;
 
 export type MetaCampaign = typeof metaCampaigns.$inferSelect;
 export type InsertMetaCampaign = typeof metaCampaigns.$inferInsert;
+
+// ============================================
+// TERRITORY MANAGEMENT
+// ============================================
+
+// Countries table
+export const countries = mysqlTable(
+  "countries",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    code: varchar("code", { length: 2 }).notNull().unique(), // ISO 3166-1 alpha-2 (BE, CH, ES, FR, DE)
+    name: varchar("name", { length: 100 }).notNull(),
+    nameEn: varchar("nameEn", { length: 100 }).notNull(),
+    nameFr: varchar("nameFr", { length: 100 }).notNull(),
+    nameNl: varchar("nameNl", { length: 100 }).notNull(),
+    isActive: boolean("isActive").default(true).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    codeIdx: index("code_idx").on(table.code),
+  })
+);
+
+// Regions table (provinces, cantons, etc.)
+export const regions = mysqlTable(
+  "regions",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    countryId: int("countryId").notNull(),
+    code: varchar("code", { length: 10 }).notNull(), // Ex: WAL, FLA, ZH, GE
+    name: varchar("name", { length: 100 }).notNull(),
+    nameEn: varchar("nameEn", { length: 100 }),
+    nameFr: varchar("nameFr", { length: 100 }),
+    nameNl: varchar("nameNl", { length: 100 }),
+    isActive: boolean("isActive").default(true).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    countryIdIdx: index("countryId_idx").on(table.countryId),
+    uniqueCountryCode: unique("unique_country_code").on(table.countryId, table.code),
+  })
+);
+
+// Postal code ranges by region
+export const postalCodeRanges = mysqlTable(
+  "postal_code_ranges",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    regionId: int("regionId").notNull(),
+    startCode: varchar("startCode", { length: 20 }).notNull(),
+    endCode: varchar("endCode", { length: 20 }).notNull(),
+    description: text("description"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    regionIdIdx: index("regionId_idx").on(table.regionId),
+    startCodeIdx: index("startCode_idx").on(table.startCode),
+  })
+);
+
+// Partner territories (replaces partnerPostalCodes)
+export const partnerTerritories = mysqlTable(
+  "partner_territories",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    partnerId: int("partnerId").notNull(),
+    regionId: int("regionId").notNull(),
+    priority: int("priority").default(1).notNull(), // Higher = preferred if multiple partners cover same region
+    isExclusive: boolean("isExclusive").default(false).notNull(), // Exclusive territory
+    assignedAt: timestamp("assignedAt").defaultNow().notNull(),
+    assignedBy: int("assignedBy"), // User ID who assigned
+    notes: text("notes"),
+  },
+  (table) => ({
+    partnerIdIdx: index("partnerId_idx").on(table.partnerId),
+    regionIdIdx: index("regionId_idx").on(table.regionId),
+    uniquePartnerRegion: unique("unique_partner_region").on(table.partnerId, table.regionId),
+  })
+);
+
+export type Country = typeof countries.$inferSelect;
+export type InsertCountry = typeof countries.$inferInsert;
+
+export type Region = typeof regions.$inferSelect;
+export type InsertRegion = typeof regions.$inferInsert;
+
+export type PostalCodeRange = typeof postalCodeRanges.$inferSelect;
+export type InsertPostalCodeRange = typeof postalCodeRanges.$inferInsert;
+
+export type PartnerTerritory = typeof partnerTerritories.$inferSelect;
+export type InsertPartnerTerritory = typeof partnerTerritories.$inferInsert;
