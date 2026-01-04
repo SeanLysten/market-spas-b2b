@@ -2476,3 +2476,93 @@ export async function processPartialRefund(data: {
   return { success: true, message: "Remboursement partiel traité" };
   */
 }
+
+
+// ============================================
+// ANALYTICS & CHARTS
+// ============================================
+
+/**
+ * Get sales data by month for the last 12 months
+ */
+export async function getSalesByMonth(months: number = 12) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db.execute(sql`
+    SELECT 
+      DATE_FORMAT(createdAt, '%Y-%m') as month,
+      COUNT(*) as orders,
+      SUM(CAST(totalTTC as DECIMAL(12,2))) as sales
+    FROM orders
+    WHERE status NOT IN ('CANCELLED', 'DRAFT')
+      AND createdAt >= DATE_SUB(NOW(), INTERVAL ${months} MONTH)
+    GROUP BY DATE_FORMAT(createdAt, '%Y-%m')
+    ORDER BY month ASC
+  `);
+
+  return (result as any).rows.map((row: any) => ({
+    month: row.month,
+    orders: Number(row.orders),
+    sales: Number(row.sales) || 0,
+  }));
+}
+
+/**
+ * Get top selling products
+ */
+export async function getTopProducts(limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db.execute(sql`
+    SELECT 
+      oi.name,
+      oi.sku,
+      SUM(oi.quantity) as quantity,
+      SUM(CAST(oi.quantity * oi.unitPriceHT as DECIMAL(12,2))) as revenue
+    FROM order_items oi
+    INNER JOIN orders o ON oi.orderId = o.id
+    WHERE o.status NOT IN ('CANCELLED', 'DRAFT')
+    GROUP BY oi.name, oi.sku
+    ORDER BY revenue DESC
+    LIMIT ${limit}
+  `);
+
+  return (result as any).rows.map((row: any) => ({
+    name: row.name,
+    sku: row.sku,
+    quantity: Number(row.quantity),
+    revenue: Number(row.revenue) || 0,
+  }));
+}
+
+/**
+ * Get partner performance data
+ */
+export async function getPartnerPerformance(limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db.execute(sql`
+    SELECT 
+      p.companyName,
+      COUNT(o.id) as orders,
+      SUM(CAST(o.totalTTC as DECIMAL(12,2))) as revenue,
+      AVG(CAST(o.totalTTC as DECIMAL(12,2))) as avgOrderValue
+    FROM partners p
+    LEFT JOIN orders o ON p.id = o.partnerId AND o.status NOT IN ('CANCELLED', 'DRAFT')
+    WHERE p.status = 'APPROVED'
+    GROUP BY p.id, p.companyName
+    HAVING orders > 0
+    ORDER BY revenue DESC
+    LIMIT ${limit}
+  `);
+
+  return (result as any).rows.map((row: any) => ({
+    companyName: row.companyName,
+    orders: Number(row.orders),
+    revenue: Number(row.revenue) || 0,
+    avgOrderValue: Number(row.avgOrderValue) || 0,
+  }));
+}

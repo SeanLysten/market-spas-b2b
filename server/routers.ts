@@ -1226,6 +1226,30 @@ export const appRouter = router({
           return await territoriesDb.findBestPartnerForPostalCode(input.postalCode);
         }),
     }),
+
+    // Analytics & Charts
+    analytics: router({
+      // Sales by month
+      salesByMonth: adminProcedure
+        .input(z.object({ months: z.number().default(12) }).optional())
+        .query(async ({ input }) => {
+          return await db.getSalesByMonth(input?.months || 12);
+        }),
+
+      // Top products
+      topProducts: adminProcedure
+        .input(z.object({ limit: z.number().default(10) }).optional())
+        .query(async ({ input }) => {
+          return await db.getTopProducts(input?.limit || 10);
+        }),
+
+      // Partner performance
+      partnerPerformance: adminProcedure
+        .input(z.object({ limit: z.number().default(10) }).optional())
+        .query(async ({ input }) => {
+          return await db.getPartnerPerformance(input?.limit || 10);
+        }),
+    }),
   }),
 });
 

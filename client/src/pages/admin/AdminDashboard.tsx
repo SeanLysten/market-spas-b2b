@@ -21,11 +21,17 @@ import {
   Activity
 } from "lucide-react";
 import { Link } from "wouter";
+import SalesChart from "@/components/charts/SalesChart";
+import TopProductsChart from "@/components/charts/TopProductsChart";
 
 export default function AdminDashboard() {
   const { data: stats, isLoading } = trpc.dashboard.stats.useQuery();
   const { data: recentOrders } = trpc.orders.list.useQuery({ limit: 5 });
   const { data: lowStockProducts } = trpc.products.list.useQuery({ limit: 100 });
+  
+  // Analytics data
+  const { data: salesData } = trpc.admin.analytics.salesByMonth.useQuery({ months: 6 });
+  const { data: topProductsData } = trpc.admin.analytics.topProducts.useQuery({ limit: 5 });
 
   // Filter low stock products
   const lowStock = lowStockProducts?.filter((p: any) => (p.stockQuantity || 0) <= 5) || [];
@@ -269,6 +275,47 @@ export default function AdminDashboard() {
                   <p>Tous les stocks sont à niveau</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Analytics Charts */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Sales Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Évolution des ventes</CardTitle>
+              <CardDescription>Chiffre d'affaires et nombre de commandes sur 6 mois</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                {salesData && salesData.length > 0 ? (
+                  <SalesChart data={salesData} />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    <p>Aucune donnée de vente disponible</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Top Products Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Top 5 produits</CardTitle>
+              <CardDescription>Produits les plus vendus par quantité et CA</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                {topProductsData && topProductsData.length > 0 ? (
+                  <TopProductsChart data={topProductsData} />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    <p>Aucune donnée de produit disponible</p>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>

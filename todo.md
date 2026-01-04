@@ -421,3 +421,11 @@
 - [ ] Graphiques d'évolution du stock
 - [ ] Rapports exportables améliorés
 - [ ] Dashboard analytics avancé
+
+
+## Graphiques de ventes - Dashboard Admin
+- [x] Installer Chart.js et react-chartjs-2
+- [x] Créer les routes tRPC pour les données de graphiques (salesByMonth, topProducts, partnerPerformance)
+- [x] Créer les composants de graphiques réutilisables (SalesChart, TopProductsChart)
+- [x] Intégrer les graphiques dans le dashboard admin (Évolution des ventes + Top 5 produits)
+- [x] Tester l'affichage avec des données réelles (graphiques affichés, message si aucune donnée)
