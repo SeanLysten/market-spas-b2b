@@ -105,6 +105,15 @@ export const resourceCategoryEnum = mysqlEnum("resource_category", [
   "CERTIFICATE",
 ]);
 
+export const productCategoryEnum = mysqlEnum("product_category", [
+  "SPAS",
+  "SWIM_SPAS",
+  "MAINTENANCE",
+  "COVERS",
+  "ACCESSORIES",
+  "OTHER",
+]);
+
 // ============================================
 // AUTHENTICATION & USERS
 // ============================================
@@ -434,7 +443,7 @@ export const products = mysqlTable(
     description: text("description"),
 
     // Category
-    categoryId: int("categoryId"),
+    category: mysqlEnum("category", ["SPAS", "SWIM_SPAS", "MAINTENANCE", "COVERS", "ACCESSORIES", "OTHER"]).default("OTHER"),
 
     // Type
     type: varchar("type", { length: 50 }).default("physical"),
@@ -481,7 +490,7 @@ export const products = mysqlTable(
   },
   (table) => ({
     skuIdx: index("sku_idx").on(table.sku),
-    categoryIdIdx: index("categoryId_idx").on(table.categoryId),
+    categoryIdx: index("category_idx").on(table.category),
     activeVisibleIdx: index("active_visible_idx").on(table.isActive, table.isVisible),
   })
 );
@@ -1449,3 +1458,96 @@ export type InsertPostalCodeRange = typeof postalCodeRanges.$inferInsert;
 
 export type PartnerTerritory = typeof partnerTerritories.$inferSelect;
 export type InsertPartnerTerritory = typeof partnerTerritories.$inferInsert;
+
+
+// ============================================
+// TECHNICAL RESOURCES & FORUM
+// ============================================
+
+// Enums for technical resources and forum
+const technicalResourceTypeEnum = ["PDF", "VIDEO", "LINK"] as const;
+const forumTopicStatusEnum = ["OPEN", "RESOLVED", "CLOSED"] as const;
+
+// Technical resources (PDFs, videos, links)
+export const technicalResources = mysqlTable(
+  "technical_resources",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    type: mysqlEnum("type", technicalResourceTypeEnum).notNull(),
+    fileUrl: text("fileUrl"), // S3 URL or external link
+    category: varchar("category", { length: 100 }), // e.g., "Installation", "Troubleshooting", "Maintenance"
+    productCategory: mysqlEnum("productCategory", ["SPAS", "SWIM_SPAS", "MAINTENANCE", "COVERS", "ACCESSORIES", "OTHER"]),
+    tags: text("tags"), // JSON array of tags
+    viewCount: int("viewCount").default(0).notNull(),
+    isPublic: boolean("isPublic").default(true).notNull(),
+    createdBy: int("createdBy").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    typeIdx: index("type_idx").on(table.type),
+    categoryIdx: index("category_idx").on(table.category),
+    productCategoryIdx: index("productCategory_idx").on(table.productCategory),
+    createdByIdx: index("createdBy_idx").on(table.createdBy),
+  })
+);
+
+// Forum topics
+export const forumTopics = mysqlTable(
+  "forum_topics",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description").notNull(),
+    category: varchar("category", { length: 100 }), // e.g., "Installation", "Troubleshooting", "General"
+    productCategory: mysqlEnum("productCategory", ["SPAS", "SWIM_SPAS", "MAINTENANCE", "COVERS", "ACCESSORIES", "OTHER"]),
+    status: mysqlEnum("status", forumTopicStatusEnum).default("OPEN").notNull(),
+    authorId: int("authorId").notNull(),
+    viewCount: int("viewCount").default(0).notNull(),
+    replyCount: int("replyCount").default(0).notNull(),
+    lastReplyAt: timestamp("lastReplyAt"),
+    lastReplyBy: int("lastReplyBy"),
+    isPinned: boolean("isPinned").default(false).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    categoryIdx: index("category_idx").on(table.category),
+    productCategoryIdx: index("productCategory_idx").on(table.productCategory),
+    statusIdx: index("status_idx").on(table.status),
+    authorIdIdx: index("authorId_idx").on(table.authorId),
+    lastReplyAtIdx: index("lastReplyAt_idx").on(table.lastReplyAt),
+  })
+);
+
+// Forum replies
+export const forumReplies = mysqlTable(
+  "forum_replies",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    topicId: int("topicId").notNull(),
+    authorId: int("authorId").notNull(),
+    content: text("content").notNull(),
+    isAdminReply: boolean("isAdminReply").default(false).notNull(),
+    isHelpful: boolean("isHelpful").default(false).notNull(), // Marked as helpful by topic author
+    helpfulCount: int("helpfulCount").default(0).notNull(), // Number of users who found this helpful
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    topicIdIdx: index("topicId_idx").on(table.topicId),
+    authorIdIdx: index("authorId_idx").on(table.authorId),
+    createdAtIdx: index("createdAt_idx").on(table.createdAt),
+  })
+);
+
+export type TechnicalResource = typeof technicalResources.$inferSelect;
+export type InsertTechnicalResource = typeof technicalResources.$inferInsert;
+
+export type ForumTopic = typeof forumTopics.$inferSelect;
+export type InsertForumTopic = typeof forumTopics.$inferInsert;
+
+export type ForumReply = typeof forumReplies.$inferSelect;
+export type InsertForumReply = typeof forumReplies.$inferInsert;

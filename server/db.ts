@@ -241,7 +241,7 @@ export async function getProductBySku(sku: string) {
 }
 
 export async function getAllProducts(filters?: {
-  categoryId?: number;
+  category?: string;
   isActive?: boolean;
   isVisible?: boolean;
   search?: string;
@@ -254,8 +254,8 @@ export async function getAllProducts(filters?: {
   let query = db.select().from(products);
 
   const conditions = [];
-  if (filters?.categoryId !== undefined) {
-    conditions.push(eq(products.categoryId, filters.categoryId));
+  if (filters?.category !== undefined) {
+    conditions.push(eq(products.category, filters.category as any));
   }
   if (filters?.isActive !== undefined) {
     conditions.push(eq(products.isActive, filters.isActive));
@@ -1850,7 +1850,7 @@ export async function getUserFavorites(userId: number) {
         pricePublicHT: products.pricePublicHT,
         pricePartnerHT: products.pricePartnerHT,
         stockQuantity: products.stockQuantity,
-        categoryId: products.categoryId,
+        category: products.category,
       }
     })
     .from(favorites)

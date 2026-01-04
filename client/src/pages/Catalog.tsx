@@ -13,12 +13,12 @@ import { toast } from "sonner";
 export default function Catalog() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<number | undefined>();
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [quantities, setQuantities] = useState<Record<number, number>>({});
 
   const { data: products, isLoading } = trpc.products.list.useQuery({
     search: searchQuery || undefined,
-    categoryId: selectedCategory,
+    category: selectedCategory,
     limit: 50,
   });
 
@@ -116,9 +116,58 @@ export default function Catalog() {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline" className="gap-2">
-              <Filter className="w-4 h-4" />
-              Filtres
+          </div>
+          
+          {/* Category Filters */}
+          <div className="flex gap-2 flex-wrap">
+            <Button 
+              variant={selectedCategory === undefined ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory(undefined)}
+            >
+              Tous
+            </Button>
+            <Button 
+              variant={selectedCategory === "SPAS" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory("SPAS")}
+            >
+              Spas
+            </Button>
+            <Button 
+              variant={selectedCategory === "SWIM_SPAS" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory("SWIM_SPAS")}
+            >
+              Spas de nage
+            </Button>
+            <Button 
+              variant={selectedCategory === "MAINTENANCE" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory("MAINTENANCE")}
+            >
+              Produits d'entretien
+            </Button>
+            <Button 
+              variant={selectedCategory === "COVERS" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory("COVERS")}
+            >
+              Couvertures
+            </Button>
+            <Button 
+              variant={selectedCategory === "ACCESSORIES" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory("ACCESSORIES")}
+            >
+              Accessoires
+            </Button>
+            <Button 
+              variant={selectedCategory === "OTHER" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory("OTHER")}
+            >
+              Autre
             </Button>
           </div>
         </div>

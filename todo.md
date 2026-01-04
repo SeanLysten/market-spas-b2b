@@ -429,3 +429,23 @@
 - [x] Créer les composants de graphiques réutilisables (SalesChart, TopProductsChart)
 - [x] Intégrer les graphiques dans le dashboard admin (Évolution des ventes + Top 5 produits)
 - [x] Tester l'affichage avec des données réelles (graphiques affichés, message si aucune donnée)
+
+
+## Système de catégories produits
+- [x] Ajouter une colonne `category` dans la table products (enum: SPAS, SWIM_SPAS, MAINTENANCE, COVERS, ACCESSORIES, OTHER)
+- [x] Mettre à jour les routes tRPC pour filtrer par catégorie (getAllProducts avec filter category)
+- [x] Ajouter un sélecteur de catégorie dans le formulaire admin de création/modification de produit
+- [x] Ajouter des filtres par catégorie dans le catalogue utilisateur (7 boutons: Tous, Spas, Spas de nage, Produits d'entretien, Couvertures, Accessoires, Autre)
+- [ ] Migrer les produits existants vers les bonnes catégories (TODO: script SQL)
+
+### Section Ressources Techniques + Forum
+- [x] Créer la table `technical_resources` (id, title, description, type: PDF/VIDEO/LINK, fileUrl, category, productCategory, tags, viewCount, createdAt, createdBy)
+- [x] Créer la table `forum_topics` (id, title, description, category, productCategory, authorId, status: OPEN/RESOLVED/CLOSED, viewCount, replyCount, isPinned, createdAt)
+- [x] Créer la table `forum_replies` (id, topicId, authorId, content, isAdminReply, isHelpful, helpfulCount, createdAt)t, isHelpful)
+- [ ] Créer les routes tRPC pour les ressources techniques (list, create, update, delete)
+- [ ] Créer les routes tRPC pour le forum (createTopic, replyToTopic, markAsResolved, markAsHelpful)
+- [ ] Créer la page admin `/admin/technical-resources` pour gérer les ressources
+- [ ] Créer la page utilisateur `/technical-resources` avec onglets (Documentations, Vidéos, Forum)
+- [ ] Implémenter le système de commentaires/réponses du forum
+- [ ] Ajouter la possibilité de marquer une réponse comme "utile"
+- [ ] Ajouter la possibilité de marquer un topic comme "résolu"

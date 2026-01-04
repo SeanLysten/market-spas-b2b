@@ -210,7 +210,7 @@ export const appRouter = router({
     list: protectedProcedure
       .input(
         z.object({
-          categoryId: z.number().optional(),
+          category: z.string().optional(),
           search: z.string().optional(),
           limit: z.number().optional().default(50),
           offset: z.number().optional().default(0),

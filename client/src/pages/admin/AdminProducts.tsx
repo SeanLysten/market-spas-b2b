@@ -40,6 +40,7 @@ export default function AdminProducts() {
     sku: "",
     name: "",
     description: "",
+    category: "OTHER" as "SPAS" | "SWIM_SPAS" | "MAINTENANCE" | "COVERS" | "ACCESSORIES" | "OTHER",
     priceHT: "",
     vatRate: "21",
     stockQuantity: "0",
@@ -116,6 +117,7 @@ export default function AdminProducts() {
       sku: "",
       name: "",
       description: "",
+      category: "OTHER" as "SPAS" | "SWIM_SPAS" | "MAINTENANCE" | "COVERS" | "ACCESSORIES" | "OTHER",
       priceHT: "",
       vatRate: "21",
       stockQuantity: "0",
@@ -132,6 +134,7 @@ export default function AdminProducts() {
       sku: product.sku || "",
       name: product.name || "",
       description: product.description || "",
+      category: product.category || "OTHER",
       priceHT: product.pricePublicHT?.toString() || "",
       vatRate: product.vatRate?.toString() || "21",
       stockQuantity: product.stockQuantity?.toString() || "0",
@@ -215,6 +218,24 @@ export default function AdminProducts() {
                     onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
                     rows={3}
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="category">Catégorie *</Label>
+                  <select
+                    id="category"
+                    value={productForm.category}
+                    onChange={(e) => setProductForm({ ...productForm, category: e.target.value as any })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    required
+                  >
+                    <option value="SPAS">Spas</option>
+                    <option value="SWIM_SPAS">Spas de nage</option>
+                    <option value="MAINTENANCE">Produits d'entretien</option>
+                    <option value="COVERS">Couvertures</option>
+                    <option value="ACCESSORIES">Accessoires</option>
+                    <option value="OTHER">Autre</option>
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
