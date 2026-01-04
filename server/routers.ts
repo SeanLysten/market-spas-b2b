@@ -410,6 +410,10 @@ export const appRouter = router({
         // Clear the cart after successful order
         await db.clearCart(ctx.user.id);
 
+        // Send new order notification
+        const { notifyNewOrder } = await import("./alerts");
+        await notifyNewOrder(result.orderId);
+
         return {
           success: true,
           orderId: result.orderId,
@@ -445,7 +449,20 @@ export const appRouter = router({
         note: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        return await db.updateOrderStatus(input.orderId, input.status, input.note);
+        // Get current order status before update
+        const order = await db.getOrderById(input.orderId);
+        const oldStatus = order?.status || "UNKNOWN";
+
+        // Update order status
+        const result = await db.updateOrderStatus(input.orderId, input.status, input.note);
+
+        // Send status change notification
+        if (order && oldStatus !== input.status) {
+          const { notifyOrderStatusChange } = await import("./alerts");
+          await notifyOrderStatusChange(input.orderId, oldStatus, input.status);
+        }
+
+        return result;
       }),
 
     // Reorder from previous order

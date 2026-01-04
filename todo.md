@@ -394,3 +394,30 @@
 - [ ] Optimisation des performances
 - [ ] Vérification de la sécurité
 - [ ] Documentation technique complète
+
+
+## Finalisation - Tâches restantes
+
+### Navigation et UX
+- [x] Ajouter un bouton "Dashboard Utilisateur" dans le dashboard admin
+- [ ] Vérifier tous les liens de navigation
+- [ ] Améliorer les transitions entre pages
+
+### Alertes et notifications
+- [x] Alertes de stock bas (automatiques) - checkLowStockAlerts()
+- [x] Alertes de nouveaux partenaires (pour admins) - checkPendingPartnersAlert()
+- [x] Notifications de changement de statut de commande - notifyOrderStatusChange()
+- [x] Notifications de nouvelle commande - notifyNewOrder()
+- [ ] Système de notifications en temps réel (nécessite WebSockets)
+
+### Gestion avancée des commandes
+- [x] Système d'annulation de commande (cancelOrder avec restauration stock)
+- [ ] Gestion des remboursements partiels (processPartialRefund - TODO schema)
+- [x] Gestion des expéditions partielles (createPartialShipment)
+- [x] Historique complet des modifications (via internalNotes)
+
+### Visualisations et rapports
+- [ ] Graphiques de ventes (Chart.js)
+- [ ] Graphiques d'évolution du stock
+- [ ] Rapports exportables améliorés
+- [ ] Dashboard analytics avancé

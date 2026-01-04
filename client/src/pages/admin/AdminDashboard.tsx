@@ -111,6 +111,12 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Link href="/dashboard">
+              <Button variant="outline" className="gap-2">
+                <Activity className="w-4 h-4" />
+                Dashboard Utilisateur
+              </Button>
+            </Link>
             <Link href="/admin/reports">
               <Button variant="outline" className="gap-2">
                 <BarChart3 className="w-4 h-4" />
