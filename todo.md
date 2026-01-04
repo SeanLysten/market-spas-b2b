@@ -68,12 +68,13 @@
 
 ## Phase 7: Intégration Stripe
 - [x] Configuration Stripe avec clés API (sandbox)
-- [ ] Création de Payment Intents pour acomptes
-- [ ] Gestion des webhooks Stripe
-- [ ] Traitement des paiements réussis
-- [ ] Gestion des échecs de paiement
-- [ ] Système de remboursements
-- [ ] Historique des transactions
+- [x] Création de Payment Intents pour acomptes (stripe.ts)
+- [x] Gestion des webhooks Stripe (/api/webhooks/stripe)
+- [x] Traitement des paiements réussis (handlePaymentSuccess)
+- [x] Gestion des échecs de paiement (handlePaymentFailure)
+- [x] Système de remboursements (handleRefund)
+- [x] Historique des transactions (table payments)
+- [ ] Intégration frontend checkout avec Stripe Elements
 
 ## Phase 8: Dashboard et analytics
 - [x] Dashboard partenaire avec KPIs personnels
@@ -343,3 +344,53 @@
 - [x] Implémenter la logique d'attribution automatique par code postal (findBestPartnerForPostalCode)
 - [x] Mettre à jour meta-leads.ts pour utiliser le nouveau système de territoires
 - [ ] Tester l'attribution automatique avec différents codes postaux
+
+
+## Session finale - Finalisation complète du portail
+
+### Système d'authentification
+- [ ] Vérifier le fonctionnement de la connexion OAuth Manus
+- [ ] Tester la déconnexion
+- [ ] Vérifier la persistance de session
+- [ ] Tester les redirections après connexion
+- [ ] Vérifier les permissions admin vs utilisateur
+
+### Fonctionnalités prioritaires à compléter
+- [ ] Synchronisation automatique stock depuis Google Sheets (toutes les 5 min)
+- [ ] Paiement d'acompte via Stripe (Payment Intents)
+- [ ] Gestion des webhooks Stripe
+- [ ] Système d'inscription partenaire avec validation email
+- [ ] Interface d'onboarding pour nouveaux partenaires
+- [ ] Surcharges de prix individuelles par partenaire
+- [ ] Gestion des expéditions partielles
+- [ ] Système d'annulation et remboursement
+
+### Intégration Odoo
+- [ ] Génération automatique de devis PDF
+- [ ] Génération de factures d'acompte
+- [ ] Génération de factures de solde
+- [ ] Intégration API JSON-RPC avec Odoo
+- [ ] Synchronisation des contacts vers Odoo
+
+### Emails transactionnels
+- [ ] Configuration du service d'email
+- [ ] Email de confirmation d'inscription
+- [ ] Email de confirmation de commande
+- [ ] Email de changement de statut
+- [ ] Email de facture disponible
+- [ ] Email d'alerte de stock bas
+- [ ] Email de validation partenaire
+
+### Jobs en arrière-plan
+- [ ] Configuration de BullMQ avec Redis
+- [ ] Job de synchronisation stock Google Sheets
+- [ ] Job de traitement des commandes
+- [ ] Job de génération de factures
+- [ ] Job d'envoi d'emails transactionnels
+
+### Tests et optimisation
+- [ ] Tests d'intégration pour workflows complets
+- [ ] Validation de toutes les intégrations externes
+- [ ] Optimisation des performances
+- [ ] Vérification de la sécurité
+- [ ] Documentation technique complète

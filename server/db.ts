@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like, lte, gte, asc, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -2289,4 +2289,65 @@ export async function getLeadStats(partnerId?: number) {
   };
   
   return stats;
+}
+
+// ============================================
+// PAYMENT TRANSACTIONS
+// ============================================
+
+export async function createPaymentTransaction(data: {
+  orderId: number;
+  amount: number;
+  currency: string;
+  paymentMethod: string;
+  stripePaymentIntentId?: string;
+  status: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Get order to find partnerId
+  const order = await db.select().from(orders).where(eq(orders.id, data.orderId)).limit(1);
+  if (order.length === 0) {
+    throw new Error(`Order ${data.orderId} not found`);
+  }
+
+  const [payment] = await db.insert(payments).values({
+    partnerId: order[0].partnerId,
+    orderId: data.orderId,
+    amount: data.amount.toString(),
+    currency: data.currency,
+    method: data.paymentMethod,
+    status: data.status as any,
+    stripePaymentIntentId: data.stripePaymentIntentId,
+    paidAt: data.status === "COMPLETED" ? new Date() : null,
+    failedAt: data.status === "FAILED" ? new Date() : null,
+    refundedAt: data.status === "REFUNDED" ? new Date() : null,
+  });
+
+  return payment;
+}
+
+export async function getPaymentTransactionByStripeId(stripePaymentIntentId: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(payments)
+    .where(eq(payments.stripePaymentIntentId, stripePaymentIntentId))
+    .limit(1);
+
+  return result[0] || null;
+}
+
+export async function getPaymentsByOrderId(orderId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(payments)
+    .where(eq(payments.orderId, orderId))
+    .orderBy(desc(payments.createdAt));
 }

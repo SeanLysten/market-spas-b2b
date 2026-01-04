@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { verifyMetaWebhook, processMetaWebhook } from "../meta-leads";
+import { handleStripeWebhook } from "../stripe-webhook";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -36,6 +37,9 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+
+  // Stripe Webhook - Must be before express.json() middleware
+  app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), handleStripeWebhook);
 
   // Meta Lead Ads Webhook
   // GET - Vérification du webhook par Meta
