@@ -25,8 +25,8 @@ export default function Catalog() {
     limit: 50,
   });
 
-  // Note: We'll fetch incoming stock per product in the dialog
-  // For badges, we could add a bulk endpoint later
+  // Fetch all incoming stock for badge display
+  const { data: allIncomingStock } = trpc.admin.incomingStock.list.useQuery({});
 
   // Remove direct add to cart mutation - now handled by ProductAddToCartDialog
 
@@ -188,7 +188,11 @@ export default function Catalog() {
               const hasStock = stock > 0;
               const quantity = getQuantity(product.id);
               const partnerPrice = getPartnerPrice(product);
-              // Incoming stock badges removed for now - will be shown in dialog
+              
+              // Check if product has incoming stock
+              const hasIncomingStock = allIncomingStock?.some(
+                (incoming: any) => incoming.productId === product.id && incoming.status === "PENDING"
+              );
 
               return (
                 <Card key={product.id} className="overflow-hidden flex flex-col">
@@ -216,7 +220,13 @@ export default function Catalog() {
                           Rupture
                         </Badge>
                       )}
-                      {/* Incoming Stock Badges - will be added back with proper API */}
+                      {/* Incoming Stock Badge */}
+                      {hasIncomingStock && (
+                        <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">
+                          <TruckIcon className="mr-1 h-3 w-3" />
+                          Arrivage
+                        </Badge>
+                      )}
                     </div>
                   </div>
 

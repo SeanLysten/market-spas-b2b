@@ -534,3 +534,8 @@
 - [x] Créer la vue globale des arrivages programmés (tous produits) dans l'onglet "Arrivages programmés"
 - [x] Ajouter les filtres par semaine et année dans la vue arrivages
 - [x] Tester la nouvelle structure
+
+## Badges "Arrivage" sur les produits du catalogue
+- [x] Ajouter la requête pour récupérer tous les arrivages programmés dans Catalog.tsx
+- [x] Afficher un badge jaune "Arrivage" sur les cartes produits ayant des arrivages programmés
+- [x] Tester l'affichage des badges
