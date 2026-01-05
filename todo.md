@@ -633,3 +633,7 @@
 - [x] Validation backend automatique via contrainte unique
 - [x] Corriger toutes les routes tRPC pour correspondre à la nouvelle signature
 - [x] Supprimer le fichier Territories.tsx en doublon
+
+## Correction du rafraîchissement temps réel des territoires (nouvelle session)
+- [x] Ajouter refetch de allTerritories après chaque mutation (assign/unassign)
+- [x] Vérifier que les provinces se dégrisent immédiatement après retrait

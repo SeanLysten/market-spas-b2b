@@ -22,7 +22,7 @@ export default function AdminTerritories() {
     { countryCode: selectedCountryCode || "" },
     { enabled: !!selectedCountryCode }
   );
-  const { data: allTerritories, isLoading: territoriesLoading } = trpc.admin.territories.list.useQuery();
+  const { data: allTerritories, isLoading: territoriesLoading, refetch: refetchAllTerritories } = trpc.admin.territories.list.useQuery();
   const { data: partnerTerritories, refetch: refetchPartnerTerritories } = trpc.admin.territories.byPartner.useQuery(
     { partnerId: selectedPartnerId || 0 },
     { enabled: !!selectedPartnerId }
@@ -33,6 +33,7 @@ export default function AdminTerritories() {
     onSuccess: () => {
       toast.success("Territoires attribués avec succès");
       refetchPartnerTerritories();
+      refetchAllTerritories();
     },
     onError: (error) => {
       toast.error(`Erreur: ${error.message}`);
@@ -43,6 +44,7 @@ export default function AdminTerritories() {
     onSuccess: () => {
       toast.success("Territoire retiré avec succès");
       refetchPartnerTerritories();
+      refetchAllTerritories();
     },
     onError: (error: any) => {
       toast.error(`Erreur: ${error.message}`);
