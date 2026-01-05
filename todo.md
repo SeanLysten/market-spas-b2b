@@ -493,3 +493,6 @@
 - [ ] Créer la page /technical-resources/forum/:id pour afficher un sujet avec ses réponses
 - [ ] Permettre aux utilisateurs de répondre aux sujets
 - [ ] Permettre de marquer un sujet comme résolu
+
+## Amélioration Dashboard - Accès Forum
+- [x] Ajouter une carte "Forum d'entraide" sur le dashboard utilisateur pour accès rapide

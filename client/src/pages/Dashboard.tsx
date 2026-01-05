@@ -18,6 +18,7 @@ import {
   Calendar,
   Megaphone,
   Gift,
+  MessageSquare,
   Target,
 } from "lucide-react";
 import { Link } from "wouter";
@@ -113,15 +114,15 @@ export default function Dashboard() {
             </Card>
           </Link>
 
-          <Link href="/calendar">
+          <Link href="/technical-resources?tab=forum">
             <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
               <CardContent className="pt-6 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <Calendar className="w-8 h-8 text-green-500" />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/10 flex items-center justify-center">
+                  <MessageSquare className="w-8 h-8 text-blue-500" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">Calendrier</h3>
+                <h3 className="font-semibold text-lg mb-2">Forum d'entraide</h3>
                 <p className="text-sm text-muted-foreground">
-                  Événements et promotions à venir
+                  Posez vos questions et partagez vos solutions
                 </p>
               </CardContent>
             </Card>
