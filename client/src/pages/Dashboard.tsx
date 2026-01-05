@@ -99,7 +99,7 @@ export default function Dashboard() {
             </Card>
           </Link>
 
-          <Link href="/resources?category=technical">
+          <Link href="/technical-resources">
             <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
               <CardContent className="pt-6 text-center">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-500/10 flex items-center justify-center">

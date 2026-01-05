@@ -482,3 +482,6 @@
 
 ## Bugs à corriger - Dashboard
 - [x] Corriger les erreurs "Cannot read properties of undefined (reading 'map')" sur /dashboard
+
+## Bugs à corriger - Liens Dashboard
+- [x] Corriger le lien "Ressources Techniques" sur /dashboard pour pointer vers /technical-resources au lieu de /resources
