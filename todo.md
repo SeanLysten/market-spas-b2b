@@ -556,3 +556,14 @@
 
 ## Bugs à corriger - Dashboard (nouvelle session)
 - [x] Corriger les erreurs "Cannot read properties of undefined (reading 'map')" sur /dashboard
+
+## Gestion automatique du stock
+- [x] Vérifier si la conversion automatique arrivage→stock existe (quand semaine d'arrivage arrive à terme)
+  - Résultat: La fonction processArrivedStock() existe mais doit être appelée manuellement
+- [x] Vérifier si la décrémentation du stock lors des commandes/précommandes existe
+  - Résultat: Décrémentation OK pour commandes normales, mais PAS pour précommandes
+- [x] Ajouter un bouton admin pour déclencher manuellement processArrivedStock()
+- [x] Implémenter la décrémentation du stock d'arrivage lors des précommandes (avec incomingStockId)
+- [x] Améliorer getIncomingStock pour retourner les données avec le produit associé
+- [ ] Déboguer le pop-up de précommande (products.getIncomingStock)
+- [ ] Tester les deux mécanismes

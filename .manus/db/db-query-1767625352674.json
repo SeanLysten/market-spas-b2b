@@ -1,0 +1,64 @@
+{
+  "query": "SELECT id, productId, variantId, quantity, expectedWeek, expectedYear, status FROM incoming_stock LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, productId, variantId, quantity, expectedWeek, expectedYear, status FROM incoming_stock LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "productId": "4",
+      "variantId": "NULL",
+      "quantity": "9",
+      "expectedWeek": "53",
+      "expectedYear": "2025",
+      "status": "PENDING"
+    },
+    {
+      "id": "2",
+      "productId": "5",
+      "variantId": "NULL",
+      "quantity": "10",
+      "expectedWeek": "53",
+      "expectedYear": "2025",
+      "status": "PENDING"
+    },
+    {
+      "id": "3",
+      "productId": "6",
+      "variantId": "NULL",
+      "quantity": "7",
+      "expectedWeek": "53",
+      "expectedYear": "2025",
+      "status": "PENDING"
+    },
+    {
+      "id": "4",
+      "productId": "30006",
+      "variantId": "NULL",
+      "quantity": "11",
+      "expectedWeek": "53",
+      "expectedYear": "2025",
+      "status": "PENDING"
+    },
+    {
+      "id": "5",
+      "productId": "30007",
+      "variantId": "NULL",
+      "quantity": "6",
+      "expectedWeek": "53",
+      "expectedYear": "2025",
+      "status": "PENDING"
+    },
+    {
+      "id": "30001",
+      "productId": "30002",
+      "variantId": "NULL",
+      "quantity": "30",
+      "expectedWeek": "15",
+      "expectedYear": "2026",
+      "status": "PENDING"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tproductId\tvariantId\tquantity\texpectedWeek\texpectedYear\tstatus\n1\t4\tNULL\t9\t53\t2025\tPENDING\n2\t5\tNULL\t10\t53\t2025\tPENDING\n3\t6\tNULL\t7\t53\t2025\tPENDING\n4\t30006\tNULL\t11\t53\t2025\tPENDING\n5\t30007\tNULL\t6\t53\t2025\tPENDING\n30001\t30002\tNULL\t30\t15\t2026\tPENDING\n",
+  "stderr": "",
+  "execution_time_ms": 107
+}

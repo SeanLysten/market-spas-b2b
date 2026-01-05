@@ -1038,7 +1038,23 @@ export async function getIncomingStock(filters?: {
   const db = await getDb();
   if (!db) return [];
 
-  let query = db.select().from(incomingStock);
+  let query = db
+    .select({
+      id: incomingStock.id,
+      productId: incomingStock.productId,
+      variantId: incomingStock.variantId,
+      quantity: incomingStock.quantity,
+      expectedWeek: incomingStock.expectedWeek,
+      expectedYear: incomingStock.expectedYear,
+      status: incomingStock.status,
+      notes: incomingStock.notes,
+      arrivedAt: incomingStock.arrivedAt,
+      createdAt: incomingStock.createdAt,
+      updatedAt: incomingStock.updatedAt,
+      product: products,
+    })
+    .from(incomingStock)
+    .leftJoin(products, eq(incomingStock.productId, products.id));
 
   const conditions = [];
   if (filters?.productId) {
@@ -1232,6 +1248,7 @@ export interface CreateOrderInput {
     vatRate: number;
     discountPercent?: number;
     isPreorder?: boolean;
+    incomingStockId?: number;
   }>;
   deliveryAddress: {
     street: string;
@@ -1359,6 +1376,14 @@ export async function createOrder(input: CreateOrderInput) {
           })
           .where(eq(products.id, item.productId));
       }
+    } else if (item.isPreorder && item.incomingStockId) {
+      // Décrémenter le stock d'arrivage programmé pour les précommandes
+      await db
+        .update(incomingStock)
+        .set({
+          quantity: sql`${incomingStock.quantity} - ${item.quantity}`,
+        })
+        .where(eq(incomingStock.id, item.incomingStockId));
     }
   }
 

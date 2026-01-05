@@ -24,7 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { Plus, Edit, Trash2, Package, Palette, TruckIcon, Pencil } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Palette, TruckIcon, Pencil, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
@@ -783,6 +783,17 @@ function GlobalIncomingStockView() {
   const createMutation = trpc.admin.incomingStock.create.useMutation();
   const updateMutation = trpc.admin.incomingStock.update.useMutation();
   const deleteMutation = trpc.admin.incomingStock.delete.useMutation();
+  const processArrivedMutation = trpc.admin.incomingStock.processArrived.useMutation();
+
+  const handleProcessArrived = async () => {
+    try {
+      await processArrivedMutation.mutateAsync();
+      toast.success("Arrivages traités avec succès");
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors du traitement");
+    }
+  };
 
   const filteredStock = incomingStock?.filter((item: any) => {
     const matchesWeek = !weekFilter || item.expectedWeek.toString() === weekFilter;
@@ -869,14 +880,23 @@ function GlobalIncomingStockView() {
               Vue globale de tous les arrivages programmés avec filtres par semaine et année
             </CardDescription>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <TruckIcon className="mr-2 h-4 w-4" />
-                Nouvel arrivage
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleProcessArrived}
+              variant="outline"
+              disabled={processArrivedMutation.isPending}
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              {processArrivedMutation.isPending ? "Traitement..." : "Traiter les arrivages"}
+            </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <TruckIcon className="mr-2 h-4 w-4" />
+                  Nouvel arrivage
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
               <DialogHeader>
                 <DialogTitle>Programmer un arrivage</DialogTitle>
                 <DialogDescription>
@@ -955,11 +975,12 @@ function GlobalIncomingStockView() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex gap-4">
+          <div className="flex gap-2">
             <div className="flex-1">
               <Label htmlFor="weekFilter">Filtrer par semaine</Label>
               <Input
