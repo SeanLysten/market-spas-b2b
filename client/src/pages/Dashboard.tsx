@@ -24,7 +24,7 @@ import { Link } from "wouter";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { data: notifications } = trpc.dashboard.notifications.useQuery({ limit: 5 });
+  const { data: notifications = [] } = trpc.dashboard.notifications.useQuery({ limit: 5 });
   const { data: unreadCount } = trpc.dashboard.unreadCount.useQuery();
   // Les événements seront chargés une fois le router events créé
   const upcomingEvents: any[] = [];

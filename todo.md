@@ -479,3 +479,6 @@
 
 ## Bugs à corriger - Navigation admin
 - [x] Ajouter le AdminLayout (sidebar) à la page /admin/technical-resources
+
+## Bugs à corriger - Dashboard
+- [x] Corriger les erreurs "Cannot read properties of undefined (reading 'map')" sur /dashboard
