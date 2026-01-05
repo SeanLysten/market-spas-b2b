@@ -496,3 +496,12 @@
 
 ## Amélioration Dashboard - Accès Forum
 - [x] Ajouter une carte "Forum d'entraide" sur le dashboard utilisateur pour accès rapide
+
+## Système de gestion des arrivages programmés
+- [x] Analyser le schéma DB existant (products, product_variants, scheduled_arrivals)
+- [x] Créer/compléter les tables pour arrivages programmés par semaine
+- [x] Créer l'interface admin pour ajouter des produits en arrivage (semaine X, quantité)
+- [x] Créer le composant ProductAddToCartDialog (version simplifiée)
+- [ ] Intégrer le pop-up dans le catalogue utilisateur
+- [ ] Afficher les badges "Arrivage Semaine X" dans le catalogue utilisateur
+- [ ] Tester l'ajout au panier avec sélection stock vs arrivage

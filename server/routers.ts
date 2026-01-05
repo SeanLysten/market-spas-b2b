@@ -834,6 +834,13 @@ export const appRouter = router({
           return { success: true };
         }),
 
+      // Variants
+      listVariants: adminProcedure
+        .input(z.object({ productId: z.number() }))
+        .query(async ({ input }) => {
+          return await db.getProductVariants(input.productId);
+        }),
+
       // Image upload
       uploadImage: adminProcedure
         .input(
