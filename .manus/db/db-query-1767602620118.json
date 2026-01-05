@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS technical_resources (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  title VARCHAR(255) NOT NULL,\n  description TEXT,\n  type ENUM('PDF', 'VIDEO', 'LINK') NOT NULL,\n  file_url TEXT NOT NULL,\n  category ENUM('INSTALLATION', 'MAINTENANCE', 'TROUBLESHOOTING', 'TECHNICAL_SPECS', 'TRAINING', 'OTHER') NOT NULL,\n  product_category ENUM('SPAS', 'SWIM_SPAS', 'MAINTENANCE', 'COVERS', 'ACCESSORIES', 'OTHER'),\n  tags TEXT,\n  view_count INT DEFAULT 0,\n  created_by INT NOT NULL,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  FOREIGN KEY (created_by) REFERENCES users(id)\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute CREATE TABLE IF NOT EXISTS technical_resources (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  title VARCHAR(255) NOT NULL,\n  description TEXT,\n  type ENUM('PDF', 'VIDEO', 'LINK') NOT NULL,\n  file_url TEXT NOT NULL,\n  category ENUM('INSTALLATION', 'MAINTENANCE', 'TROUBLESHOOTING', 'TECHNICAL_SPECS', 'TRAINING', 'OTHER') NOT NULL,\n  product_category ENUM('SPAS', 'SWIM_SPAS', 'MAINTENANCE', 'COVERS', 'ACCESSORIES', 'OTHER'),\n  tags TEXT,\n  view_count INT DEFAULT 0,\n  created_by INT NOT NULL,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  FOREIGN KEY (created_by) REFERENCES users(id)\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 454
+}

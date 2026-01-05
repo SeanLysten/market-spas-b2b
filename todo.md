@@ -472,3 +472,7 @@
 - [ ] Créer la page de détail de topic avec réponses
 - [ ] Ajouter le lien "Ressources Techniques" dans le dashboard utilisateur
 - [ ] Ajouter des données de démonstration (3-5 ressources techniques)
+
+## Bugs à corriger - Session actuelle
+- [x] Corriger l'erreur "Cannot read properties of undefined (reading 'map')" dans /admin/technical-resources
+- [x] Corriger l'erreur "Cannot read properties of undefined (reading 'map')" dans /technical-resources
