@@ -1071,7 +1071,8 @@ export async function getIncomingStock(filters?: {
     query = query.where(and(...conditions)) as any;
   }
 
-  return await query.orderBy(desc(incomingStock.expectedYear), desc(incomingStock.expectedWeek));
+  const result = await query.orderBy(desc(incomingStock.expectedYear), desc(incomingStock.expectedWeek));
+  return result || [];
 }
 
 export async function createIncomingStock(data: {

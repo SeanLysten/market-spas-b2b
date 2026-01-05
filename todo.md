@@ -582,3 +582,8 @@
 - [x] Ajouter des alertes visuelles pour les stocks critiques (RUPTURE, STOCK_CRITIQUE, STOCK_BAS)
 - [x] Créer les tests unitaires complets (7/7 tests passent)
 - [x] Ajouter le lien de navigation dans AdminLayout
+
+## Bugs à corriger - AdminProducts (nouvelle session)
+- [x] Corriger l'erreur "Cannot read properties of undefined (reading 'map')" sur /admin/products
+- [x] Identifier quelle requête API retourne undefined au lieu d'un tableau (getIncomingStock)
+- [x] Ajouter des vérifications de sécurité pour éviter les erreurs similaires (|| [] sur tous les .map())

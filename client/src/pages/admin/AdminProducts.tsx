@@ -341,7 +341,7 @@ export default function AdminProducts() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {products.map((product: any) => (
+                    {(products || []).map((product: any) => (
                       <TableRow key={product.id}>
                         <TableCell className="font-mono text-sm">{product.sku}</TableCell>
                         <TableCell className="font-medium">{product.name}</TableCell>
@@ -618,7 +618,7 @@ function VariantsTab({ productId }: { productId: number }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {variants.map((variant: any) => (
+              {(variants || []).map((variant: any) => (
                 <TableRow key={variant.id}>
                   <TableCell className="font-mono text-sm">{variant.sku}</TableCell>
                   <TableCell>{variant.name}</TableCell>
@@ -914,7 +914,7 @@ function GlobalIncomingStockView() {
                     required
                   >
                     <option value="">Sélectionnez un produit</option>
-                    {products?.map((p: any) => (
+                    {(products || []).map((p: any) => (
                       <option key={p.id} value={p.id}>
                         {p.name} ({p.sku})
                       </option>
@@ -1019,7 +1019,7 @@ function GlobalIncomingStockView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredStock.map((item: any) => (
+                {(filteredStock || []).map((item: any) => (
                   <TableRow key={item.id}>
                     <TableCell>{item.product?.name || "N/A"}</TableCell>
                     <TableCell>{item.product?.sku || "N/A"}</TableCell>
