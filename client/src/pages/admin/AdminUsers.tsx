@@ -44,6 +44,7 @@ export default function AdminUsers() {
   });
 
   const { data: users, isLoading, refetch } = trpc.admin.users.list.useQuery();
+  const safeUsers = Array.isArray(users) ? users : [];
   const inviteMutation = trpc.admin.users.invite.useMutation();
   const toggleActiveMutation = trpc.admin.users.toggleActive.useMutation();
 
@@ -244,7 +245,7 @@ export default function AdminUsers() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {safeUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">
                         {user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim() || "—"}

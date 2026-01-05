@@ -644,3 +644,8 @@
 - [x] Remplacer les valeurs par défaut (= []) par des variables safe* avec Array.isArray()
 - [x] Corriger filteredStock pour utiliser safeIncomingStock
 - [x] Tester la page /admin/products - Aucune erreur visible
+
+## Bug AdminUsers - Erreurs .map() (nouvelle session)
+- [x] Identifier tous les .map() sans protection dans AdminUsers.tsx
+- [x] Ajouter des vérifications Array.isArray() comme dans AdminProducts (safeUsers)
+- [x] Remplacer users.map() par safeUsers.map()
