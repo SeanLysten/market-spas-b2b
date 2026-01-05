@@ -32,16 +32,19 @@ export default function AdminReports() {
     { limit: 1000 },
     { enabled: reportType === "orders" || reportType === "sales" }
   );
+  const safeOrdersData = Array.isArray(ordersData) ? ordersData : [];
 
   const { data: productsData } = trpc.products.list.useQuery(
     { limit: 1000 },
     { enabled: reportType === "products" }
   );
+  const safeProductsData = Array.isArray(productsData) ? productsData : [];
 
   const { data: partnersData } = trpc.admin.partners.list.useQuery(
     {},
     { enabled: reportType === "partners" }
   );
+  const safePartnersData = Array.isArray(partnersData) ? partnersData : [];
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return "";

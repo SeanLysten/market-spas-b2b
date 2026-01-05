@@ -27,11 +27,15 @@ import TopProductsChart from "@/components/charts/TopProductsChart";
 export default function AdminDashboard() {
   const { data: stats, isLoading } = trpc.dashboard.stats.useQuery();
   const { data: recentOrders } = trpc.orders.list.useQuery({ limit: 5 });
+  const safeRecentOrders = Array.isArray(recentOrders) ? recentOrders : [];
   const { data: lowStockProducts } = trpc.products.list.useQuery({ limit: 100 });
+  const safeLowStockProducts = Array.isArray(lowStockProducts) ? lowStockProducts : [];
   
   // Analytics data
   const { data: salesData } = trpc.admin.analytics.salesByMonth.useQuery({ months: 6 });
+  const safeSalesData = Array.isArray(salesData) ? salesData : [];
   const { data: topProductsData } = trpc.admin.analytics.topProducts.useQuery({ limit: 5 });
+  const safeTopProductsData = Array.isArray(topProductsData) ? topProductsData : [];
 
   // Filter low stock products
   const lowStock = lowStockProducts?.filter((p: any) => (p.stockQuantity || 0) <= 5) || [];
@@ -201,7 +205,7 @@ export default function AdminDashboard() {
             <CardContent>
               {recentOrders && recentOrders.length > 0 ? (
                 <div className="space-y-4">
-                  {recentOrders.map((order: any) => (
+                  {safeRecentOrders.map((order: any) => (
                     <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">

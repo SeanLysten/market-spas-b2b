@@ -649,3 +649,10 @@
 - [x] Identifier tous les .map() sans protection dans AdminUsers.tsx
 - [x] Ajouter des vérifications Array.isArray() comme dans AdminProducts (safeUsers)
 - [x] Remplacer users.map() par safeUsers.map()
+
+## Bug Dashboard - Erreurs .map() (nouvelle session)
+- [x] Identifier tous les .map() sans protection dans Dashboard.tsx
+- [x] Ajouter des vérifications Array.isArray() (safeNotifications)
+- [x] Identifier toutes les autres pages avec le même problème (33 fichiers .tsx)
+- [x] Appliquer la correction systématiquement avec script Python automatique
+- [x] Pages corrigées : Dashboard, AdminDashboard, AdminReports, AdminStockForecast

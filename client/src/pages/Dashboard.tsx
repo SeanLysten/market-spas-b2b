@@ -25,7 +25,8 @@ import { Link } from "wouter";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { data: notifications = [] } = trpc.dashboard.notifications.useQuery({ limit: 5 });
+  const { data: notifications } = trpc.dashboard.notifications.useQuery({ limit: 5 });
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
   const { data: unreadCount } = trpc.dashboard.unreadCount.useQuery();
   // Les événements seront chargés une fois le router events créé
   const upcomingEvents: any[] = [];
@@ -232,9 +233,9 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              {notifications && notifications.length > 0 ? (
+              {safeNotifications && safeNotifications.length > 0 ? (
                 <div className="space-y-3">
-                  {notifications.map((notification) => (
+                  {safeNotifications.map((notification) => (
                     <div
                       key={notification.id}
                       className={`flex items-start gap-3 p-4 rounded-lg border transition-colors ${

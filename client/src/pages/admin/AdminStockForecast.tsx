@@ -48,6 +48,7 @@ export default function AdminStockForecast() {
     { productId: selectedProductId!, weeks },
     { enabled: !!selectedProductId }
   );
+  const safeProductForecast = Array.isArray(productForecast) ? productForecast : [];
 
   // Filter forecasts by search query
   const filteredForecasts = forecasts?.filter(
