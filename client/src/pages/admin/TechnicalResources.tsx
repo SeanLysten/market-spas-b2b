@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import AdminLayout from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -134,7 +135,8 @@ export default function AdminTechnicalResources() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <AdminLayout>
+      <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Ressources Techniques</h1>
@@ -377,5 +379,6 @@ export default function AdminTechnicalResources() {
         </Table>
       </Card>
     </div>
+    </AdminLayout>
   );
 }

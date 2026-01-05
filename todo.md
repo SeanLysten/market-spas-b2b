@@ -476,3 +476,6 @@
 ## Bugs à corriger - Session actuelle
 - [x] Corriger l'erreur "Cannot read properties of undefined (reading 'map')" dans /admin/technical-resources
 - [x] Corriger l'erreur "Cannot read properties of undefined (reading 'map')" dans /technical-resources
+
+## Bugs à corriger - Navigation admin
+- [x] Ajouter le AdminLayout (sidebar) à la page /admin/technical-resources
