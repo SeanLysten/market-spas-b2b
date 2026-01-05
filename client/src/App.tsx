@@ -9,6 +9,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminResources from "./pages/admin/AdminResources";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminProducts from "./pages/admin/AdminProducts";
+import AdminStockForecast from "./pages/admin/AdminStockForecast";
 import AdminPartners from "@/pages/admin/AdminPartners";
 import AdminReports from "@/pages/admin/AdminReports";
 import AdminOrders from "@/pages/admin/AdminOrders";
@@ -62,6 +63,7 @@ function Router() {
       <Route path="/admin/resources" component={AdminResources} />
       <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/products" component={AdminProducts} />
+      <Route path="/admin/forecast" component={AdminStockForecast} />
       <Route path="/admin/partners" component={AdminPartners} />
       <Route path="/admin/reports" component={AdminReports} />
       <Route path="/admin/orders" component={AdminOrders} />

@@ -17,6 +17,7 @@ import {
   Target,
   BookOpen,
   Calendar,
+  TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -64,6 +65,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: "Produits",
       href: "/admin/products",
       icon: Package,
+    },
+    {
+      name: "Prévisions Stock",
+      href: "/admin/forecast",
+      icon: TrendingUp,
     },
     {
       name: "Ressources média",

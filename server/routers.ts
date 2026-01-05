@@ -961,6 +961,32 @@ export const appRouter = router({
         }),
     }),
 
+    // Stock forecast
+    forecast: router({
+      getAll: adminProcedure
+        .input(z.object({ weeks: z.number().optional().default(8) }))
+        .query(async ({ input }) => {
+          return await db.getStockForecast(input.weeks);
+        }),
+
+      getProduct: adminProcedure
+        .input(
+          z.object({
+            productId: z.number(),
+            weeks: z.number().optional().default(8),
+          })
+        )
+        .query(async ({ input }) => {
+          return await db.getProductForecast(input.productId, input.weeks);
+        }),
+
+      getSummary: adminProcedure
+        .input(z.object({ weeks: z.number().optional().default(8) }))
+        .query(async ({ input }) => {
+          return await db.getStockForecastSummary(input.weeks);
+        }),
+    }),
+
     // Stripe payments
     payments: router({
       createPaymentIntent: adminProcedure

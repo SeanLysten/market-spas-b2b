@@ -573,3 +573,12 @@
 - [x] Configurer une tâche cron hebdomadaire (chaque lundi matin à 8h00)
 - [x] Créer les tests unitaires pour valider la route cron (3/3 tests passent)
 - [x] Créer la documentation complète du système (GUIDE-AUTOMATISATION-ARRIVAGES.md)
+
+## Dashboard prévisionnel des stocks (nouvelle session)
+- [x] Créer les fonctions backend pour calculer les prévisions de stock sur 8 semaines
+- [x] Créer les routes tRPC pour récupérer les prévisions (getAll, getProduct, getSummary)
+- [x] Développer l'interface du dashboard avec graphiques (Recharts)
+- [x] Afficher les prévisions par produit avec arrivages et précommandes
+- [x] Ajouter des alertes visuelles pour les stocks critiques (RUPTURE, STOCK_CRITIQUE, STOCK_BAS)
+- [x] Créer les tests unitaires complets (7/7 tests passent)
+- [x] Ajouter le lien de navigation dans AdminLayout

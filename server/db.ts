@@ -2893,3 +2893,291 @@ export async function incrementTopicViewCount(topicId: number) {
     .set({ viewCount: sql`${forumTopics.viewCount} + 1` })
     .where(eq(forumTopics.id, topicId));
 }
+
+// ============================================
+// STOCK FORECAST FUNCTIONS
+// ============================================
+
+/**
+ * Calculate stock forecast for the next N weeks
+ * Takes into account:
+ * - Current stock
+ * - Incoming stock (scheduled arrivals)
+ * - Preorders (reserved stock from incoming)
+ */
+export async function getStockForecast(weeks: number = 8) {
+  const db = await getDb();
+  if (!db) return [];
+
+  // Get current week and year
+  const now = new Date();
+  const currentWeek = getWeekNumber(now);
+  const currentYear = now.getFullYear();
+
+  // Get all products with their current stock
+  const allProducts = await db.select().from(products);
+
+  // Get all incoming stock (PENDING)
+  const allIncomingStock = await db
+    .select()
+    .from(incomingStock)
+    .where(eq(incomingStock.status, "PENDING"));
+
+  // Get all preorders (orders with isPreorder = true)
+  const preorders = await db
+    .select({
+      productId: orderItems.productId,
+      variantId: orderItems.variantId,
+      quantity: orderItems.quantity,
+      incomingStockId: sql<number>`NULL`, // TODO: Add this field to orderItems table
+    })
+    .from(orderItems)
+    .innerJoin(orders, eq(orderItems.orderId, orders.id))
+    .where(eq(orders.status, "PENDING_APPROVAL"));
+
+  // Build forecast for each product
+  const forecasts = [];
+
+  for (const product of allProducts) {
+    const forecast = {
+      productId: product.id,
+      productName: product.name,
+      productSku: product.sku,
+      currentStock: product.stockQuantity,
+      weeks: [] as Array<{
+        weekNumber: number;
+        year: number;
+        weekLabel: string;
+        projectedStock: number;
+        incomingQuantity: number;
+        preorderQuantity: number;
+        alerts: string[];
+      }>,
+    };
+
+    let runningStock: number = product.stockQuantity || 0;
+
+    // Calculate for each week
+    for (let i = 0; i < weeks; i++) {
+      const { week, year } = addWeeks(currentWeek, currentYear, i);
+      
+      // Find incoming stock for this week
+      const incoming = allIncomingStock.filter(
+        (stock: any) =>
+          stock.productId === product.id &&
+          stock.expectedWeek === week &&
+          stock.expectedYear === year
+      );
+
+      const incomingQuantity = incoming.reduce((sum: number, stock: any) => sum + (stock.quantity || 0), 0);
+
+      // Find preorders for this week (approximation - we don't have exact week data)
+      // For now, we'll distribute preorders evenly across weeks
+      const productPreorders = preorders.filter((po: any) => po.productId === product.id);
+      const preorderQuantity = 0; // TODO: Calculate based on expected delivery week
+
+      // Calculate projected stock
+      runningStock += incomingQuantity - preorderQuantity;
+
+      // Generate alerts
+      const alerts: string[] = [];
+      if (runningStock < 0) {
+        alerts.push("RUPTURE");
+      } else if (runningStock < 5) {
+        alerts.push("STOCK_CRITIQUE");
+      } else if (runningStock < 10) {
+        alerts.push("STOCK_BAS");
+      }
+
+      forecast.weeks.push({
+        weekNumber: week,
+        year,
+        weekLabel: `S${week} ${year}`,
+        projectedStock: runningStock,
+        incomingQuantity,
+        preorderQuantity,
+        alerts,
+      });
+    }
+
+    forecasts.push(forecast);
+  }
+
+  return forecasts;
+}
+
+/**
+ * Get detailed forecast for a specific product
+ */
+export async function getProductForecast(productId: number, weeks: number = 8) {
+  const db = await getDb();
+  if (!db) return null;
+
+  // Get product details
+  const product = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+  if (!product.length) return null;
+
+  // Get current week and year
+  const now = new Date();
+  const currentWeek = getWeekNumber(now);
+  const currentYear = now.getFullYear();
+
+  // Get incoming stock for this product
+  const productIncomingStock = await db
+    .select()
+    .from(incomingStock)
+    .where(
+      and(
+        eq(incomingStock.productId, productId),
+        eq(incomingStock.status, "PENDING")
+      )
+    );
+
+  // Build weekly forecast
+  const weeklyForecast = [];
+  let runningStock: number = product[0].stockQuantity || 0;
+
+  for (let i = 0; i < weeks; i++) {
+    const { week, year } = addWeeks(currentWeek, currentYear, i);
+
+    // Find incoming for this week
+    const weekIncoming = productIncomingStock.filter(
+      (stock: any) => stock.expectedWeek === week && stock.expectedYear === year
+    );
+
+    const incomingQuantity = weekIncoming.reduce((sum: number, stock: any) => sum + (stock.quantity || 0), 0);
+
+    // Update running stock
+    runningStock += incomingQuantity;
+
+    // Generate alerts
+    const alerts: string[] = [];
+    if (runningStock < 0) {
+      alerts.push("RUPTURE");
+    } else if (runningStock < 5) {
+      alerts.push("STOCK_CRITIQUE");
+    } else if (runningStock < 10) {
+      alerts.push("STOCK_BAS");
+    }
+
+    weeklyForecast.push({
+      weekNumber: week,
+      year,
+      weekLabel: `S${week} ${year}`,
+      projectedStock: runningStock,
+      incomingQuantity,
+      incoming: weekIncoming.map((stock: any) => ({
+        id: stock.id,
+        quantity: stock.quantity,
+        notes: stock.notes,
+      })),
+      alerts,
+    });
+  }
+
+  return {
+    product: product[0],
+    currentStock: product[0].stockQuantity,
+    forecast: weeklyForecast,
+  };
+}
+
+/**
+ * Get summary statistics for stock forecast
+ */
+export async function getStockForecastSummary(weeks: number = 8) {
+  const forecasts = await getStockForecast(weeks);
+
+  const summary = {
+    totalProducts: forecasts.length,
+    productsWithAlerts: 0,
+    productsWithRupture: 0,
+    productsWithLowStock: 0,
+    totalIncomingQuantity: 0,
+    weeklyBreakdown: [] as Array<{
+      weekLabel: string;
+      totalIncoming: number;
+      productsWithAlerts: number;
+    }>,
+  };
+
+  // Calculate summary stats
+  for (const forecast of forecasts) {
+    let hasAlerts = false;
+    let hasRupture = false;
+    let hasLowStock = false;
+
+    for (const week of forecast.weeks) {
+      summary.totalIncomingQuantity += week.incomingQuantity;
+
+      if (week.alerts.includes("RUPTURE")) {
+        hasRupture = true;
+        hasAlerts = true;
+      } else if (week.alerts.includes("STOCK_CRITIQUE") || week.alerts.includes("STOCK_BAS")) {
+        hasLowStock = true;
+        hasAlerts = true;
+      }
+    }
+
+    if (hasAlerts) summary.productsWithAlerts++;
+    if (hasRupture) summary.productsWithRupture++;
+    if (hasLowStock) summary.productsWithLowStock++;
+  }
+
+  // Build weekly breakdown
+  const now = new Date();
+  const currentWeek = getWeekNumber(now);
+  const currentYear = now.getFullYear();
+
+  for (let i = 0; i < weeks; i++) {
+    const { week, year } = addWeeks(currentWeek, currentYear, i);
+    const weekLabel = `S${week} ${year}`;
+
+    let totalIncoming = 0;
+    let productsWithAlerts = 0;
+
+    for (const forecast of forecasts) {
+      const weekData = forecast.weeks[i];
+      if (weekData) {
+        totalIncoming += weekData.incomingQuantity;
+        if (weekData.alerts.length > 0) {
+          productsWithAlerts++;
+        }
+      }
+    }
+
+    summary.weeklyBreakdown.push({
+      weekLabel,
+      totalIncoming,
+      productsWithAlerts,
+    });
+  }
+
+  return summary;
+}
+
+/**
+ * Helper function to add weeks to current week/year
+ */
+function addWeeks(currentWeek: number, currentYear: number, weeksToAdd: number): { week: number; year: number } {
+  let week = currentWeek + weeksToAdd;
+  let year = currentYear;
+
+  while (week > 52) {
+    week -= 52;
+    year++;
+  }
+
+  return { week, year };
+}
+
+/**
+ * Helper function to get ISO week number
+ */
+function getWeekNumber(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
