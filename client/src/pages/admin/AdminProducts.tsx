@@ -70,7 +70,7 @@ export default function AdminProducts() {
     notes: "",
   });
 
-  const { data: products, isLoading, refetch } = trpc.admin.products.list.useQuery({});
+  const { data: products = [], isLoading, refetch } = trpc.admin.products.list.useQuery({});
   const createProductMutation = trpc.admin.products.create.useMutation();
   const updateProductMutation = trpc.admin.products.update.useMutation();
   const deleteProductMutation = trpc.admin.products.delete.useMutation();
@@ -449,7 +449,7 @@ function VariantsTab({ productId }: { productId: number }) {
     imageUrl: "",
   });
 
-  const { data: variants, refetch } = trpc.admin.products.getVariants.useQuery({ productId });
+  const { data: variants = [], refetch } = trpc.admin.products.getVariants.useQuery({ productId });
   const createMutation = trpc.admin.products.createVariant.useMutation();
   const deleteMutation = trpc.admin.products.deleteVariant.useMutation();
 
@@ -778,8 +778,8 @@ function GlobalIncomingStockView() {
     notes: "",
   });
 
-  const { data: products } = trpc.admin.products.list.useQuery({});
-  const { data: incomingStock, refetch } = trpc.admin.incomingStock.list.useQuery({});
+  const { data: products = [] } = trpc.admin.products.list.useQuery({});
+  const { data: incomingStock = [], refetch } = trpc.admin.incomingStock.list.useQuery({});
   const createMutation = trpc.admin.incomingStock.create.useMutation();
   const updateMutation = trpc.admin.incomingStock.update.useMutation();
   const deleteMutation = trpc.admin.incomingStock.delete.useMutation();

@@ -550,3 +550,6 @@
 - [x] Ajouter un bouton Modifier dans le tableau des arrivages programmés
 - [x] Créer un dialog d'édition avec formulaire pré-rempli
 - [x] Tester la modification d'un arrivage existant
+
+## Bugs à corriger - Page admin/products
+- [x] Corriger les erreurs "Cannot read properties of undefined (reading 'map')" sur /admin/products
