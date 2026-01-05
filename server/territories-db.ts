@@ -109,8 +109,6 @@ export async function getPartnerTerritories(partnerId: number) {
       regionCode: regions.code,
       countryCode: countries.code,
       countryName: countries.name,
-      priority: partnerTerritories.priority,
-      isExclusive: partnerTerritories.isExclusive,
       assignedAt: partnerTerritories.assignedAt,
       notes: partnerTerritories.notes,
     })
@@ -118,7 +116,7 @@ export async function getPartnerTerritories(partnerId: number) {
     .innerJoin(regions, eq(regions.id, partnerTerritories.regionId))
     .innerJoin(countries, eq(countries.id, regions.countryId))
     .where(eq(partnerTerritories.partnerId, partnerId))
-    .orderBy(desc(partnerTerritories.priority));
+    .orderBy(desc(partnerTerritories.assignedAt));
 }
 
 /**
@@ -137,8 +135,6 @@ export async function getAllPartnerTerritories() {
       regionCode: regions.code,
       countryCode: countries.code,
       countryName: countries.name,
-      priority: partnerTerritories.priority,
-      isExclusive: partnerTerritories.isExclusive,
       assignedAt: partnerTerritories.assignedAt,
     })
     .from(partnerTerritories)
@@ -149,22 +145,18 @@ export async function getAllPartnerTerritories() {
 
 /**
  * Assign territory to partner
- */
-export async function assignTerritoryToPartner(
+ */export async function assignTerritoryToPartner(
   partnerId: number,
   regionId: number,
-  priority: number = 1,
-  isExclusive: boolean = false,
   assignedBy: number,
   notes?: string
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+
   const [result] = await db.insert(partnerTerritories).values({
     partnerId,
     regionId,
-    priority,
-    isExclusive,
     assignedBy,
     notes,
   });
@@ -182,14 +174,14 @@ export async function removeTerritoryFromPartner(territoryId: number) {
 }
 
 /**
- * Update territory priority
+ * Update territory notes
  */
-export async function updateTerritoryPriority(territoryId: number, priority: number) {
+export async function updateTerritoryNotes(territoryId: number, notes: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db
     .update(partnerTerritories)
-    .set({ priority })
+    .set({ notes })
     .where(eq(partnerTerritories.id, territoryId));
 }
 
@@ -203,12 +195,10 @@ export async function findPartnersByRegion(regionId: number) {
     .select({
       partnerId: partnerTerritories.partnerId,
       partnerName: sql<string>`(SELECT companyName FROM partners WHERE id = ${partnerTerritories.partnerId})`,
-      priority: partnerTerritories.priority,
-      isExclusive: partnerTerritories.isExclusive,
     })
     .from(partnerTerritories)
     .where(eq(partnerTerritories.regionId, regionId))
-    .orderBy(desc(partnerTerritories.priority));
+    .limit(1);
 }
 
 /**
@@ -227,7 +217,7 @@ export async function findBestPartnerForPostalCode(postalCode: string) {
     return null;
   }
 
-  // Return highest priority partner
+  // Return the exclusive partner
   return {
     partnerId: partners[0].partnerId,
     partnerName: partners[0].partnerName,

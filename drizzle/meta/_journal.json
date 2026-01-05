@@ -57,6 +57,13 @@
       "when": 1767050219232,
       "tag": "0007_fantastic_mentallo",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1767655050581,
+      "tag": "0008_omniscient_garia",
+      "breakpoints": true
     }
   ]
 }

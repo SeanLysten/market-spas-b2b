@@ -1428,14 +1428,13 @@ export const postalCodeRanges = mysqlTable(
 );
 
 // Partner territories (replaces partnerPostalCodes)
+// EXCLUSIVE SYSTEM: 1 region = 1 partner only
 export const partnerTerritories = mysqlTable(
   "partner_territories",
   {
     id: int("id").autoincrement().primaryKey(),
     partnerId: int("partnerId").notNull(),
     regionId: int("regionId").notNull(),
-    priority: int("priority").default(1).notNull(), // Higher = preferred if multiple partners cover same region
-    isExclusive: boolean("isExclusive").default(false).notNull(), // Exclusive territory
     assignedAt: timestamp("assignedAt").defaultNow().notNull(),
     assignedBy: int("assignedBy"), // User ID who assigned
     notes: text("notes"),
@@ -1443,7 +1442,7 @@ export const partnerTerritories = mysqlTable(
   (table) => ({
     partnerIdIdx: index("partnerId_idx").on(table.partnerId),
     regionIdIdx: index("regionId_idx").on(table.regionId),
-    uniquePartnerRegion: unique("unique_partner_region").on(table.partnerId, table.regionId),
+    uniqueRegion: unique("unique_region").on(table.regionId), // ONE region = ONE partner
   })
 );
 

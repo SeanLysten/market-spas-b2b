@@ -1,428 +1,296 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
+import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
+import { Loader2, MapPin, Save, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-import { MapPin, Plus, Trash2, Search, AlertCircle } from "lucide-react";
 
 export default function AdminTerritories() {
   const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(null);
-  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
-  const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(null);
+  const [selectedRegionIds, setSelectedRegionIds] = useState<Set<number>>(new Set());
 
   // Queries
-  const { data: partners = [] } = trpc.admin.partners.list.useQuery({});
-  const { data: countries = [] } = trpc.admin.territories.countries.useQuery();
-  const { data: allRegions = [] } = trpc.admin.territories.allRegions.useQuery();
-  const { data: allPartnerTerritories = [] } = trpc.admin.territories.allPartnerTerritories.useQuery();
+  const { data: partners, isLoading: partnersLoading } = trpc.admin.partners.list.useQuery({});
+  const { data: countries, isLoading: countriesLoading } = trpc.admin.territories.countries.useQuery();
+  const { data: regions, isLoading: regionsLoading } = trpc.admin.territories.regions.useQuery(
+    { countryCode: selectedCountryCode || "" },
+    { enabled: !!selectedCountryCode }
+  );
+  const { data: allTerritories, isLoading: territoriesLoading } = trpc.admin.territories.list.useQuery();
+  const { data: partnerTerritories, refetch: refetchPartnerTerritories } = trpc.admin.territories.byPartner.useQuery(
+    { partnerId: selectedPartnerId || 0 },
+    { enabled: !!selectedPartnerId }
+  );
 
   // Mutations
   const assignMutation = trpc.admin.territories.assign.useMutation({
     onSuccess: () => {
-      toast.success("Territoire attribué avec succès");
-      setIsAssignDialogOpen(false);
-      utils.admin.territories.allPartnerTerritories.invalidate();
+      toast.success("Territoires attribués avec succès");
+      refetchPartnerTerritories();
     },
     onError: (error) => {
       toast.error(`Erreur: ${error.message}`);
     },
   });
 
-  const removeMutation = trpc.admin.territories.remove.useMutation({
+  const unassignMutation = trpc.admin.territories.unassign.useMutation({
     onSuccess: () => {
       toast.success("Territoire retiré avec succès");
-      utils.admin.territories.allPartnerTerritories.invalidate();
+      refetchPartnerTerritories();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(`Erreur: ${error.message}`);
     },
   });
 
-  const utils = trpc.useContext();
+  // Map des régions déjà attribuées (regionId -> partnerId)
+  const assignedRegionsMap = useMemo(() => {
+    const map = new Map<number, { partnerId: number; partnerName: string }>();
+    if (allTerritories) {
+      allTerritories.forEach((t: any) => {
+        map.set(t.regionId, { partnerId: t.partnerId, partnerName: t.partnerName });
+      });
+    }
+    return map;
+  }, [allTerritories]);
 
-  // Form state for assignment
-  const [assignForm, setAssignForm] = useState({
-    partnerId: "",
-    regionId: "",
-    priority: 1,
-    isExclusive: false,
-    notes: "",
-  });
+  // Initialiser les régions sélectionnées quand on change de partenaire
+  useMemo(() => {
+    if (partnerTerritories && selectedCountryCode) {
+      const regionIds = partnerTerritories
+        .filter((t: any) => t.countryCode === selectedCountryCode)
+        .map((t: any) => t.regionId);
+      setSelectedRegionIds(new Set(regionIds));
+    } else {
+      setSelectedRegionIds(new Set());
+    }
+  }, [partnerTerritories, selectedCountryCode]);
 
-  // Filter regions by selected country
-  const filteredRegions = selectedCountryId
-    ? allRegions.filter((r: any) => r.countryId === selectedCountryId)
-    : allRegions;
+  const handleToggleRegion = (regionId: number, isAssigned: boolean) => {
+    const newSet = new Set(selectedRegionIds);
+    if (newSet.has(regionId)) {
+      newSet.delete(regionId);
+    } else {
+      // Vérifier si la région est déjà attribuée à un autre partenaire
+      const assigned = assignedRegionsMap.get(regionId);
+      if (assigned && assigned.partnerId !== selectedPartnerId) {
+        toast.error(`Cette région est déjà attribuée à ${assigned.partnerName}`);
+        return;
+      }
+      newSet.add(regionId);
+    }
+    setSelectedRegionIds(newSet);
+  };
 
-  // Filter partner territories by search term
-  const filteredPartnerTerritories = allPartnerTerritories.filter((pt: any) => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      pt.partner?.companyName?.toLowerCase().includes(searchLower) ||
-      pt.region?.name?.toLowerCase().includes(searchLower) ||
-      pt.country?.name?.toLowerCase().includes(searchLower)
-    );
-  });
-
-  const handleAssign = () => {
-    if (!assignForm.partnerId || !assignForm.regionId) {
-      toast.error("Veuillez sélectionner un partenaire et une région");
+  const handleSave = async () => {
+    if (!selectedPartnerId || !selectedCountryCode) {
+      toast.error("Veuillez sélectionner un partenaire et un pays");
       return;
     }
 
-    assignMutation.mutate({
-      partnerId: parseInt(assignForm.partnerId),
-      regionId: parseInt(assignForm.regionId),
-      priority: assignForm.priority,
-      isExclusive: assignForm.isExclusive,
-      notes: assignForm.notes || undefined,
-    });
+    // Régions actuellement attribuées au partenaire dans ce pays
+    const currentRegionIds = new Set(
+      (partnerTerritories || [])
+        .filter((t: any) => t.countryCode === selectedCountryCode)
+        .map((t: any) => t.regionId)
+    );
+
+    // Régions à ajouter
+    const toAdd = Array.from(selectedRegionIds).filter((id) => !currentRegionIds.has(id));
+
+    // Régions à retirer
+    const toRemove = (Array.from(currentRegionIds) as number[]).filter((id) => !selectedRegionIds.has(id));
+
+    // Exécuter les mutations
+    for (const regionId of toAdd) {
+      await assignMutation.mutateAsync({
+        partnerId: selectedPartnerId,
+        regionId,
+        assignedBy: 1, // TODO: Utiliser l'ID de l'utilisateur connecté
+      });
+    }
+
+    for (const regionId of toRemove) {
+      const territory = (partnerTerritories || []).find((t: any) => t.regionId === regionId);
+      if (territory) {
+        await unassignMutation.mutateAsync({ territoryId: territory.id });
+      }
+    }
+
+    toast.success("Modifications enregistrées");
   };
 
-  const handleRemove = (territoryId: number) => {
-    if (confirm("Êtes-vous sûr de vouloir retirer ce territoire ?")) {
-      removeMutation.mutate({ territoryId });
-    }
-  };
+  const selectedPartner = partners?.find((p) => p.id === selectedPartnerId);
+  const selectedCountry = countries?.find((c) => c.code === selectedCountryCode);
 
-  // Group territories by partner
-  const territoriesByPartner = filteredPartnerTerritories.reduce((acc: any, pt: any) => {
-    const partnerId = pt.partnerId;
-    if (!acc[partnerId]) {
-      acc[partnerId] = {
-        partner: pt.partner,
-        territories: [],
-      };
-    }
-    acc[partnerId].territories.push(pt);
-    return acc;
-  }, {});
+  const isLoading = partnersLoading || countriesLoading || regionsLoading || territoriesLoading;
+  const isSaving = assignMutation.isPending || unassignMutation.isPending;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Gestion des territoires</h1>
-          <p className="text-muted-foreground mt-1">
-            Attribuez des territoires géographiques aux partenaires pour l'attribution automatique des leads
+    <AdminLayout>
+      <div className="container mx-auto py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <MapPin className="h-8 w-8" />
+            Gestion des Territoires
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Attribuez des provinces/départements/cantons exclusifs à chaque partenaire
           </p>
         </div>
-        <Button onClick={() => setIsAssignDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Attribuer un territoire
-        </Button>
-      </div>
 
-      {/* Search */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher un partenaire ou une région..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Statistics */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pays couverts</CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{countries.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {countries.map((c: any) => c.name).join(", ")}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Régions disponibles</CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{allRegions.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Provinces, départements, cantons
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Attributions actives</CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{allPartnerTerritories.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Territoires attribués aux partenaires
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Partner Territories List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Attributions par partenaire</CardTitle>
-          <CardDescription>
-            Liste des territoires attribués à chaque partenaire
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {Object.keys(territoriesByPartner).length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Aucun territoire attribué pour le moment</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setIsAssignDialogOpen(true)}
-              >
-                Attribuer le premier territoire
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {Object.values(territoriesByPartner).map((group: any) => (
-                <div key={group.partner.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="font-semibold text-lg">{group.partner.companyName}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {group.territories.length} territoire(s) attribué(s)
-                      </p>
-                    </div>
-                    <Badge variant={group.partner.status === "APPROVED" ? "default" : "secondary"}>
-                      {group.partner.status}
-                    </Badge>
-                  </div>
-
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Pays</TableHead>
-                        <TableHead>Région</TableHead>
-                        <TableHead>Priorité</TableHead>
-                        <TableHead>Exclusivité</TableHead>
-                        <TableHead>Notes</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {group.territories.map((territory: any) => (
-                        <TableRow key={territory.id}>
-                          <TableCell>
-                            <Badge variant="outline">{territory.country?.code}</Badge>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {territory.region?.name}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{territory.priority}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            {territory.isExclusive ? (
-                              <Badge variant="destructive">Exclusif</Badge>
-                            ) : (
-                              <Badge variant="outline">Partagé</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="max-w-xs truncate">
-                            {territory.notes || "-"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemove(territory.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Assign Territory Dialog */}
-      <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Attribuer un territoire à un partenaire</DialogTitle>
-            <DialogDescription>
-              Sélectionnez un partenaire et une région géographique pour l'attribution automatique des leads
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="partner">Partenaire</Label>
+        <div className="grid gap-6">
+          {/* Sélection du partenaire */}
+          <Card>
+            <CardHeader>
+              <CardTitle>1. Sélectionner le partenaire</CardTitle>
+              <CardDescription>Choisissez le partenaire pour lequel vous souhaitez gérer les territoires</CardDescription>
+            </CardHeader>
+            <CardContent>
               <Select
-                value={assignForm.partnerId}
-                onValueChange={(value) => setAssignForm({ ...assignForm, partnerId: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionnez un partenaire" />
-                </SelectTrigger>
-                <SelectContent>
-                  {partners.map((partner: any) => (
-                    <SelectItem key={partner.id} value={partner.id.toString()}>
-                      {partner.companyName} ({partner.status})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="country">Pays</Label>
-              <Select
-                value={selectedCountryId?.toString() || ""}
+                value={selectedPartnerId?.toString() || ""}
                 onValueChange={(value) => {
-                  setSelectedCountryId(parseInt(value));
-                  setAssignForm({ ...assignForm, regionId: "" });
+                  setSelectedPartnerId(parseInt(value));
+                  setSelectedCountryCode(null);
+                  setSelectedRegionIds(new Set());
                 }}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionnez un pays" />
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choisir un partenaire..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {countries.map((country: any) => (
-                    <SelectItem key={country.id} value={country.id.toString()}>
-                      {country.name} ({country.code})
+                  {partners?.map((partner) => (
+                    <SelectItem key={partner.id} value={partner.id.toString()}>
+                      {partner.companyName}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="grid gap-2">
-              <Label htmlFor="region">Région / Province / Département</Label>
-              <Select
-                value={assignForm.regionId}
-                onValueChange={(value) => setAssignForm({ ...assignForm, regionId: value })}
-                disabled={!selectedCountryId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionnez une région" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredRegions.map((region: any) => (
-                    <SelectItem key={region.id} value={region.id.toString()}>
-                      {region.name} ({region.code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="priority">Priorité</Label>
-                <Input
-                  id="priority"
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={assignForm.priority}
-                  onChange={(e) =>
-                    setAssignForm({ ...assignForm, priority: parseInt(e.target.value) || 1 })
-                  }
-                />
-                <p className="text-xs text-muted-foreground">
-                  Plus la priorité est élevée, plus le partenaire sera privilégié
-                </p>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="exclusive">Exclusivité</Label>
+          {/* Sélection du pays */}
+          {selectedPartnerId && (
+            <Card>
+              <CardHeader>
+                <CardTitle>2. Sélectionner le pays</CardTitle>
+                <CardDescription>Choisissez le pays pour lequel vous souhaitez attribuer des territoires</CardDescription>
+              </CardHeader>
+              <CardContent>
                 <Select
-                  value={assignForm.isExclusive.toString()}
-                  onValueChange={(value) =>
-                    setAssignForm({ ...assignForm, isExclusive: value === "true" })
-                  }
+                  value={selectedCountryCode || ""}
+                  onValueChange={(value) => {
+                    setSelectedCountryCode(value);
+                    setSelectedRegionIds(new Set());
+                  }}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Choisir un pays..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="false">Partagé</SelectItem>
-                    <SelectItem value="true">Exclusif</SelectItem>
+                    {countries?.map((country) => (
+                      <SelectItem key={country.code} value={country.code}>
+                        {country.name} ({country.code})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  Exclusif = seul ce partenaire reçoit les leads
-                </p>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
+          )}
 
-            <div className="grid gap-2">
-              <Label htmlFor="notes">Notes (optionnel)</Label>
-              <Textarea
-                id="notes"
-                placeholder="Informations complémentaires sur cette attribution..."
-                value={assignForm.notes}
-                onChange={(e) => setAssignForm({ ...assignForm, notes: e.target.value })}
-                rows={3}
-              />
-            </div>
-          </div>
+          {/* Liste des provinces/départements/cantons */}
+          {selectedPartnerId && selectedCountryCode && (
+            <Card>
+              <CardHeader>
+                <CardTitle>3. Sélectionner les territoires</CardTitle>
+                <CardDescription>
+                  Cochez les provinces/départements/cantons à attribuer à <strong>{selectedPartner?.companyName}</strong> en{" "}
+                  <strong>{selectedCountry?.name}</strong>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {regions?.map((region: any) => {
+                        const assigned = assignedRegionsMap.get(region.id);
+                        const isOwnedByOther = assigned && assigned.partnerId !== selectedPartnerId;
+                        const isChecked = selectedRegionIds.has(region.id);
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleAssign} disabled={assignMutation.isPending}>
-              {assignMutation.isPending ? "Attribution..." : "Attribuer"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+                        return (
+                          <div
+                            key={region.id}
+                            className={`flex items-start space-x-3 p-4 border rounded-lg ${
+                              isOwnedByOther ? "bg-muted opacity-60" : "bg-background"
+                            }`}
+                          >
+                            <Checkbox
+                              id={`region-${region.id}`}
+                              checked={isChecked}
+                              disabled={isOwnedByOther}
+                              onCheckedChange={() => handleToggleRegion(region.id, !!assigned)}
+                            />
+                            <div className="flex-1">
+                              <Label
+                                htmlFor={`region-${region.id}`}
+                                className={`font-medium ${isOwnedByOther ? "cursor-not-allowed" : "cursor-pointer"}`}
+                              >
+                                {region.name}
+                              </Label>
+                              <p className="text-sm text-muted-foreground">{region.code}</p>
+                              {isOwnedByOther && (
+                                <Badge variant="secondary" className="mt-2">
+                                  Attribué à {assigned.partnerName}
+                                </Badge>
+                              )}
+                              {isChecked && !isOwnedByOther && (
+                                <Badge variant="default" className="mt-2">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Sélectionné
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-6 border-t">
+                      <p className="text-sm text-muted-foreground">
+                        {selectedRegionIds.size} territoire(s) sélectionné(s)
+                      </p>
+                      <Button onClick={handleSave} disabled={isSaving}>
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Enregistrement...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="mr-2 h-4 w-4" />
+                            Sauvegarder les territoires
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    </AdminLayout>
   );
 }

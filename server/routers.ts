@@ -1207,7 +1207,18 @@ export const appRouter = router({
         return await territoriesDb.getAllCountries();
       }),
 
-      // Get regions by country
+      // Get regions by country code
+      regions: adminProcedure
+        .input(z.object({ countryCode: z.string() }))
+        .query(async ({ input }) => {
+          // Get country by code first, then get regions
+          const countries = await territoriesDb.getAllCountries();
+          const country = countries.find((c: any) => c.code === input.countryCode);
+          if (!country) return [];
+          return await territoriesDb.getRegionsByCountry(country.id);
+        }),
+
+      // Get regions by country ID
       regionsByCountry: adminProcedure
         .input(z.object({ countryId: z.number() }))
         .query(async ({ input }) => {
@@ -1238,14 +1249,25 @@ export const appRouter = router({
         return await territoriesDb.getAllPartnerTerritories();
       }),
 
+      // Get all partner territories (alias for list)
+      list: adminProcedure.query(async () => {
+        return await territoriesDb.getAllPartnerTerritories();
+      }),
+
+      // Get partner territories by partner ID (alias for partnerTerritories)
+      byPartner: adminProcedure
+        .input(z.object({ partnerId: z.number() }))
+        .query(async ({ input }) => {
+          return await territoriesDb.getPartnerTerritories(input.partnerId);
+        }),
+
       // Assign territory to partner
       assign: adminProcedure
         .input(
           z.object({
             partnerId: z.number(),
             regionId: z.number(),
-            priority: z.number().optional().default(1),
-            isExclusive: z.boolean().optional().default(false),
+            assignedBy: z.number(),
             notes: z.string().optional(),
           })
         )
@@ -1253,8 +1275,6 @@ export const appRouter = router({
           return await territoriesDb.assignTerritoryToPartner(
             input.partnerId,
             input.regionId,
-            input.priority,
-            input.isExclusive,
             ctx.user.id,
             input.notes
           );
@@ -1268,16 +1288,24 @@ export const appRouter = router({
           return { success: true };
         }),
 
-      // Update territory priority
-      updatePriority: adminProcedure
+      // Unassign territory from partner (alias for remove)
+      unassign: adminProcedure
+        .input(z.object({ territoryId: z.number() }))
+        .mutation(async ({ input }) => {
+          await territoriesDb.removeTerritoryFromPartner(input.territoryId);
+          return { success: true };
+        }),
+
+      // Update territory notes
+      updateNotes: adminProcedure
         .input(
           z.object({
             territoryId: z.number(),
-            priority: z.number(),
+            notes: z.string(),
           })
         )
         .mutation(async ({ input }) => {
-          await territoriesDb.updateTerritoryPriority(input.territoryId, input.priority);
+          await territoriesDb.updateTerritoryNotes(input.territoryId, input.notes);
           return { success: true };
         }),
 

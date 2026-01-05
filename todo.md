@@ -619,3 +619,17 @@
 - [x] Insérer les nouvelles données via script seed-territories-fine.mjs (176 subdivisions)
 - [x] Tester l'attribution avec des codes postaux réels (4000=Liège, 75001=Paris)
 - [x] Valider que l'interface admin affiche les bonnes subdivisions
+
+## Système d'attribution territoriale exclusive (nouvelle session)
+- [x] Modifier le backend pour garantir l'exclusivité (1 province = 1 partenaire max)
+- [x] Supprimer les champs priority et isExclusive de partnerTerritories (toujours exclusif)
+- [x] Ajouter contrainte unique sur regionId dans la base de données
+- [x] Refondre l'interface AdminTerritories :
+  - [x] Sélection du partenaire en premier
+  - [x] Sélection du pays (dropdown)
+  - [x] Liste des provinces avec checkboxes
+  - [x] Affichage visuel des provinces déjà attribuées (disabled + nom du partenaire)
+  - [x] Bouton "Sauvegarder les territoires" pour le partenaire
+- [x] Validation backend automatique via contrainte unique
+- [x] Corriger toutes les routes tRPC pour correspondre à la nouvelle signature
+- [x] Supprimer le fichier Territories.tsx en doublon
