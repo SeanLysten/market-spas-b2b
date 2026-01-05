@@ -468,9 +468,10 @@
 - [x] Créer l'interface admin /admin/technical-resources pour gérer les contenus
 - [x] Ajouter le lien "Ressources Techniques" dans AdminLayout
 - [x] Créer la page utilisateur /technical-resources avec onglets (Documentations, Forum)
-- [ ] Créer la page de création de topic forum
-- [ ] Créer la page de détail de topic avec réponses
-- [ ] Ajouter le lien "Ressources Techniques" dans le dashboard utilisateur
+- [x] Créer la page de création de topic forum (/technical-resources/forum/new)
+- [x] Créer la page de détail de topic avec réponses (/technical-resources/forum/:id)
+- [x] Ajouter le lien "Ressources Techniques" dans le dashboard utilisateur
+- [x] Tester la création de sujet et l'ajout de réponses
 - [ ] Ajouter des données de démonstration (3-5 ressources techniques)
 
 ## Bugs à corriger - Session actuelle
@@ -485,3 +486,10 @@
 
 ## Bugs à corriger - Liens Dashboard
 - [x] Corriger le lien "Ressources Techniques" sur /dashboard pour pointer vers /technical-resources au lieu de /resources
+
+## Fonctionnalités Forum à implémenter
+- [ ] Créer les routes tRPC pour créer un topic, récupérer un topic et ajouter une réponse
+- [ ] Créer la page /technical-resources/forum/new pour créer un nouveau sujet
+- [ ] Créer la page /technical-resources/forum/:id pour afficher un sujet avec ses réponses
+- [ ] Permettre aux utilisateurs de répondre aux sujets
+- [ ] Permettre de marquer un sujet comme résolu

@@ -2739,8 +2739,25 @@ export async function getForumTopicById(id: number) {
   if (!db) return null;
 
   const results = await db
-    .select()
+    .select({
+      id: forumTopics.id,
+      title: forumTopics.title,
+      description: forumTopics.description,
+      category: forumTopics.category,
+      productCategory: forumTopics.productCategory,
+      status: forumTopics.status,
+      authorId: forumTopics.authorId,
+      authorName: users.name,
+      viewCount: forumTopics.viewCount,
+      replyCount: forumTopics.replyCount,
+      lastReplyAt: forumTopics.lastReplyAt,
+      lastReplyBy: forumTopics.lastReplyBy,
+      isPinned: forumTopics.isPinned,
+      createdAt: forumTopics.createdAt,
+      updatedAt: forumTopics.updatedAt,
+    })
     .from(forumTopics)
+    .leftJoin(users, eq(forumTopics.authorId, users.id))
     .where(eq(forumTopics.id, id))
     .limit(1);
 
@@ -2776,8 +2793,20 @@ export async function getForumRepliesByTopicId(topicId: number) {
   if (!db) return [];
 
   return await db
-    .select()
+    .select({
+      id: forumReplies.id,
+      topicId: forumReplies.topicId,
+      authorId: forumReplies.authorId,
+      authorName: users.name,
+      content: forumReplies.content,
+      isAdminReply: forumReplies.isAdminReply,
+      isHelpful: forumReplies.isHelpful,
+      helpfulCount: forumReplies.helpfulCount,
+      createdAt: forumReplies.createdAt,
+      updatedAt: forumReplies.updatedAt,
+    })
     .from(forumReplies)
+    .leftJoin(users, eq(forumReplies.authorId, users.id))
     .where(eq(forumReplies.topicId, topicId))
     .orderBy(forumReplies.createdAt);
 }

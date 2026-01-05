@@ -32,6 +32,8 @@ import Favorites from "./pages/Favorites";
 import Calendar from "./pages/Calendar";
 import Leads from "./pages/Leads";
 import TechnicalResources from "./pages/TechnicalResources";
+import ForumNewTopic from "./pages/ForumNewTopic";
+import ForumTopicDetail from "./pages/ForumTopicDetail";
 
 function Router() {
   return (
@@ -53,6 +55,8 @@ function Router() {
       <Route path="/calendar" component={Calendar} />
       <Route path="/leads" component={Leads} />
       <Route path="/technical-resources" component={TechnicalResources} />
+      <Route path="/technical-resources/forum/new" component={ForumNewTopic} />
+      <Route path="/technical-resources/forum/:id" component={ForumTopicDetail} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/resources" component={AdminResources} />
       <Route path="/admin/users" component={AdminUsers} />
