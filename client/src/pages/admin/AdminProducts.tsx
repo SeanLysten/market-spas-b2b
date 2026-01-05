@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { useSafeQuery } from "@/hooks/useSafeQuery";
+import { TableSkeleton } from "@/components/TableSkeleton";
 import { Plus, Edit, Trash2, Package, Palette, TruckIcon, Pencil, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -329,7 +330,7 @@ export default function AdminProducts() {
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <div className="text-center py-8 text-muted-foreground">Chargement...</div>
+                <TableSkeleton rows={10} columns={6} />
               ) : products && products.length > 0 ? (
                 <Table>
                   <TableHeader>

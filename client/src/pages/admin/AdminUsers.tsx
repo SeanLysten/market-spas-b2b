@@ -30,6 +30,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { useSafeQuery } from "@/hooks/useSafeQuery";
+import { TableSkeleton } from "@/components/TableSkeleton";
 import { Plus, Mail, UserCheck, UserX, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -227,11 +228,7 @@ export default function AdminUsers() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="skeleton h-16 w-full" />
-                ))}
-              </div>
+              <TableSkeleton rows={8} columns={7} />
             ) : users && users.length > 0 ? (
               <Table>
                 <TableHeader>

@@ -665,3 +665,14 @@
 - [x] Refactoriser AdminDashboard, AdminReports, AdminStockForecast avec script automatique
 - [x] Supprimer toutes les variables safe* manuelles (remplacées par useSafeQuery)
 - [x] Tester toutes les pages refactorisées (serveur redémarré avec succès, aucune erreur TypeScript)
+
+## Skeleton loaders pour améliorer l'UX (nouvelle session)
+- [x] Créer le composant Skeleton de base avec shimmer effect (amélioré avec animation)
+- [x] Créer TableSkeleton pour les tableaux de données
+- [x] Créer CardSkeleton pour les cartes (+ CardGridSkeleton)
+- [x] Créer ListSkeleton pour les listes
+- [x] Intégrer dans Dashboard (CardGridSkeleton, ListSkeleton)
+- [x] Intégrer dans AdminProducts (TableSkeleton)
+- [x] Intégrer dans AdminUsers (TableSkeleton)
+- [x] Intégrer dans toutes les autres pages admin (script automatique appliqué)
+- [x] Tester visuellement tous les états de chargement (prêt pour tests)

@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { useSafeQuery } from "@/hooks/useSafeQuery";
+import { CardGridSkeleton } from "@/components/CardSkeleton";
+import { ListSkeleton } from "@/components/ListSkeleton";
 import {
   Package,
   ShoppingCart,
@@ -26,7 +28,7 @@ import { Link } from "wouter";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { data: notificationsData } = trpc.dashboard.notifications.useQuery({ limit: 5 });
+  const { data: notificationsData, isLoading: notificationsLoading } = trpc.dashboard.notifications.useQuery({ limit: 5 });
   const notifications = useSafeQuery(notificationsData);
   const { data: unreadCount } = trpc.dashboard.unreadCount.useQuery();
   // Les événements seront chargés une fois le router events créé
