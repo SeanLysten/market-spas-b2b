@@ -604,3 +604,18 @@
 - [ ] Intégrer l'attribution automatique dans la création de leads - À FAIRE
 - [ ] Créer les tests unitaires pour l'attribution automatique - À FAIRE
 - [ ] Documenter le système d'attribution territoriale - À FAIRE
+
+## Correction du système territorial - Subdivisions fines (nouvelle session)
+- [x] Analyser les données actuelles (22 régions trop vastes)
+- [x] Créer les nouvelles données de référence avec subdivisions fines (script seed-territories-fine.mjs) :
+  - [x] Belgique : 11 provinces (Liège, Hainaut, Namur, Luxembourg, Brabant wallon, Brabant flamand, Anvers, Flandre occidentale, Flandre orientale, Limbourg, Bruxelles-Capitale)
+  - [x] France : 95 départements (01-Ain, 02-Aisne, ..., 95-Val-d'Oise)
+  - [x] Suisse : 26 cantons (Genève, Vaud, Valais, Fribourg, Neuchâtel, Jura, Berne, etc.)
+  - [x] Espagne : 15 provinces principales (Madrid, Barcelona, Valencia, Sevilla, etc.)
+  - [x] Allemagne : 16 Länder (Baden-Württemberg, Bayern, Berlin, etc.)
+  - [x] Pays-Bas : 12 provinces (Noord-Holland, Zuid-Holland, Utrecht, Gelderland, etc.)
+- [x] Mapper précisément chaque plage de codes postaux à la bonne subdivision (140 plages)
+- [x] Nettoyer les anciennes données de la base
+- [x] Insérer les nouvelles données via script seed-territories-fine.mjs (176 subdivisions)
+- [x] Tester l'attribution avec des codes postaux réels (4000=Liège, 75001=Paris)
+- [x] Valider que l'interface admin affiche les bonnes subdivisions

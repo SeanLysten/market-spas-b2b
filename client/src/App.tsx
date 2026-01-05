@@ -70,7 +70,6 @@ function Router() {
       <Route path="/admin/orders" component={AdminOrders} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin/leads" component={AdminLeads} />
-      <Route path="/admin/territories" component={AdminTerritories} />
       <Route path="/admin/technical-resources" component={AdminTechnicalResources} />
 
       <Route path="/404" component={NotFound} />

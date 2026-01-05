@@ -1,0 +1,40 @@
+{
+  "query": "SELECT c.name as country, c.code, COUNT(r.id) as nb_subdivisions\nFROM countries c\nLEFT JOIN regions r ON c.id = r.countryId\nGROUP BY c.id, c.name, c.code\nORDER BY c.code;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT c.name as country, c.code, COUNT(r.id) as nb_subdivisions\nFROM countries c\nLEFT JOIN regions r ON c.id = r.countryId\nGROUP BY c.id, c.name, c.code\nORDER BY c.code;",
+  "rows": [
+    {
+      "country": "Belgique",
+      "code": "BE",
+      "nb_subdivisions": "11"
+    },
+    {
+      "country": "Suisse",
+      "code": "CH",
+      "nb_subdivisions": "26"
+    },
+    {
+      "country": "Allemagne",
+      "code": "DE",
+      "nb_subdivisions": "16"
+    },
+    {
+      "country": "Espagne",
+      "code": "ES",
+      "nb_subdivisions": "15"
+    },
+    {
+      "country": "France",
+      "code": "FR",
+      "nb_subdivisions": "96"
+    },
+    {
+      "country": "Pays-Bas",
+      "code": "NL",
+      "nb_subdivisions": "12"
+    }
+  ],
+  "messages": [],
+  "stdout": "country\tcode\tnb_subdivisions\nBelgique\tBE\t11\nSuisse\tCH\t26\nAllemagne\tDE\t16\nEspagne\tES\t15\nFrance\tFR\t96\nPays-Bas\tNL\t12\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}
