@@ -567,3 +567,9 @@
 - [x] Améliorer getIncomingStock pour retourner les données avec le produit associé
 - [ ] Déboguer le pop-up de précommande (products.getIncomingStock)
 - [ ] Tester les deux mécanismes
+
+## Automatisation de la conversion des arrivages (nouvelle session)
+- [x] Créer une route tRPC publique pour déclencher processArrivedStock()
+- [x] Configurer une tâche cron hebdomadaire (chaque lundi matin à 8h00)
+- [x] Créer les tests unitaires pour valider la route cron (3/3 tests passent)
+- [x] Créer la documentation complète du système (GUIDE-AUTOMATISATION-ARRIVAGES.md)

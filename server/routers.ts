@@ -45,6 +45,25 @@ export const appRouter = router({
   }),
 
   // ============================================
+  // CRON JOBS (public with secret key)
+  // ============================================
+  cron: router({
+    processArrivedStock: publicProcedure
+      .input(z.object({ secret: z.string() }))
+      .mutation(async ({ input }) => {
+        // Vérifier la clé secrète
+        const CRON_SECRET = process.env.CRON_SECRET || 'default-secret-change-me';
+        if (input.secret !== CRON_SECRET) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid secret key' });
+        }
+        
+        // Exécuter la conversion des arrivages
+        const result = await db.processArrivedStock();
+        return { success: true, result };
+      }),
+  }),
+
+  // ============================================
   // DASHBOARD
   // ============================================
   dashboard: router({
