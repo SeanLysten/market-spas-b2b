@@ -449,3 +449,26 @@
 - [ ] Implémenter le système de commentaires/réponses du forum
 - [ ] Ajouter la possibilité de marquer une réponse comme "utile"
 - [ ] Ajouter la possibilité de marquer un topic comme "résolu"
+
+
+## Développement Interface Ressources Techniques
+- [x] Créer les fonctions DB pour ressources techniques (getAllTechnicalResources, createTechnicalResource, updateTechnicalResource, deleteTechnicalResource, incrementResourceViewCount)
+- [x] Créer les fonctions DB pour le forum (getAllForumTopics, createForumTopic, getForumTopicById, getForumRepliesByTopicId, createForumReply, markTopicAsResolved, markReplyAsHelpful, incrementTopicViewCount)
+- [x] Créer les routes tRPC technicalResources (list, getById, create, update, delete avec auto-increment viewCount)
+- [x] Créer les routes tRPC forum (listTopics, getTopic avec replies, createTopic, createReply, markResolved, markHelpful)
+- [ ] Créer la page admin `/admin/technical-resources` avec tableau de gestion
+- [ ] Créer la page utilisateur `/technical-resources` avec 3 onglets (Documentations PDF, Vidéos, Forum)
+- [ ] Créer la page `/technical-resources/forum/:topicId` pour afficher un topic et ses réponses
+- [ ] Ajouter le lien "Ressources Techniques" dans la navigation utilisateur
+
+## Ressources Techniques et Forum d'entraide
+- [x] Créer le schéma DB pour technical_resources, forum_topics, forum_replies
+- [x] Créer les fonctions DB dans technical-resources-db.ts
+- [x] Créer les routes tRPC admin.technicalResources et admin.forum
+- [x] Créer l'interface admin /admin/technical-resources pour gérer les contenus
+- [x] Ajouter le lien "Ressources Techniques" dans AdminLayout
+- [x] Créer la page utilisateur /technical-resources avec onglets (Documentations, Forum)
+- [ ] Créer la page de création de topic forum
+- [ ] Créer la page de détail de topic avec réponses
+- [ ] Ajouter le lien "Ressources Techniques" dans le dashboard utilisateur
+- [ ] Ajouter des données de démonstration (3-5 ressources techniques)

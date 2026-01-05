@@ -1250,6 +1250,162 @@ export const appRouter = router({
           return await db.getPartnerPerformance(input?.limit || 10);
         }),
     }),
+
+    // Technical Resources
+    technicalResources: router({
+      // List all technical resources
+      list: protectedProcedure
+        .input(
+          z
+            .object({
+              type: z.string().optional(),
+              category: z.string().optional(),
+              productCategory: z.string().optional(),
+              search: z.string().optional(),
+            })
+            .optional()
+        )
+        .query(async ({ input }) => {
+          return await db.getAllTechnicalResources(input || {});
+        }),
+
+      // Get single resource
+      getById: protectedProcedure
+        .input(z.object({ id: z.number() }))
+        .query(async ({ input }) => {
+          const resource = await db.getTechnicalResourceById(input.id);
+          if (resource) {
+            await db.incrementResourceViewCount(input.id);
+          }
+          return resource;
+        }),
+
+      // Create resource (admin only)
+      create: adminProcedure
+        .input(
+          z.object({
+            title: z.string(),
+            description: z.string(),
+            type: z.string(),
+            fileUrl: z.string(),
+            category: z.string(),
+            productCategory: z.string().optional(),
+            tags: z.string().optional(),
+          })
+        )
+        .mutation(async ({ input, ctx }) => {
+          return await db.createTechnicalResource({
+            ...input,
+            createdBy: ctx.user.id,
+          });
+        }),
+
+      // Update resource (admin only)
+      update: adminProcedure
+        .input(
+          z.object({
+            id: z.number(),
+            title: z.string().optional(),
+            description: z.string().optional(),
+            type: z.string().optional(),
+            fileUrl: z.string().optional(),
+            category: z.string().optional(),
+            productCategory: z.string().optional(),
+            tags: z.string().optional(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          const { id, ...data } = input;
+          return await db.updateTechnicalResource(id, data);
+        }),
+
+      // Delete resource (admin only)
+      delete: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          return await db.deleteTechnicalResource(input.id);
+        }),
+    }),
+
+    // Forum
+    forum: router({
+      // List all topics
+      listTopics: protectedProcedure
+        .input(
+          z
+            .object({
+              category: z.string().optional(),
+              productCategory: z.string().optional(),
+              status: z.string().optional(),
+              search: z.string().optional(),
+            })
+            .optional()
+        )
+        .query(async ({ input }) => {
+          return await db.getAllForumTopics(input || {});
+        }),
+
+      // Get single topic with replies
+      getTopic: protectedProcedure
+        .input(z.object({ id: z.number() }))
+        .query(async ({ input }) => {
+          const topic = await db.getForumTopicById(input.id);
+          if (!topic) return null;
+
+          await db.incrementTopicViewCount(input.id);
+          const replies = await db.getForumRepliesByTopicId(input.id);
+
+          return { topic, replies };
+        }),
+
+      // Create topic
+      createTopic: protectedProcedure
+        .input(
+          z.object({
+            title: z.string(),
+            description: z.string(),
+            category: z.string(),
+            productCategory: z.string().optional(),
+          })
+        )
+        .mutation(async ({ input, ctx }) => {
+          return await db.createForumTopic({
+            ...input,
+            authorId: ctx.user.id,
+          });
+        }),
+
+      // Create reply
+      createReply: protectedProcedure
+        .input(
+          z.object({
+            topicId: z.number(),
+            content: z.string(),
+          })
+        )
+        .mutation(async ({ input, ctx }) => {
+          const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+          return await db.createForumReply({
+            ...input,
+            authorId: ctx.user.id,
+            isAdminReply: isAdmin,
+          });
+        }),
+
+      // Mark topic as resolved
+      markResolved: protectedProcedure
+        .input(z.object({ topicId: z.number() }))
+        .mutation(async ({ input }) => {
+          return await db.markTopicAsResolved(input.topicId);
+        }),
+
+      // Mark reply as helpful
+      markHelpful: protectedProcedure
+        .input(z.object({ replyId: z.number() }))
+        .mutation(async ({ input }) => {
+          return await db.markReplyAsHelpful(input.replyId);
+        }),
+    }),
   }),
 });
 

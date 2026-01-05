@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like, lte, gte, asc, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -2565,4 +2565,277 @@ export async function getPartnerPerformance(limit: number = 10) {
     revenue: Number(row.revenue) || 0,
     avgOrderValue: Number(row.avgOrderValue) || 0,
   }));
+}
+
+
+// ============================================
+// TECHNICAL RESOURCES
+// ============================================
+
+export async function getAllTechnicalResources(filters?: {
+  type?: string;
+  category?: string;
+  productCategory?: string;
+  search?: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let conditions = [];
+  
+  if (filters?.type) {
+    conditions.push(eq(technicalResources.type, filters.type as any));
+  }
+  if (filters?.category) {
+    conditions.push(eq(technicalResources.category, filters.category as any));
+  }
+  if (filters?.productCategory) {
+    conditions.push(eq(technicalResources.productCategory, filters.productCategory as any));
+  }
+  if (filters?.search) {
+    conditions.push(
+      or(
+        like(technicalResources.title, `%${filters.search}%`),
+        like(technicalResources.description, `%${filters.search}%`)
+      )
+    );
+  }
+
+  const query = conditions.length > 0
+    ? db.select().from(technicalResources).where(and(...conditions))
+    : db.select().from(technicalResources);
+
+  return await query.orderBy(desc(technicalResources.createdAt));
+}
+
+export async function getTechnicalResourceById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const results = await db
+    .select()
+    .from(technicalResources)
+    .where(eq(technicalResources.id, id))
+    .limit(1);
+
+  return results[0] || null;
+}
+
+export async function createTechnicalResource(data: {
+  title: string;
+  description: string;
+  type: string;
+  fileUrl: string;
+  category: string;
+  productCategory?: string;
+  tags?: string;
+  createdBy: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(technicalResources).values({
+    ...data,
+    type: data.type as any,
+    category: data.category as any,
+    productCategory: data.productCategory as any,
+    viewCount: 0,
+    createdAt: new Date(),
+  });
+
+  return result;
+}
+
+export async function updateTechnicalResource(
+  id: number,
+  data: Partial<{
+    title: string;
+    description: string;
+    type: string;
+    fileUrl: string;
+    category: string;
+    productCategory: string;
+    tags: string;
+  }>
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateData: any = { ...data };
+  if (data.type) updateData.type = data.type as any;
+  if (data.category) updateData.category = data.category as any;
+  if (data.productCategory) updateData.productCategory = data.productCategory as any;
+
+  return await db
+    .update(technicalResources)
+    .set(updateData)
+    .where(eq(technicalResources.id, id));
+}
+
+export async function deleteTechnicalResource(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db
+    .delete(technicalResources)
+    .where(eq(technicalResources.id, id));
+}
+
+export async function incrementResourceViewCount(id: number) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(technicalResources)
+    .set({ viewCount: sql`${technicalResources.viewCount} + 1` })
+    .where(eq(technicalResources.id, id));
+}
+
+// ============================================
+// FORUM
+// ============================================
+
+export async function getAllForumTopics(filters?: {
+  category?: string;
+  productCategory?: string;
+  status?: string;
+  search?: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let conditions = [];
+  
+  if (filters?.category) {
+    conditions.push(eq(forumTopics.category, filters.category as any));
+  }
+  if (filters?.productCategory) {
+    conditions.push(eq(forumTopics.productCategory, filters.productCategory as any));
+  }
+  if (filters?.status) {
+    conditions.push(eq(forumTopics.status, filters.status as any));
+  }
+  if (filters?.search) {
+    conditions.push(
+      or(
+        like(forumTopics.title, `%${filters.search}%`),
+        like(forumTopics.description, `%${filters.search}%`)
+      )
+    );
+  }
+
+  const query = conditions.length > 0
+    ? db.select().from(forumTopics).where(and(...conditions))
+    : db.select().from(forumTopics);
+
+  return await query.orderBy(
+    desc(forumTopics.isPinned),
+    desc(forumTopics.createdAt)
+  );
+}
+
+export async function getForumTopicById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const results = await db
+    .select()
+    .from(forumTopics)
+    .where(eq(forumTopics.id, id))
+    .limit(1);
+
+  return results[0] || null;
+}
+
+export async function createForumTopic(data: {
+  title: string;
+  description: string;
+  category: string;
+  productCategory?: string;
+  authorId: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(forumTopics).values({
+    ...data,
+    category: data.category as any,
+    productCategory: data.productCategory as any,
+    status: "OPEN",
+    viewCount: 0,
+    replyCount: 0,
+    isPinned: false,
+    createdAt: new Date(),
+  });
+
+  return result;
+}
+
+export async function getForumRepliesByTopicId(topicId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(forumReplies)
+    .where(eq(forumReplies.topicId, topicId))
+    .orderBy(forumReplies.createdAt);
+}
+
+export async function createForumReply(data: {
+  topicId: number;
+  authorId: number;
+  content: string;
+  isAdminReply: boolean;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(forumReplies).values({
+    ...data,
+    isHelpful: false,
+    helpfulCount: 0,
+    createdAt: new Date(),
+  });
+
+  // Increment reply count
+  await db
+    .update(forumTopics)
+    .set({ replyCount: sql`${forumTopics.replyCount} + 1` })
+    .where(eq(forumTopics.id, data.topicId));
+
+  return result;
+}
+
+export async function markTopicAsResolved(topicId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db
+    .update(forumTopics)
+    .set({ status: "RESOLVED" })
+    .where(eq(forumTopics.id, topicId));
+}
+
+export async function markReplyAsHelpful(replyId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db
+    .update(forumReplies)
+    .set({
+      isHelpful: true,
+      helpfulCount: sql`${forumReplies.helpfulCount} + 1`,
+    })
+    .where(eq(forumReplies.id, replyId));
+}
+
+export async function incrementTopicViewCount(topicId: number) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(forumTopics)
+    .set({ viewCount: sql`${forumTopics.viewCount} + 1` })
+    .where(eq(forumTopics.id, topicId));
 }

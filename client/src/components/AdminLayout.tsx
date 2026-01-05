@@ -15,6 +15,7 @@ import {
   Building2,
   FileSpreadsheet,
   Target,
+  BookOpen,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -92,6 +93,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: "Leads",
       href: "/admin/leads",
       icon: Target,
+    },
+    {
+      name: "Ressources Techniques",
+      href: "/admin/technical-resources",
+      icon: BookOpen,
     },
     {
       name: "Paramètres",
