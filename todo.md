@@ -527,3 +527,10 @@
 - [x] Supprimer la route /admin/incoming-stock dans App.tsx
 - [x] Supprimer le lien "Arrivages programmés" dans AdminLayout.tsx
 - [x] Tester la nouvelle interface unifiée
+
+## Restructuration page admin Produits - Onglets principaux
+- [x] Modifier AdminProducts.tsx pour avoir 2 onglets au niveau supérieur : "Produits en stock" et "Arrivages programmés"
+- [x] Déplacer la liste des produits actuelle dans l'onglet "Produits en stock"
+- [x] Créer la vue globale des arrivages programmés (tous produits) dans l'onglet "Arrivages programmés"
+- [x] Ajouter les filtres par semaine et année dans la vue arrivages
+- [x] Tester la nouvelle structure

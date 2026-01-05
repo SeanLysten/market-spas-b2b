@@ -165,13 +165,21 @@ export default function AdminProducts() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Gestion des produits</h1>
-            <p className="text-muted-foreground mt-1">
-              Gérez vos produits, variantes et arrivages programmés
-            </p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold">Gestion des produits</h1>
+          <p className="text-muted-foreground mt-1">
+            Gérez vos produits, variantes et arrivages programmés
+          </p>
+        </div>
+
+        <Tabs defaultValue="products" className="w-full">
+          <TabsList>
+            <TabsTrigger value="products">Produits en stock</TabsTrigger>
+            <TabsTrigger value="incoming">Arrivages programmés</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="products" className="space-y-6">
+            <div className="flex items-center justify-between">
           <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={() => { setEditingProduct(null); resetProductForm(); }}>
@@ -386,6 +394,12 @@ export default function AdminProducts() {
             </CardContent>
           </Card>
         )}
+          </TabsContent>
+
+          <TabsContent value="incoming" className="space-y-6">
+            <GlobalIncomingStockView />
+          </TabsContent>
+        </Tabs>
       </div>
     </AdminLayout>
   );
@@ -736,6 +750,242 @@ function IncomingStockTab({ productId }: { productId: number }) {
       <CardContent>
         <div className="text-center py-8 text-muted-foreground">
           Fonctionnalité en cours de développement
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+
+function GlobalIncomingStockView() {
+  const [weekFilter, setWeekFilter] = useState("");
+  const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState({
+    productId: "",
+    quantity: "",
+    expectedWeek: "",
+    expectedYear: new Date().getFullYear().toString(),
+    notes: "",
+  });
+
+  const { data: products } = trpc.admin.products.list.useQuery({});
+  const { data: incomingStock, refetch } = trpc.admin.incomingStock.list.useQuery({});
+  const createMutation = trpc.admin.incomingStock.create.useMutation();
+  const updateMutation = trpc.admin.incomingStock.update.useMutation();
+  const deleteMutation = trpc.admin.incomingStock.delete.useMutation();
+
+  const filteredStock = incomingStock?.filter((item: any) => {
+    const matchesWeek = !weekFilter || item.expectedWeek.toString() === weekFilter;
+    const matchesYear = !yearFilter || item.expectedYear.toString() === yearFilter;
+    return matchesWeek && matchesYear;
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await createMutation.mutateAsync({
+        productId: parseInt(form.productId),
+        quantity: parseInt(form.quantity),
+        expectedWeek: parseInt(form.expectedWeek),
+        expectedYear: parseInt(form.expectedYear),
+        notes: form.notes || undefined,
+      });
+      toast.success("Arrivage programmé avec succès");
+      setDialogOpen(false);
+      setForm({
+        productId: "",
+        quantity: "",
+        expectedWeek: "",
+        expectedYear: new Date().getFullYear().toString(),
+        notes: "",
+      });
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur");
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Supprimer cet arrivage ?")) return;
+    try {
+      await deleteMutation.mutateAsync({ id });
+      toast.success("Arrivage supprimé");
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur");
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Arrivages programmés</CardTitle>
+            <CardDescription>
+              Vue globale de tous les arrivages programmés avec filtres par semaine et année
+            </CardDescription>
+          </div>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <TruckIcon className="mr-2 h-4 w-4" />
+                Nouvel arrivage
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Programmer un arrivage</DialogTitle>
+                <DialogDescription>
+                  Ajoutez un arrivage programmé pour un produit
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="productId">Produit *</Label>
+                  <select
+                    id="productId"
+                    value={form.productId}
+                    onChange={(e) => setForm({ ...form, productId: e.target.value })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    required
+                  >
+                    <option value="">Sélectionnez un produit</option>
+                    {products?.map((p: any) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.sku})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="quantity">Quantité *</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="1"
+                    value={form.quantity}
+                    onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="expectedWeek">Semaine *</Label>
+                    <Input
+                      id="expectedWeek"
+                      type="number"
+                      min="1"
+                      max="53"
+                      placeholder="1-53"
+                      value={form.expectedWeek}
+                      onChange={(e) => setForm({ ...form, expectedWeek: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="expectedYear">Année *</Label>
+                    <Input
+                      id="expectedYear"
+                      type="number"
+                      value={form.expectedYear}
+                      onChange={(e) => setForm({ ...form, expectedYear: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={form.notes}
+                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="submit">Programmer</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Label htmlFor="weekFilter">Filtrer par semaine</Label>
+              <Input
+                id="weekFilter"
+                type="number"
+                min="1"
+                max="53"
+                placeholder="Toutes les semaines"
+                value={weekFilter}
+                onChange={(e) => setWeekFilter(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <Label htmlFor="yearFilter">Filtrer par année</Label>
+              <Input
+                id="yearFilter"
+                type="number"
+                placeholder="Toutes les années"
+                value={yearFilter}
+                onChange={(e) => setYearFilter(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {filteredStock && filteredStock.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Produit</TableHead>
+                  <TableHead>SKU</TableHead>
+                  <TableHead>Quantité</TableHead>
+                  <TableHead>Semaine</TableHead>
+                  <TableHead>Année</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredStock.map((item: any) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{item.product?.name || "N/A"}</TableCell>
+                    <TableCell>{item.product?.sku || "N/A"}</TableCell>
+                    <TableCell>{item.quantity}</TableCell>
+                    <TableCell>Semaine {item.expectedWeek}</TableCell>
+                    <TableCell>{item.expectedYear}</TableCell>
+                    <TableCell>
+                      <Badge variant={item.status === "PENDING" ? "default" : item.status === "ARRIVED" ? "secondary" : "destructive"}>
+                        {item.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              Aucun arrivage programmé
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
