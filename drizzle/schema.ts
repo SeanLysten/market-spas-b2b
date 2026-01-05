@@ -1551,3 +1551,4 @@ export type InsertForumTopic = typeof forumTopics.$inferInsert;
 
 export type ForumReply = typeof forumReplies.$inferSelect;
 export type InsertForumReply = typeof forumReplies.$inferInsert;
+

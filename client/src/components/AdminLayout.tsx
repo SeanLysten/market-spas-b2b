@@ -18,6 +18,7 @@ import {
   BookOpen,
   Calendar,
   TrendingUp,
+  MapPin,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -70,6 +71,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: "Prévisions Stock",
       href: "/admin/forecast",
       icon: TrendingUp,
+    },
+    {
+      name: "Territoires",
+      href: "/admin/territories",
+      icon: MapPin,
     },
     {
       name: "Ressources média",

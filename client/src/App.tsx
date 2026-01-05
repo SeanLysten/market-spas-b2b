@@ -10,12 +10,12 @@ import AdminResources from "./pages/admin/AdminResources";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminStockForecast from "./pages/admin/AdminStockForecast";
+import AdminTerritories from "./pages/admin/AdminTerritories";
 import AdminPartners from "@/pages/admin/AdminPartners";
 import AdminReports from "@/pages/admin/AdminReports";
 import AdminOrders from "@/pages/admin/AdminOrders";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminLeads from "@/pages/admin/AdminLeads";
-import AdminTerritories from "@/pages/admin/Territories";
 import AdminTechnicalResources from "@/pages/admin/TechnicalResources";
 
 import Dashboard from "./pages/Dashboard";
@@ -64,6 +64,7 @@ function Router() {
       <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/products" component={AdminProducts} />
       <Route path="/admin/forecast" component={AdminStockForecast} />
+      <Route path="/admin/territories" component={AdminTerritories} />
       <Route path="/admin/partners" component={AdminPartners} />
       <Route path="/admin/reports" component={AdminReports} />
       <Route path="/admin/orders" component={AdminOrders} />

@@ -587,3 +587,20 @@
 - [x] Corriger l'erreur "Cannot read properties of undefined (reading 'map')" sur /admin/products
 - [x] Identifier quelle requête API retourne undefined au lieu d'un tableau (getIncomingStock)
 - [x] Ajouter des vérifications de sécurité pour éviter les erreurs similaires (|| [] sur tous les .map())
+
+## Système de gestion territoriale et attribution automatique des leads (nouvelle session)
+- [x] Créer les tables de base de données (territories, partner_territories, postal_code_ranges) - EXISTAIENT DÉJÀ
+- [x] Définir les données de référence pour les 6 pays (BE, FR, CH, ES, DE, NL) - Script seed-territories.mjs exécuté avec succès
+- [x] Créer les fonctions backend pour gérer les territoires - EXISTAIENT DÉJÀ dans territories-db.ts
+- [x] Créer les routes tRPC pour les territoires - EXISTAIENT DÉJÀ
+- [x] Développer l'interface admin pour attribuer les territoires aux partenaires (AdminTerritories.tsx)
+- [x] Ajouter le lien Territoires dans AdminLayout
+- [x] Logique d'attribution automatique des leads disponible dans territories-db.ts :
+  - [x] Préfixe téléphonique international (identification du pays) - detectCountryFromPhone()
+  - [x] Code postal (identification région/département/province) - findRegionByPostalCode()
+  - [x] Validation et normalisation des codes postaux par pays
+  - [x] Fonction findBestPartnerForPostalCode() pour attribution automatique
+- [ ] Créer le système de gestion des leads (formulaire de contact) - À FAIRE
+- [ ] Intégrer l'attribution automatique dans la création de leads - À FAIRE
+- [ ] Créer les tests unitaires pour l'attribution automatique - À FAIRE
+- [ ] Documenter le système d'attribution territoriale - À FAIRE
