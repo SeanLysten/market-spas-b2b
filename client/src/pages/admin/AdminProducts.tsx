@@ -24,6 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
+import { useSafeQuery } from "@/hooks/useSafeQuery";
 import { Plus, Edit, Trash2, Package, Palette, TruckIcon, Pencil, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -70,8 +71,8 @@ export default function AdminProducts() {
     notes: "",
   });
 
-  const { data: products, isLoading, refetch } = trpc.admin.products.list.useQuery({});
-  const safeProducts = Array.isArray(products) ? products : [];
+  const { data: productsData, isLoading, refetch } = trpc.admin.products.list.useQuery({});
+  const products = useSafeQuery(productsData);
   const createProductMutation = trpc.admin.products.create.useMutation();
   const updateProductMutation = trpc.admin.products.update.useMutation();
   const deleteProductMutation = trpc.admin.products.delete.useMutation();
@@ -342,7 +343,7 @@ export default function AdminProducts() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {safeProducts.map((product: any) => (
+                    {products.map((product: any) => (
                       <TableRow key={product.id}>
                         <TableCell className="font-mono text-sm">{product.sku}</TableCell>
                         <TableCell className="font-medium">{product.name}</TableCell>
@@ -450,8 +451,8 @@ function VariantsTab({ productId }: { productId: number }) {
     imageUrl: "",
   });
 
-  const { data: variants, refetch } = trpc.admin.products.getVariants.useQuery({ productId });
-  const safeVariants = Array.isArray(variants) ? variants : [];
+  const { data: variantsData, refetch } = trpc.admin.products.getVariants.useQuery({ productId });
+  const variants = useSafeQuery(variantsData);
   const createMutation = trpc.admin.products.createVariant.useMutation();
   const deleteMutation = trpc.admin.products.deleteVariant.useMutation();
 
@@ -620,7 +621,7 @@ function VariantsTab({ productId }: { productId: number }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {safeVariants.map((variant: any) => (
+              {variants.map((variant: any) => (
                 <TableRow key={variant.id}>
                   <TableCell className="font-mono text-sm">{variant.sku}</TableCell>
                   <TableCell>{variant.name}</TableCell>
@@ -782,8 +783,8 @@ function GlobalIncomingStockView() {
 
   const { data: products } = trpc.admin.products.list.useQuery({});
   const { data: incomingStock, refetch } = trpc.admin.incomingStock.list.useQuery({});
-  const safeProducts2 = Array.isArray(products) ? products : [];
-  const safeIncomingStock = Array.isArray(incomingStock) ? incomingStock : [];
+  const products2 = useSafeQuery(products);
+  const incomingStockList = useSafeQuery(incomingStock);
   const createMutation = trpc.admin.incomingStock.create.useMutation();
   const updateMutation = trpc.admin.incomingStock.update.useMutation();
   const deleteMutation = trpc.admin.incomingStock.delete.useMutation();
@@ -799,7 +800,7 @@ function GlobalIncomingStockView() {
     }
   };
 
-  const filteredStock = safeIncomingStock.filter((item: any) => {
+  const filteredStock = incomingStockList.filter((item: any) => {
     const matchesWeek = !weekFilter || item.expectedWeek.toString() === weekFilter;
     const matchesYear = !yearFilter || item.expectedYear.toString() === yearFilter;
     return matchesWeek && matchesYear;
@@ -918,7 +919,7 @@ function GlobalIncomingStockView() {
                     required
                   >
                     <option value="">Sélectionnez un produit</option>
-                    {safeProducts2.map((p: any) => (
+                    {products2.map((p: any) => (
                       <option key={p.id} value={p.id}>
                         {p.name} ({p.sku})
                       </option>

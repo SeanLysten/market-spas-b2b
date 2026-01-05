@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
+import { useSafeQuery } from "@/hooks/useSafeQuery";
 import { 
   Download, 
   FileSpreadsheet, 
@@ -32,19 +33,19 @@ export default function AdminReports() {
     { limit: 1000 },
     { enabled: reportType === "orders" || reportType === "sales" }
   );
-  const safeOrdersData = Array.isArray(ordersData) ? ordersData : [];
+  const ordersDataSafe = useSafeQuery(ordersData);
 
   const { data: productsData } = trpc.products.list.useQuery(
     { limit: 1000 },
     { enabled: reportType === "products" }
   );
-  const safeProductsData = Array.isArray(productsData) ? productsData : [];
+  const productsDataSafe = useSafeQuery(productsData);
 
   const { data: partnersData } = trpc.admin.partners.list.useQuery(
     {},
     { enabled: reportType === "partners" }
   );
-  const safePartnersData = Array.isArray(partnersData) ? partnersData : [];
+  const partnersDataSafe = useSafeQuery(partnersData);
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return "";

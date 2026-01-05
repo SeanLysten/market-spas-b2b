@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
+import { useSafeQuery } from "@/hooks/useSafeQuery";
 import { Plus, Mail, UserCheck, UserX, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -43,8 +44,8 @@ export default function AdminUsers() {
     partnerId: "",
   });
 
-  const { data: users, isLoading, refetch } = trpc.admin.users.list.useQuery();
-  const safeUsers = Array.isArray(users) ? users : [];
+  const { data: usersData, isLoading, refetch } = trpc.admin.users.list.useQuery();
+  const users = useSafeQuery(usersData);
   const inviteMutation = trpc.admin.users.invite.useMutation();
   const toggleActiveMutation = trpc.admin.users.toggleActive.useMutation();
 
@@ -245,7 +246,7 @@ export default function AdminUsers() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {safeUsers.map((user) => (
+                  {users.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">
                         {user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim() || "—"}

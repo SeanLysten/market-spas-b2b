@@ -656,3 +656,12 @@
 - [x] Identifier toutes les autres pages avec le même problème (33 fichiers .tsx)
 - [x] Appliquer la correction systématiquement avec script Python automatique
 - [x] Pages corrigées : Dashboard, AdminDashboard, AdminReports, AdminStockForecast
+
+## Hook useSafeQuery pour simplifier le code (nouvelle session)
+- [x] Créer le hook useSafeQuery dans client/src/hooks/useSafeQuery.ts
+- [x] Refactoriser AdminProducts pour utiliser useSafeQuery (products, variants, incomingStockList)
+- [x] Refactoriser AdminUsers pour utiliser useSafeQuery
+- [x] Refactoriser Dashboard pour utiliser useSafeQuery (notifications)
+- [x] Refactoriser AdminDashboard, AdminReports, AdminStockForecast avec script automatique
+- [x] Supprimer toutes les variables safe* manuelles (remplacées par useSafeQuery)
+- [x] Tester toutes les pages refactorisées (serveur redémarré avec succès, aucune erreur TypeScript)

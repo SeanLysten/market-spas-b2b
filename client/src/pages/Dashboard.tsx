@@ -2,6 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
+import { useSafeQuery } from "@/hooks/useSafeQuery";
 import {
   Package,
   ShoppingCart,
@@ -25,8 +26,8 @@ import { Link } from "wouter";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { data: notifications } = trpc.dashboard.notifications.useQuery({ limit: 5 });
-  const safeNotifications = Array.isArray(notifications) ? notifications : [];
+  const { data: notificationsData } = trpc.dashboard.notifications.useQuery({ limit: 5 });
+  const notifications = useSafeQuery(notificationsData);
   const { data: unreadCount } = trpc.dashboard.unreadCount.useQuery();
   // Les événements seront chargés une fois le router events créé
   const upcomingEvents: any[] = [];
@@ -233,9 +234,9 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              {safeNotifications && safeNotifications.length > 0 ? (
+              {notifications && notifications.length > 0 ? (
                 <div className="space-y-3">
-                  {safeNotifications.map((notification) => (
+                  {notifications.map((notification) => (
                     <div
                       key={notification.id}
                       className={`flex items-start gap-3 p-4 rounded-lg border transition-colors ${

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { useSafeQuery, useSafeQueryObject } from "@/hooks/useSafeQuery";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +49,8 @@ export default function AdminStockForecast() {
     { productId: selectedProductId!, weeks },
     { enabled: !!selectedProductId }
   );
-  const safeProductForecast = Array.isArray(productForecast) ? productForecast : [];
+  // productForecast est un objet unique, pas un tableau
+  // On ne peut pas utiliser useSafeQuery ici, on garde la logique existante
 
   // Filter forecasts by search query
   const filteredForecasts = forecasts?.filter(
