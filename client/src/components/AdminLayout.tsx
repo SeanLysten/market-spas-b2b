@@ -100,11 +100,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       href: "/admin/technical-resources",
       icon: BookOpen,
     },
-    {
-      name: "Arrivages programmés",
-      href: "/admin/incoming-stock",
-      icon: Calendar,
-    },
+
     {
       name: "Paramètres",
       href: "/admin/settings",

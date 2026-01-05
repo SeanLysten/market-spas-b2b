@@ -16,7 +16,7 @@ import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminLeads from "@/pages/admin/AdminLeads";
 import AdminTerritories from "@/pages/admin/Territories";
 import AdminTechnicalResources from "@/pages/admin/TechnicalResources";
-import AdminIncomingStock from "@/pages/admin/AdminIncomingStock";
+
 import Dashboard from "./pages/Dashboard";
 import Catalog from "./pages/Catalog";
 import Orders from "./pages/Orders";
@@ -69,7 +69,7 @@ function Router() {
       <Route path="/admin/leads" component={AdminLeads} />
       <Route path="/admin/territories" component={AdminTerritories} />
       <Route path="/admin/technical-resources" component={AdminTechnicalResources} />
-      <Route path="/admin/incoming-stock" component={AdminIncomingStock} />
+
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

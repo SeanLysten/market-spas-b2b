@@ -520,3 +520,10 @@
 - [ ] Réactiver les badges d'arrivage sur les cartes produits du catalogue
 - [ ] Tester le flux complet : sélection arrivage → ajout au panier → checkout
 - [ ] Ajouter le support des variantes de produits dans le pop-up
+
+## Fusion interface admin - Produits et Arrivages
+- [x] Intégrer la section Arrivages programmés dans AdminProducts.tsx avec système d'onglets
+- [x] Supprimer la page AdminIncomingStock.tsx
+- [x] Supprimer la route /admin/incoming-stock dans App.tsx
+- [x] Supprimer le lien "Arrivages programmés" dans AdminLayout.tsx
+- [x] Tester la nouvelle interface unifiée
