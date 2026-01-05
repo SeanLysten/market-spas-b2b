@@ -70,7 +70,8 @@ export default function AdminProducts() {
     notes: "",
   });
 
-  const { data: products = [], isLoading, refetch } = trpc.admin.products.list.useQuery({});
+  const { data: products, isLoading, refetch } = trpc.admin.products.list.useQuery({});
+  const safeProducts = Array.isArray(products) ? products : [];
   const createProductMutation = trpc.admin.products.create.useMutation();
   const updateProductMutation = trpc.admin.products.update.useMutation();
   const deleteProductMutation = trpc.admin.products.delete.useMutation();
@@ -341,7 +342,7 @@ export default function AdminProducts() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {(products || []).map((product: any) => (
+                    {safeProducts.map((product: any) => (
                       <TableRow key={product.id}>
                         <TableCell className="font-mono text-sm">{product.sku}</TableCell>
                         <TableCell className="font-medium">{product.name}</TableCell>
@@ -449,7 +450,8 @@ function VariantsTab({ productId }: { productId: number }) {
     imageUrl: "",
   });
 
-  const { data: variants = [], refetch } = trpc.admin.products.getVariants.useQuery({ productId });
+  const { data: variants, refetch } = trpc.admin.products.getVariants.useQuery({ productId });
+  const safeVariants = Array.isArray(variants) ? variants : [];
   const createMutation = trpc.admin.products.createVariant.useMutation();
   const deleteMutation = trpc.admin.products.deleteVariant.useMutation();
 
@@ -618,7 +620,7 @@ function VariantsTab({ productId }: { productId: number }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(variants || []).map((variant: any) => (
+              {safeVariants.map((variant: any) => (
                 <TableRow key={variant.id}>
                   <TableCell className="font-mono text-sm">{variant.sku}</TableCell>
                   <TableCell>{variant.name}</TableCell>
@@ -778,8 +780,10 @@ function GlobalIncomingStockView() {
     notes: "",
   });
 
-  const { data: products = [] } = trpc.admin.products.list.useQuery({});
-  const { data: incomingStock = [], refetch } = trpc.admin.incomingStock.list.useQuery({});
+  const { data: products } = trpc.admin.products.list.useQuery({});
+  const { data: incomingStock, refetch } = trpc.admin.incomingStock.list.useQuery({});
+  const safeProducts2 = Array.isArray(products) ? products : [];
+  const safeIncomingStock = Array.isArray(incomingStock) ? incomingStock : [];
   const createMutation = trpc.admin.incomingStock.create.useMutation();
   const updateMutation = trpc.admin.incomingStock.update.useMutation();
   const deleteMutation = trpc.admin.incomingStock.delete.useMutation();
@@ -795,7 +799,7 @@ function GlobalIncomingStockView() {
     }
   };
 
-  const filteredStock = incomingStock?.filter((item: any) => {
+  const filteredStock = safeIncomingStock.filter((item: any) => {
     const matchesWeek = !weekFilter || item.expectedWeek.toString() === weekFilter;
     const matchesYear = !yearFilter || item.expectedYear.toString() === yearFilter;
     return matchesWeek && matchesYear;
@@ -914,7 +918,7 @@ function GlobalIncomingStockView() {
                     required
                   >
                     <option value="">Sélectionnez un produit</option>
-                    {(products || []).map((p: any) => (
+                    {safeProducts2.map((p: any) => (
                       <option key={p.id} value={p.id}>
                         {p.name} ({p.sku})
                       </option>
@@ -1019,7 +1023,7 @@ function GlobalIncomingStockView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(filteredStock || []).map((item: any) => (
+                {filteredStock.map((item: any) => (
                   <TableRow key={item.id}>
                     <TableCell>{item.product?.name || "N/A"}</TableCell>
                     <TableCell>{item.product?.sku || "N/A"}</TableCell>

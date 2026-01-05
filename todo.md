@@ -637,3 +637,10 @@
 ## Correction du rafraîchissement temps réel des territoires (nouvelle session)
 - [x] Ajouter refetch de allTerritories après chaque mutation (assign/unassign)
 - [x] Vérifier que les provinces se dégrisent immédiatement après retrait
+
+## Bug AdminProducts - Erreurs .map() (nouvelle session)
+- [x] Identifier tous les .map() sans protection dans AdminProducts.tsx
+- [x] Ajouter des vérifications Array.isArray() avant tous les .map()
+- [x] Remplacer les valeurs par défaut (= []) par des variables safe* avec Array.isArray()
+- [x] Corriger filteredStock pour utiliser safeIncomingStock
+- [x] Tester la page /admin/products - Aucune erreur visible
