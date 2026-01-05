@@ -505,3 +505,18 @@
 - [ ] Intégrer le pop-up dans le catalogue utilisateur
 - [ ] Afficher les badges "Arrivage Semaine X" dans le catalogue utilisateur
 - [ ] Tester l'ajout au panier avec sélection stock vs arrivage
+
+## Intégration pop-up catalogue - Session actuelle
+- [ ] Modifier la page Catalog pour utiliser ProductAddToCartDialog au lieu de l'ajout direct au panier
+- [ ] Ajouter les badges "Arrivage Semaine X" sur les cartes produits du catalogue
+- [ ] Tester le flux complet de sélection stock/précommande
+
+## Système d'arrivages - Travail en cours
+- [x] Créer l'interface admin /admin/incoming-stock pour gérer les arrivages
+- [x] Créer le composant ProductAddToCartDialog
+- [x] Intégrer le pop-up dans le catalogue
+- [x] Corriger les routes tRPC pour utiliser products.getIncomingStock
+- [ ] **BLOCKER**: Déboguer pourquoi products.getIncomingStock ne retourne pas les données (le pop-up n'affiche que "Stock disponible")
+- [ ] Réactiver les badges d'arrivage sur les cartes produits du catalogue
+- [ ] Tester le flux complet : sélection arrivage → ajout au panier → checkout
+- [ ] Ajouter le support des variantes de produits dans le pop-up

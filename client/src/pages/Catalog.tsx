@@ -9,12 +9,15 @@ import { Search, Package, ShoppingCart, Filter, ArrowLeft, Euro, TrendingUp, Tru
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import ProductAddToCartDialog from "@/components/ProductAddToCartDialog";
 
 export default function Catalog() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [quantities, setQuantities] = useState<Record<number, number>>({});
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const { data: products, isLoading } = trpc.products.list.useQuery({
     search: searchQuery || undefined,
@@ -22,7 +25,10 @@ export default function Catalog() {
     limit: 50,
   });
 
-  const addToCartMutation = trpc.cart.add.useMutation();
+  // Note: We'll fetch incoming stock per product in the dialog
+  // For badges, we could add a bulk endpoint later
+
+  // Remove direct add to cart mutation - now handled by ProductAddToCartDialog
 
   const getQuantity = (productId: number) => quantities[productId] || 1;
 
@@ -31,22 +37,9 @@ export default function Catalog() {
     setQuantities({ ...quantities, [productId]: newQty });
   };
 
-  const handleAddToCart = async (productId: number, isPreorder: boolean = false) => {
-    const quantity = getQuantity(productId);
-    try {
-      await addToCartMutation.mutateAsync({ 
-        productId, 
-        quantity,
-        isPreorder 
-      });
-      toast.success(isPreorder 
-        ? `${quantity} produit(s) pré-réservé(s)` 
-        : `${quantity} produit(s) ajouté(s) au panier`
-      );
-      setQuantities({ ...quantities, [productId]: 1 });
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de l'ajout au panier");
-    }
+  const handleOpenDialog = (product: any) => {
+    setSelectedProduct(product);
+    setDialogOpen(true);
   };
 
   const getPartnerPrice = (product: any) => {
@@ -64,6 +57,9 @@ export default function Catalog() {
     const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
     return Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7);
   };
+
+  // Incoming stock will be fetched per product in the dialog
+  // For now, we'll show badges based on product data
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -192,6 +188,7 @@ export default function Catalog() {
               const hasStock = stock > 0;
               const quantity = getQuantity(product.id);
               const partnerPrice = getPartnerPrice(product);
+              // Incoming stock badges removed for now - will be shown in dialog
 
               return (
                 <Card key={product.id} className="overflow-hidden flex flex-col">
@@ -209,7 +206,7 @@ export default function Catalog() {
                       </div>
                     )}
                     {/* Stock Badge */}
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute top-2 right-2 flex flex-col gap-1">
                       {hasStock ? (
                         <Badge variant="default" className="bg-green-600">
                           En stock ({stock})
@@ -219,6 +216,7 @@ export default function Catalog() {
                           Rupture
                         </Badge>
                       )}
+                      {/* Incoming Stock Badges - will be added back with proper API */}
                     </div>
                   </div>
 
@@ -276,30 +274,13 @@ export default function Catalog() {
                   </CardContent>
 
                   <CardFooter className="flex-col gap-2">
-                    {hasStock ? (
-                      <Button 
-                        className="w-full gap-2" 
-                        onClick={() => handleAddToCart(product.id, false)}
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                        Ajouter au panier
-                      </Button>
-                    ) : (
-                      <div className="w-full space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <TruckIcon className="w-4 h-4" />
-                          <span>Arrivage prévu</span>
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          className="w-full gap-2"
-                          onClick={() => handleAddToCart(product.id, true)}
-                        >
-                          <TruckIcon className="w-4 h-4" />
-                          Pré-réserver
-                        </Button>
-                      </div>
-                    )}
+                    <Button 
+                      className="w-full gap-2" 
+                      onClick={() => handleOpenDialog(product)}
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      {hasStock ? "Ajouter au panier" : "Pré-commander"}
+                    </Button>
                   </CardFooter>
                 </Card>
               );
@@ -315,6 +296,15 @@ export default function Catalog() {
           </div>
         )}
       </div>
+
+      {/* Product Add to Cart Dialog */}
+      {selectedProduct && (
+        <ProductAddToCartDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          product={selectedProduct}
+        />
+      )}
     </div>
   );
 }

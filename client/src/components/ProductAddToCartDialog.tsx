@@ -46,7 +46,7 @@ export default function ProductAddToCartDialog({
   const variants = [];
 
   // Fetch incoming stock for this product
-  const { data: incomingStock } = trpc.admin.incomingStock.list.useQuery(
+  const { data: incomingStock } = trpc.products.getIncomingStock.useQuery(
     { productId: product.id },
     { enabled: open && !!product.id }
   );
