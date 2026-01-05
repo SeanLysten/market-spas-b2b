@@ -24,7 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { Plus, Edit, Trash2, Package, Palette, TruckIcon } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Palette, TruckIcon, Pencil } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
@@ -761,11 +761,20 @@ function GlobalIncomingStockView() {
   const [weekFilter, setWeekFilter] = useState("");
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
   const [form, setForm] = useState({
     productId: "",
     quantity: "",
     expectedWeek: "",
     expectedYear: new Date().getFullYear().toString(),
+    notes: "",
+  });
+  const [editForm, setEditForm] = useState({
+    quantity: "",
+    expectedWeek: "",
+    expectedYear: "",
+    status: "",
     notes: "",
   });
 
@@ -800,6 +809,39 @@ function GlobalIncomingStockView() {
         expectedYear: new Date().getFullYear().toString(),
         notes: "",
       });
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur");
+    }
+  };
+
+  const handleEdit = (item: any) => {
+    setEditingItem(item);
+    setEditForm({
+      quantity: item.quantity.toString(),
+      expectedWeek: item.expectedWeek.toString(),
+      expectedYear: item.expectedYear.toString(),
+      status: item.status,
+      notes: item.notes || "",
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingItem) return;
+    try {
+      await updateMutation.mutateAsync({
+        id: editingItem.id,
+        quantity: parseInt(editForm.quantity),
+        expectedWeek: parseInt(editForm.expectedWeek),
+        expectedYear: parseInt(editForm.expectedYear),
+        status: editForm.status as "PENDING" | "ARRIVED" | "CANCELLED",
+        notes: editForm.notes || undefined,
+      });
+      toast.success("Arrivage modifié avec succès");
+      setEditDialogOpen(false);
+      setEditingItem(null);
       refetch();
     } catch (error: any) {
       toast.error(error.message || "Erreur");
@@ -969,13 +1011,22 @@ function GlobalIncomingStockView() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(item)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -988,6 +1039,72 @@ function GlobalIncomingStockView() {
           )}
         </div>
       </CardContent>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier l'arrivage</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdate} className="space-y-4">
+            <div>
+              <Label>Quantité</Label>
+              <Input
+                type="number"
+                value={editForm.quantity}
+                onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <Label>Semaine</Label>
+              <Input
+                type="number"
+                min="1"
+                max="53"
+                value={editForm.expectedWeek}
+                onChange={(e) => setEditForm({ ...editForm, expectedWeek: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <Label>Année</Label>
+              <Input
+                type="number"
+                value={editForm.expectedYear}
+                onChange={(e) => setEditForm({ ...editForm, expectedYear: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <Label>Statut</Label>
+              <select
+                className="w-full border rounded-md p-2"
+                value={editForm.status}
+                onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                required
+              >
+                <option value="PENDING">PENDING</option>
+                <option value="ARRIVED">ARRIVED</option>
+                <option value="CANCELLED">CANCELLED</option>
+              </select>
+            </div>
+            <div>
+              <Label>Notes (optionnel)</Label>
+              <Input
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Annuler
+              </Button>
+              <Button type="submit">Enregistrer</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

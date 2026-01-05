@@ -539,3 +539,14 @@
 - [x] Ajouter la requête pour récupérer tous les arrivages programmés dans Catalog.tsx
 - [x] Afficher un badge jaune "Arrivage" sur les cartes produits ayant des arrivages programmés
 - [x] Tester l'affichage des badges
+
+## Modification des arrivages existants
+- [ ] Ajouter un bouton "Modifier" dans le tableau des arrivages programmés
+- [ ] Créer un dialog d'édition avec formulaire pré-rempli
+- [ ] Permettre la modification de la quantité, semaine, année et statut
+- [ ] Tester la modification d'un arrivage
+
+## Modification des arrivages admin
+- [x] Ajouter un bouton Modifier dans le tableau des arrivages programmés
+- [x] Créer un dialog d'édition avec formulaire pré-rempli
+- [x] Tester la modification d'un arrivage existant
