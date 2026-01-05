@@ -72,11 +72,21 @@ export const appRouter = router({
     notifications: protectedProcedure
       .input(z.object({ limit: z.number().optional().default(50) }))
       .query(async ({ ctx, input }) => {
-        return await db.getNotificationsByUserId(ctx.user.id, input.limit);
+        try {
+          return await db.getNotificationsByUserId(ctx.user.id, input.limit) || [];
+        } catch (error) {
+          console.error('Error fetching notifications:', error);
+          return [];
+        }
       }),
 
     unreadCount: protectedProcedure.query(async ({ ctx }) => {
-      return await db.getUnreadNotificationsCount(ctx.user.id);
+      try {
+        return await db.getUnreadNotificationsCount(ctx.user.id) || 0;
+      } catch (error) {
+        console.error('Error fetching unread count:', error);
+        return 0;
+      }
     }),
 
     markNotificationRead: protectedProcedure

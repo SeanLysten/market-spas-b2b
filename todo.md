@@ -553,3 +553,6 @@
 
 ## Bugs à corriger - Page admin/products
 - [x] Corriger les erreurs "Cannot read properties of undefined (reading 'map')" sur /admin/products
+
+## Bugs à corriger - Dashboard (nouvelle session)
+- [x] Corriger les erreurs "Cannot read properties of undefined (reading 'map')" sur /dashboard
