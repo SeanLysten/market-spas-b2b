@@ -186,6 +186,50 @@ export const appRouter = router({
       }
       return await db.getLeadStats(ctx.user.partnerId);
     }),
+
+    // Export leads to Excel/CSV
+    export: protectedProcedure
+      .input(
+        z.object({
+          status: z.string().optional(),
+        })
+      )
+      .query(async ({ ctx, input }) => {
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        
+        let leads;
+        if (isAdmin) {
+          leads = await db.getLeads({ status: input.status });
+        } else if (ctx.user.partnerId) {
+          leads = await db.getLeads({
+            partnerId: ctx.user.partnerId,
+            status: input.status,
+          });
+        } else {
+          return { fileBase64: "" };
+        }
+        
+        const XLSX = await import("xlsx");
+        const data = (leads || []).map((lead: any) => ({
+          "Nom": lead.lastName || "-",
+          "Prénom": lead.firstName || "-",
+          "Email": lead.email || "-",
+          "Téléphone": lead.phone || "-",
+          "Entreprise": lead.companyName || "-",
+          "Statut": lead.status,
+          "Source": lead.source || "-",
+          "Produit intérêt": lead.productInterest || "-",
+          "Date": new Date(lead.createdAt).toLocaleDateString("fr-FR"),
+          "Partenaire": lead.partner?.companyName || "-",
+        }));
+        
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Leads");
+        
+        const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
+        return { fileBase64: buffer.toString("base64") };
+      }),
   }),
 
   // ============================================
@@ -613,6 +657,71 @@ export const appRouter = router({
     exportToday: adminProcedure
       .query(async () => {
         return await db.getTodayOrdersForExport();
+      }),
+
+    // Parse and validate CSV for bulk order import
+    parseCSV: protectedProcedure
+      .input(z.object({ fileBase64: z.string() }))
+      .mutation(async ({ input }) => {
+        const { parseOrderCSV } = await import("./csv-import");
+        const fileBuffer = Buffer.from(input.fileBase64, "base64");
+        
+        return await parseOrderCSV(fileBuffer, db.getProductBySKU);
+      }),
+
+    // Download CSV template for bulk orders
+    downloadTemplate: protectedProcedure
+      .query(async () => {
+        const { generateOrderTemplate } = await import("./csv-import");
+        const buffer = generateOrderTemplate();
+        return { fileBase64: buffer.toString("base64") };
+      }),
+
+    // Export orders to Excel/CSV
+    export: protectedProcedure
+      .input(
+        z.object({
+          status: z.string().optional(),
+          startDate: z.string().optional(),
+          endDate: z.string().optional(),
+        })
+      )
+      .query(async ({ ctx, input }) => {
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        
+        let orders;
+        if (isAdmin) {
+          orders = await db.getAllOrders({
+            status: input.status,
+            limit: 10000,
+          });
+        } else if (ctx.user.partnerId) {
+          orders = await db.getAllOrders({
+            partnerId: ctx.user.partnerId,
+            status: input.status,
+            limit: 10000,
+          });
+        } else {
+          return { fileBase64: "" };
+        }
+        
+        const XLSX = await import("xlsx");
+        const data = (orders || []).map((order: any) => ({
+          "Numéro": order.orderNumber,
+          "Date": new Date(order.createdAt).toLocaleDateString("fr-FR"),
+          "Partenaire": order.partner?.companyName || "-",
+          "Statut": order.status,
+          "Total HT": order.totalHT,
+          "Total TTC": order.totalTTC,
+          "Mode paiement": order.paymentMethod,
+        }));
+        
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Commandes");
+        
+        const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
+        return { fileBase64: buffer.toString("base64") };
       }),
   }),
 

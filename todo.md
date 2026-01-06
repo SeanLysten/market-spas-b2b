@@ -849,3 +849,44 @@
 - [x] Rendre l'onglet Entreprise éditable (avec bouton Modifier/Sauvegarder)
 - [x] Créer la route tRPC pour mettre à jour les informations partenaire (partners.updateMyPartner)
 - [x] Tester les modifications (serveur fonctionnel, aucune erreur TypeScript)
+
+
+## Fonctionnalités B2B critiques
+
+### 1. Import de commandes CSV/Excel
+- [x] Installer la librairie xlsx
+- [x] Créer le fichier server/csv-import.ts avec parseOrderCSV
+- [x] Créer la route tRPC orders.parseCSV
+- [x] Créer la route tRPC orders.downloadTemplate
+- [x] Implémenter la validation du fichier CSV (colonnes SKU, quantité)
+- [x] Créer le composant CSVImportDialog.tsx
+- [x] Ajouter le bouton dans Catalog.tsx
+- [x] Ajouter la prévisualisation des produits avant validation
+- [x] Gérer les erreurs (SKU invalide, stock insuffisant)
+- [ ] Connecter l'ajout au panier depuis le dialog
+
+### 2. Export de données Excel/CSV
+- [x] Installer la librairie xlsx pour génération Excel (déjà installée)
+- [x] Créer la route tRPC orders.export avec filtres
+- [x] Créer la route tRPC leads.export avec filtres
+- [x] Créer le composant ExportButton.tsx réutilisable
+- [x] Ajouter les boutons d'export dans Orders.tsx
+- [x] Ajouter les boutons d'export dans Leads.tsx
+- [x] Implémenter le formatage des données (dates, montants, statuts)
+- [ ] Tester l'export avec données réelles
+
+### 3. Gestion des retours en ligne
+- [ ] Créer le schéma de table returns (order_id, items, reason, status)
+- [ ] Créer les routes tRPC returns.create, returns.list, returns.updateStatus
+- [ ] Créer la page Returns.tsx pour les partenaires
+- [ ] Créer la page AdminReturns.tsx pour les admins
+- [ ] Ajouter le bouton "Demander un retour" dans Orders.tsx
+- [ ] Implémenter le workflow de statuts (PENDING, APPROVED, REJECTED, COMPLETED)
+
+### 4. Chat support en temps réel
+- [ ] Créer le schéma de table chat_conversations et chat_messages
+- [ ] Créer les routes tRPC chat.sendMessage, chat.getConversations, chat.getMessages
+- [ ] Créer le composant ChatWidget.tsx (bouton flottant)
+- [ ] Implémenter le polling ou WebSocket pour temps réel
+- [ ] Créer l'interface admin pour répondre aux chats
+- [ ] Ajouter les notifications de nouveaux messages

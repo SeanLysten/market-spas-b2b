@@ -16,6 +16,7 @@ import {
   Heart
 } from "lucide-react";
 import { Link } from "wouter";
+import { ExportButton } from "@/components/ExportButton";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -34,6 +35,11 @@ export default function Orders() {
     status: statusFilter,
     limit: 50,
   });
+
+  const exportQuery = trpc.orders.export.useQuery(
+    { status: statusFilter },
+    { enabled: false }
+  );
 
   const reorderMutation = trpc.orders.reorder.useMutation({
     onSuccess: () => {
@@ -114,9 +120,18 @@ export default function Orders() {
                 </p>
               </div>
             </div>
-            <Link href="/catalog">
-              <Button>Nouvelle commande</Button>
-            </Link>
+            <div className="flex gap-2">
+              <ExportButton
+                onExport={async () => {
+                  const result = await exportQuery.refetch();
+                  return result.data || { fileBase64: "" };
+                }}
+                filename={`commandes-${new Date().toISOString().split('T')[0]}.xlsx`}
+              />
+              <Link href="/catalog">
+                <Button>Nouvelle commande</Button>
+              </Link>
+            </div>
           </div>
         </div>
       </header>

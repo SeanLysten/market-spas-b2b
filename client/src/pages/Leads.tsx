@@ -28,6 +28,7 @@ import {
   MoreVertical
 } from "lucide-react";
 import { Link } from "wouter";
+import { ExportButton } from "@/components/ExportButton";
 
 // Types
 interface Lead {
@@ -85,10 +86,15 @@ export default function Leads() {
   const [statusNote, setStatusNote] = useState("");
 
   // Fetch leads from backend
-  const { data: leads = [], isLoading, refetch } = trpc.leads.myLeads.useQuery({
-    status: statusFilter !== "all" ? statusFilter : undefined,
+  const { data: leads, isLoading, refetch } = trpc.leads.myLeads.useQuery({
+    status: statusFilter,
     limit: 100,
   });
+
+  const exportQuery = trpc.leads.export.useQuery(
+    { status: statusFilter },
+    { enabled: false }
+  );
 
   const { data: stats } = trpc.leads.myStats.useQuery();
 
@@ -242,6 +248,13 @@ export default function Leads() {
                 <p className="text-sm text-gray-500">Gérez vos prospects et suivez vos conversions</p>
               </div>
             </div>
+            <ExportButton
+              onExport={async () => {
+                const result = await exportQuery.refetch();
+                return result.data || { fileBase64: "" };
+              }}
+              filename={`leads-${new Date().toISOString().split('T')[0]}.xlsx`}
+            />
           </div>
         </div>
       </header>

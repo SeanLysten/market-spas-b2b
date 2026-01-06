@@ -3450,3 +3450,21 @@ export async function removeTeamMember(memberId: number, partnerId: number) {
 
   return { success: true };
 }
+
+
+// ============================================
+// CSV IMPORT
+// ============================================
+
+export async function getProductBySKU(sku: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db
+    .select()
+    .from(products)
+    .where(eq(products.sku, sku))
+    .limit(1);
+  
+  return result[0] || null;
+}

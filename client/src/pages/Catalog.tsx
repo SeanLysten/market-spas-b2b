@@ -10,6 +10,7 @@ import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import ProductAddToCartDialog from "@/components/ProductAddToCartDialog";
+import { CSVImportDialog } from "@/components/CSVImportDialog";
 
 export default function Catalog() {
   const { user } = useAuth();
@@ -82,6 +83,7 @@ export default function Catalog() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <CSVImportDialog />
               <Link href="/favorites">
                 <Button variant="outline" className="gap-2">
                   <Heart className="w-4 h-4 text-red-500" />
