@@ -249,7 +249,7 @@ export default function AdminSettings() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {partnerLevels.map((level, index) => (
+                  {(partnerLevels || []).map((level, index) => (
                     <div key={level.level} className="flex items-center gap-4 p-4 border rounded-lg">
                       <div className="w-24 font-semibold">{level.level}</div>
                       <div className="flex-1 grid gap-4 md:grid-cols-2">

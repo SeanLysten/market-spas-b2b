@@ -60,7 +60,7 @@ export default function AdminStockForecast() {
   );
 
   // Prepare chart data for weekly breakdown
-  const weeklyChartData = summary?.weeklyBreakdown.map((week) => ({
+  const weeklyChartData = summary?.weeklyBreakdown?.map((week) => ({
     week: week.weekLabel,
     arrivages: week.totalIncoming,
     alertes: week.productsWithAlerts,
@@ -71,12 +71,12 @@ export default function AdminStockForecast() {
 
     const csv = [
       ["SKU", "Produit", "Stock actuel", ...Array.from({ length: weeks }, (_, i) => `S${i + 1}`)].join(","),
-      ...forecasts.map((f) =>
+      ...(forecasts || []).map((f) =>
         [
           f.productSku,
           f.productName,
           f.currentStock,
-          ...f.weeks.map((w) => w.projectedStock),
+          ...(f.weeks || []).map((w) => w.projectedStock),
         ].join(",")
       ),
     ].join("\n");
@@ -236,7 +236,7 @@ export default function AdminStockForecast() {
                   <th className="text-left p-2 font-medium">SKU</th>
                   <th className="text-left p-2 font-medium">Produit</th>
                   <th className="text-center p-2 font-medium">Stock actuel</th>
-                  {filteredForecasts?.[0]?.weeks.slice(0, 4).map((week) => (
+                  {(filteredForecasts?.[0]?.weeks || []).slice(0, 4).map((week) => (
                     <th key={week.weekLabel} className="text-center p-2 font-medium">
                       {week.weekLabel}
                     </th>
@@ -245,7 +245,7 @@ export default function AdminStockForecast() {
                 </tr>
               </thead>
               <tbody>
-                {filteredForecasts?.map((forecast) => {
+                {(filteredForecasts || []).map((forecast) => {
                   const hasAlerts = forecast.weeks.some((w) => w.alerts.length > 0);
                   const hasRupture = forecast.weeks.some((w) => w.alerts.includes("RUPTURE"));
 
@@ -258,7 +258,7 @@ export default function AdminStockForecast() {
                       <td className="p-2 font-mono text-sm">{forecast.productSku}</td>
                       <td className="p-2">{forecast.productName}</td>
                       <td className="p-2 text-center font-medium">{forecast.currentStock}</td>
-                      {forecast.weeks.slice(0, 4).map((week) => (
+                      {(forecast.weeks || []).slice(0, 4).map((week) => (
                         <td
                           key={week.weekLabel}
                           className={`p-2 text-center ${
@@ -344,7 +344,7 @@ export default function AdminStockForecast() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Détails hebdomadaires</h3>
               <div className="space-y-2">
-                {productForecast.forecast.map((week) => (
+                {(productForecast?.forecast || []).map((week) => (
                   <div
                     key={week.weekLabel}
                     className="flex items-center justify-between p-3 border rounded-lg"

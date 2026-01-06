@@ -824,3 +824,10 @@
 - [x] Tester la hiérarchie des rôles (OWNER > FULL_MANAGER > ORDER_MANAGER > SALES_REP)
 - [x] Tester la génération de tokens d'invitation
 - [x] Tester la sérialisation JSON des permissions
+
+
+## Corrections d'erreurs .map()
+- [x] Identifier les appels .map() dans AdminSettings.tsx (1 occurrence)
+- [x] Identifier les appels .map() dans AdminStockForecast.tsx (7 occurrences)
+- [x] Ajouter des vérifications de données (|| []) avant chaque .map()
+- [x] Tester les pages /admin/settings et /admin/forecast (aucune erreur TypeScript)
