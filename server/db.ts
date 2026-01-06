@@ -3765,6 +3765,9 @@ export async function getAfterSalesServices(filters?: {
   partnerId?: number;
   status?: string;
   urgency?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  customerName?: string;
 }) {
   const db = await getDb();
   if (!db) return [];
@@ -3792,6 +3795,20 @@ export async function getAfterSalesServices(filters?: {
   
   if (filters?.urgency) {
     conditions.push(eq(afterSalesServices.urgency, filters.urgency as any));
+  }
+  
+  if (filters?.dateFrom) {
+    conditions.push(gte(afterSalesServices.createdAt, new Date(filters.dateFrom)));
+  }
+  
+  if (filters?.dateTo) {
+    const endDate = new Date(filters.dateTo);
+    endDate.setHours(23, 59, 59, 999);
+    conditions.push(lte(afterSalesServices.createdAt, endDate));
+  }
+  
+  if (filters?.customerName) {
+    conditions.push(like(afterSalesServices.customerName, `%${filters.customerName}%`));
   }
   
   if (conditions.length > 0) {

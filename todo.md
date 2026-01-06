@@ -988,3 +988,12 @@
 - [ ] Tester le workflow complet admin (gestion → résolution)
 - [ ] Vérifier les notifications email
 - [ ] Vérifier l'export PDF
+
+
+## Filtres de recherche avancés SAV
+- [x] Étendre le backend pour supporter les filtres de date de création (dateFrom, dateTo)
+- [x] Étendre le backend pour supporter le filtre par nom de client (customerName)
+- [x] Ajouter les champs de filtre de date sur la page SAV utilisateur
+- [x] Ajouter le champ de filtre par nom de client sur la page SAV utilisateur
+- [x] Ajouter les champs de filtre de date sur la page SAV admin
+- [x] Ajouter le champ de filtre par nom de client sur la page SAV admin

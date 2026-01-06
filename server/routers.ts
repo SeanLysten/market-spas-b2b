@@ -2071,6 +2071,9 @@ export const appRouter = router({
         z.object({
           status: z.string().optional(),
           urgency: z.string().optional(),
+          dateFrom: z.string().optional(),
+          dateTo: z.string().optional(),
+          customerName: z.string().optional(),
         }).optional()
       )
       .query(async ({ ctx, input }) => {

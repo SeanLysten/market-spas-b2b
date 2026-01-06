@@ -16,6 +16,9 @@ export default function AdminAfterSales() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [urgencyFilter, setUrgencyFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [customerNameFilter, setCustomerNameFilter] = useState<string>("");
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [statusFormData, setStatusFormData] = useState<{
@@ -32,6 +35,9 @@ export default function AdminAfterSales() {
   const { data: services, isLoading, refetch } = trpc.afterSales.list.useQuery({
     status: statusFilter !== "all" ? statusFilter : undefined,
     urgency: urgencyFilter !== "all" ? urgencyFilter : undefined,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+    customerName: customerNameFilter || undefined,
   });
 
   // Update status mutation
@@ -160,44 +166,74 @@ export default function AdminAfterSales() {
       {/* Filters */}
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <div className="space-y-4">
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher par numéro de ticket, numéro de série..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="NEW">Nouveau</SelectItem>
+                  <SelectItem value="IN_PROGRESS">En cours</SelectItem>
+                  <SelectItem value="WAITING_PARTS">Attente pièces</SelectItem>
+                  <SelectItem value="RESOLVED">Résolu</SelectItem>
+                  <SelectItem value="CLOSED">Fermé</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Urgence" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les urgences</SelectItem>
+                  <SelectItem value="NORMAL">Normale</SelectItem>
+                  <SelectItem value="URGENT">Urgente</SelectItem>
+                  <SelectItem value="CRITICAL">Critique</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Filtres avancés */}
+            <div className="flex gap-4">
+              <div className="flex-1">
                 <Input
-                  placeholder="Rechercher par numéro de ticket, numéro de série..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  type="text"
+                  placeholder="Nom du client..."
+                  value={customerNameFilter}
+                  onChange={(e) => setCustomerNameFilter(e.target.value)}
+                />
+              </div>
+              <div className="w-48">
+                <Input
+                  type="date"
+                  placeholder="Date de début"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                />
+              </div>
+              <div className="w-48">
+                <Input
+                  type="date"
+                  placeholder="Date de fin"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
                 />
               </div>
             </div>
-
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="NEW">Nouveau</SelectItem>
-                <SelectItem value="IN_PROGRESS">En cours</SelectItem>
-                <SelectItem value="WAITING_PARTS">Attente pièces</SelectItem>
-                <SelectItem value="RESOLVED">Résolu</SelectItem>
-                <SelectItem value="CLOSED">Fermé</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Urgence" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les urgences</SelectItem>
-                <SelectItem value="NORMAL">Normale</SelectItem>
-                <SelectItem value="URGENT">Urgente</SelectItem>
-                <SelectItem value="CRITICAL">Critique</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardContent>
       </Card>
