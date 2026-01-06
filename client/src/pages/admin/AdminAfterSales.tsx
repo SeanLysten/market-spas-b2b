@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, AlertCircle, Clock, CheckCircle, XCircle, Package } from "lucide-react";
+import { Search, AlertCircle, Clock, CheckCircle, XCircle, Package, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +19,8 @@ export default function AdminAfterSales() {
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [customerNameFilter, setCustomerNameFilter] = useState<string>("");
+  const [orderBy, setOrderBy] = useState<string>("createdAt");
+  const [orderDirection, setOrderDirection] = useState<"asc" | "desc">("desc");
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [statusFormData, setStatusFormData] = useState<{
@@ -31,6 +33,16 @@ export default function AdminAfterSales() {
     resolutionNotes: "",
   });
 
+  // Handle sort
+  const handleSort = (column: string) => {
+    if (orderBy === column) {
+      setOrderDirection(orderDirection === "asc" ? "desc" : "asc");
+    } else {
+      setOrderBy(column);
+      setOrderDirection("desc");
+    }
+  };
+
   // Fetch SAV list
   const { data: services, isLoading, refetch } = trpc.afterSales.list.useQuery({
     status: statusFilter !== "all" ? statusFilter : undefined,
@@ -38,6 +50,8 @@ export default function AdminAfterSales() {
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
     customerName: customerNameFilter || undefined,
+    orderBy,
+    orderDirection,
   });
 
   // Update status mutation
@@ -237,6 +251,49 @@ export default function AdminAfterSales() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Sort Headers */}
+      {!isLoading && filteredServices.length > 0 && (
+        <Card className="mb-4">
+          <CardContent className="pt-6">
+            <div className="flex gap-4 items-center text-sm font-medium">
+              <button
+                onClick={() => handleSort("createdAt")}
+                className="flex items-center gap-1 hover:text-primary transition-colors"
+              >
+                Date de création
+                {orderBy === "createdAt" ? (
+                  orderDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                ) : (
+                  <ArrowUpDown className="h-4 w-4 opacity-50" />
+                )}
+              </button>
+              <button
+                onClick={() => handleSort("status")}
+                className="flex items-center gap-1 hover:text-primary transition-colors"
+              >
+                Statut
+                {orderBy === "status" ? (
+                  orderDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                ) : (
+                  <ArrowUpDown className="h-4 w-4 opacity-50" />
+                )}
+              </button>
+              <button
+                onClick={() => handleSort("urgency")}
+                className="flex items-center gap-1 hover:text-primary transition-colors"
+              >
+                Urgence
+                {orderBy === "urgency" ? (
+                  orderDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                ) : (
+                  <ArrowUpDown className="h-4 w-4 opacity-50" />
+                )}
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* SAV List */}
       {isLoading ? (

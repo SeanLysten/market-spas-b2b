@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertCircle, Clock, CheckCircle, XCircle, Package, ArrowLeft } from "lucide-react";
+import { Plus, Search, AlertCircle, Clock, CheckCircle, XCircle, Package, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,10 +20,22 @@ export default function AfterSales() {
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [customerNameFilter, setCustomerNameFilter] = useState<string>("");
+  const [orderBy, setOrderBy] = useState<string>("createdAt");
+  const [orderDirection, setOrderDirection] = useState<"asc" | "desc">("desc");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
   const toast = (opts: { title: string; description: string; variant?: string }) => {
     alert(`${opts.title}: ${opts.description}`);
+  };
+
+  // Handle sort
+  const handleSort = (column: string) => {
+    if (orderBy === column) {
+      setOrderDirection(orderDirection === "asc" ? "desc" : "asc");
+    } else {
+      setOrderBy(column);
+      setOrderDirection("desc");
+    }
   };
 
   // Fetch SAV list
@@ -33,6 +45,8 @@ export default function AfterSales() {
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
     customerName: customerNameFilter || undefined,
+    orderBy,
+    orderDirection,
   });
 
   // Create SAV mutation
@@ -401,6 +415,49 @@ export default function AfterSales() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Sort Headers */}
+      {!isLoading && filteredServices.length > 0 && (
+        <Card className="mb-4">
+          <CardContent className="pt-6">
+            <div className="flex gap-4 items-center text-sm font-medium">
+              <button
+                onClick={() => handleSort("createdAt")}
+                className="flex items-center gap-1 hover:text-primary transition-colors"
+              >
+                Date de création
+                {orderBy === "createdAt" ? (
+                  orderDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                ) : (
+                  <ArrowUpDown className="h-4 w-4 opacity-50" />
+                )}
+              </button>
+              <button
+                onClick={() => handleSort("status")}
+                className="flex items-center gap-1 hover:text-primary transition-colors"
+              >
+                Statut
+                {orderBy === "status" ? (
+                  orderDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                ) : (
+                  <ArrowUpDown className="h-4 w-4 opacity-50" />
+                )}
+              </button>
+              <button
+                onClick={() => handleSort("urgency")}
+                className="flex items-center gap-1 hover:text-primary transition-colors"
+              >
+                Urgence
+                {orderBy === "urgency" ? (
+                  orderDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                ) : (
+                  <ArrowUpDown className="h-4 w-4 opacity-50" />
+                )}
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* SAV List */}
       {isLoading ? (

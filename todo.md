@@ -997,3 +997,10 @@
 - [x] Ajouter le champ de filtre par nom de client sur la page SAV utilisateur
 - [x] Ajouter les champs de filtre de date sur la page SAV admin
 - [x] Ajouter le champ de filtre par nom de client sur la page SAV admin
+
+## Tri par colonnes SAV
+- [x] Étendre le backend pour supporter le tri (orderBy: createdAt/status/urgency, orderDirection: asc/desc)
+- [x] Ajouter l'état de tri dans AfterSales.tsx
+- [x] Créer des en-têtes de colonnes cliquables avec indicateurs de tri (flèches)
+- [x] Ajouter l'état de tri dans AdminAfterSales.tsx
+- [x] Créer des en-têtes de colonnes cliquables avec indicateurs de tri (flèches)

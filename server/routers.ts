@@ -2074,6 +2074,8 @@ export const appRouter = router({
           dateFrom: z.string().optional(),
           dateTo: z.string().optional(),
           customerName: z.string().optional(),
+          orderBy: z.string().optional(),
+          orderDirection: z.enum(["asc", "desc"]).optional(),
         }).optional()
       )
       .query(async ({ ctx, input }) => {

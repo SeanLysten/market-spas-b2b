@@ -3768,6 +3768,8 @@ export async function getAfterSalesServices(filters?: {
   dateFrom?: string;
   dateTo?: string;
   customerName?: string;
+  orderBy?: string;
+  orderDirection?: string;
 }) {
   const db = await getDb();
   if (!db) return [];
@@ -3813,6 +3815,19 @@ export async function getAfterSalesServices(filters?: {
   
   if (conditions.length > 0) {
     query = query.where(and(...conditions)) as any;
+  }
+  
+  // Apply sorting
+  if (filters?.orderBy && filters?.orderDirection) {
+    const column = filters.orderBy === 'createdAt' ? afterSalesServices.createdAt :
+                   filters.orderBy === 'status' ? afterSalesServices.status :
+                   filters.orderBy === 'urgency' ? afterSalesServices.urgency :
+                   afterSalesServices.createdAt;
+    
+    query = (filters.orderDirection === 'asc' ? query.orderBy(asc(column)) : query.orderBy(desc(column))) as any;
+  } else {
+    // Default sort by createdAt desc
+    query = query.orderBy(desc(afterSalesServices.createdAt)) as any;
   }
   
   const results = await query;
