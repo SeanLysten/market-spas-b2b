@@ -8,6 +8,7 @@ import * as db from "./db";
 import * as territoriesDb from "./territories-db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
+import { notifyOwner } from "./_core/notification";
 
 export const appRouter = router({
   system: systemRouter,
@@ -2043,6 +2044,24 @@ export const appRouter = router({
           media: uploadedMedia,
         });
 
+        // Send notification to admin for urgent/critical tickets
+        if (input.urgency === "URGENT" || input.urgency === "CRITICAL") {
+          const urgencyLabel = input.urgency === "CRITICAL" ? "CRITIQUE" : "URGENT";
+          const issueTypeLabels: Record<string, string> = {
+            TECHNICAL: "Technique",
+            LEAK: "Fuite",
+            ELECTRICAL: "Électrique",
+            HEATING: "Chauffage",
+            JETS: "Jets",
+            CONTROL_PANEL: "Panneau de contrôle",
+            OTHER: "Autre",
+          };
+          await notifyOwner({
+            title: `Nouveau ticket SAV ${urgencyLabel}`,
+            content: `Un nouveau ticket SAV ${urgencyLabel} a été créé.\n\nNuméro de ticket: ${result.ticketNumber}\nNuméro de série: ${input.serialNumber}\nType de problème: ${issueTypeLabels[input.issueType] || input.issueType}\nDescription: ${input.description.substring(0, 200)}${input.description.length > 200 ? '...' : ''}`,
+          }).catch(err => console.error("Failed to send SAV notification:", err));
+        }
+
         return result;
       }),
 
@@ -2108,6 +2127,24 @@ export const appRouter = router({
             resolutionNotes: input.resolutionNotes,
           }
         );
+
+        // Get service details for notification
+        const service = await db.getAfterSalesServiceById(input.id);
+        if (service) {
+          // Send notification to owner about status change
+          const statusLabels: Record<string, string> = {
+            NEW: "Nouveau",
+            IN_PROGRESS: "En cours",
+            WAITING_PARTS: "En attente de pièces",
+            RESOLVED: "Résolu",
+            CLOSED: "Fermé",
+          };
+          await notifyOwner({
+            title: `Ticket SAV ${service.service.ticketNumber} - Statut mis à jour`,
+            content: `Le statut du ticket SAV a été mis à jour : ${statusLabels[input.status] || input.status}${input.resolutionNotes ? `\n\nNotes: ${input.resolutionNotes}` : ''}`,
+          }).catch(err => console.error("Failed to send status update notification:", err));
+        }
+
         return { success: true };
       }),
 

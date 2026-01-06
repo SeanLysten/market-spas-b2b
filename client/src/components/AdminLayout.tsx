@@ -19,6 +19,7 @@ import {
   Calendar,
   TrendingUp,
   MapPin,
+  Wrench,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -112,7 +113,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       href: "/admin/technical-resources",
       icon: BookOpen,
     },
-
+    {
+      name: "SAV",
+      href: "/admin/after-sales",
+      icon: Wrench,
+    },
     {
       name: "Paramètres",
       href: "/admin/settings",

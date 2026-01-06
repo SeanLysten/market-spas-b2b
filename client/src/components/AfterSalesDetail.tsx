@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, Clock, CheckCircle, XCircle, Package, MessageSquare } from "lucide-react";
+import { AlertCircle, Clock, CheckCircle, XCircle, Package, MessageSquare, Download } from "lucide-react";
+import { generateSAVPDF } from "@/components/SAVPDFExport";
 import { useState } from "react";
 
 interface AfterSalesDetailProps {
@@ -99,6 +100,14 @@ export default function AfterSalesDetail({ serviceId, onClose }: AfterSalesDetai
           </p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => generateSAVPDF(serviceData)}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export PDF
+          </Button>
           {getStatusBadge(service.status)}
           {getUrgencyBadge(service.urgency)}
         </div>

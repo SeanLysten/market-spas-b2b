@@ -962,3 +962,29 @@
 - [ ] Tester le changement de statut
 - [ ] Tester l'upload de médias
 - [ ] Tester l'assignation de technicien
+
+
+## Finalisation système SAV
+
+### Navigation
+- [x] Ajouter le lien "SAV" dans DashboardLayout (sidebar partenaire)
+- [x] Ajouter le lien "SAV" dans AdminLayout (sidebar admin)
+- [x] Remplacer le menu de démonstration par un vrai menu complet
+- [x] Vérifier que les routes sont accessibles
+
+### Notifications email
+- [x] Utiliser le helper notifyOwner existant
+- [x] Implémenter l'envoi automatique lors de la création de ticket URGENT/CRITICAL
+- [x] Implémenter l'envoi automatique lors du changement de statut
+- [x] Ajouter les labels traduits pour les statuts et types de problèmes
+- [ ] Tester les notifications avec des données réelle### Génération PDF
+- [x] Installer jsPDF
+- [x] Créer le composant SAVPDFExport.tsx avec template PDF complet
+- [x] Ajouter le bouton d'export dans AfterSalesDetail
+- [x] Inclure toutes les informations (détails, client, médias, notes, résolution)
+- [x] Gérer la pagination automatique
+- [x] Ajouter les labels traduits pour tous les champs
+- [ ] Tester l'export PDF avec données réellesomplet partenaire (création → suivi)
+- [ ] Tester le workflow complet admin (gestion → résolution)
+- [ ] Vérifier les notifications email
+- [ ] Vérifier l'export PDF
