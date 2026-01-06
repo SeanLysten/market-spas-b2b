@@ -75,7 +75,7 @@ export default function Dashboard() {
 
       <div className="container py-8 space-y-8">
         {/* Accès rapides principaux */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
           <Link href="/catalog">
             <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
               <CardContent className="pt-6 text-center">
@@ -127,6 +127,20 @@ export default function Dashboard() {
                 <h3 className="font-semibold text-lg mb-2">Forum d'entraide</h3>
                 <p className="text-sm text-muted-foreground">
                   Posez vos questions et partagez vos solutions
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/after-sales">
+            <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
+              <CardContent className="pt-6 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
+                  <AlertCircle className="w-8 h-8 text-red-500" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">Service Après-Vente</h3>
+                <p className="text-sm text-muted-foreground">
+                  Déclarez et suivez vos tickets SAV
                 </p>
               </CardContent>
             </Card>
