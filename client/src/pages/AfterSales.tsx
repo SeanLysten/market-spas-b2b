@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertCircle, Clock, CheckCircle, XCircle, Package } from "lucide-react";
+import { Plus, Search, AlertCircle, Clock, CheckCircle, XCircle, Package, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -141,9 +142,16 @@ export default function AfterSales() {
   return (
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Service Après-Vente</h1>
-          <p className="text-muted-foreground">Gérez vos demandes de SAV</p>
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard">
+            <Button variant="outline" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Service Après-Vente</h1>
+            <p className="text-muted-foreground">Gérez vos demandes de SAV</p>
+          </div>
         </div>
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
