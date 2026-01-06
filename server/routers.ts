@@ -117,6 +117,78 @@ export const appRouter = router({
   }),
 
   // ============================================
+  // LEADS (for partners)
+  // ============================================
+  leads: router({
+    // Get leads assigned to the current partner
+    myLeads: protectedProcedure
+      .input(
+        z.object({
+          status: z.string().optional(),
+          limit: z.number().optional().default(50),
+        }).optional()
+      )
+      .query(async ({ ctx, input }) => {
+        if (!ctx.user.partnerId) {
+          return [];
+        }
+        return await db.getLeads({ partnerId: ctx.user.partnerId, ...input });
+      }),
+
+    // Get lead by ID (only if assigned to partner)
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const lead = await db.getLeadById(input.id);
+        
+        if (!lead) return null;
+        
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        
+        // Partners can only view their assigned leads
+        if (!isAdmin && lead.assignedPartnerId !== ctx.user.partnerId) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Unauthorized' });
+        }
+        
+        return lead;
+      }),
+
+    // Update lead status (partners can update their own leads)
+    updateStatus: protectedProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          status: z.string(),
+          notes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const lead = await db.getLeadById(input.id);
+        
+        if (!lead) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Lead not found' });
+        }
+        
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        
+        // Partners can only update their assigned leads
+        if (!isAdmin && lead.assignedPartnerId !== ctx.user.partnerId) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Unauthorized' });
+        }
+        
+        return await db.updateLeadStatus(input.id, input.status, ctx.user.id, input.notes);
+      }),
+
+    // Get stats for current partner
+    myStats: protectedProcedure.query(async ({ ctx }) => {
+      if (!ctx.user.partnerId) {
+        return { total: 0, byStatus: {}, bySource: {} };
+      }
+      return await db.getLeadStats(ctx.user.partnerId);
+    }),
+  }),
+
+  // ============================================
   // PARTNERS
   // ============================================
   partners: router({

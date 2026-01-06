@@ -676,3 +676,75 @@
 - [x] Intégrer dans AdminUsers (TableSkeleton)
 - [x] Intégrer dans toutes les autres pages admin (script automatique appliqué)
 - [x] Tester visuellement tous les états de chargement (prêt pour tests)
+
+
+## Audit complet du portail B2B - Fonctionnalités manquantes pour être 100% opérationnel (hors facturation/paiement)
+
+### 1. Système de gestion des leads
+- [ ] Formulaire de contact public (/contact) pour capture des leads
+- [ ] Attribution automatique des leads aux partenaires selon territoire
+- [ ] Page /leads pour les partenaires (voir leurs leads attribués)
+- [ ] Statuts de leads (nouveau, contacté, qualifié, converti, perdu)
+- [ ] Historique des interactions avec chaque lead
+- [ ] Notifications par email aux partenaires lors de nouveaux leads
+
+### 2. Système de commandes complet
+- [ ] Panier d'achat fonctionnel avec persistance
+- [ ] Processus de commande (checkout) sans paiement
+- [ ] Confirmation de commande par email
+- [ ] Suivi des commandes pour les partenaires (/orders)
+- [ ] Gestion des statuts de commande (en attente, confirmée, expédiée, livrée, annulée)
+- [ ] Historique des commandes par partenaire
+- [ ] Export des commandes en CSV/PDF
+
+### 3. Gestion des partenaires
+- [ ] Page de profil partenaire (/profile)
+- [ ] Modification des informations partenaire (adresse, téléphone, etc.)
+- [ ] Upload de logo partenaire
+- [ ] Gestion des utilisateurs associés au partenaire
+- [ ] Statistiques partenaire (commandes, CA, leads)
+
+### 4. Catalogue produits pour partenaires
+- [ ] Page catalogue (/catalog) avec filtres et recherche
+- [ ] Affichage du stock en temps réel
+- [ ] Affichage des arrivages programmés avec dates
+- [ ] Possibilité de précommander sur arrivages
+- [ ] Fiches produits détaillées avec images, specs, prix
+- [ ] Système de favoris/wishlist
+
+### 5. Ressources et documentation
+- [ ] Page ressources médias (/resources) - PLV, catalogues, supports marketing
+- [ ] Upload et organisation des fichiers par catégorie
+- [ ] Téléchargement de ressources par les partenaires
+- [ ] Page ressources techniques (/technical-resources) - guides de réparation, vidéos
+- [ ] Forum d'entraide entre partenaires (/forum)
+
+### 6. Notifications et communications
+- [ ] Système de notifications en temps réel
+- [ ] Notifications par email pour événements importants
+- [ ] Centre de notifications dans le portail
+- [ ] Messagerie interne entre admin et partenaires
+
+### 7. Rapports et analytics
+- [ ] Dashboard partenaire avec KPIs
+- [ ] Rapports de ventes par période
+- [ ] Rapports de stock et prévisions
+- [ ] Export des rapports en PDF/Excel
+
+### 8. Système d'authentification et sécurité
+- [ ] Invitation de nouveaux partenaires par email
+- [ ] Gestion des rôles et permissions
+- [ ] Réinitialisation de mot de passe
+- [ ] Logs d'activité pour audit
+
+### 9. Configuration et paramètres
+- [ ] Page paramètres (/settings) pour les partenaires
+- [ ] Gestion des préférences de notifications
+- [ ] Choix de la langue (FR/EN/NL/DE/ES)
+- [ ] Configuration des alertes de stock
+
+### 10. Tests et validation
+- [ ] Tests unitaires pour toutes les fonctionnalités critiques
+- [ ] Tests d'intégration pour les workflows complets
+- [ ] Tests de performance et optimisation
+- [ ] Documentation utilisateur complète

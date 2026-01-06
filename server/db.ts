@@ -2118,10 +2118,7 @@ export async function getLeads(filters?: {
   const db = await getDb();
   if (!db) return [];
 
-  let query = db.select({
-    lead: leads,
-    partner: partners,
-  })
+  let query = db.select()
   .from(leads)
   .leftJoin(partners, eq(leads.assignedPartnerId, partners.id));
   
@@ -2148,12 +2145,8 @@ export async function getLeadById(id: number) {
   const db = await getDb();
   if (!db) return null;
 
-  const result = await db.select({
-    lead: leads,
-    partner: partners,
-  })
+  const result = await db.select()
   .from(leads)
-  .leftJoin(partners, eq(leads.assignedPartnerId, partners.id))
   .where(eq(leads.id, id))
   .limit(1);
   

@@ -84,8 +84,62 @@ export default function Leads() {
   const [newStatus, setNewStatus] = useState("");
   const [statusNote, setStatusNote] = useState("");
 
-  // Données de démonstration (à remplacer par les vraies données tRPC)
-  const leads: Lead[] = [
+  // Fetch leads from backend
+  const { data: leads = [], isLoading, refetch } = trpc.leads.myLeads.useQuery({
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    limit: 100,
+  });
+
+  const { data: stats } = trpc.leads.myStats.useQuery();
+
+  const updateStatusMutation = trpc.leads.updateStatus.useMutation({
+    onSuccess: () => {
+      refetch();
+      setShowStatusDialog(false);
+      setSelectedLead(null);
+    },
+  });
+
+  const handleUpdateStatus = () => {
+    if (!selectedLead || !newStatus) return;
+    updateStatusMutation.mutate({
+      id: selectedLead.id,
+      status: newStatus,
+      notes: statusNote,
+    });
+  };
+
+  // Helper function to normalize lead data (handles both direct and joined structures)
+  const normalizeLead = (lead: any) => {
+    // If lead has 'leads' property, it's from a join
+    if (lead.leads) {
+      return {
+        ...lead.leads,
+        partner: lead.partners,
+      };
+    }
+    // Otherwise it's direct
+    return lead;
+  };
+
+  // Normalize all leads
+  const normalizedLeads = (leads || []).map(normalizeLead);
+
+  // Filter leads by search query
+  const filteredLeads = normalizedLeads.filter((lead: any) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      lead.firstName?.toLowerCase().includes(query) ||
+      lead.lastName?.toLowerCase().includes(query) ||
+      lead.email?.toLowerCase().includes(query) ||
+      lead.phone?.toLowerCase().includes(query) ||
+      lead.city?.toLowerCase().includes(query)
+    );
+  });
+
+  // Remove demo data below
+  const _demoLeads: Lead[] = [
     {
       id: 1,
       firstName: "Jean",
@@ -145,26 +199,8 @@ export default function Leads() {
     },
   ];
 
-  // Stats
-  const stats = {
-    total: leads.length,
-    new: leads.filter(l => l.status === "NEW" || l.status === "ASSIGNED").length,
-    inProgress: leads.filter(l => ["CONTACTED", "QUALIFIED", "MEETING_SCHEDULED", "QUOTE_SENT", "NEGOTIATION"].includes(l.status)).length,
-    converted: leads.filter(l => l.status === "CONVERTED").length,
-  };
-
-  // Filtrer les leads
-  const filteredLeads = leads.filter(lead => {
-    const matchesSearch = searchQuery === "" || 
-      `${lead.firstName} ${lead.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.phone?.includes(searchQuery) ||
-      lead.city?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  // Stats are now fetched from backend via trpc.leads.myStats.useQuery()
+  // filteredLeads is now computed above after fetching data
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -186,17 +222,6 @@ export default function Leads() {
     if (diffDays > 0) return `Il y a ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
     if (diffHours > 0) return `Il y a ${diffHours} heure${diffHours > 1 ? "s" : ""}`;
     return "À l'instant";
-  };
-
-  const handleUpdateStatus = () => {
-    if (!selectedLead || !newStatus) return;
-    
-    // TODO: Appeler la mutation tRPC pour mettre à jour le statut
-    console.log("Update status:", selectedLead.id, newStatus, statusNote);
-    
-    setShowStatusDialog(false);
-    setNewStatus("");
-    setStatusNote("");
   };
 
   return (
@@ -229,7 +254,7 @@ export default function Leads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Total leads</p>
-                  <p className="text-2xl font-bold">{stats.total}</p>
+                  <p className="text-2xl font-bold">{stats?.total || 0}</p>
                 </div>
                 <Target className="w-8 h-8 text-blue-500" />
               </div>
@@ -240,7 +265,7 @@ export default function Leads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Nouveaux</p>
-                  <p className="text-2xl font-bold text-blue-600">{stats.new}</p>
+                  <p className="text-2xl font-bold text-blue-600">{(stats as any)?.new || 0}</p>
                 </div>
                 <AlertCircle className="w-8 h-8 text-blue-500" />
               </div>
@@ -251,7 +276,7 @@ export default function Leads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">En cours</p>
-                  <p className="text-2xl font-bold text-yellow-600">{stats.inProgress}</p>
+                  <p className="text-2xl font-bold text-yellow-600">{(stats as any)?.inProgress || 0}</p>
                 </div>
                 <Phone className="w-8 h-8 text-yellow-500" />
               </div>
@@ -262,7 +287,7 @@ export default function Leads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Convertis</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.converted}</p>
+                  <p className="text-2xl font-bold text-green-600">{(stats as any)?.converted || 0}</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-green-500" />
               </div>
@@ -371,8 +396,8 @@ export default function Leads() {
                         </div>
                       </div>
                       <div className="text-right text-sm">
-                        <p className="text-gray-500">{getTimeSince(lead.receivedAt)}</p>
-                        {lead.contactAttempts > 0 && (
+                        <p className="text-gray-500">{getTimeSince(lead.receivedAt || lead.createdAt)}</p>
+                        {(lead.contactAttempts || 0) > 0 && (
                           <p className="text-xs text-gray-400 mt-1">
                             {lead.contactAttempts} contact{lead.contactAttempts > 1 ? "s" : ""}
                           </p>
