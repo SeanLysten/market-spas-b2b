@@ -831,3 +831,10 @@
 - [x] Identifier les appels .map() dans AdminStockForecast.tsx (7 occurrences)
 - [x] Ajouter des vérifications de données (|| []) avant chaque .map()
 - [x] Tester les pages /admin/settings et /admin/forecast (aucune erreur TypeScript)
+
+
+## Corrections backend .map()
+- [x] Identifier les routes tRPC utilisées par AdminSettings.tsx
+- [x] Vérifier les .map() dans routers.ts (aucun .map() trouvé)
+- [x] Vérifier les .map() dans db.ts (4 corrections appliquées)
+- [x] Tester /admin/settings après corrections (serveur redémarré, aucune erreur TypeScript)

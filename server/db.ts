@@ -2520,7 +2520,7 @@ export async function getSalesByMonth(months: number = 12) {
     ORDER BY month ASC
   `);
 
-  return (result as any).rows.map((row: any) => ({
+  return ((result as any).rows || []).map((row: any) => ({
     month: row.month,
     orders: Number(row.orders),
     sales: Number(row.sales) || 0,
@@ -2548,7 +2548,7 @@ export async function getTopProducts(limit: number = 10) {
     LIMIT ${limit}
   `);
 
-  return (result as any).rows.map((row: any) => ({
+  return ((result as any).rows || []).map((row: any) => ({
     name: row.name,
     sku: row.sku,
     quantity: Number(row.quantity),
@@ -2578,7 +2578,7 @@ export async function getPartnerPerformance(limit: number = 10) {
     LIMIT ${limit}
   `);
 
-  return (result as any).rows.map((row: any) => ({
+  return ((result as any).rows || []).map((row: any) => ({
     companyName: row.companyName,
     orders: Number(row.orders),
     revenue: Number(row.revenue) || 0,
@@ -3060,7 +3060,7 @@ export async function getProductForecast(productId: number, weeks: number = 8) {
       weekLabel: `S${week} ${year}`,
       projectedStock: runningStock,
       incomingQuantity,
-      incoming: weekIncoming.map((stock: any) => ({
+      incoming: (weekIncoming || []).map((stock: any) => ({
         id: stock.id,
         quantity: stock.quantity,
         notes: stock.notes,
