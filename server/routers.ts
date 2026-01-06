@@ -224,6 +224,29 @@ export const appRouter = router({
       return await db.getPartnerById(ctx.user.partnerId);
     }),
 
+    updateMyPartner: protectedProcedure
+      .input(
+        z.object({
+          companyName: z.string().optional(),
+          tradeName: z.string().optional(),
+          vatNumber: z.string().optional(),
+          addressStreet: z.string().optional(),
+          addressCity: z.string().optional(),
+          addressPostalCode: z.string().optional(),
+          addressCountry: z.string().optional(),
+          primaryContactName: z.string().optional(),
+          primaryContactEmail: z.string().email().optional(),
+          primaryContactPhone: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (!ctx.user.partnerId) {
+          throw new Error("Vous n'êtes pas associé à un partenaire");
+        }
+        await db.updatePartner(ctx.user.partnerId, input);
+        return { success: true };
+      }),
+
     create: adminProcedure
       .input(
         z.object({

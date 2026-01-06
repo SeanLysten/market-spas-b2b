@@ -838,3 +838,14 @@
 - [x] Vérifier les .map() dans routers.ts (aucun .map() trouvé)
 - [x] Vérifier les .map() dans db.ts (4 corrections appliquées)
 - [x] Tester /admin/settings après corrections (serveur redémarré, aucune erreur TypeScript)
+
+
+## Audit et amélioration des paramètres utilisateur
+- [x] Vérifier où se trouve actuellement la page Profile/Paramètres (existe avec 5 onglets)
+- [x] Vérifier si les informations société (TVA, nom, adresse, téléphone) sont éditables (actuellement en lecture seule)
+- [x] Vérifier si la gestion d'équipe est accessible depuis les paramètres (oui, onglet Équipe)
+- [x] Vérifier si un bouton "Paramètres" est visible dans la navigation (non, manquant)
+- [x] Ajouter un lien "Paramètres" dans le menu utilisateur (dropdown sidebar)
+- [x] Rendre l'onglet Entreprise éditable (avec bouton Modifier/Sauvegarder)
+- [x] Créer la route tRPC pour mettre à jour les informations partenaire (partners.updateMyPartner)
+- [x] Tester les modifications (serveur fonctionnel, aucune erreur TypeScript)

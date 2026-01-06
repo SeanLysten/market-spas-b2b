@@ -49,9 +49,36 @@ export default function Profile() {
     newsletter: true,
   });
 
+  // Company form state
+  const [isEditingCompany, setIsEditingCompany] = useState(false);
+  const [companyData, setCompanyData] = useState({
+    companyName: "",
+    tradeName: "",
+    vatNumber: "",
+    addressStreet: "",
+    addressCity: "",
+    addressPostalCode: "",
+    addressCountry: "BE",
+    primaryContactName: "",
+    primaryContactEmail: "",
+    primaryContactPhone: "",
+  });
+
   // Get partner info if user is linked to a partner
-  const { data: partner } = trpc.partners.myPartner.useQuery(undefined, {
+  const { data: partner, refetch: refetchPartner } = trpc.partners.myPartner.useQuery(undefined, {
     enabled: !!user?.partnerId,
+  });
+
+  // Update company mutation
+  const updateCompanyMutation = trpc.partners.updateMyPartner.useMutation({
+    onSuccess: () => {
+      alert("Informations entreprise mises à jour avec succès!");
+      setIsEditingCompany(false);
+      refetchPartner();
+    },
+    onError: (error) => {
+      alert("Erreur lors de la mise à jour: " + error.message);
+    },
   });
 
   useEffect(() => {
@@ -65,6 +92,23 @@ export default function Profile() {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    if (partner) {
+      setCompanyData({
+        companyName: partner.companyName || "",
+        tradeName: partner.tradeName || "",
+        vatNumber: partner.vatNumber || "",
+        addressStreet: partner.addressStreet || "",
+        addressCity: partner.addressCity || "",
+        addressPostalCode: partner.addressPostalCode || "",
+        addressCountry: partner.addressCountry || "BE",
+        primaryContactName: partner.primaryContactName || "",
+        primaryContactEmail: partner.primaryContactEmail || "",
+        primaryContactPhone: partner.primaryContactPhone || "",
+      });
+    }
+  }, [partner]);
 
   // Note: updateProfile mutation would need to be added to the router
   const handleSaveProfile = () => {
@@ -253,14 +297,65 @@ export default function Profile() {
               <CardContent>
                 {partner ? (
                   <div className="space-y-6">
+                    <div className="flex justify-end mb-4">
+                      {isEditingCompany ? (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setIsEditingCompany(false);
+                              // Reset form
+                              if (partner) {
+                                setCompanyData({
+                                  companyName: partner.companyName || "",
+                                  tradeName: partner.tradeName || "",
+                                  vatNumber: partner.vatNumber || "",
+                                  addressStreet: partner.addressStreet || "",
+                                  addressCity: partner.addressCity || "",
+                                  addressPostalCode: partner.addressPostalCode || "",
+                                  addressCountry: partner.addressCountry || "BE",
+                                  primaryContactName: partner.primaryContactName || "",
+                                  primaryContactEmail: partner.primaryContactEmail || "",
+                                  primaryContactPhone: partner.primaryContactPhone || "",
+                                });
+                              }
+                            }}
+                          >
+                            Annuler
+                          </Button>
+                          <Button
+                            onClick={() => updateCompanyMutation.mutate(companyData)}
+                            disabled={updateCompanyMutation.isPending}
+                          >
+                            <Save className="w-4 h-4 mr-2" />
+                            {updateCompanyMutation.isPending ? "Sauvegarde..." : "Sauvegarder"}
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button onClick={() => setIsEditingCompany(true)} variant="outline">
+                          <Edit className="w-4 h-4 mr-2" />
+                          Modifier
+                        </Button>
+                      )}
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label>Nom de l'entreprise</Label>
-                        <Input value={partner.companyName} disabled className="bg-muted" />
+                        <Input
+                          value={companyData.companyName}
+                          onChange={(e) => setCompanyData({ ...companyData, companyName: e.target.value })}
+                          disabled={!isEditingCompany}
+                          className={!isEditingCompany ? "bg-muted" : ""}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label>Numéro de TVA</Label>
-                        <Input value={partner.vatNumber} disabled className="bg-muted" />
+                        <Input
+                          value={companyData.vatNumber}
+                          onChange={(e) => setCompanyData({ ...companyData, vatNumber: e.target.value })}
+                          disabled={!isEditingCompany}
+                          className={!isEditingCompany ? "bg-muted" : ""}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label>Niveau partenaire</Label>
@@ -311,45 +406,46 @@ export default function Profile() {
                         Adresse
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Rue</Label>
-                          <Input
-                            value={partner.addressStreet || ""}
-                            disabled
-                            className="bg-muted"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Ville</Label>
-                          <Input
-                            value={partner.addressCity || ""}
-                            disabled
-                            className="bg-muted"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Code postal</Label>
-                          <Input
-                            value={partner.addressPostalCode || ""}
-                            disabled
-                            className="bg-muted"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Pays</Label>
-                          <Input
-                            value={partner.addressCountry || "BE"}
-                            disabled
-                            className="bg-muted"
-                          />
-                        </div>
+                      <div className="space-y-2">
+                        <Label>Rue</Label>
+                        <Input
+                          value={companyData.addressStreet}
+                          onChange={(e) => setCompanyData({ ...companyData, addressStreet: e.target.value })}
+                          disabled={!isEditingCompany}
+                          className={!isEditingCompany ? "bg-muted" : ""}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Ville</Label>
+                        <Input
+                          value={companyData.addressCity}
+                          onChange={(e) => setCompanyData({ ...companyData, addressCity: e.target.value })}
+                          disabled={!isEditingCompany}
+                          className={!isEditingCompany ? "bg-muted" : ""}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Code postal</Label>
+                        <Input
+                          value={companyData.addressPostalCode}
+                          onChange={(e) => setCompanyData({ ...companyData, addressPostalCode: e.target.value })}
+                          disabled={!isEditingCompany}
+                          className={!isEditingCompany ? "bg-muted" : ""}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Pays</Label>
+                        <Input
+                          value={companyData.addressCountry}
+                          onChange={(e) => setCompanyData({ ...companyData, addressCountry: e.target.value })}
+                          disabled={!isEditingCompany}
+                          className={!isEditingCompany ? "bg-muted" : ""}
+                        />
+                      </div>
                       </div>
                     </div>
 
-                    <p className="text-sm text-muted-foreground">
-                      Pour modifier les informations de votre entreprise, veuillez
-                      contacter votre représentant commercial.
-                    </p>
+
                   </div>
                 ) : (
                   <div className="text-center py-8">
