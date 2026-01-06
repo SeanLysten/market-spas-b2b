@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS after_sales_notes (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  serviceId INT NOT NULL,\n  userId INT NOT NULL,\n  note TEXT NOT NULL,\n  isInternal BOOLEAN NOT NULL DEFAULT FALSE,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  INDEX serviceId_idx (serviceId)\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute CREATE TABLE IF NOT EXISTS after_sales_notes (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  serviceId INT NOT NULL,\n  userId INT NOT NULL,\n  note TEXT NOT NULL,\n  isInternal BOOLEAN NOT NULL DEFAULT FALSE,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  INDEX serviceId_idx (serviceId)\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 314
+}

@@ -1977,6 +1977,170 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  // ============================================
+  // AFTER-SALES SERVICE (SAV)
+  // ============================================
+  afterSales: router({
+    // Create a new SAV request
+    create: protectedProcedure
+      .input(
+        z.object({
+          productId: z.number().optional(),
+          serialNumber: z.string().min(1),
+          issueType: z.enum(["TECHNICAL", "LEAK", "ELECTRICAL", "HEATING", "JETS", "CONTROL_PANEL", "OTHER"]),
+          description: z.string().min(10),
+          urgency: z.enum(["NORMAL", "URGENT", "CRITICAL"]).default("NORMAL"),
+          customerName: z.string().optional(),
+          customerPhone: z.string().optional(),
+          customerEmail: z.string().optional(),
+          customerAddress: z.string().optional(),
+          installationDate: z.string().optional(),
+          media: z.array(
+            z.object({
+              base64: z.string(),
+              mimeType: z.string(),
+              type: z.enum(["IMAGE", "VIDEO"]),
+              description: z.string().optional(),
+            })
+          ).optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (!ctx.user.partnerId) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Partner ID required" });
+        }
+
+        // Upload media to S3 if provided
+        const uploadedMedia: Array<{ url: string; key: string; type: "IMAGE" | "VIDEO"; description?: string }> = [];
+        if (input.media && input.media.length > 0) {
+          for (const item of input.media) {
+            const buffer = Buffer.from(item.base64, "base64");
+            const ext = item.type === "VIDEO" ? "mp4" : "jpg";
+            const fileKey = `sav/${ctx.user.partnerId}/${Date.now()}-${nanoid()}.${ext}`;
+            const { url } = await storagePut(fileKey, buffer, item.mimeType);
+            uploadedMedia.push({
+              url,
+              key: fileKey,
+              type: item.type,
+              description: item.description,
+            });
+          }
+        }
+
+        const result = await db.createAfterSalesService({
+          partnerId: ctx.user.partnerId,
+          productId: input.productId,
+          serialNumber: input.serialNumber,
+          issueType: input.issueType,
+          description: input.description,
+          urgency: input.urgency,
+          customerName: input.customerName,
+          customerPhone: input.customerPhone,
+          customerEmail: input.customerEmail,
+          customerAddress: input.customerAddress,
+          installationDate: input.installationDate,
+          media: uploadedMedia,
+        });
+
+        return result;
+      }),
+
+    // List SAV requests
+    list: protectedProcedure
+      .input(
+        z.object({
+          status: z.string().optional(),
+          urgency: z.string().optional(),
+        }).optional()
+      )
+      .query(async ({ ctx, input }) => {
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+
+        if (isAdmin) {
+          return await db.getAfterSalesServices(input);
+        } else if (ctx.user.partnerId) {
+          return await db.getAfterSalesServices({
+            partnerId: ctx.user.partnerId,
+            ...input,
+          });
+        }
+
+        return [];
+      }),
+
+    // Get SAV by ID
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const serviceData = await db.getAfterSalesServiceById(input.id);
+
+        if (!serviceData) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Service not found" });
+        }
+
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+
+        // Check access
+        if (!isAdmin && serviceData.service.partnerId !== ctx.user.partnerId) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Unauthorized" });
+        }
+
+        return serviceData;
+      }),
+
+    // Update SAV status (admin only)
+    updateStatus: adminProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          status: z.enum(["NEW", "IN_PROGRESS", "WAITING_PARTS", "RESOLVED", "CLOSED"]),
+          assignedTechnicianId: z.number().optional(),
+          resolutionNotes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        await db.updateAfterSalesServiceStatus(
+          input.id,
+          input.status,
+          {
+            assignedTechnicianId: input.assignedTechnicianId,
+            resolutionNotes: input.resolutionNotes,
+          }
+        );
+        return { success: true };
+      }),
+
+    // Add note to SAV
+    addNote: protectedProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          note: z.string(),
+          isInternal: z.boolean().default(false),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const serviceData = await db.getAfterSalesServiceById(input.id);
+
+        if (!serviceData) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Service not found" });
+        }
+
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+
+        // Check access
+        if (!isAdmin && serviceData.service.partnerId !== ctx.user.partnerId) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Unauthorized" });
+        }
+
+        // Only admins can add internal notes
+        const noteIsInternal = isAdmin && input.isInternal;
+
+        await db.addAfterSalesNote(input.id, ctx.user.id, input.note, noteIsInternal);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

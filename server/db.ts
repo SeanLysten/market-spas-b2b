@@ -3700,3 +3700,210 @@ export async function addReturnNote(returnId: number, note: string, isAdmin: boo
   
   return true;
 }
+
+// ============================================
+// AFTER-SALES SERVICE (SAV)
+// ============================================
+
+export async function createAfterSalesService(data: {
+  partnerId: number;
+  productId?: number;
+  serialNumber: string;
+  issueType: string;
+  description: string;
+  urgency: string;
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  customerAddress?: string;
+  installationDate?: string;
+  media?: Array<{ url: string; key: string; type: "IMAGE" | "VIDEO"; description?: string }>;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { afterSalesServices, afterSalesMedia } = await import("../drizzle/schema");
+  
+  // Generate unique ticket number
+  const ticketNumber = `SAV-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+  
+  // Create service
+  const [result] = await db.insert(afterSalesServices).values({
+    ticketNumber,
+    partnerId: data.partnerId,
+    productId: data.productId,
+    serialNumber: data.serialNumber,
+    issueType: data.issueType as any,
+    description: data.description,
+    urgency: data.urgency as any,
+    customerName: data.customerName,
+    customerPhone: data.customerPhone,
+    customerEmail: data.customerEmail,
+    customerAddress: data.customerAddress,
+    installationDate: data.installationDate ? new Date(data.installationDate) : undefined,
+  });
+  
+  const serviceId = Number(result.insertId);
+  
+  // Create media entries
+  if (data.media && data.media.length > 0) {
+    await db.insert(afterSalesMedia).values(
+      data.media.map((m) => ({
+        serviceId,
+        mediaUrl: m.url,
+        mediaKey: m.key,
+        mediaType: m.type,
+        description: m.description,
+      }))
+    );
+  }
+  
+  return { serviceId, ticketNumber };
+}
+
+export async function getAfterSalesServices(filters?: {
+  partnerId?: number;
+  status?: string;
+  urgency?: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { afterSalesServices } = await import("../drizzle/schema");
+  
+  let query = db
+    .select({
+      service: afterSalesServices,
+      partner: partners,
+      product: products,
+    })
+    .from(afterSalesServices)
+    .leftJoin(partners, eq(afterSalesServices.partnerId, partners.id))
+    .leftJoin(products, eq(afterSalesServices.productId, products.id));
+  
+  const conditions = [];
+  if (filters?.partnerId) {
+    conditions.push(eq(afterSalesServices.partnerId, filters.partnerId));
+  }
+  
+  if (filters?.status) {
+    conditions.push(eq(afterSalesServices.status, filters.status as any));
+  }
+  
+  if (filters?.urgency) {
+    conditions.push(eq(afterSalesServices.urgency, filters.urgency as any));
+  }
+  
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  
+  const results = await query;
+  return results;
+}
+
+export async function getAfterSalesServiceById(serviceId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { afterSalesServices, afterSalesMedia, afterSalesNotes } = await import("../drizzle/schema");
+  
+  const [serviceData] = await db
+    .select({
+      service: afterSalesServices,
+      partner: partners,
+      product: products,
+    })
+    .from(afterSalesServices)
+    .leftJoin(partners, eq(afterSalesServices.partnerId, partners.id))
+    .leftJoin(products, eq(afterSalesServices.productId, products.id))
+    .where(eq(afterSalesServices.id, serviceId));
+  
+  if (!serviceData) return null;
+  
+  // Get media
+  const media = await db
+    .select()
+    .from(afterSalesMedia)
+    .where(eq(afterSalesMedia.serviceId, serviceId));
+  
+  // Get notes with user info
+  const notes = await db
+    .select({
+      note: afterSalesNotes,
+      user: users,
+    })
+    .from(afterSalesNotes)
+    .leftJoin(users, eq(afterSalesNotes.userId, users.id))
+    .where(eq(afterSalesNotes.serviceId, serviceId))
+    .orderBy(afterSalesNotes.createdAt);
+  
+  return {
+    ...serviceData,
+    media,
+    notes,
+  };
+}
+
+export async function updateAfterSalesServiceStatus(
+  serviceId: number,
+  status: string,
+  updates?: {
+    assignedTechnicianId?: number;
+    resolutionNotes?: string;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { afterSalesServices } = await import("../drizzle/schema");
+  
+  const updateData: any = {
+    status: status as any,
+    updatedAt: new Date(),
+  };
+  
+  if (updates?.assignedTechnicianId) {
+    updateData.assignedTechnicianId = updates.assignedTechnicianId;
+    updateData.assignedAt = new Date();
+  }
+  
+  if (updates?.resolutionNotes) {
+    updateData.resolutionNotes = updates.resolutionNotes;
+  }
+  
+  // Set timestamp based on status
+  if (status === "RESOLVED") {
+    updateData.resolvedAt = new Date();
+  } else if (status === "CLOSED") {
+    updateData.closedAt = new Date();
+  }
+  
+  await db
+    .update(afterSalesServices)
+    .set(updateData)
+    .where(eq(afterSalesServices.id, serviceId));
+  
+  return true;
+}
+
+export async function addAfterSalesNote(
+  serviceId: number,
+  userId: number,
+  note: string,
+  isInternal: boolean
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { afterSalesNotes } = await import("../drizzle/schema");
+  
+  await db.insert(afterSalesNotes).values({
+    serviceId,
+    userId,
+    note,
+    isInternal,
+  });
+  
+  return true;
+}

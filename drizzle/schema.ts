@@ -9,6 +9,7 @@ import {
   boolean,
   unique,
   index,
+  date,
 } from "drizzle-orm/mysql-core";
 
 // ============================================
@@ -1714,3 +1715,117 @@ export type InsertReturnItem = typeof returnItems.$inferInsert;
 export type ReturnPhoto = typeof returnPhotos.$inferSelect;
 export type InsertReturnPhoto = typeof returnPhotos.$inferInsert;
 
+
+// ============================================
+// AFTER-SALES SERVICE (SAV)
+// ============================================
+
+// SAV status enum
+export const savStatusEnum = mysqlEnum("sav_status", [
+  "NEW",
+  "IN_PROGRESS",
+  "WAITING_PARTS",
+  "RESOLVED",
+  "CLOSED",
+]);
+
+// SAV urgency enum
+export const savUrgencyEnum = mysqlEnum("sav_urgency", [
+  "NORMAL",
+  "URGENT",
+  "CRITICAL",
+]);
+
+// SAV issue type enum
+export const savIssueTypeEnum = mysqlEnum("sav_issue_type", [
+  "TECHNICAL",
+  "LEAK",
+  "ELECTRICAL",
+  "HEATING",
+  "JETS",
+  "CONTROL_PANEL",
+  "OTHER",
+]);
+
+// After-sales services table
+export const afterSalesServices = mysqlTable(
+  "after_sales_services",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    ticketNumber: varchar("ticketNumber", { length: 50 }).notNull().unique(),
+    partnerId: int("partnerId").notNull(),
+    productId: int("productId"),
+    serialNumber: varchar("serialNumber", { length: 100 }).notNull(),
+    issueType: savIssueTypeEnum.notNull(),
+    description: text("description").notNull(),
+    urgency: savUrgencyEnum.notNull().default("NORMAL"),
+    status: savStatusEnum.notNull().default("NEW"),
+    
+    // Customer information
+    customerName: varchar("customerName", { length: 255 }),
+    customerPhone: varchar("customerPhone", { length: 50 }),
+    customerEmail: varchar("customerEmail", { length: 255 }),
+    customerAddress: text("customerAddress"),
+    installationDate: date("installationDate"),
+    
+    // Assignment
+    assignedTechnicianId: int("assignedTechnicianId"),
+    assignedAt: timestamp("assignedAt"),
+    
+    // Resolution
+    resolutionNotes: text("resolutionNotes"),
+    resolvedAt: timestamp("resolvedAt"),
+    closedAt: timestamp("closedAt"),
+    
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    partnerIdIdx: index("partnerId_idx").on(table.partnerId),
+    statusIdx: index("status_idx").on(table.status),
+    urgencyIdx: index("urgency_idx").on(table.urgency),
+    ticketNumberIdx: index("ticketNumber_idx").on(table.ticketNumber),
+  })
+);
+
+// After-sales media table (photos and videos)
+export const afterSalesMedia = mysqlTable(
+  "after_sales_media",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    serviceId: int("serviceId").notNull(),
+    mediaUrl: varchar("mediaUrl", { length: 512 }).notNull(),
+    mediaKey: varchar("mediaKey", { length: 512 }).notNull(),
+    mediaType: mysqlEnum("mediaType", ["IMAGE", "VIDEO"]).notNull(),
+    description: text("description"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    serviceIdIdx: index("serviceId_idx").on(table.serviceId),
+  })
+);
+
+// After-sales notes table
+export const afterSalesNotes = mysqlTable(
+  "after_sales_notes",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    serviceId: int("serviceId").notNull(),
+    userId: int("userId").notNull(),
+    note: text("note").notNull(),
+    isInternal: boolean("isInternal").notNull().default(false), // Internal notes only visible to admins
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    serviceIdIdx: index("serviceId_idx").on(table.serviceId),
+  })
+);
+
+export type AfterSalesService = typeof afterSalesServices.$inferSelect;
+export type InsertAfterSalesService = typeof afterSalesServices.$inferInsert;
+
+export type AfterSalesMedia = typeof afterSalesMedia.$inferSelect;
+export type InsertAfterSalesMedia = typeof afterSalesMedia.$inferInsert;
+
+export type AfterSalesNote = typeof afterSalesNotes.$inferSelect;
+export type InsertAfterSalesNote = typeof afterSalesNotes.$inferInsert;

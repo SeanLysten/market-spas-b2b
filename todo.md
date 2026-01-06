@@ -924,3 +924,42 @@
 - [ ] Tester la création de retour
 - [ ] Tester le changement de statut
 - [ ] Tester l'upload de photos
+
+
+## Système de Service Après-Vente (SAV)
+
+### Base de données
+- [x] Créer la table after_sales_services (id, ticketNumber, partnerId, productId, serialNumber, issueType, description, urgency, status)
+- [x] Créer la table after_sales_media (id, serviceId, mediaUrl, mediaType, description)
+- [x] Créer la table after_sales_notes (id, serviceId, userId, note, isInternal, createdAt)
+- [x] Créer l'enum sav_status (NEW, IN_PROGRESS, WAITING_PARTS, RESOLVED, CLOSED)
+- [x] Créer l'enum sav_urgency (NORMAL, URGENT, CRITICAL)
+- [x] Créer l'enum sav_issue_type (TECHNICAL, LEAK, ELECTRICAL, HEATING, JETS, CONTROL_PANEL, OTHER)
+
+### Backend
+- [x] Créer les fonctions DB (createAfterSalesService, getAfterSalesServices, updateServiceStatus, addAfterSalesNote)
+- [x] Créer la route afterSales.create avec upload photos/vidéos
+- [x] Créer la route afterSales.list avec filtres
+- [x] Créer la route afterSales.getById
+- [x] Créer la route afterSales.updateStatus (admin)
+- [x] Créer la route afterSales.addNote
+
+### Frontend partenaire
+- [ ] Créer la page AfterSales.tsx pour la liste des SAV
+- [ ] Créer le composant AfterSalesForm.tsx pour déclarer un SAV
+- [ ] Implémenter l'upload de photos et vidéos
+- [ ] Afficher le timeline de statut
+- [ ] Ajouter l'onglet SAV dans la navigation
+
+### Frontend admin
+- [ ] Créer la page AdminAfterSales.tsx
+- [ ] Implémenter la gestion des statuts
+- [ ] Implémenter l'assignation de technicien
+- [ ] Afficher les médias et détails
+- [ ] Ajouter les notes internes
+
+### Tests
+- [ ] Tester la création de SAV
+- [ ] Tester le changement de statut
+- [ ] Tester l'upload de médias
+- [ ] Tester l'assignation de technicien
