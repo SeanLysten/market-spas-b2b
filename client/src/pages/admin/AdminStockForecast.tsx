@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import AdminLayout from "@/components/AdminLayout";
 import { useSafeQuery, useSafeQueryObject } from "@/hooks/useSafeQuery";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -105,7 +106,8 @@ export default function AdminStockForecast() {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <AdminLayout>
+      <div className="p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -387,5 +389,6 @@ export default function AdminStockForecast() {
         </Card>
       )}
     </div>
+    </AdminLayout>
   );
 }

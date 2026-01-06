@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import AdminLayout from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -110,7 +111,8 @@ export default function AdminAfterSales() {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <AdminLayout>
+      <div className="container mx-auto py-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Gestion SAV</h1>
         <p className="text-muted-foreground">Gérez toutes les demandes de service après-vente</p>
@@ -331,5 +333,6 @@ export default function AdminAfterSales() {
         </DialogContent>
       </Dialog>
     </div>
+    </AdminLayout>
   );
 }
