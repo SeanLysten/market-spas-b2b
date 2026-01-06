@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertCircle, Clock, CheckCircle, XCircle, Package, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, AlertCircle, Clock, CheckCircle, XCircle, Package, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +36,18 @@ export default function AfterSales() {
       setOrderBy(column);
       setOrderDirection("desc");
     }
+  };
+
+  // Handle reset filters
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setUrgencyFilter("all");
+    setDateFrom("");
+    setDateTo("");
+    setCustomerNameFilter("");
+    setOrderBy("createdAt");
+    setOrderDirection("desc");
   };
 
   // Fetch SAV list
@@ -386,7 +398,7 @@ export default function AfterSales() {
             </div>
 
             {/* Filtres avancés */}
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
               <div className="flex-1">
                 <Input
                   type="text"
@@ -411,6 +423,14 @@ export default function AfterSales() {
                   onChange={(e) => setDateTo(e.target.value)}
                 />
               </div>
+              <Button
+                variant="outline"
+                onClick={handleResetFilters}
+                className="flex items-center gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Réinitialiser
+              </Button>
             </div>
           </div>
         </CardContent>

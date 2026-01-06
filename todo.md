@@ -1004,3 +1004,9 @@
 - [x] Créer des en-têtes de colonnes cliquables avec indicateurs de tri (flèches)
 - [x] Ajouter l'état de tri dans AdminAfterSales.tsx
 - [x] Créer des en-têtes de colonnes cliquables avec indicateurs de tri (flèches)
+
+## Bouton de réinitialisation des filtres SAV
+- [x] Créer la fonction handleResetFilters dans AfterSales.tsx
+- [x] Ajouter le bouton "Réinitialiser" dans la section filtres de AfterSales
+- [x] Créer la fonction handleResetFilters dans AdminAfterSales.tsx
+- [x] Ajouter le bouton "Réinitialiser" dans la section filtres de AdminAfterSales
