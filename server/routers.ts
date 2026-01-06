@@ -1828,6 +1828,155 @@ export const appRouter = router({
         return await db.acceptTeamInvitation(input.token);
       }),
   }),
+
+  // ============================================
+  // RETURNS
+  // ============================================
+  returns: router({
+    // Create a return request
+    create: protectedProcedure
+      .input(
+        z.object({
+          orderId: z.number(),
+          items: z.array(
+            z.object({
+              productId: z.number(),
+              quantity: z.number(),
+              reason: z.enum(["DEFECTIVE", "WRONG_ITEM", "NOT_AS_DESCRIBED", "CHANGED_MIND", "OTHER"]),
+              reasonDetails: z.string().optional(),
+              unitPrice: z.number().optional(),
+            })
+          ),
+          notes: z.string().optional(),
+          photos: z.array(
+            z.object({
+              base64: z.string(),
+              mimeType: z.string(),
+              description: z.string().optional(),
+            })
+          ).optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (!ctx.user.partnerId) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Partner ID required" });
+        }
+
+        // Upload photos to S3 if provided
+        const uploadedPhotos: Array<{ url: string; key: string; description?: string }> = [];
+        if (input.photos && input.photos.length > 0) {
+          for (const photo of input.photos) {
+            const buffer = Buffer.from(photo.base64, "base64");
+            const fileKey = `returns/${ctx.user.partnerId}/${Date.now()}-${nanoid()}.jpg`;
+            const { url } = await storagePut(fileKey, buffer, photo.mimeType);
+            uploadedPhotos.push({
+              url,
+              key: fileKey,
+              description: photo.description,
+            });
+          }
+        }
+
+        const returnId = await db.createReturn({
+          orderId: input.orderId,
+          partnerId: ctx.user.partnerId,
+          items: input.items,
+          notes: input.notes,
+          photos: uploadedPhotos,
+        });
+
+        return { returnId };
+      }),
+
+    // List returns
+    list: protectedProcedure
+      .input(
+        z.object({
+          status: z.string().optional(),
+          orderId: z.number().optional(),
+        }).optional()
+      )
+      .query(async ({ ctx, input }) => {
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+
+        if (isAdmin) {
+          return await db.getReturns(input);
+        } else if (ctx.user.partnerId) {
+          return await db.getReturns({
+            partnerId: ctx.user.partnerId,
+            ...input,
+          });
+        }
+
+        return [];
+      }),
+
+    // Get return by ID
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const returnData = await db.getReturnById(input.id);
+
+        if (!returnData) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Return not found" });
+        }
+
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+
+        // Check access
+        if (!isAdmin && returnData.return.partnerId !== ctx.user.partnerId) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Unauthorized" });
+        }
+
+        return returnData;
+      }),
+
+    // Update return status (admin only)
+    updateStatus: adminProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          status: z.enum(["REQUESTED", "APPROVED", "REJECTED", "IN_TRANSIT", "RECEIVED", "REFUNDED"]),
+          adminNotes: z.string().optional(),
+          refundAmount: z.number().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        await db.updateReturnStatus(
+          input.id,
+          input.status,
+          input.adminNotes,
+          input.refundAmount
+        );
+        return { success: true };
+      }),
+
+    // Add note to return
+    addNote: protectedProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          note: z.string(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const returnData = await db.getReturnById(input.id);
+
+        if (!returnData) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Return not found" });
+        }
+
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+
+        // Check access
+        if (!isAdmin && returnData.return.partnerId !== ctx.user.partnerId) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Unauthorized" });
+        }
+
+        await db.addReturnNote(input.id, input.note, isAdmin);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

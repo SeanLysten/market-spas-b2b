@@ -1620,3 +1620,97 @@ export type InsertTeamInvitation = typeof teamInvitations.$inferInsert;
 export type TeamMember = typeof teamMembers.$inferSelect;
 export type InsertTeamMember = typeof teamMembers.$inferInsert;
 
+// ============================================
+// RETURNS
+// ============================================
+
+// Return status enum
+export const returnStatusEnum = mysqlEnum("return_status", [
+  "REQUESTED",
+  "APPROVED",
+  "REJECTED",
+  "IN_TRANSIT",
+  "RECEIVED",
+  "REFUNDED",
+]);
+
+// Return reason enum
+export const returnReasonEnum = mysqlEnum("return_reason", [
+  "DEFECTIVE",
+  "WRONG_ITEM",
+  "NOT_AS_DESCRIBED",
+  "CHANGED_MIND",
+  "OTHER",
+]);
+
+// Returns table
+export const returns = mysqlTable(
+  "returns",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    orderId: int("orderId").notNull(),
+    partnerId: int("partnerId").notNull(),
+    status: returnStatusEnum.default("REQUESTED").notNull(),
+    totalAmount: decimal("totalAmount", { precision: 10, scale: 2 }),
+    notes: text("notes"),
+    adminNotes: text("adminNotes"),
+    trackingNumber: varchar("trackingNumber", { length: 255 }),
+    refundAmount: decimal("refundAmount", { precision: 10, scale: 2 }),
+    refundedAt: timestamp("refundedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+    approvedAt: timestamp("approvedAt"),
+    rejectedAt: timestamp("rejectedAt"),
+    receivedAt: timestamp("receivedAt"),
+  },
+  (table) => ({
+    orderIdIdx: index("orderId_idx").on(table.orderId),
+    partnerIdIdx: index("partnerId_idx").on(table.partnerId),
+    statusIdx: index("status_idx").on(table.status),
+  })
+);
+
+// Return items table
+export const returnItems = mysqlTable(
+  "return_items",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    returnId: int("returnId").notNull(),
+    productId: int("productId").notNull(),
+    quantity: int("quantity").notNull(),
+    reason: returnReasonEnum.notNull(),
+    reasonDetails: text("reasonDetails"),
+    unitPrice: decimal("unitPrice", { precision: 10, scale: 2 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    returnIdIdx: index("returnId_idx").on(table.returnId),
+    productIdIdx: index("productId_idx").on(table.productId),
+  })
+);
+
+// Return photos table
+export const returnPhotos = mysqlTable(
+  "return_photos",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    returnId: int("returnId").notNull(),
+    photoUrl: varchar("photoUrl", { length: 512 }).notNull(),
+    photoKey: varchar("photoKey", { length: 512 }).notNull(),
+    description: text("description"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    returnIdIdx: index("returnId_idx").on(table.returnId),
+  })
+);
+
+export type Return = typeof returns.$inferSelect;
+export type InsertReturn = typeof returns.$inferInsert;
+
+export type ReturnItem = typeof returnItems.$inferSelect;
+export type InsertReturnItem = typeof returnItems.$inferInsert;
+
+export type ReturnPhoto = typeof returnPhotos.$inferSelect;
+export type InsertReturnPhoto = typeof returnPhotos.$inferInsert;
+

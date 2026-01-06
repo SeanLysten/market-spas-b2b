@@ -890,3 +890,37 @@
 - [ ] Implémenter le polling ou WebSocket pour temps réel
 - [ ] Créer l'interface admin pour répondre aux chats
 - [ ] Ajouter les notifications de nouveaux messages
+
+
+## Gestion des retours en ligne
+
+### Base de données
+- [x] Créer la table returns (id, orderId, partnerId, status, reason, notes)
+- [x] Créer la table return_items (id, returnId, productId, quantity, reason)
+- [x] Créer la table return_photos (id, returnId, photoUrl)
+- [x] Créer l'enum return_status (REQUESTED, APPROVED, REJECTED, IN_TRANSIT, RECEIVED, REFUNDED)
+- [x] Créer l'enum return_reason (DEFECTIVE, WRONG_ITEM, NOT_AS_DESCRIBED, CHANGED_MIND, OTHER)
+
+### Backend
+- [x] Créer les fonctions DB (createReturn, getReturns, updateReturnStatus, addReturnNote)
+- [x] Créer la route returns.create avec upload photos
+- [x] Créer la route returns.list avec filtres
+- [x] Créer la route returns.getById
+- [x] Créer la route returns.updateStatus (admin)
+- [x] Créer la route returns.addNote
+
+### Frontend partenaire
+- [ ] Créer le composant ReturnRequestDialog dans Orders.tsx
+- [ ] Créer la page Returns.tsx pour le suivi
+- [ ] Implémenter l'upload de photos
+- [ ] Afficher le timeline de statut
+
+### Frontend admin
+- [ ] Créer la page AdminReturns.tsx
+- [ ] Implémenter la gestion des statuts
+- [ ] Afficher les photos et détails
+
+### Tests
+- [ ] Tester la création de retour
+- [ ] Tester le changement de statut
+- [ ] Tester l'upload de photos

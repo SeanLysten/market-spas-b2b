@@ -3468,3 +3468,235 @@ export async function getProductBySKU(sku: string) {
   
   return result[0] || null;
 }
+
+// ============================================
+// RETURNS
+// ============================================
+
+export async function createReturn(data: {
+  orderId: number;
+  partnerId: number;
+  items: Array<{
+    productId: number;
+    quantity: number;
+    reason: string;
+    reasonDetails?: string;
+    unitPrice?: number;
+  }>;
+  notes?: string;
+  photos?: Array<{ url: string; key: string; description?: string }>;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Calculate total amount
+  const totalAmount = data.items.reduce((sum, item) => {
+    return sum + (item.unitPrice || 0) * item.quantity;
+  }, 0);
+  
+  // Import schema for returns
+  const { returns: returnsTable, returnItems: returnItemsTable, returnPhotos: returnPhotosTable } = await import("../drizzle/schema");
+  
+  // Create return
+  const [returnResult] = await db.insert(returnsTable).values({
+    orderId: data.orderId,
+    partnerId: data.partnerId,
+    status: "REQUESTED",
+    totalAmount: totalAmount.toString(),
+    notes: data.notes,
+  });
+  
+  const returnId = Number(returnResult.insertId);
+  
+  // Create return items
+  if (data.items.length > 0) {
+    await db.insert(returnItemsTable).values(
+      data.items.map((item) => ({
+        returnId,
+        productId: item.productId,
+        quantity: item.quantity,
+        reason: item.reason as any,
+        reasonDetails: item.reasonDetails,
+        unitPrice: item.unitPrice?.toString(),
+      }))
+    );
+  }
+  
+  // Create return photos
+  if (data.photos && data.photos.length > 0) {
+    await db.insert(returnPhotosTable).values(
+      data.photos.map((photo) => ({
+        returnId,
+        photoUrl: photo.url,
+        photoKey: photo.key,
+        description: photo.description,
+      }))
+    );
+  }
+  
+  return returnId;
+}
+
+export async function getReturns(filters?: {
+  partnerId?: number;
+  status?: string;
+  orderId?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { returns: returnsTable } = await import("../drizzle/schema");
+  
+  let query = db
+    .select({
+      return: returnsTable,
+      order: orders,
+      partner: partners,
+    })
+    .from(returnsTable)
+    .leftJoin(orders, eq(returnsTable.orderId, orders.id))
+    .leftJoin(partners, eq(returnsTable.partnerId, partners.id));
+  
+  const conditions = [];
+  if (filters?.partnerId) {
+    conditions.push(eq(returnsTable.partnerId, filters.partnerId));
+  }
+  
+  if (filters?.status) {
+    conditions.push(eq(returnsTable.status, filters.status as any));
+  }
+  
+  if (filters?.orderId) {
+    conditions.push(eq(returnsTable.orderId, filters.orderId));
+  }
+  
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  
+  const results = await query;
+  return results;
+}
+
+export async function getReturnById(returnId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { returns: returnsTable, returnItems: returnItemsTable, returnPhotos: returnPhotosTable } = await import("../drizzle/schema");
+  
+  const [returnData] = await db
+    .select({
+      return: returnsTable,
+      order: orders,
+      partner: partners,
+    })
+    .from(returnsTable)
+    .leftJoin(orders, eq(returnsTable.orderId, orders.id))
+    .leftJoin(partners, eq(returnsTable.partnerId, partners.id))
+    .where(eq(returnsTable.id, returnId));
+  
+  if (!returnData) return null;
+  
+  // Get return items with product details
+  const items = await db
+    .select({
+      item: returnItemsTable,
+      product: products,
+    })
+    .from(returnItemsTable)
+    .leftJoin(products, eq(returnItemsTable.productId, products.id))
+    .where(eq(returnItemsTable.returnId, returnId));
+  
+  // Get return photos
+  const photos = await db
+    .select()
+    .from(returnPhotosTable)
+    .where(eq(returnPhotosTable.returnId, returnId));
+  
+  return {
+    ...returnData,
+    items,
+    photos,
+  };
+}
+
+export async function updateReturnStatus(
+  returnId: number,
+  status: string,
+  adminNotes?: string,
+  refundAmount?: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { returns: returnsTable } = await import("../drizzle/schema");
+  
+  const updates: any = {
+    status: status as any,
+    updatedAt: new Date(),
+  };
+  
+  if (adminNotes) {
+    updates.adminNotes = adminNotes;
+  }
+  
+  if (refundAmount !== undefined) {
+    updates.refundAmount = refundAmount.toString();
+  }
+  
+  // Set timestamp based on status
+  if (status === "APPROVED") {
+    updates.approvedAt = new Date();
+  } else if (status === "REJECTED") {
+    updates.rejectedAt = new Date();
+  } else if (status === "RECEIVED") {
+    updates.receivedAt = new Date();
+  } else if (status === "REFUNDED") {
+    updates.refundedAt = new Date();
+  }
+  
+  await db
+    .update(returnsTable)
+    .set(updates)
+    .where(eq(returnsTable.id, returnId));
+  
+  return true;
+}
+
+export async function addReturnNote(returnId: number, note: string, isAdmin: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { returns: returnsTable } = await import("../drizzle/schema");
+  
+  const [existing] = await db
+    .select()
+    .from(returnsTable)
+    .where(eq(returnsTable.id, returnId));
+  
+  if (!existing) return false;
+  
+  if (isAdmin) {
+    const currentNotes = existing.adminNotes || "";
+    const newNotes = currentNotes
+      ? `${currentNotes}\n---\n${new Date().toISOString()}: ${note}`
+      : `${new Date().toISOString()}: ${note}`;
+    
+    await db
+      .update(returnsTable)
+      .set({ adminNotes: newNotes })
+      .where(eq(returnsTable.id, returnId));
+  } else {
+    const currentNotes = existing.notes || "";
+    const newNotes = currentNotes
+      ? `${currentNotes}\n---\n${new Date().toISOString()}: ${note}`
+      : `${new Date().toISOString()}: ${note}`;
+    
+    await db
+      .update(returnsTable)
+      .set({ notes: newNotes })
+      .where(eq(returnsTable.id, returnId));
+  }
+  
+  return true;
+}
