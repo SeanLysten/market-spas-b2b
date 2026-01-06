@@ -1551,3 +1551,72 @@ export type InsertForumTopic = typeof forumTopics.$inferInsert;
 export type ForumReply = typeof forumReplies.$inferSelect;
 export type InsertForumReply = typeof forumReplies.$inferInsert;
 
+// ============================================
+// TEAM MANAGEMENT
+// ============================================
+
+export const teamRoleEnum = mysqlEnum("team_role", [
+  "OWNER",
+  "SALES_REP",
+  "ORDER_MANAGER",
+  "ACCOUNTANT",
+  "FULL_MANAGER",
+]);
+
+export const invitationStatusEnum = mysqlEnum("invitation_status", [
+  "PENDING",
+  "ACCEPTED",
+  "EXPIRED",
+  "CANCELLED",
+]);
+
+// Team invitations
+export const teamInvitations = mysqlTable(
+  "team_invitations",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    email: varchar("email", { length: 255 }).notNull(),
+    partnerId: int("partnerId").notNull(),
+    role: teamRoleEnum.notNull(),
+    permissions: text("permissions"), // JSON string for custom permissions
+    invitedBy: int("invitedBy").notNull(),
+    status: invitationStatusEnum.default("PENDING").notNull(),
+    token: varchar("token", { length: 255 }).notNull(),
+    expiresAt: timestamp("expiresAt").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    acceptedAt: timestamp("acceptedAt"),
+  },
+  (table) => ({
+    emailIdx: index("email_idx").on(table.email),
+    partnerIdIdx: index("partnerId_idx").on(table.partnerId),
+    tokenIdx: index("token_idx").on(table.token),
+    statusIdx: index("status_idx").on(table.status),
+  })
+);
+
+// Team members (users linked to partners with specific roles)
+export const teamMembers = mysqlTable(
+  "team_members",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    partnerId: int("partnerId").notNull(),
+    role: teamRoleEnum.notNull(),
+    permissions: text("permissions"), // JSON string for granular permissions
+    addedBy: int("addedBy").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("userId_idx").on(table.userId),
+    partnerIdIdx: index("partnerId_idx").on(table.partnerId),
+    uniqueUserPartner: unique("unique_user_partner").on(table.userId, table.partnerId),
+  })
+);
+
+export type TeamInvitation = typeof teamInvitations.$inferSelect;
+export type InsertTeamInvitation = typeof teamInvitations.$inferInsert;
+
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type InsertTeamMember = typeof teamMembers.$inferInsert;
+

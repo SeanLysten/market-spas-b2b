@@ -1569,6 +1569,133 @@ export const appRouter = router({
         }),
     }),
   }),
+
+  // ============================================
+  // TEAM MANAGEMENT
+  // ============================================
+  team: router({
+    // List team members
+    list: protectedProcedure.query(async ({ ctx }) => {
+      if (!ctx.user.partnerId) {
+        throw new Error("User is not associated with a partner");
+      }
+      return await db.getTeamMembers(ctx.user.partnerId);
+    }),
+
+    // List pending invitations
+    listInvitations: protectedProcedure.query(async ({ ctx }) => {
+      if (!ctx.user.partnerId) {
+        throw new Error("User is not associated with a partner");
+      }
+      return await db.getTeamInvitations(ctx.user.partnerId);
+    }),
+
+    // Invite a team member
+    invite: protectedProcedure
+      .input(
+        z.object({
+          email: z.string().email(),
+          role: z.enum(["SALES_REP", "ORDER_MANAGER", "ACCOUNTANT", "FULL_MANAGER"]),
+          customPermissions: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user.partnerId) {
+          throw new Error("User is not associated with a partner");
+        }
+
+        // Check if user has permission to invite
+        const member = await db.getTeamMember(ctx.user.id, ctx.user.partnerId);
+        if (member) {
+          const permissions = member.permissions ? JSON.parse(member.permissions) : null;
+          if (!permissions?.team?.invite) {
+            throw new Error("You don't have permission to invite team members");
+          }
+        } else if (ctx.user.role !== "PARTNER_ADMIN") {
+          throw new Error("Only partner admins can invite team members");
+        }
+
+        return await db.createTeamInvitation({
+          email: input.email,
+          partnerId: ctx.user.partnerId,
+          role: input.role,
+          permissions: input.customPermissions || null,
+          invitedBy: ctx.user.id,
+        });
+      }),
+
+    // Cancel invitation
+    cancelInvitation: protectedProcedure
+      .input(z.object({ invitationId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user.partnerId) {
+          throw new Error("User is not associated with a partner");
+        }
+        return await db.cancelTeamInvitation(input.invitationId, ctx.user.partnerId);
+      }),
+
+    // Update member permissions
+    updatePermissions: protectedProcedure
+      .input(
+        z.object({
+          memberId: z.number(),
+          role: z.enum(["SALES_REP", "ORDER_MANAGER", "ACCOUNTANT", "FULL_MANAGER", "OWNER"]),
+          permissions: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user.partnerId) {
+          throw new Error("User is not associated with a partner");
+        }
+
+        // Check if user has permission to manage team
+        const member = await db.getTeamMember(ctx.user.id, ctx.user.partnerId);
+        if (member) {
+          const permissions = member.permissions ? JSON.parse(member.permissions) : null;
+          if (!permissions?.team?.manage) {
+            throw new Error("You don't have permission to manage team members");
+          }
+        } else if (ctx.user.role !== "PARTNER_ADMIN") {
+          throw new Error("Only partner admins can manage team members");
+        }
+
+        return await db.updateTeamMemberPermissions({
+          id: input.memberId,
+          partnerId: ctx.user.partnerId,
+          role: input.role,
+          permissions: input.permissions || null,
+        });
+      }),
+
+    // Remove team member
+    remove: protectedProcedure
+      .input(z.object({ memberId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user.partnerId) {
+          throw new Error("User is not associated with a partner");
+        }
+
+        // Check if user has permission to manage team
+        const member = await db.getTeamMember(ctx.user.id, ctx.user.partnerId);
+        if (member) {
+          const permissions = member.permissions ? JSON.parse(member.permissions) : null;
+          if (!permissions?.team?.manage) {
+            throw new Error("You don't have permission to remove team members");
+          }
+        } else if (ctx.user.role !== "PARTNER_ADMIN") {
+          throw new Error("Only partner admins can remove team members");
+        }
+
+        return await db.removeTeamMember(input.memberId, ctx.user.partnerId);
+      }),
+
+    // Accept invitation (public route with token)
+    acceptInvitation: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .mutation(async ({ input }) => {
+        return await db.acceptTeamInvitation(input.token);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

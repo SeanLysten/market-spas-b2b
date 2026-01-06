@@ -3176,3 +3176,277 @@ function getWeekNumber(date: Date): number {
   return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
 }
 
+
+// ============================================
+// TEAM MANAGEMENT
+// ============================================
+
+import { teamInvitations, teamMembers } from "../drizzle/schema";
+import { getDefaultPermissions, generateInvitationToken } from "./team-permissions";
+
+/**
+ * Get all team members for a partner
+ */
+export async function getTeamMembers(partnerId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select({
+      id: teamMembers.id,
+      userId: teamMembers.userId,
+      partnerId: teamMembers.partnerId,
+      role: teamMembers.role,
+      permissions: teamMembers.permissions,
+      addedBy: teamMembers.addedBy,
+      createdAt: teamMembers.createdAt,
+      updatedAt: teamMembers.updatedAt,
+      user: {
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        avatar: users.avatar,
+      },
+    })
+    .from(teamMembers)
+    .leftJoin(users, eq(teamMembers.userId, users.id))
+    .where(eq(teamMembers.partnerId, partnerId))
+    .orderBy(desc(teamMembers.createdAt));
+}
+
+/**
+ * Get a specific team member
+ */
+export async function getTeamMember(userId: number, partnerId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .select()
+    .from(teamMembers)
+    .where(and(eq(teamMembers.userId, userId), eq(teamMembers.partnerId, partnerId)))
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+/**
+ * Get all pending invitations for a partner
+ */
+export async function getTeamInvitations(partnerId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select({
+      id: teamInvitations.id,
+      email: teamInvitations.email,
+      partnerId: teamInvitations.partnerId,
+      role: teamInvitations.role,
+      permissions: teamInvitations.permissions,
+      invitedBy: teamInvitations.invitedBy,
+      status: teamInvitations.status,
+      token: teamInvitations.token,
+      expiresAt: teamInvitations.expiresAt,
+      createdAt: teamInvitations.createdAt,
+      acceptedAt: teamInvitations.acceptedAt,
+      inviter: {
+        id: users.id,
+        email: users.email,
+        name: users.name,
+      },
+    })
+    .from(teamInvitations)
+    .leftJoin(users, eq(teamInvitations.invitedBy, users.id))
+    .where(eq(teamInvitations.partnerId, partnerId))
+    .orderBy(desc(teamInvitations.createdAt));
+}
+
+/**
+ * Create a team invitation
+ */
+export async function createTeamInvitation(data: {
+  email: string;
+  partnerId: number;
+  role: string;
+  permissions: string | null;
+  invitedBy: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const token = generateInvitationToken();
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7); // Expire in 7 days
+
+  // Get default permissions if not provided
+  let permissionsJson = data.permissions;
+  if (!permissionsJson) {
+    const defaultPerms = getDefaultPermissions(data.role as any);
+    permissionsJson = JSON.stringify(defaultPerms);
+  }
+
+  const result = await db.insert(teamInvitations).values({
+    email: data.email,
+    partnerId: data.partnerId,
+    role: data.role as any,
+    permissions: permissionsJson,
+    invitedBy: data.invitedBy,
+    status: "PENDING",
+    token,
+    expiresAt,
+  });
+
+  return {
+    id: result[0].insertId,
+    token,
+    expiresAt,
+  };
+}
+
+/**
+ * Cancel a team invitation
+ */
+export async function cancelTeamInvitation(invitationId: number, partnerId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(teamInvitations)
+    .set({ status: "CANCELLED" })
+    .where(and(eq(teamInvitations.id, invitationId), eq(teamInvitations.partnerId, partnerId)));
+
+  return { success: true };
+}
+
+/**
+ * Accept a team invitation
+ */
+export async function acceptTeamInvitation(token: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Find the invitation
+  const invitation = await db
+    .select()
+    .from(teamInvitations)
+    .where(and(eq(teamInvitations.token, token), eq(teamInvitations.status, "PENDING")))
+    .limit(1);
+
+  if (!invitation[0]) {
+    throw new Error("Invitation not found or already used");
+  }
+
+  const inv = invitation[0];
+
+  // Check if expired
+  if (new Date() > inv.expiresAt) {
+    await db
+      .update(teamInvitations)
+      .set({ status: "EXPIRED" })
+      .where(eq(teamInvitations.id, inv.id));
+    throw new Error("Invitation has expired");
+  }
+
+  // Check if user already exists with this email
+  const existingUser = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, inv.email))
+    .limit(1);
+
+  let userId: number;
+
+  if (existingUser[0]) {
+    userId = existingUser[0].id;
+
+    // Check if already a member
+    const existingMember = await db
+      .select()
+      .from(teamMembers)
+      .where(and(eq(teamMembers.userId, userId), eq(teamMembers.partnerId, inv.partnerId)))
+      .limit(1);
+
+    if (existingMember[0]) {
+      throw new Error("User is already a team member");
+    }
+  } else {
+    // Create a new user (they'll complete registration later)
+    const newUser = await db.insert(users).values({
+      openId: `team-invite-${inv.id}-${Date.now()}`, // Temporary openId
+      email: inv.email,
+      name: inv.email.split("@")[0],
+      role: "PARTNER_USER",
+      partnerId: inv.partnerId,
+    });
+    userId = newUser[0].insertId;
+  }
+
+  // Create team member
+  await db.insert(teamMembers).values({
+    userId,
+    partnerId: inv.partnerId,
+    role: inv.role,
+    permissions: inv.permissions,
+    addedBy: inv.invitedBy,
+  });
+
+  // Mark invitation as accepted
+  await db
+    .update(teamInvitations)
+    .set({
+      status: "ACCEPTED",
+      acceptedAt: new Date(),
+    })
+    .where(eq(teamInvitations.id, inv.id));
+
+  return {
+    success: true,
+    userId,
+    partnerId: inv.partnerId,
+  };
+}
+
+/**
+ * Update team member permissions
+ */
+export async function updateTeamMemberPermissions(data: {
+  id: number;
+  partnerId: number;
+  role: string;
+  permissions: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Get default permissions if not provided
+  let permissionsJson = data.permissions;
+  if (!permissionsJson) {
+    const defaultPerms = getDefaultPermissions(data.role as any);
+    permissionsJson = JSON.stringify(defaultPerms);
+  }
+
+  await db
+    .update(teamMembers)
+    .set({
+      role: data.role as any,
+      permissions: permissionsJson,
+    })
+    .where(and(eq(teamMembers.id, data.id), eq(teamMembers.partnerId, data.partnerId)));
+
+  return { success: true };
+}
+
+/**
+ * Remove a team member
+ */
+export async function removeTeamMember(memberId: number, partnerId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .delete(teamMembers)
+    .where(and(eq(teamMembers.id, memberId), eq(teamMembers.partnerId, partnerId)));
+
+  return { success: true };
+}

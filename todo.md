@@ -780,3 +780,47 @@
 - [x] Tester le téléchargement de fichiers
 - [x] Valider la prévisualisation des images et PDFs
 - [x] Créer 6 ressources de test (catalogues, guides, vidéos, PLV)
+
+
+## Système de gestion d'équipe partenaire - Session actuelle
+
+### Recherche et conception
+- [x] Rechercher les meilleures pratiques pour les rôles B2B (permissions granulaires)
+- [x] Identifier les rôles les plus fréquents (commercial leads, comptable, gestionnaire commandes)
+- [x] Définir la matrice de permissions par rôle
+
+### Base de données
+- [x] Créer la table team_invitations (email, role, permissions, status)
+- [x] Créer la table team_members (user_id, partner_id, role, permissions)
+- [x] Ajouter les enums team_role et invitation_status
+
+### Backend
+- [x] Créer les routes tRPC pour inviter un membre (team.invite)
+- [x] Créer les routes tRPC pour lister les membres (team.list)
+- [x] Créer les routes tRPC pour modifier les permissions (team.updatePermissions)
+- [x] Créer les routes tRPC pour supprimer un membre (team.remove)
+- [x] Implémenter la logique d'invitation par email
+- [x] Implémenter la validation des permissions par route
+- [x] Créer le fichier team-permissions.ts avec helpers
+- [x] Créer les fonctions DB (getTeamMembers, createTeamInvitation, etc.)
+
+### Frontend
+- [x] Créer l'onglet "Équipe" dans la page Profile.tsx
+- [x] Créer le formulaire d'invitation avec sélection de rôle
+- [x] Créer la liste des membres avec leurs permissions
+- [x] Afficher les rôles et descriptions
+- [x] Ajouter la gestion des invitations en attente
+- [x] Ajouter les actions supprimer membre et annuler invitation
+
+### Système d'invitation
+- [x] Créer la page AcceptInvitation.tsx
+- [x] Ajouter la route /accept-invitation dans App.tsx
+- [x] Implémenter la logique d'acceptation avec token
+- [x] Gérer les cas d'erreur (token invalide, expiré, etc.)
+
+### Tests
+- [x] Tester les différents niveaux de permissions (10 tests passés)
+- [x] Vérifier que les permissions par défaut sont correctes pour chaque rôle
+- [x] Tester la hiérarchie des rôles (OWNER > FULL_MANAGER > ORDER_MANAGER > SALES_REP)
+- [x] Tester la génération de tokens d'invitation
+- [x] Tester la sérialisation JSON des permissions
