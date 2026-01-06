@@ -945,13 +945,12 @@
 - [x] Créer la route afterSales.addNote
 
 ### Frontend partenaire
-- [ ] Créer la page AfterSales.tsx pour la liste des SAV
-- [ ] Créer le composant AfterSalesForm.tsx pour déclarer un SAV
-- [ ] Implémenter l'upload de photos et vidéos
-- [ ] Afficher le timeline de statut
-- [ ] Ajouter l'onglet SAV dans la navigation
-
-### Frontend admin
+- [x] Créer la page AfterSales.tsx pour la liste des SAV
+- [x] Créer le formulaire de déclaration SAV intégré dans un Dialog
+- [x] Implémenter l'upload de photos/vidéos avec prévisualisation
+- [x] Ajouter les filtres par statut et urgence
+- [x] Ajouter la route /after-sales dans App.tsx
+- [x] Implémenter la création de SAV avec upload vers S3end admin
 - [ ] Créer la page AdminAfterSales.tsx
 - [ ] Implémenter la gestion des statuts
 - [ ] Implémenter l'assignation de technicien

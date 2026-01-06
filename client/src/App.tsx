@@ -16,6 +16,7 @@ import AdminReports from "@/pages/admin/AdminReports";
 import AdminOrders from "@/pages/admin/AdminOrders";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminLeads from "@/pages/admin/AdminLeads";
+import AdminAfterSales from "@/pages/admin/AdminAfterSales";
 import AdminTechnicalResources from "@/pages/admin/TechnicalResources";
 
 import Dashboard from "./pages/Dashboard";
@@ -33,6 +34,7 @@ import OrderTracking from "./pages/OrderTracking";
 import Favorites from "./pages/Favorites";
 import Calendar from "./pages/Calendar";
 import Leads from "./pages/Leads";
+import AfterSales from "./pages/AfterSales";
 import TechnicalResources from "./pages/TechnicalResources";
 import ForumNewTopic from "./pages/ForumNewTopic";
 import ForumTopicDetail from "./pages/ForumTopicDetail";
@@ -57,6 +59,7 @@ function Router() {
       <Route path="/favorites" component={Favorites} />
       <Route path="/calendar" component={Calendar} />
       <Route path="/leads" component={Leads} />
+      <Route path="/after-sales" component={AfterSales} />
       <Route path="/technical-resources" component={TechnicalResources} />
       <Route path="/technical-resources/forum/new" component={ForumNewTopic} />
       <Route path="/technical-resources/forum/:id" component={ForumTopicDetail} />
@@ -72,6 +75,7 @@ function Router() {
       <Route path="/admin/orders" component={AdminOrders} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin/leads" component={AdminLeads} />
+      <Route path="/admin/after-sales" component={AdminAfterSales} />
       <Route path="/admin/technical-resources" component={AdminTechnicalResources} />
 
       <Route path="/404" component={NotFound} />
