@@ -1,0 +1,73 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'after_sales_services' ORDER BY ORDINAL_POSITION",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'after_sales_services' ORDER BY ORDINAL_POSITION",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "ticketNumber"
+    },
+    {
+      "COLUMN_NAME": "partnerId"
+    },
+    {
+      "COLUMN_NAME": "productId"
+    },
+    {
+      "COLUMN_NAME": "serialNumber"
+    },
+    {
+      "COLUMN_NAME": "issueType"
+    },
+    {
+      "COLUMN_NAME": "description"
+    },
+    {
+      "COLUMN_NAME": "urgency"
+    },
+    {
+      "COLUMN_NAME": "status"
+    },
+    {
+      "COLUMN_NAME": "customerName"
+    },
+    {
+      "COLUMN_NAME": "customerPhone"
+    },
+    {
+      "COLUMN_NAME": "customerEmail"
+    },
+    {
+      "COLUMN_NAME": "customerAddress"
+    },
+    {
+      "COLUMN_NAME": "installationDate"
+    },
+    {
+      "COLUMN_NAME": "assignedTechnicianId"
+    },
+    {
+      "COLUMN_NAME": "assignedAt"
+    },
+    {
+      "COLUMN_NAME": "resolutionNotes"
+    },
+    {
+      "COLUMN_NAME": "resolvedAt"
+    },
+    {
+      "COLUMN_NAME": "closedAt"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    },
+    {
+      "COLUMN_NAME": "updatedAt"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\nticketNumber\npartnerId\nproductId\nserialNumber\nissueType\ndescription\nurgency\nstatus\ncustomerName\ncustomerPhone\ncustomerEmail\ncustomerAddress\ninstallationDate\nassignedTechnicianId\nassignedAt\nresolutionNotes\nresolvedAt\nclosedAt\ncreatedAt\nupdatedAt\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

@@ -1721,7 +1721,7 @@ export type InsertReturnPhoto = typeof returnPhotos.$inferInsert;
 // ============================================
 
 // SAV status enum
-export const savStatusEnum = mysqlEnum("sav_status", [
+export const savStatusEnum = mysqlEnum("status", [
   "NEW",
   "IN_PROGRESS",
   "WAITING_PARTS",
@@ -1730,14 +1730,14 @@ export const savStatusEnum = mysqlEnum("sav_status", [
 ]);
 
 // SAV urgency enum
-export const savUrgencyEnum = mysqlEnum("sav_urgency", [
+export const savUrgencyEnum = mysqlEnum("urgency", [
   "NORMAL",
   "URGENT",
   "CRITICAL",
 ]);
 
 // SAV issue type enum
-export const savIssueTypeEnum = mysqlEnum("sav_issue_type", [
+export const savIssueTypeEnum = mysqlEnum("issueType", [
   "TECHNICAL",
   "LEAK",
   "ELECTRICAL",
