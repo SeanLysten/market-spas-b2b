@@ -15,15 +15,53 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export default function Resources() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
+  const [previewResource, setPreviewResource] = useState<any>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const { data: resources, isLoading } = trpc.resources.list.useQuery({
     category: categoryFilter,
     limit: 50,
   });
+
+  const downloadMutation = trpc.resources.download.useMutation();
+
+  const handleView = (resource: any) => {
+    // For images and PDFs, show preview modal
+    if (resource.fileType.includes('image') || resource.fileType.includes('pdf')) {
+      setPreviewResource(resource);
+      setPreviewOpen(true);
+    } else {
+      // For other files, open in new tab
+      window.open(resource.fileUrl, '_blank');
+    }
+  };
+
+  const handleDownload = async (id: number, fileUrl: string, title: string) => {
+    try {
+      // Increment download count
+      await downloadMutation.mutateAsync({ id });
+      
+      // Trigger download
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = title;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Téléchargement démarré');
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Erreur lors du téléchargement');
+    }
+  };
 
   const getCategoryIcon = (category: string) => {
     const icons: Record<string, any> = {
@@ -197,11 +235,21 @@ export default function Resources() {
                       </span>
                     </div>
                     <div className="flex gap-2 pt-2">
-                      <Button variant="outline" className="flex-1" size="sm">
+                      <Button 
+                        variant="outline" 
+                        className="flex-1" 
+                        size="sm"
+                        onClick={() => handleView(resource)}
+                      >
                         <Eye className="w-4 h-4 mr-2" />
                         Voir
                       </Button>
-                      <Button className="flex-1" size="sm">
+                      <Button 
+                        className="flex-1" 
+                        size="sm"
+                        onClick={() => handleDownload(resource.id, resource.fileUrl, resource.title)}
+                        disabled={downloadMutation.isPending}
+                      >
                         <Download className="w-4 h-4 mr-2" />
                         Télécharger
                       </Button>
@@ -237,6 +285,47 @@ export default function Resources() {
             </div>
           </Card>
         )}
+
+        {/* Preview Modal */}
+        <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+            <DialogHeader>
+              <DialogTitle>{previewResource?.title}</DialogTitle>
+            </DialogHeader>
+            <div className="mt-4">
+              {previewResource?.fileType.includes('image') ? (
+                <img 
+                  src={previewResource.fileUrl} 
+                  alt={previewResource.title}
+                  className="w-full h-auto rounded-lg"
+                />
+              ) : previewResource?.fileType.includes('pdf') ? (
+                <iframe
+                  src={previewResource.fileUrl}
+                  className="w-full h-[70vh] rounded-lg"
+                  title={previewResource.title}
+                />
+              ) : null}
+              <div className="flex gap-2 mt-4">
+                <Button 
+                  onClick={() => handleDownload(previewResource.id, previewResource.fileUrl, previewResource.title)}
+                  disabled={downloadMutation.isPending}
+                  className="flex-1"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Télécharger
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setPreviewOpen(false)}
+                  className="flex-1"
+                >
+                  Fermer
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

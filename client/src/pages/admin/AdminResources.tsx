@@ -169,23 +169,57 @@ export default function AdminResources() {
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
                     <Label htmlFor="file">Fichier *</Label>
-                    <div className="flex items-center gap-2">
+                    <div 
+                      className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const file = e.dataTransfer.files?.[0];
+                        if (file) {
+                          if (file.size > 50 * 1024 * 1024) {
+                            toast.error("Le fichier est trop volumineux (max 50MB)");
+                            return;
+                          }
+                          setSelectedFile(file);
+                        }
+                      }}
+                      onClick={() => document.getElementById('file')?.click()}
+                    >
                       <Input
                         id="file"
                         type="file"
                         onChange={handleFileSelect}
                         accept=".pdf,.doc,.docx,.ppt,.pptx,.mp4,.mov,.jpg,.jpeg,.png,.zip"
+                        className="hidden"
                         required
                       />
-                      {selectedFile && (
-                        <span className="text-sm text-muted-foreground">
-                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                        </span>
+                      {selectedFile ? (
+                        <div className="space-y-2">
+                          <Upload className="w-8 h-8 mx-auto text-green-500" />
+                          <p className="font-medium">{selectedFile.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                          {selectedFile.type.includes('image') && (
+                            <img 
+                              src={URL.createObjectURL(selectedFile)} 
+                              alt="Preview" 
+                              className="max-w-xs mx-auto rounded-lg mt-2"
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">
+                            Glissez-déposez un fichier ou cliquez pour sélectionner
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            PDF, DOC, PPT, MP4, JPG, PNG, ZIP (max 50MB)
+                          </p>
+                        </div>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Formats acceptés : PDF, DOC, PPT, MP4, JPG, PNG, ZIP (max 50MB)
-                    </p>
                   </div>
 
                   <div className="space-y-2">

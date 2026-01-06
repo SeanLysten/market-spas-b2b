@@ -748,3 +748,35 @@
 - [ ] Tests d'intégration pour les workflows complets
 - [ ] Tests de performance et optimisation
 - [ ] Documentation utilisateur complète
+
+
+## Système de ressources marketing - Session actuelle
+
+### Backend
+- [x] Vérifier le schéma de la table resources et ses relations
+- [x] Créer les routes tRPC pour les ressources (list, getById, create, update, delete)
+- [x] Implémenter l'upload de fichiers vers S3 avec storagePut
+- [x] Ajouter les fonctions DB pour gérer les ressources
+- [x] Ajouter la gestion des catégories de ressources
+
+### Admin Interface
+- [x] Créer AdminResources.tsx pour la gestion des ressources
+- [x] Implémenter le formulaire d'upload avec drag & drop
+- [x] Ajouter la gestion des catégories
+- [x] Créer l'interface de liste avec recherche et filtres
+- [x] Ajouter les actions d'édition et suppression
+
+### Partner Interface
+- [x] Connecter Resources.tsx au backend
+- [x] Implémenter la grille de ressources avec prévisualisation
+- [x] Ajouter les filtres par catégorie et type
+- [x] Implémenter le téléchargement de fichiers
+- [x] Ajouter la recherche de ressources
+- [x] Ajouter la prévisualisation des images et PDFs
+
+### Tests
+- [x] Tester l'upload de différents types de fichiers (PDF, images, vidéos)
+- [x] Vérifier les permissions (admin vs partenaire)
+- [x] Tester le téléchargement de fichiers
+- [x] Valider la prévisualisation des images et PDFs
+- [x] Créer 6 ressources de test (catalogues, guides, vidéos, PLV)
