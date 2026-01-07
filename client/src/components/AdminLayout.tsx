@@ -119,11 +119,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: Wrench,
     },
     {
-      name: "Statistiques SAV",
-      href: "/admin/after-sales/stats",
-      icon: TrendingUp,
-    },
-    {
       name: "Paramètres",
       href: "/admin/settings",
       icon: Settings,

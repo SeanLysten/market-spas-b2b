@@ -1151,3 +1151,19 @@
 - [x] Ajouter un sélecteur de partenaire dans le formulaire SAV
 - [x] Tester la création de ticket avec le nouveau formulaire
 - [x] Créer un checkpoint avec la correction
+
+
+## Session 7 janvier 2026 - Regroupement onglets SAV dashboard admin
+
+- [ ] Examiner la structure actuelle du dashboard admin
+- [ ] Fusionner les onglets "SAV" et "Statistiques SAV" en un seul onglet
+- [ ] Réorganiser le contenu pour afficher les statistiques et la liste SAV ensemble
+- [ ] Tester le nouveau dashboard et créer un checkpoint
+
+
+## Session 7 janvier 2026 - Regroupement onglets SAV
+
+- [x] Examiner la structure actuelle du dashboard admin
+- [x] Fusionner les onglets SAV et Statistiques SAV en un seul avec système d'onglets
+- [x] Supprimer l'ancien onglet Statistiques SAV du menu latéral
+- [x] Tester le nouveau dashboard et créer un checkpoint

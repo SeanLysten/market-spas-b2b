@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import AdminLayout from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -6,11 +6,37 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, AlertCircle, Clock, CheckCircle, XCircle, Package, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw } from "lucide-react";
+import { Search, AlertCircle, Clock, CheckCircle, XCircle, Package, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, BarChart3 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import AfterSalesDetail from "@/components/AfterSalesDetail";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Bar, Line, Pie } from "react-chartjs-2";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export default function AdminAfterSales() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,6 +91,11 @@ export default function AdminAfterSales() {
     orderBy,
     orderDirection,
   });
+
+  // Fetch statistics
+  const { data: statsData } = trpc.afterSales.stats.useQuery();
+  const { data: weeklyStats } = trpc.afterSales.weeklyStats.useQuery();
+  const { data: partners } = trpc.partners.list.useQuery({});
 
   // Update status mutation
   const updateStatusMutation = trpc.afterSales.updateStatus.useMutation({
@@ -142,6 +173,85 @@ export default function AdminAfterSales() {
     resolved: filteredServices.filter((s) => s.service.status === "RESOLVED").length,
   };
 
+  // Prepare chart data
+  const partnerStatsData = useMemo(() => {
+    if (!statsData?.byPartner || !partners) return null;
+    const partnerMap = new Map(partners.map(p => [p.id, p.companyName]));
+    return {
+      labels: statsData.byPartner.map(p => partnerMap.get(p.partnerId) || `Partner ${p.partnerId}`),
+      datasets: [{
+        label: "Nombre de tickets",
+        data: statsData.byPartner.map(p => p.count),
+        backgroundColor: "rgba(59, 130, 246, 0.5)",
+        borderColor: "rgba(59, 130, 246, 1)",
+        borderWidth: 1,
+      }],
+    };
+  }, [statsData?.byPartner, partners]);
+
+  const urgencyData = useMemo(() => {
+    if (!statsData?.byUrgency) return null;
+    const urgencyMap: Record<string, string> = { NORMAL: "Normal", URGENT: "Urgent", CRITICAL: "Critique" };
+    const colorMap: Record<string, string> = {
+      NORMAL: "rgba(107, 114, 128, 0.5)",
+      URGENT: "rgba(249, 115, 22, 0.5)",
+      CRITICAL: "rgba(239, 68, 68, 0.5)",
+    };
+    return {
+      labels: statsData.byUrgency.map(u => urgencyMap[u.urgency] || u.urgency),
+      datasets: [{
+        label: "Nombre de tickets",
+        data: statsData.byUrgency.map(u => u.count),
+        backgroundColor: statsData.byUrgency.map(u => colorMap[u.urgency] || "rgba(107, 114, 128, 0.5)"),
+        borderColor: statsData.byUrgency.map(u => colorMap[u.urgency]?.replace("0.5", "1") || "rgba(107, 114, 128, 1)"),
+        borderWidth: 1,
+      }],
+    };
+  }, [statsData?.byUrgency]);
+
+  const statusData = useMemo(() => {
+    if (!statsData?.byStatus) return null;
+    const statusMap: Record<string, string> = {
+      NEW: "Nouveau", IN_PROGRESS: "En cours", WAITING_PARTS: "Attente pièces",
+      RESOLVED: "Résolu", CLOSED: "Fermé",
+    };
+    return {
+      labels: statsData.byStatus.map(s => statusMap[s.status] || s.status),
+      datasets: [{
+        label: "Nombre de tickets",
+        data: statsData.byStatus.map(s => s.count),
+        backgroundColor: [
+          "rgba(59, 130, 246, 0.5)", "rgba(249, 115, 22, 0.5)",
+          "rgba(168, 85, 247, 0.5)", "rgba(34, 197, 94, 0.5)", "rgba(107, 114, 128, 0.5)",
+        ],
+        borderColor: [
+          "rgba(59, 130, 246, 1)", "rgba(249, 115, 22, 1)",
+          "rgba(168, 85, 247, 1)", "rgba(34, 197, 94, 1)", "rgba(107, 114, 128, 1)",
+        ],
+        borderWidth: 1,
+      }],
+    };
+  }, [statsData?.byStatus]);
+
+  const weeklyChartData = useMemo(() => {
+    if (!weeklyStats) return null;
+    return {
+      labels: weeklyStats.map(w => w.week || "N/A"),
+      datasets: [{
+        label: "Tickets créés",
+        data: weeklyStats.map(w => w.count),
+        borderColor: "rgba(59, 130, 246, 1)",
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        borderWidth: 2,
+        tension: 0.4,
+      }],
+    };
+  }, [weeklyStats]);
+
+  const resolvedCount = statsData?.byStatus?.find(s => s.status === "RESOLVED")?.count || 0;
+  const closedCount = statsData?.byStatus?.find(s => s.status === "CLOSED")?.count || 0;
+  const resolutionRate = statsData?.totalTickets ? Math.round(((resolvedCount + closedCount) / statsData.totalTickets) * 100) : 0;
+
   return (
     <AdminLayout>
       <div className="container mx-auto py-8">
@@ -150,6 +260,16 @@ export default function AdminAfterSales() {
         <p className="text-muted-foreground">Gérez toutes les demandes de service après-vente</p>
       </div>
 
+      <Tabs defaultValue="tickets" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="tickets">Liste des tickets</TabsTrigger>
+          <TabsTrigger value="stats">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Statistiques
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="tickets">
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <Card>
@@ -385,6 +505,162 @@ export default function AdminAfterSales() {
           })}
         </div>
       )}
+
+        </TabsContent>
+
+        <TabsContent value="stats">
+          {/* Key Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Tickets</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{statsData?.totalTickets || 0}</div>
+                <p className="text-xs text-muted-foreground mt-1">Tous les tickets SAV</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Critiques</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-red-600">
+                  {statsData?.byUrgency?.find(u => u.urgency === "CRITICAL")?.count || 0}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Tickets critiques</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Urgents</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-orange-600">
+                  {statsData?.byUrgency?.find(u => u.urgency === "URGENT")?.count || 0}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Tickets urgents</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Taux de Résolution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-green-600">{resolutionRate}%</div>
+                <p className="text-xs text-muted-foreground mt-1">Tickets résolus/fermés</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Tickets par Partenaire</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {partnerStatsData ? (
+                  <Bar
+                    data={partnerStatsData}
+                    options={{
+                      responsive: true,
+                      plugins: { legend: { position: "top" as const } },
+                      scales: { y: { beginAtZero: true } },
+                    }}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">Chargement...</div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Répartition par Urgence</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {urgencyData ? (
+                  <Pie
+                    data={urgencyData}
+                    options={{
+                      responsive: true,
+                      plugins: { legend: { position: "top" as const } },
+                    }}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">Chargement...</div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Répartition par Statut</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {statusData ? (
+                  <Pie
+                    data={statusData}
+                    options={{
+                      responsive: true,
+                      plugins: { legend: { position: "top" as const } },
+                    }}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">Chargement...</div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Évolution Hebdomadaire</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {weeklyChartData ? (
+                  <Line
+                    data={weeklyChartData}
+                    options={{
+                      responsive: true,
+                      plugins: { legend: { position: "top" as const } },
+                      scales: { y: { beginAtZero: true } },
+                    }}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">Chargement...</div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Status Breakdown Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Détail par Statut</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {statsData?.byStatus?.map(status => (
+                  <div key={status.status} className="flex justify-between items-center p-2 border rounded">
+                    <span>
+                      {status.status === "NEW" && "Nouveau"}
+                      {status.status === "IN_PROGRESS" && "En cours"}
+                      {status.status === "WAITING_PARTS" && "Attente pièces"}
+                      {status.status === "RESOLVED" && "Résolu"}
+                      {status.status === "CLOSED" && "Fermé"}
+                    </span>
+                    <Badge>{status.count}</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Detail Dialog */}
       {selectedServiceId && (
