@@ -1887,3 +1887,52 @@ export type InsertAfterSalesAssignmentHistory = typeof afterSalesAssignmentHisto
 
 export type ResponseTemplate = typeof responseTemplates.$inferSelect;
 export type InsertResponseTemplate = typeof responseTemplates.$inferInsert;
+
+// ============================================
+// NOTIFICATION PREFERENCES
+// ============================================
+
+export const notificationPreferences = mysqlTable(
+  "notification_preferences",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull().unique(),
+
+    // Order notifications
+    orderStatusChangedToast: boolean("orderStatusChangedToast").default(true),
+    orderStatusChangedEmail: boolean("orderStatusChangedEmail").default(true),
+    orderNewToast: boolean("orderNewToast").default(true),
+    orderNewEmail: boolean("orderNewEmail").default(true),
+
+    // After-sales notifications
+    savStatusChangedToast: boolean("savStatusChangedToast").default(true),
+    savStatusChangedEmail: boolean("savStatusChangedEmail").default(true),
+    savNewToast: boolean("savNewToast").default(true),
+    savNewEmail: boolean("savNewEmail").default(true),
+
+    // Lead notifications
+    leadNewToast: boolean("leadNewToast").default(true),
+    leadNewEmail: boolean("leadNewEmail").default(true),
+
+    // System notifications
+    systemAlertToast: boolean("systemAlertToast").default(true),
+    systemAlertEmail: boolean("systemAlertEmail").default(true),
+
+    // Stock notifications (admin only)
+    stockLowToast: boolean("stockLowToast").default(true),
+    stockLowEmail: boolean("stockLowEmail").default(true),
+
+    // Partner notifications (admin only)
+    partnerNewToast: boolean("partnerNewToast").default(true),
+    partnerNewEmail: boolean("partnerNewEmail").default(true),
+
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("userId_pref_idx").on(table.userId),
+  })
+);
+
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreferences = typeof notificationPreferences.$inferInsert;

@@ -2,10 +2,16 @@ import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
 export function useWebSocket() {
   const { user } = useAuth();
   const socketRef = useRef<Socket | null>(null);
+  
+  // Charger les préférences de notification de l'utilisateur
+  const { data: preferences } = trpc.notificationPreferences.get.useQuery(undefined, {
+    enabled: !!user,
+  });
 
   useEffect(() => {
     if (!user) return;
@@ -41,9 +47,12 @@ export function useWebSocket() {
       oldStatus: string;
       newStatus: string;
     }) => {
-      toast.success("Commande mise à jour", {
-        description: `La commande ${data.orderNumber} est maintenant ${getStatusLabel(data.newStatus)}`,
-      });
+      // Vérifier si l'utilisateur souhaite recevoir ce type de notification
+      if (preferences?.orderStatusChangedToast !== false) {
+        toast.success("Commande mise à jour", {
+          description: `La commande ${data.orderNumber} est maintenant ${getStatusLabel(data.newStatus)}`,
+        });
+      }
     });
 
     // Notifications de changement de statut SAV
@@ -53,9 +62,12 @@ export function useWebSocket() {
       oldStatus: string;
       newStatus: string;
     }) => {
-      toast.info("Ticket SAV mis à jour", {
-        description: `Le ticket ${data.ticketNumber} est maintenant ${getSavStatusLabel(data.newStatus)}`,
-      });
+      // Vérifier si l'utilisateur souhaite recevoir ce type de notification
+      if (preferences?.savStatusChangedToast !== false) {
+        toast.info("Ticket SAV mis à jour", {
+          description: `Le ticket ${data.ticketNumber} est maintenant ${getSavStatusLabel(data.newStatus)}`,
+        });
+      }
     });
 
     // Notifications de nouveau lead
@@ -64,9 +76,12 @@ export function useWebSocket() {
       customerName: string;
       city: string;
     }) => {
-      toast.success("Nouveau lead", {
-        description: `${data.customerName} de ${data.city}`,
-      });
+      // Vérifier si l'utilisateur souhaite recevoir ce type de notification
+      if (preferences?.leadNewToast !== false) {
+        toast.success("Nouveau lead", {
+          description: `${data.customerName} de ${data.city}`,
+        });
+      }
     });
 
     // Notifications de nouveau ticket SAV
@@ -75,9 +90,12 @@ export function useWebSocket() {
       ticketNumber: string;
       urgency: string;
     }) => {
-      toast.warning("Nouveau ticket SAV", {
-        description: `${data.ticketNumber} - Urgence: ${data.urgency}`,
-      });
+      // Vérifier si l'utilisateur souhaite recevoir ce type de notification
+      if (preferences?.savNewToast !== false) {
+        toast.warning("Nouveau ticket SAV", {
+          description: `${data.ticketNumber} - Urgence: ${data.urgency}`,
+        });
+      }
     });
 
     // Notifications de nouvelle commande
@@ -86,9 +104,12 @@ export function useWebSocket() {
       orderNumber: string;
       totalAmount: number;
     }) => {
-      toast.success("Nouvelle commande", {
-        description: `${data.orderNumber} - ${data.totalAmount.toFixed(2)} €`,
-      });
+      // Vérifier si l'utilisateur souhaite recevoir ce type de notification
+      if (preferences?.orderNewToast !== false) {
+        toast.success("Nouvelle commande", {
+          description: `${data.orderNumber} - ${data.totalAmount.toFixed(2)} €`,
+        });
+      }
     });
 
     socket.on("disconnect", () => {
@@ -102,7 +123,7 @@ export function useWebSocket() {
     return () => {
       socket.disconnect();
     };
-  }, [user]);
+  }, [user, preferences]);
 
   return socketRef.current;
 }

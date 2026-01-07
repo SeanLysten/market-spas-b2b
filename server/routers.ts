@@ -47,6 +47,49 @@ export const appRouter = router({
   }),
 
   // ============================================
+  // NOTIFICATION PREFERENCES
+  // ============================================
+  notificationPreferences: router({
+    get: protectedProcedure.query(async ({ ctx }) => {
+      let prefs = await db.getNotificationPreferences(ctx.user.id);
+      
+      // If no preferences exist, create default ones
+      if (!prefs) {
+        await db.createDefaultNotificationPreferences(ctx.user.id);
+        prefs = await db.getNotificationPreferences(ctx.user.id);
+      }
+      
+      return prefs;
+    }),
+
+    update: protectedProcedure
+      .input(
+        z.object({
+          orderStatusChangedToast: z.boolean().optional(),
+          orderStatusChangedEmail: z.boolean().optional(),
+          orderNewToast: z.boolean().optional(),
+          orderNewEmail: z.boolean().optional(),
+          savStatusChangedToast: z.boolean().optional(),
+          savStatusChangedEmail: z.boolean().optional(),
+          savNewToast: z.boolean().optional(),
+          savNewEmail: z.boolean().optional(),
+          leadNewToast: z.boolean().optional(),
+          leadNewEmail: z.boolean().optional(),
+          systemAlertToast: z.boolean().optional(),
+          systemAlertEmail: z.boolean().optional(),
+          stockLowToast: z.boolean().optional(),
+          stockLowEmail: z.boolean().optional(),
+          partnerNewToast: z.boolean().optional(),
+          partnerNewEmail: z.boolean().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        await db.updateNotificationPreferences(ctx.user.id, input);
+        return { success: true };
+      }),
+  }),
+
+  // ============================================
   // CRON JOBS (public with secret key)
   // ============================================
   cron: router({

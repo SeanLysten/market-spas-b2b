@@ -1124,3 +1124,13 @@
 - [x] Ajouter les notifications WebSocket dans les mutations commandes (alerts.ts)
 - [x] Tester les notifications en temps réel
 - [x] Créer le rapport complet d'intégration (RAPPORT-NOTIFICATIONS-WEBSOCKET.md)
+
+## Session 7 janvier 2026 - Système de préférences de notification
+
+- [x] Créer le schéma de base de données pour les préférences de notification
+- [x] Ajouter les helpers de base de données pour les préférences
+- [x] Créer les routes tRPC pour gérer les préférences (get, update)
+- [x] Créer l'interface utilisateur des préférences dans les paramètres
+- [x] Intégrer la logique de filtrage dans useWebSocket
+- [x] Tester le système complet avec différents scénarios
+- [x] Créer un checkpoint final

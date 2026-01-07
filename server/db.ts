@@ -4177,3 +4177,99 @@ export async function addResponseTemplate(
     createdBy,
   });
 }
+
+// ============================================
+// NOTIFICATION PREFERENCES
+// ============================================
+
+// Get notification preferences for a user
+export async function getNotificationPreferences(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { notificationPreferences } = await import("../drizzle/schema");
+  
+  const result = await db
+    .select()
+    .from(notificationPreferences)
+    .where(eq(notificationPreferences.userId, userId))
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+// Create default notification preferences for a user
+export async function createDefaultNotificationPreferences(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { notificationPreferences } = await import("../drizzle/schema");
+  
+  const result = await db.insert(notificationPreferences).values({
+    userId,
+    // All preferences default to true
+    orderStatusChangedToast: true,
+    orderStatusChangedEmail: true,
+    orderNewToast: true,
+    orderNewEmail: true,
+    savStatusChangedToast: true,
+    savStatusChangedEmail: true,
+    savNewToast: true,
+    savNewEmail: true,
+    leadNewToast: true,
+    leadNewEmail: true,
+    systemAlertToast: true,
+    systemAlertEmail: true,
+    stockLowToast: true,
+    stockLowEmail: true,
+    partnerNewToast: true,
+    partnerNewEmail: true,
+  });
+  
+  return result;
+}
+
+// Update notification preferences for a user
+export async function updateNotificationPreferences(
+  userId: number,
+  preferences: Partial<{
+    orderStatusChangedToast: boolean;
+    orderStatusChangedEmail: boolean;
+    orderNewToast: boolean;
+    orderNewEmail: boolean;
+    savStatusChangedToast: boolean;
+    savStatusChangedEmail: boolean;
+    savNewToast: boolean;
+    savNewEmail: boolean;
+    leadNewToast: boolean;
+    leadNewEmail: boolean;
+    systemAlertToast: boolean;
+    systemAlertEmail: boolean;
+    stockLowToast: boolean;
+    stockLowEmail: boolean;
+    partnerNewToast: boolean;
+    partnerNewEmail: boolean;
+  }>
+) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { notificationPreferences } = await import("../drizzle/schema");
+  
+  // Check if preferences exist
+  const existing = await getNotificationPreferences(userId);
+  
+  if (!existing) {
+    // Create new preferences with provided values
+    return await db.insert(notificationPreferences).values({
+      userId,
+      ...preferences,
+    });
+  }
+  
+  // Update existing preferences
+  return await db
+    .update(notificationPreferences)
+    .set(preferences)
+    .where(eq(notificationPreferences.userId, userId));
+}

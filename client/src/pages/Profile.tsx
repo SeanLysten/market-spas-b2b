@@ -468,81 +468,26 @@ export default function Profile() {
               <CardHeader>
                 <CardTitle>Préférences de notifications</CardTitle>
                 <CardDescription>
-                  Choisissez les notifications que vous souhaitez recevoir
+                  Personnalisez vos notifications pour chaque type d'événement
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Mises à jour de commandes</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Recevez des notifications sur l'état de vos commandes
+                <div className="rounded-lg border border-border bg-muted/50 p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Bell className="h-5 w-5 text-primary" />
+                    <div className="flex-1">
+                      <h3 className="font-medium">Gérer vos préférences de notification</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Choisissez de recevoir des notifications toast (dans l'application) et/ou par email pour chaque type d'événement : commandes, SAV, leads, alertes système, etc.
                       </p>
                     </div>
-                    <Switch
-                      checked={notifications.orderUpdates}
-                      onCheckedChange={(checked) =>
-                        setNotifications({ ...notifications, orderUpdates: checked })
-                      }
-                    />
                   </div>
-
-                  <Separator />
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Nouveaux produits</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Soyez informé des nouveaux produits disponibles
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifications.newProducts}
-                      onCheckedChange={(checked) =>
-                        setNotifications({ ...notifications, newProducts: checked })
-                      }
-                    />
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Promotions</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Recevez les offres spéciales et promotions
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifications.promotions}
-                      onCheckedChange={(checked) =>
-                        setNotifications({ ...notifications, promotions: checked })
-                      }
-                    />
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Newsletter</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Recevez notre newsletter mensuelle
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifications.newsletter}
-                      onCheckedChange={(checked) =>
-                        setNotifications({ ...notifications, newsletter: checked })
-                      }
-                    />
-                  </div>
+                  <Link href="/notification-preferences">
+                    <Button className="w-full sm:w-auto">
+                      Configurer mes préférences
+                    </Button>
+                  </Link>
                 </div>
-
-                <Button className="w-full sm:w-auto">
-                  Enregistrer les préférences
-                </Button>
               </CardContent>
             </Card>
           </TabsContent>
