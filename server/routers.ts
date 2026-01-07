@@ -44,6 +44,137 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+
+    // Local authentication
+    loginLocal: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string().min(6),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const user = await db.getUserByEmail(input.email);
+        
+        if (!user || !user.passwordHash) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Email ou mot de passe incorrect' });
+        }
+
+        // Verify password
+        const bcrypt = await import('bcryptjs');
+        const isValid = await bcrypt.compare(input.password, user.passwordHash);
+        
+        if (!isValid) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Email ou mot de passe incorrect' });
+        }
+
+        // Check if account is active
+        if (!user.isActive) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Votre compte a été désactivé' });
+        }
+
+        // Update last login
+        await db.updateUserLastLogin(user.id, ctx.req.ip || 'unknown');
+
+        // Create session
+        const jwt = await import('jsonwebtoken');
+        const token = jwt.sign(
+          { userId: user.id, email: user.email },
+          process.env.JWT_SECRET!,
+          { expiresIn: '7d' }
+        );
+
+        // Set cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, cookieOptions);
+
+        return { success: true, user };
+      }),
+
+    register: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères'),
+        firstName: z.string().min(1),
+        lastName: z.string().min(1),
+        phone: z.string().optional(),
+        companyName: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        // Check if user already exists
+        const existing = await db.getUserByEmail(input.email);
+        if (existing) {
+          throw new TRPCError({ code: 'CONFLICT', message: 'Un compte existe déjà avec cet email' });
+        }
+
+        // Hash password
+        const bcrypt = await import('bcryptjs');
+        const passwordHash = await bcrypt.hash(input.password, 10);
+
+        // Create user
+        const crypto = await import('crypto');
+        const openId = crypto.randomBytes(32).toString('hex');
+        
+        const user = await db.createLocalUser({
+          openId,
+          email: input.email,
+          passwordHash,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          name: `${input.firstName} ${input.lastName}`,
+          phone: input.phone,
+          loginMethod: 'local',
+        });
+
+        return { success: true, userId: user.id };
+      }),
+
+    forgotPassword: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+      }))
+      .mutation(async ({ input }) => {
+        const user = await db.getUserByEmail(input.email);
+        
+        // Always return success to prevent email enumeration
+        if (!user) {
+          return { success: true };
+        }
+
+        // Generate reset token
+        const crypto = await import('crypto');
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetExpires = new Date(Date.now() + 3600000); // 1 hour
+
+        await db.setPasswordResetToken(user.id, resetToken, resetExpires);
+
+        // TODO: Send email with reset link
+        // For now, log the token (in production, send email)
+        console.log(`Password reset token for ${input.email}: ${resetToken}`);
+
+        return { success: true };
+      }),
+
+    resetPassword: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        password: z.string().min(8),
+      }))
+      .mutation(async ({ input }) => {
+        const user = await db.getUserByResetToken(input.token);
+        
+        if (!user) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Token invalide ou expiré' });
+        }
+
+        // Hash new password
+        const bcrypt = await import('bcryptjs');
+        const passwordHash = await bcrypt.hash(input.password, 10);
+
+        // Update password and clear reset token
+        await db.updateUserPassword(user.id, passwordHash);
+        await db.clearPasswordResetToken(user.id);
+
+        return { success: true };
+      }),
   }),
 
   // ============================================

@@ -4294,3 +4294,139 @@ export async function updateNotificationPreferences(
     .set(preferences)
     .where(eq(notificationPreferences.userId, userId));
 }
+
+
+// ============================================
+// LOCAL AUTHENTICATION
+// ============================================
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createLocalUser(data: {
+  openId: string;
+  email: string;
+  passwordHash: string;
+  firstName: string;
+  lastName: string;
+  name: string;
+  phone?: string;
+  loginMethod: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const [result] = await db
+    .insert(users)
+    .values({
+      ...data,
+      role: 'PARTNER_USER',
+      isActive: true,
+      emailVerified: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .$returningId();
+  
+  return { id: result.id };
+}
+
+export async function updateUserLastLogin(userId: number, ip: string) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(users)
+    .set({
+      lastLoginAt: new Date(),
+      lastLoginIp: ip,
+      lastSignedIn: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, userId));
+}
+
+export async function setPasswordResetToken(
+  userId: number,
+  token: string,
+  expires: Date
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { passwordResetTokens } = await import("../drizzle/schema");
+
+  // Delete any existing tokens for this user
+  await db
+    .delete(passwordResetTokens)
+    .where(eq(passwordResetTokens.userId, userId));
+
+  // Create new token
+  await db.insert(passwordResetTokens).values({
+    userId,
+    token,
+    expiresAt: expires,
+  });
+}
+
+export async function getUserByResetToken(token: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const { passwordResetTokens } = await import("../drizzle/schema");
+
+  const result = await db
+    .select({
+      user: users,
+      token: passwordResetTokens,
+    })
+    .from(passwordResetTokens)
+    .innerJoin(users, eq(users.id, passwordResetTokens.userId))
+    .where(
+      and(
+        eq(passwordResetTokens.token, token),
+        gte(passwordResetTokens.expiresAt, new Date()),
+        sql`${passwordResetTokens.usedAt} IS NULL`
+      )
+    )
+    .limit(1);
+
+  return result.length > 0 ? result[0].user : undefined;
+}
+
+export async function updateUserPassword(userId: number, passwordHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(users)
+    .set({
+      passwordHash,
+      mustChangePassword: false,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, userId));
+}
+
+export async function clearPasswordResetToken(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { passwordResetTokens } = await import("../drizzle/schema");
+
+  // Mark token as used
+  await db
+    .update(passwordResetTokens)
+    .set({ usedAt: new Date() })
+    .where(eq(passwordResetTokens.userId, userId));
+}

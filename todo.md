@@ -1201,3 +1201,29 @@
 - [x] Modifier les queries pour utiliser la période sélectionnée
 - [x] Tester les statistiques avec différentes périodes
 - [x] Créer un checkpoint final
+
+
+## Session 7 janvier 2026 - Portail d'authentification personnalisé Market Spas
+
+- [ ] Vérifier le schéma actuel de la table users (passwordHash existe déjà)
+- [ ] Créer les routes tRPC pour l'authentification locale (login, register, forgotPassword, resetPassword)
+- [ ] Créer la page de connexion personnalisée Market Spas (/login)
+- [ ] Créer la page d'inscription (/register)
+- [ ] Créer la page de réinitialisation de mot de passe (/reset-password)
+- [ ] Modifier le système d'authentification pour utiliser les sessions locales
+- [ ] Tester le flux complet d'authentification
+- [ ] Créer un checkpoint final
+
+
+## Session 7 janvier 2026 - Portail d'authentification personnalisé Market Spas
+
+- [x] Vérifier le schéma de base de données pour l'authentification locale
+- [x] Créer les routes tRPC pour l'authentification (loginLocal, register, forgotPassword, resetPassword)
+- [x] Ajouter les helpers de base de données dans db.ts
+- [x] Créer la page de connexion personnalisée Market Spas
+- [x] Créer la page d'inscription
+- [x] Créer les pages de réinitialisation de mot de passe
+- [x] Ajouter les routes dans App.tsx
+- [x] Modifier getLoginUrl pour rediriger vers /login
+- [x] Tester le système d'authentification complet
+- [x] Créer un checkpoint final
