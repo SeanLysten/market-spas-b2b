@@ -79,10 +79,8 @@ export default function Login() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Mot de passe</Label>
-                <Link href="/forgot-password">
-                  <a className="text-sm text-blue-600 hover:text-blue-700 hover:underline">
-                    Mot de passe oublié ?
-                  </a>
+                <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700 hover:underline">
+                  Mot de passe oublié ?
                 </Link>
               </div>
               <Input
@@ -114,10 +112,8 @@ export default function Login() {
             </Button>
             <div className="text-center text-sm text-gray-600">
               Pas encore de compte ?{" "}
-              <Link href="/register">
-                <a className="text-blue-600 hover:text-blue-700 font-medium hover:underline">
-                  Créer un compte
-                </a>
+              <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">
+                Créer un compte
               </Link>
             </div>
           </CardFooter>

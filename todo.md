@@ -1227,3 +1227,10 @@
 - [x] Modifier getLoginUrl pour rediriger vers /login
 - [x] Tester le système d'authentification complet
 - [x] Créer un checkpoint final
+
+## BUGS À CORRIGER (Authentification - Session actuelle)
+
+- [x] Corriger l'erreur "Email ou mot de passe incorrect" lors de la connexion
+- [x] Corriger l'erreur HTML "<a> cannot contain a nested <a>" dans Login.tsx
+- [x] Vérifier la logique de comparaison bcrypt dans auth.loginLocal
+- [x] Tester la connexion avec un compte existant

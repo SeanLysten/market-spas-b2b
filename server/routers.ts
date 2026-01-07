@@ -76,7 +76,7 @@ export const appRouter = router({
 
         // Create session
         const jwt = await import('jsonwebtoken');
-        const token = jwt.sign(
+        const token = jwt.default.sign(
           { userId: user.id, email: user.email },
           process.env.JWT_SECRET!,
           { expiresIn: '7d' }
