@@ -4052,3 +4052,128 @@ export async function getAfterSalesWeeklyStats() {
   
   return weeklyStats;
 }
+
+
+// Get status history for a ticket
+export async function getAfterSalesStatusHistory(serviceId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { afterSalesStatusHistory, users } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  return await db
+    .select({
+      id: afterSalesStatusHistory.id,
+      serviceId: afterSalesStatusHistory.serviceId,
+      previousStatus: afterSalesStatusHistory.previousStatus,
+      newStatus: afterSalesStatusHistory.newStatus,
+      reason: afterSalesStatusHistory.reason,
+      changedBy: afterSalesStatusHistory.changedBy,
+      changedByName: users.name,
+      createdAt: afterSalesStatusHistory.createdAt,
+    })
+    .from(afterSalesStatusHistory)
+    .leftJoin(users, eq(afterSalesStatusHistory.changedBy, users.id))
+    .where(eq(afterSalesStatusHistory.serviceId, serviceId))
+    .orderBy(desc(afterSalesStatusHistory.createdAt));
+}
+
+// Add status history entry
+export async function addAfterSalesStatusHistory(
+  serviceId: number,
+  previousStatus: string | null,
+  newStatus: string,
+  changedBy: number,
+  reason?: string
+) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { afterSalesStatusHistory } = await import("../drizzle/schema");
+  
+  return await db.insert(afterSalesStatusHistory).values({
+    serviceId,
+    previousStatus: previousStatus as any,
+    newStatus: newStatus as any,
+    changedBy,
+    reason,
+  });
+}
+
+// Get assignment history for a ticket
+export async function getAfterSalesAssignmentHistory(serviceId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { afterSalesAssignmentHistory, users } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  return await db
+    .select({
+      id: afterSalesAssignmentHistory.id,
+      serviceId: afterSalesAssignmentHistory.serviceId,
+      previousTechnicianId: afterSalesAssignmentHistory.previousTechnicianId,
+      newTechnicianId: afterSalesAssignmentHistory.newTechnicianId,
+      reason: afterSalesAssignmentHistory.reason,
+      assignedBy: afterSalesAssignmentHistory.assignedBy,
+      assignedByName: users.name,
+      createdAt: afterSalesAssignmentHistory.createdAt,
+    })
+    .from(afterSalesAssignmentHistory)
+    .leftJoin(users, eq(afterSalesAssignmentHistory.assignedBy, users.id))
+    .where(eq(afterSalesAssignmentHistory.serviceId, serviceId))
+    .orderBy(desc(afterSalesAssignmentHistory.createdAt));
+}
+
+// Add assignment history entry
+export async function addAfterSalesAssignmentHistory(
+  serviceId: number,
+  previousTechnicianId: number | null,
+  newTechnicianId: number | null,
+  assignedBy: number,
+  reason?: string
+) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { afterSalesAssignmentHistory } = await import("../drizzle/schema");
+  
+  return await db.insert(afterSalesAssignmentHistory).values({
+    serviceId,
+    previousTechnicianId,
+    newTechnicianId,
+    assignedBy,
+    reason,
+  });
+}
+
+// Get response templates
+export async function getResponseTemplates() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { responseTemplates } = await import("../drizzle/schema");
+  
+  return await db.select().from(responseTemplates).orderBy(responseTemplates.category);
+}
+
+// Add response template
+export async function addResponseTemplate(
+  name: string,
+  category: string,
+  content: string,
+  createdBy: number
+) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { responseTemplates } = await import("../drizzle/schema");
+  
+  return await db.insert(responseTemplates).values({
+    name,
+    category,
+    content,
+    createdBy,
+  });
+}

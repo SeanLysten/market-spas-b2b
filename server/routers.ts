@@ -2207,6 +2207,23 @@ export const appRouter = router({
       .query(async () => {
         return await db.getAfterSalesWeeklyStats();
       }),
+
+    statusHistory: protectedProcedure
+      .input(z.object({ serviceId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getAfterSalesStatusHistory(input.serviceId);
+      }),
+
+    assignmentHistory: protectedProcedure
+      .input(z.object({ serviceId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getAfterSalesAssignmentHistory(input.serviceId);
+      }),
+
+    responseTemplates: adminProcedure
+      .query(async () => {
+        return await db.getResponseTemplates();
+      }),
   }),
 });
 

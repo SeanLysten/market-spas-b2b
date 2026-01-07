@@ -1829,3 +1829,61 @@ export type InsertAfterSalesMedia = typeof afterSalesMedia.$inferInsert;
 
 export type AfterSalesNote = typeof afterSalesNotes.$inferSelect;
 export type InsertAfterSalesNote = typeof afterSalesNotes.$inferInsert;
+
+
+// After-sales status history (track all status changes)
+export const afterSalesStatusHistory = mysqlTable(
+  "after_sales_status_history",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    serviceId: int("serviceId").notNull(),
+    previousStatus: savStatusEnum,
+    newStatus: savStatusEnum.notNull(),
+    changedBy: int("changedBy").notNull(),
+    reason: text("reason"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    serviceIdIdx: index("serviceId_history_idx").on(table.serviceId),
+  })
+);
+
+// After-sales assignment history (track technician assignments)
+export const afterSalesAssignmentHistory = mysqlTable(
+  "after_sales_assignment_history",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    serviceId: int("serviceId").notNull(),
+    previousTechnicianId: int("previousTechnicianId"),
+    newTechnicianId: int("newTechnicianId"),
+    assignedBy: int("assignedBy").notNull(),
+    reason: text("reason"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    serviceIdIdx: index("serviceId_assignment_idx").on(table.serviceId),
+  })
+);
+
+// Response templates for quick replies
+export const responseTemplates = mysqlTable(
+  "response_templates",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    category: varchar("category", { length: 100 }).notNull(),
+    content: text("content").notNull(),
+    createdBy: int("createdBy").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  }
+);
+
+export type AfterSalesStatusHistory = typeof afterSalesStatusHistory.$inferSelect;
+export type InsertAfterSalesStatusHistory = typeof afterSalesStatusHistory.$inferInsert;
+
+export type AfterSalesAssignmentHistory = typeof afterSalesAssignmentHistory.$inferSelect;
+export type InsertAfterSalesAssignmentHistory = typeof afterSalesAssignmentHistory.$inferInsert;
+
+export type ResponseTemplate = typeof responseTemplates.$inferSelect;
+export type InsertResponseTemplate = typeof responseTemplates.$inferInsert;

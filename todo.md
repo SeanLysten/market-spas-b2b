@@ -1026,3 +1026,69 @@
 - [x] Ajouter un graphique en camembert pour la répartition par urgence
 - [x] Ajouter un graphique en courbe pour l'évolution hebdomadaire des tickets
 - [x] Ajouter le lien vers le dashboard SAV dans la sidebar admin
+
+
+## Analyse et Amélioration Complète du Système SAV
+
+### Fonctionnalités Manquantes à Ajouter
+- [ ] Historique complet des changements de statut avec timestamps et utilisateurs
+- [ ] Pièces jointes multiples (photos, vidéos, documents PDF)
+- [ ] Assignation de techniciens avec historique
+- [ ] Temps estimé de résolution et suivi du SLA
+- [ ] Priorité des tickets (en plus de l'urgence)
+- [ ] Catégories de produits pour le filtrage
+- [ ] Recherche avancée par numéro de ticket
+- [ ] Export des tickets en CSV/PDF
+- [ ] Notifications email en temps réel
+- [ ] Commentaires internes (notes visibles uniquement par les admins)
+- [ ] Suivi du temps passé par technicien
+- [ ] Évaluation de satisfaction client
+- [ ] Modèles de réponse prédéfinis
+- [ ] Escalade automatique des tickets non résolus
+- [ ] Historique des modifications de tickets
+
+### Simulations Utilisateur à Effectuer
+- [ ] Créer un ticket SAV complet avec photos et description détaillée
+- [ ] Consulter l'historique du ticket
+- [ ] Modifier un ticket existant
+- [ ] Télécharger le rapport PDF du ticket
+- [ ] Filtrer les tickets par date, urgence, statut
+- [ ] Trier les tickets par colonne
+- [ ] Réinitialiser les filtres
+- [ ] Naviguer entre les pages (dashboard → SAV → détail → retour)
+
+### Simulations Admin à Effectuer
+- [ ] Créer un ticket au nom d'un partenaire
+- [ ] Assigner un ticket à un technicien
+- [ ] Mettre à jour le statut d'un ticket
+- [ ] Ajouter des notes internes
+- [ ] Consulter les statistiques SAV
+- [ ] Filtrer les tickets par partenaire
+- [ ] Exporter les données statistiques
+- [ ] Vérifier les notifications email
+
+### Bugs à Corriger
+- [ ] (À identifier lors des simulations)
+
+
+## Bugs Identifiés lors des Simulations
+
+### Bug 1: Formulaire de création SAV - Les champs se vident
+- [ ] Les valeurs saisies dans le formulaire de création SAV se vident après quelques secondes
+- [ ] Problème probable: L'état React n'est pas correctement lié aux champs input/textarea
+- [ ] Affecte: Page AfterSales.tsx - formulaire de création
+
+### Bug 2: Partenaire non sélectionné pour les super admins
+- [ ] Les super admins ne peuvent pas créer de tickets SAV car aucun partenaire n'est sélectionné
+- [ ] Le sélecteur de partenaire doit être visible et fonctionnel pour les admins
+- [ ] Affecte: Page AfterSales.tsx - création de ticket par admin
+
+### Fonctionnalités à Tester
+- [ ] Création complète d'un ticket SAV
+- [ ] Consultation de l'historique du ticket
+- [ ] Modification d'un ticket existant
+- [ ] Téléchargement du rapport PDF
+- [ ] Filtrage et tri des tickets
+- [ ] Navigation entre les pages
+- [ ] Page admin SAV
+- [ ] Statistiques SAV
