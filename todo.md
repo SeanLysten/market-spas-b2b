@@ -1167,3 +1167,11 @@
 - [x] Fusionner les onglets SAV et Statistiques SAV en un seul avec système d'onglets
 - [x] Supprimer l'ancien onglet Statistiques SAV du menu latéral
 - [x] Tester le nouveau dashboard et créer un checkpoint
+
+
+## Session 7 janvier 2026 - Correction erreur SQL weeklyStats
+
+- [x] Identifier la requête SQL problématique dans db.ts (getAfterSalesWeeklyStats)
+- [x] Corriger la syntaxe DATE_FORMAT pour compatibilité TiDB
+- [x] Tester la page Statistiques SAV
+- [x] Créer un checkpoint avec la correction

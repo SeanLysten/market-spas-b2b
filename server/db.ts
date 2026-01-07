@@ -4038,17 +4038,18 @@ export async function getAfterSalesWeeklyStats() {
   const { count, sql } = await import("drizzle-orm");
   
   // Get weekly stats for the last 8 weeks
+  // Use YEARWEEK() instead of DATE_FORMAT for better TiDB compatibility
   const weeklyStats = await db
     .select({
-      week: sql`DATE_FORMAT(${afterSalesServices.createdAt}, '%Y-W%u')`,
+      week: sql<string>`CONCAT(YEAR(${afterSalesServices.createdAt}), '-W', LPAD(WEEK(${afterSalesServices.createdAt}, 1), 2, '0'))`,
       count: count(),
     })
     .from(afterSalesServices)
     .where(
       sql`${afterSalesServices.createdAt} >= DATE_SUB(NOW(), INTERVAL 8 WEEK)`
     )
-    .groupBy(sql`DATE_FORMAT(${afterSalesServices.createdAt}, '%Y-W%u')`)
-    .orderBy(sql`DATE_FORMAT(${afterSalesServices.createdAt}, '%Y-W%u')`);
+    .groupBy(sql`CONCAT(YEAR(${afterSalesServices.createdAt}), '-W', LPAD(WEEK(${afterSalesServices.createdAt}, 1), 2, '0'))`)
+    .orderBy(sql`CONCAT(YEAR(${afterSalesServices.createdAt}), '-W', LPAD(WEEK(${afterSalesServices.createdAt}, 1), 2, '0'))`);
   
   return weeklyStats;
 }
