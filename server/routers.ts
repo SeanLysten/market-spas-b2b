@@ -2191,6 +2191,22 @@ export const appRouter = router({
         await db.addAfterSalesNote(input.id, ctx.user.id, input.note, noteIsInternal);
         return { success: true };
       }),
+
+    stats: adminProcedure
+      .query(async () => {
+        return await db.getAfterSalesStats();
+      }),
+
+    statsByPartner: adminProcedure
+      .input(z.object({ partnerId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getAfterSalesStatsByPartner(input.partnerId);
+      }),
+
+    weeklyStats: adminProcedure
+      .query(async () => {
+        return await db.getAfterSalesWeeklyStats();
+      }),
   }),
 });
 

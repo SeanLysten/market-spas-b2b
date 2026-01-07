@@ -3939,3 +3939,116 @@ export async function addAfterSalesNote(
   
   return true;
 }
+
+
+// ============================================
+// AFTER SALES STATISTICS
+// ============================================
+
+export async function getAfterSalesStats() {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { afterSalesServices } = await import("../drizzle/schema");
+  const { count, eq } = await import("drizzle-orm");
+  
+  // Total tickets
+  const totalTickets = await db.select({ count: count() }).from(afterSalesServices);
+  
+  // Tickets by status
+  const byStatus = await db
+    .select({ 
+      status: afterSalesServices.status, 
+      count: count() 
+    })
+    .from(afterSalesServices)
+    .groupBy(afterSalesServices.status);
+  
+  // Tickets by urgency
+  const byUrgency = await db
+    .select({ 
+      urgency: afterSalesServices.urgency, 
+      count: count() 
+    })
+    .from(afterSalesServices)
+    .groupBy(afterSalesServices.urgency);
+  
+  // Tickets by partner
+  const byPartner = await db
+    .select({ 
+      partnerId: afterSalesServices.partnerId, 
+      count: count() 
+    })
+    .from(afterSalesServices)
+    .groupBy(afterSalesServices.partnerId);
+  
+  return {
+    totalTickets: totalTickets[0]?.count || 0,
+    byStatus,
+    byUrgency,
+    byPartner,
+  };
+}
+
+export async function getAfterSalesStatsByPartner(partnerId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { afterSalesServices } = await import("../drizzle/schema");
+  const { count, eq } = await import("drizzle-orm");
+  
+  // Total tickets for partner
+  const totalTickets = await db
+    .select({ count: count() })
+    .from(afterSalesServices)
+    .where(eq(afterSalesServices.partnerId, partnerId));
+  
+  // Tickets by status for partner
+  const byStatus = await db
+    .select({ 
+      status: afterSalesServices.status, 
+      count: count() 
+    })
+    .from(afterSalesServices)
+    .where(eq(afterSalesServices.partnerId, partnerId))
+    .groupBy(afterSalesServices.status);
+  
+  // Tickets by urgency for partner
+  const byUrgency = await db
+    .select({ 
+      urgency: afterSalesServices.urgency, 
+      count: count() 
+    })
+    .from(afterSalesServices)
+    .where(eq(afterSalesServices.partnerId, partnerId))
+    .groupBy(afterSalesServices.urgency);
+  
+  return {
+    totalTickets: totalTickets[0]?.count || 0,
+    byStatus,
+    byUrgency,
+  };
+}
+
+export async function getAfterSalesWeeklyStats() {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { afterSalesServices } = await import("../drizzle/schema");
+  const { count, sql } = await import("drizzle-orm");
+  
+  // Get weekly stats for the last 8 weeks
+  const weeklyStats = await db
+    .select({
+      week: sql`DATE_FORMAT(${afterSalesServices.createdAt}, '%Y-W%u')`,
+      count: count(),
+    })
+    .from(afterSalesServices)
+    .where(
+      sql`${afterSalesServices.createdAt} >= DATE_SUB(NOW(), INTERVAL 8 WEEK)`
+    )
+    .groupBy(sql`DATE_FORMAT(${afterSalesServices.createdAt}, '%Y-W%u')`)
+    .orderBy(sql`DATE_FORMAT(${afterSalesServices.createdAt}, '%Y-W%u')`);
+  
+  return weeklyStats;
+}

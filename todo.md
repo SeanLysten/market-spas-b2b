@@ -1016,3 +1016,13 @@
 - [x] Permettre aux super admins de spécifier le partnerId lors de la création
 - [x] Ajouter un sélecteur de partenaire dans le formulaire de création SAV pour les admins
 - [x] Masquer le sélecteur de partenaire pour les utilisateurs normaux (utiliser leur partnerId automatiquement)
+
+## Dashboard Statistiques SAV
+- [x] Créer les fonctions getAfterSalesStats et getAfterSalesStatsByPartner dans db.ts
+- [x] Créer le router afterSales.stats pour récupérer les statistiques
+- [x] Créer la page AdminAfterSalesStats.tsx avec graphiques Chart.js
+- [x] Ajouter des cartes métriques (total tickets, urgents, critiques, résolus)
+- [x] Ajouter un graphique en barres pour les tickets par partenaire
+- [x] Ajouter un graphique en camembert pour la répartition par urgence
+- [x] Ajouter un graphique en courbe pour l'évolution hebdomadaire des tickets
+- [x] Ajouter le lien vers le dashboard SAV dans la sidebar admin
