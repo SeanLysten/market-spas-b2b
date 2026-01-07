@@ -225,6 +225,25 @@ export const emailVerificationTokens = mysqlTable(
   })
 );
 
+export const invitationTokens = mysqlTable(
+  "invitation_tokens",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    email: varchar("email", { length: 320 }).notNull(),
+    firstName: varchar("firstName", { length: 100 }),
+    lastName: varchar("lastName", { length: 100 }),
+    token: varchar("token", { length: 255 }).notNull().unique(),
+    invitedBy: int("invitedBy").notNull(), // Admin user ID who sent the invitation
+    expiresAt: timestamp("expiresAt").notNull(),
+    usedAt: timestamp("usedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    tokenIdx: index("token_idx").on(table.token),
+    emailIdx: index("email_idx").on(table.email),
+  })
+);
+
 // ============================================
 // PARTNERS
 // ============================================

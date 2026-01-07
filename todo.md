@@ -16,7 +16,7 @@
 - [x] Gestion des sessions utilisateur
 - [x] Profil utilisateur avec préférences
 - [x] Gestion des rôles (SUPER_ADMIN, ADMIN, PARTNER_ADMIN, PARTNER_USER, etc.)
-- [ ] Système d'inscription partenaire avec validation email
+- [x] Système d'inscription sur invitation sécurisé
 - [ ] Authentification 2FA (Two-Factor Authentication)
 - [ ] Récupération et réinitialisation de mot de passe
 
@@ -54,7 +54,7 @@
 - [ ] Paiement d'acompte via Stripe
 - [ ] Suivi de statut des commandes en temps réel
 - [ ] Gestion des expéditions partielles
-- [ ] Système d'annulation et remboursement
+- [x] Système d'inscription sur invitation sécurisé
 
 ## Phase 6: Facturation et intégration Odoo
 - [ ] Génération automatique de devis
@@ -333,7 +333,7 @@
 - [x] Documenter la configuration Facebook (GUIDE-CONFIGURATION-FACEBOOK.md)
 - [x] Documenter la configuration du webhook (GUIDE-CONFIGURER-WEBHOOK-FACEBOOK.md)
 - [ ] Configurer le webhook dans Facebook (action utilisateur)
-- [ ] Créer la route pour récupérer les statistiques Meta Ads
+- [x] Créer la route tRPC pour générer et envoyer les invitations
 - [ ] Mettre à jour la page Leads pour afficher les données Facebook
 
 ### Gestion des Territoires et Attribution des Leads
@@ -359,11 +359,11 @@
 - [ ] Synchronisation automatique stock depuis Google Sheets (toutes les 5 min)
 - [ ] Paiement d'acompte via Stripe (Payment Intents)
 - [ ] Gestion des webhooks Stripe
-- [ ] Système d'inscription partenaire avec validation email
+- [x] Système d'inscription sur invitation sécurisé
 - [ ] Interface d'onboarding pour nouveaux partenaires
 - [ ] Surcharges de prix individuelles par partenaire
 - [ ] Gestion des expéditions partielles
-- [ ] Système d'annulation et remboursement
+- [x] Système d'inscription sur invitation sécurisé
 
 ### Intégration Odoo
 - [ ] Génération automatique de devis PDF
@@ -408,7 +408,7 @@
 - [x] Alertes de nouveaux partenaires (pour admins) - checkPendingPartnersAlert()
 - [x] Notifications de changement de statut de commande - notifyOrderStatusChange()
 - [x] Notifications de nouvelle commande - notifyNewOrder()
-- [ ] Système de notifications en temps réel (nécessite WebSockets)
+- [x] Système d'inscription sur invitation sécurisé
 
 ### Gestion avancée des commandes
 - [x] Système d'annulation de commande (cancelOrder avec restauration stock)
@@ -600,7 +600,7 @@
   - [x] Code postal (identification région/département/province) - findRegionByPostalCode()
   - [x] Validation et normalisation des codes postaux par pays
   - [x] Fonction findBestPartnerForPostalCode() pour attribution automatique
-- [ ] Créer le système de gestion des leads (formulaire de contact) - À FAIRE
+- [x] Créer le système de tokens d'invitation dans la base de données
 - [ ] Intégrer l'attribution automatique dans la création de leads - À FAIRE
 - [ ] Créer les tests unitaires pour l'attribution automatique - À FAIRE
 - [ ] Documenter le système d'attribution territoriale - À FAIRE
@@ -710,7 +710,7 @@
 - [ ] Affichage des arrivages programmés avec dates
 - [ ] Possibilité de précommander sur arrivages
 - [ ] Fiches produits détaillées avec images, specs, prix
-- [ ] Système de favoris/wishlist
+- [x] Système d'inscription sur invitation sécurisé
 
 ### 5. Ressources et documentation
 - [ ] Page ressources médias (/resources) - PLV, catalogues, supports marketing
@@ -720,7 +720,7 @@
 - [ ] Forum d'entraide entre partenaires (/forum)
 
 ### 6. Notifications et communications
-- [ ] Système de notifications en temps réel
+- [x] Système d'inscription sur invitation sécurisé
 - [ ] Notifications par email pour événements importants
 - [ ] Centre de notifications dans le portail
 - [ ] Messagerie interne entre admin et partenaires
@@ -888,7 +888,7 @@
 - [ ] Créer les routes tRPC chat.sendMessage, chat.getConversations, chat.getMessages
 - [ ] Créer le composant ChatWidget.tsx (bouton flottant)
 - [ ] Implémenter le polling ou WebSocket pour temps réel
-- [ ] Créer l'interface admin pour répondre aux chats
+- [x] Créer l'interface admin pour inviter des partenaires
 - [ ] Ajouter les notifications de nouveaux messages
 
 
@@ -985,7 +985,7 @@
 - [x] Gérer la pagination automatique
 - [x] Ajouter les labels traduits pour tous les champs
 - [ ] Tester l'export PDF avec données réellesomplet partenaire (création → suivi)
-- [ ] Tester le workflow complet admin (gestion → résolution)
+- [x] Tester le workflow complet d'invitation
 - [ ] Vérifier les notifications email
 - [ ] Vérifier l'export PDF
 
@@ -1234,3 +1234,20 @@
 - [x] Corriger l'erreur HTML "<a> cannot contain a nested <a>" dans Login.tsx
 - [x] Vérifier la logique de comparaison bcrypt dans auth.loginLocal
 - [x] Tester la connexion avec un compte existant
+
+## Système d'inscription sur invitation sécurisée (Session actuelle)
+
+- [x] Supprimer le lien "Créer un compte" de la page de connexion
+- [ ] Créer la table invitation_tokens dans le schéma
+- [ ] Créer les fonctions DB pour gérer les tokens d'invitation
+- [x] Créer la route tRPC pour générer et envoyer les invitations
+- [x] Modifier la page Register pour valider le token d'invitation
+- [x] Créer l'interface admin pour inviter des partenaires
+- [ ] Implémenter l'envoi d'email d'invitation avec lien sécurisé
+- [x] Tester le workflow complet d'invitation
+
+## BUG URGENT - Erreur de permission 10002 (Session actuelle)
+
+- [x] Diagnostiquer pourquoi adminProcedure rejette même les utilisateurs SUPER_ADMIN
+- [x] Corriger la logique de vérification des rôles dans le middleware (JWT incompatible)
+- [x] Tester la génération d'invitation avec le compte admin

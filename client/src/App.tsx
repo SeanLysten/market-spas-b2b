@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminResources from "./pages/admin/AdminResources";
 import AdminUsers from "./pages/admin/AdminUsers";
+import InvitePartner from "./pages/InvitePartner";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminStockForecast from "./pages/admin/AdminStockForecast";
 import AdminTerritories from "./pages/admin/AdminTerritories";
@@ -83,6 +84,7 @@ function Router() {
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/resources" component={AdminResources} />
       <Route path="/admin/users" component={AdminUsers} />
+      <Route path="/admin/invite-partner" component={InvitePartner} />
       <Route path="/admin/products" component={AdminProducts} />
       <Route path="/admin/forecast" component={AdminStockForecast} />
       <Route path="/admin/territories" component={AdminTerritories} />

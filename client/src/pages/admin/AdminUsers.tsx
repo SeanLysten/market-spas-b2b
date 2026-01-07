@@ -58,8 +58,6 @@ export default function AdminUsers() {
         email: formData.email,
         firstName: formData.firstName || undefined,
         lastName: formData.lastName || undefined,
-        role: formData.role,
-        partnerId: formData.partnerId ? parseInt(formData.partnerId) : undefined,
       });
 
       toast.success("Invitation envoyée avec succès");

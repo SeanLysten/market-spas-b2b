@@ -110,12 +110,7 @@ export default function Login() {
                 "Se connecter"
               )}
             </Button>
-            <div className="text-center text-sm text-gray-600">
-              Pas encore de compte ?{" "}
-              <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">
-                Créer un compte
-              </Link>
-            </div>
+
           </CardFooter>
         </form>
       </Card>

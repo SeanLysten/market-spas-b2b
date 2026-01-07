@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,11 @@ import { Link } from "wouter";
 
 export default function Register() {
   const [, setLocation] = useLocation();
+  
+  // Extract token from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const invitationToken = urlParams.get('token');
+  
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -23,6 +28,48 @@ export default function Register() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [tokenValidated, setTokenValidated] = useState(false);
+  const [invitationEmail, setInvitationEmail] = useState("");
+
+  // Validate token and get email
+  const { data: tokenData, isLoading: tokenLoading, error: tokenError } = trpc.auth.validateInvitationToken.useQuery(
+    { token: invitationToken || "" },
+    { enabled: !!invitationToken }
+  );
+
+  // Redirect to login if no token provided
+  useEffect(() => {
+    if (!invitationToken) {
+      setError("Accès refusé. Cette page n'est accessible que sur invitation.");
+      setTimeout(() => {
+        setLocation("/login");
+      }, 3000);
+    }
+  }, [invitationToken, setLocation]);
+
+  // Pre-fill email and names when token is validated
+  useEffect(() => {
+    if (tokenData) {
+      setInvitationEmail(tokenData.email);
+      setFormData(prev => ({
+        ...prev,
+        email: tokenData.email,
+        firstName: tokenData.firstName || "",
+        lastName: tokenData.lastName || ""
+      }));
+      setTokenValidated(true);
+    }
+  }, [tokenData]);
+
+  // Show error if token is invalid
+  useEffect(() => {
+    if (tokenError) {
+      setError(tokenError.message);
+      setTimeout(() => {
+        setLocation("/login");
+      }, 3000);
+    }
+  }, [tokenError, setLocation]);
 
   const registerMutation = trpc.auth.register.useMutation({
     onSuccess: () => {
@@ -64,6 +111,7 @@ export default function Register() {
       lastName: formData.lastName,
       phone: formData.phone || undefined,
       companyName: formData.companyName || undefined,
+      invitationToken: invitationToken || undefined,
     });
   };
 
@@ -155,9 +203,15 @@ export default function Register() {
                 value={formData.email}
                 onChange={handleChange("email")}
                 required
-                disabled={isLoading}
+                disabled={isLoading || !!invitationEmail}
                 autoComplete="email"
+                className={invitationEmail ? "bg-gray-100" : ""}
               />
+              {invitationEmail && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  🔒 Email verrouillé par l'invitation
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Téléphone</Label>

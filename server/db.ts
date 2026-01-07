@@ -1,6 +1,6 @@
-import { eq, and, desc, sql, or, like, lte, gte, asc, ne } from "drizzle-orm";
+import { eq, and, desc, sql, or, like, lte, gte, asc, ne, gt, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -4429,4 +4429,117 @@ export async function clearPasswordResetToken(userId: number) {
     .update(passwordResetTokens)
     .set({ usedAt: new Date() })
     .where(eq(passwordResetTokens.userId, userId));
+}
+
+// ============================================
+// INVITATION TOKENS
+// ============================================
+
+export async function createInvitationToken(
+  email: string,
+  invitedBy: number,
+  expiresInDays: number = 7,
+  firstName?: string,
+  lastName?: string
+) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  // Generate a secure random token
+  const crypto = await import('crypto');
+  const token = crypto.randomBytes(32).toString('hex');
+  
+  // Calculate expiration date
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + expiresInDays);
+
+  const result = await db.insert(invitationTokens).values({
+    email,
+    firstName,
+    lastName,
+    token,
+    invitedBy,
+    expiresAt,
+  });
+
+  return { token, expiresAt };
+}
+
+export async function getInvitationTokenByToken(token: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select()
+    .from(invitationTokens)
+    .where(eq(invitationTokens.token, token))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function validateInvitationToken(token: string, email: string) {
+  const db = await getDb();
+  if (!db) return { valid: false, message: 'Database unavailable' };
+
+  const invitationToken = await getInvitationTokenByToken(token);
+
+  if (!invitationToken) {
+    return { valid: false, message: 'Token invalide' };
+  }
+
+  if (invitationToken.usedAt) {
+    return { valid: false, message: 'Cette invitation a déjà été utilisée' };
+  }
+
+  if (new Date() > new Date(invitationToken.expiresAt)) {
+    return { valid: false, message: 'Cette invitation a expiré' };
+  }
+
+  // Verify that the email matches exactly
+  if (invitationToken.email.toLowerCase() !== email.toLowerCase()) {
+    return { valid: false, message: 'Cette invitation n\'est pas pour cette adresse email' };
+  }
+
+  return { valid: true, invitationToken };
+}
+
+export async function markInvitationTokenAsUsed(token: string) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(invitationTokens)
+    .set({ usedAt: new Date() })
+    .where(eq(invitationTokens.token, token));
+}
+
+export async function deleteExpiredInvitationTokens() {
+  const db = await getDb();
+  if (!db) return 0;
+
+  const result = await db
+    .delete(invitationTokens)
+    .where(lte(invitationTokens.expiresAt, new Date()));
+
+  return result;
+}
+
+export async function getInvitationTokenInfo(token: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(invitationTokens)
+    .where(
+      and(
+        eq(invitationTokens.token, token),
+        isNull(invitationTokens.usedAt),
+        gt(invitationTokens.expiresAt, new Date())
+      )
+    )
+    .limit(1);
+
+  return result.length > 0 ? result[0] : null;
 }

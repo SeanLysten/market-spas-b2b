@@ -45,6 +45,17 @@ export const appRouter = router({
       return { success: true } as const;
     }),
 
+    // Validate invitation token and get email
+    validateInvitationToken: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .query(async ({ input }) => {
+        const validation = await db.getInvitationTokenInfo(input.token);
+        if (!validation) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Token d\'invitation invalide ou expiré' });
+        }
+        return { email: validation.email, firstName: validation.firstName, lastName: validation.lastName };
+      }),
+
     // Local authentication
     loginLocal: publicProcedure
       .input(z.object({
@@ -74,13 +85,12 @@ export const appRouter = router({
         // Update last login
         await db.updateUserLastLogin(user.id, ctx.req.ip || 'unknown');
 
-        // Create session
-        const jwt = await import('jsonwebtoken');
-        const token = jwt.default.sign(
-          { userId: user.id, email: user.email },
-          process.env.JWT_SECRET!,
-          { expiresIn: '7d' }
-        );
+        // Create session using SDK (compatible with OAuth sessions)
+        const { sdk } = await import('./_core/sdk');
+        const token = await sdk.createSessionToken(user.openId, {
+          name: user.name || `${user.firstName} ${user.lastName}`,
+          expiresInMs: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
 
         // Set cookie
         const cookieOptions = getSessionCookieOptions(ctx.req);
@@ -97,8 +107,23 @@ export const appRouter = router({
         lastName: z.string().min(1),
         phone: z.string().optional(),
         companyName: z.string().optional(),
+        invitationToken: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
+        // Validate invitation token if provided
+        if (input.invitationToken) {
+          const validation = await db.validateInvitationToken(input.invitationToken, input.email);
+          if (!validation.valid) {
+            throw new TRPCError({ code: 'UNAUTHORIZED', message: validation.message });
+          }
+        } else {
+          // Registration requires an invitation token
+          throw new TRPCError({ 
+            code: 'UNAUTHORIZED', 
+            message: 'L\'inscription n\'est possible que sur invitation' 
+          });
+        }
+
         // Check if user already exists
         const existing = await db.getUserByEmail(input.email);
         if (existing) {
@@ -123,6 +148,11 @@ export const appRouter = router({
           phone: input.phone,
           loginMethod: 'local',
         });
+
+        // Mark invitation token as used
+        if (input.invitationToken) {
+          await db.markInvitationTokenAsUsed(input.invitationToken);
+        }
 
         return { success: true, userId: user.id };
       }),
@@ -1098,14 +1128,47 @@ export const appRouter = router({
             email: z.string().email(),
             firstName: z.string().optional(),
             lastName: z.string().optional(),
-            role: z.string(),
-            partnerId: z.number().optional(),
           })
         )
-        .mutation(async ({ input }) => {
-          // TODO: Implement email invitation
-          // For now, just create the user
-          return { success: true, message: "Invitation envoyée" };
+        .mutation(async ({ input, ctx }) => {
+          // Check if user already exists
+          const existingUser = await db.getUserByEmail(input.email);
+          if (existingUser) {
+            throw new TRPCError({ 
+              code: 'BAD_REQUEST', 
+              message: 'Un utilisateur avec cet email existe déjà' 
+            });
+          }
+
+          // Create invitation token (expires in 7 days)
+          const tokenData = await db.createInvitationToken(
+            input.email,
+            ctx.user.id,
+            7,
+            input.firstName,
+            input.lastName
+          );
+
+          if (!tokenData) {
+            throw new TRPCError({ 
+              code: 'INTERNAL_SERVER_ERROR', 
+              message: 'Erreur lors de la création du token d\'invitation' 
+            });
+          }
+
+          // Generate invitation link
+          const invitationUrl = `${process.env.VITE_OAUTH_PORTAL_URL || 'http://localhost:3000'}/register?token=${tokenData.token}`;
+
+          // TODO: Send email with invitation link
+          // For now, return the link so admin can share it manually
+          console.log(`[Invitation] Email: ${input.email}, Link: ${invitationUrl}`);
+
+          return { 
+            success: true, 
+            message: "Invitation créée avec succès",
+            invitationUrl,
+            expiresAt: tokenData.expiresAt
+          };
         }),
 
       toggleActive: adminProcedure
