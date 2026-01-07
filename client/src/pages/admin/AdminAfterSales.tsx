@@ -48,6 +48,7 @@ export default function AdminAfterSales() {
   const [orderBy, setOrderBy] = useState<string>("createdAt");
   const [orderDirection, setOrderDirection] = useState<"asc" | "desc">("desc");
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
+  const [statsPeriod, setStatsPeriod] = useState<string>("8weeks"); // 4weeks, 8weeks, 3months, 1year
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [statusFormData, setStatusFormData] = useState<{
     serviceId: number;
@@ -93,8 +94,8 @@ export default function AdminAfterSales() {
   });
 
   // Fetch statistics
-  const { data: statsData } = trpc.afterSales.stats.useQuery();
-  const { data: weeklyStats } = trpc.afterSales.weeklyStats.useQuery();
+  const { data: statsData } = trpc.afterSales.stats.useQuery({ period: statsPeriod });
+  const { data: weeklyStats } = trpc.afterSales.weeklyStats.useQuery({ period: statsPeriod });
   const { data: partners } = trpc.partners.list.useQuery({});
 
   // Update status mutation
@@ -509,6 +510,22 @@ export default function AdminAfterSales() {
         </TabsContent>
 
         <TabsContent value="stats">
+          {/* Period Filter */}
+          <div className="mb-6 flex items-center gap-4">
+            <Label htmlFor="stats-period" className="text-sm font-medium">Période d'analyse :</Label>
+            <Select value={statsPeriod} onValueChange={setStatsPeriod}>
+              <SelectTrigger id="stats-period" className="w-[200px]">
+                <SelectValue placeholder="Sélectionner une période" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="4weeks">Dernières 4 semaines</SelectItem>
+                <SelectItem value="8weeks">Dernières 8 semaines</SelectItem>
+                <SelectItem value="3months">Derniers 3 mois</SelectItem>
+                <SelectItem value="1year">Dernière année</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card>

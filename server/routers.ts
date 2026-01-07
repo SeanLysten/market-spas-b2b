@@ -2255,8 +2255,9 @@ export const appRouter = router({
       }),
 
     stats: adminProcedure
-      .query(async () => {
-        return await db.getAfterSalesStats();
+      .input(z.object({ period: z.string().optional().default("8weeks") }))
+      .query(async ({ input }) => {
+        return await db.getAfterSalesStats(input.period);
       }),
 
     statsByPartner: adminProcedure
@@ -2266,8 +2267,9 @@ export const appRouter = router({
       }),
 
     weeklyStats: adminProcedure
-      .query(async () => {
-        return await db.getAfterSalesWeeklyStats();
+      .input(z.object({ period: z.string().optional().default("8weeks") }))
+      .query(async ({ input }) => {
+        return await db.getAfterSalesWeeklyStats(input.period);
       }),
 
     statusHistory: protectedProcedure

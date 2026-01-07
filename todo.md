@@ -1191,3 +1191,13 @@
 - [x] Utiliser une requête SQL brute pour éviter les incohérences de noms de colonnes
 - [x] Tester la page Statistiques SAV
 - [x] Créer un checkpoint avec la correction finale
+
+
+## Session 7 janvier 2026 - Tickets SAV de test et filtre de période
+
+- [x] Créer un script de génération de tickets SAV de test (10-15 tickets sur 6-8 semaines)
+- [x] Exécuter le script pour peupler la base de données
+- [x] Ajouter un filtre de période dans l'onglet Statistiques (4 semaines, 3 mois, 1 an)
+- [x] Modifier les queries pour utiliser la période sélectionnée
+- [x] Tester les statistiques avec différentes périodes
+- [x] Créer un checkpoint final

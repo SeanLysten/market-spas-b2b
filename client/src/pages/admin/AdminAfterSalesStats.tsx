@@ -33,8 +33,8 @@ ChartJS.register(
 );
 
 export default function AdminAfterSalesStats() {
-  const { data: stats, isLoading: statsLoading } = trpc.afterSales.stats.useQuery();
-  const { data: weeklyStats, isLoading: weeklyLoading } = trpc.afterSales.weeklyStats.useQuery();
+  const { data: stats, isLoading: statsLoading } = trpc.afterSales.stats.useQuery({ period: "8weeks" });
+  const { data: weeklyStats, isLoading: weeklyLoading } = trpc.afterSales.weeklyStats.useQuery({ period: "8weeks" });
   const { data: partners } = trpc.partners.list.useQuery({});
 
   // Prepare data for charts

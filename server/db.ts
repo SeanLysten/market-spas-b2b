@@ -3945,15 +3945,28 @@ export async function addAfterSalesNote(
 // AFTER SALES STATISTICS
 // ============================================
 
-export async function getAfterSalesStats() {
+export async function getAfterSalesStats(period: string = "8weeks") {
   const db = await getDb();
   if (!db) return null;
   
   const { afterSalesServices } = await import("../drizzle/schema");
-  const { count, eq } = await import("drizzle-orm");
+  const { count, eq, sql } = await import("drizzle-orm");
+  
+  // Convert period to SQL interval
+  const intervalMap: Record<string, string> = {
+    "4weeks": "4 WEEK",
+    "8weeks": "8 WEEK",
+    "3months": "3 MONTH",
+    "1year": "1 YEAR",
+  };
+  const interval = intervalMap[period] || "8 WEEK";
+  const dateFilter = sql`${afterSalesServices.createdAt} >= DATE_SUB(NOW(), INTERVAL ${sql.raw(interval)})`;
   
   // Total tickets
-  const totalTickets = await db.select({ count: count() }).from(afterSalesServices);
+  const totalTickets = await db
+    .select({ count: count() })
+    .from(afterSalesServices)
+    .where(dateFilter);
   
   // Tickets by status
   const byStatus = await db
@@ -3962,6 +3975,7 @@ export async function getAfterSalesStats() {
       count: count() 
     })
     .from(afterSalesServices)
+    .where(dateFilter)
     .groupBy(afterSalesServices.status);
   
   // Tickets by urgency
@@ -3971,6 +3985,7 @@ export async function getAfterSalesStats() {
       count: count() 
     })
     .from(afterSalesServices)
+    .where(dateFilter)
     .groupBy(afterSalesServices.urgency);
   
   // Tickets by partner
@@ -3980,6 +3995,7 @@ export async function getAfterSalesStats() {
       count: count() 
     })
     .from(afterSalesServices)
+    .where(dateFilter)
     .groupBy(afterSalesServices.partnerId);
   
   return {
@@ -4030,9 +4046,18 @@ export async function getAfterSalesStatsByPartner(partnerId: number) {
   };
 }
 
-export async function getAfterSalesWeeklyStats() {
+export async function getAfterSalesWeeklyStats(period: string = "8weeks") {
   const db = await getDb();
   if (!db) return null;
+  
+  // Convert period to SQL interval
+  const intervalMap: Record<string, string> = {
+    "4weeks": "4 WEEK",
+    "8weeks": "8 WEEK",
+    "3months": "3 MONTH",
+    "1year": "1 YEAR",
+  };
+  const interval = intervalMap[period] || "8 WEEK";
   
   // Use raw SQL query to avoid Drizzle query builder issues
   const query = `
@@ -4040,7 +4065,7 @@ export async function getAfterSalesWeeklyStats() {
       YEARWEEK(createdAt, 1) as week,
       COUNT(*) as count
     FROM after_sales_services
-    WHERE createdAt >= DATE_SUB(NOW(), INTERVAL 8 WEEK)
+    WHERE createdAt >= DATE_SUB(NOW(), INTERVAL ${interval})
     GROUP BY YEARWEEK(createdAt, 1)
     ORDER BY YEARWEEK(createdAt, 1)
   `;
