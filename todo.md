@@ -1175,3 +1175,11 @@
 - [x] Corriger la syntaxe DATE_FORMAT pour compatibilité TiDB
 - [x] Tester la page Statistiques SAV
 - [x] Créer un checkpoint avec la correction
+
+
+## Session 7 janvier 2026 - Correction définitive erreur SQL weeklyStats
+
+- [x] Réécrire la requête weeklyStats avec une approche plus simple (sans CONCAT/LPAD)
+- [x] Utiliser YEARWEEK() ou une requête SQL brute simplifiée
+- [x] Tester la page Statistiques SAV
+- [x] Créer un checkpoint avec la correction définitive
