@@ -2061,8 +2061,14 @@ export const appRouter = router({
           throw new TRPCError({ code: "FORBIDDEN", message: "You can only create SAV requests for your own partner" });
         }
         
+        // If no partnerId is provided and user is not an admin, reject
+        if (!partnerId && ctx.user.role !== "ADMIN" && ctx.user.role !== "SUPER_ADMIN") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Partner ID required. Please select a partner or contact support to be associated with a partner." });
+        }
+        
+        // If admin without partnerId, require partnerId in input
         if (!partnerId) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Partner ID required" });
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Please select a partner for this SAV request" });
         }
 
         // Upload media to S3 if provided

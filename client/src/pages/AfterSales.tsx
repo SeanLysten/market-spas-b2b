@@ -265,6 +265,28 @@ export default function AfterSales() {
                 </Select>
               </div>
 
+              {/* Partner selector - shown if user has no partnerId */}
+              {!user?.partnerId && (
+                <div className="space-y-2">
+                  <Label htmlFor="partner">Partenaire * {!user?.partnerId && <span className="text-xs text-muted-foreground">(requis)</span>}</Label>
+                  <Select
+                    value={selectedPartnerId?.toString() || ""}
+                    onValueChange={(value) => setSelectedPartnerId(value ? parseInt(value) : null)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez un partenaire" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {partners?.map((p) => (
+                        <SelectItem key={p.id} value={p.id.toString()}>
+                          {p.companyName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="border-t pt-4">
                 <h3 className="font-semibold mb-3">Informations client</h3>
                 <div className="grid grid-cols-2 gap-4">

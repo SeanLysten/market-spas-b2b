@@ -1134,3 +1134,20 @@
 - [x] Intégrer la logique de filtrage dans useWebSocket
 - [x] Tester le système complet avec différents scénarios
 - [x] Créer un checkpoint final
+
+
+## Session 7 janvier 2026 - Bug attribution ID ticket SAV
+
+- [ ] Identifier le problème d'attribution d'ID lors de la création de ticket SAV
+- [ ] Corriger le bug dans la route afterSales.create
+- [ ] Tester la création de ticket SAV en tant qu'utilisateur
+- [ ] Créer un checkpoint avec la correction
+
+
+## Session 7 janvier 2026 - Correction bug attribution ID SAV
+
+- [x] Identifier le problème dans le code de création de ticket SAV
+- [x] Corriger le bug pour permettre aux utilisateurs sans partnerId de créer des tickets
+- [x] Ajouter un sélecteur de partenaire dans le formulaire SAV
+- [x] Tester la création de ticket avec le nouveau formulaire
+- [x] Créer un checkpoint avec la correction
