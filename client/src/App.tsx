@@ -40,8 +40,11 @@ import TechnicalResources from "./pages/TechnicalResources";
 import ForumNewTopic from "./pages/ForumNewTopic";
 import ForumTopicDetail from "./pages/ForumTopicDetail";
 import AcceptInvitation from "./pages/AcceptInvitation";
+import { useWebSocket } from "./hooks/useWebSocket";
 
 function Router() {
+  // Initialize WebSocket connection for real-time notifications
+  useWebSocket();
   return (
     <Switch>
       <Route path="/" component={Home} />

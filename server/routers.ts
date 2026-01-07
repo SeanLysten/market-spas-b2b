@@ -9,6 +9,7 @@ import * as territoriesDb from "./territories-db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { notifyOwner } from "./_core/notification";
+import { notifyPartner, notifyAdmins } from "./_core/websocket";
 
 export const appRouter = router({
   system: systemRouter,
@@ -2157,6 +2158,18 @@ export const appRouter = router({
             title: `Ticket SAV ${service.service.ticketNumber} - Statut mis à jour`,
             content: `Le statut du ticket SAV a été mis à jour : ${statusLabels[input.status] || input.status}${input.resolutionNotes ? `\n\nNotes: ${input.resolutionNotes}` : ''}`,
           }).catch(err => console.error("Failed to send status update notification:", err));
+
+          // Send real-time WebSocket notification to partner
+          try {
+            notifyPartner(service.service.partnerId, "sav:status_changed", {
+              savId: input.id,
+              ticketNumber: service.service.ticketNumber,
+              oldStatus: service.service.status,
+              newStatus: input.status,
+            });
+          } catch (err) {
+            console.error("Failed to send WebSocket notification:", err);
+          }
         }
 
         return { success: true };

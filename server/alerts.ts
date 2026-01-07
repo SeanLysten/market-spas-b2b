@@ -1,5 +1,6 @@
 import * as db from "./db";
 import { notifyOwner } from "./_core/notification";
+import { notifyPartner, notifyAdmins } from "./_core/websocket";
 
 /**
  * Check for low stock products and send alerts
@@ -101,6 +102,18 @@ export async function notifyOrderStatusChange(
       content: `Partenaire: ${partner.companyName}\nStatut: ${statusLabels[oldStatus] || oldStatus} → ${statusLabels[newStatus] || newStatus}\nMontant: ${order.totalTTC} €\n\nConsulter la commande dans l'admin.`,
     });
 
+    // Send real-time WebSocket notification to partner
+    try {
+      notifyPartner(order.partnerId, "order:status_changed", {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        oldStatus,
+        newStatus,
+      });
+    } catch (err) {
+      console.error("[Alerts] Failed to send WebSocket notification:", err);
+    }
+
     console.log(`[Alerts] Order status change notification sent for order ${orderId}`);
     return { success: true };
   } catch (error) {
@@ -130,6 +143,17 @@ export async function notifyNewOrder(orderId: number) {
       title: `🎉 Nouvelle Commande ${order.orderNumber}`,
       content: `Partenaire: ${partner.companyName}\nMontant HT: ${order.subtotalHT} €\nMontant TTC: ${order.totalTTC} €\nStatut: En attente d'approbation\n\nConsulter la commande dans l'admin.`,
     });
+
+    // Send real-time WebSocket notification to admins
+    try {
+      notifyAdmins("order:new", {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        totalAmount: parseFloat(order.totalTTC),
+      });
+    } catch (err) {
+      console.error("[Alerts] Failed to send WebSocket notification:", err);
+    }
 
     console.log(`[Alerts] New order notification sent for order ${orderId}`);
     return { success: true };

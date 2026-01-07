@@ -742,9 +742,9 @@ export async function addToCart(userId: number, productId: number, quantity: num
     ).limit(1);
 
     if (existing[0]) {
-      // Update quantity
+      // Replace quantity instead of accumulating
       await db.update(cartItems)
-        .set({ quantity: existing[0].quantity + quantity })
+        .set({ quantity: quantity })
         .where(eq(cartItems.id, existing[0].id));
     } else {
       // Insert new item

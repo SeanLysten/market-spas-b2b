@@ -1092,3 +1092,35 @@
 - [ ] Navigation entre les pages
 - [ ] Page admin SAV
 - [ ] Statistiques SAV
+
+
+## 🚨 Tâches Prioritaires (Session Actuelle)
+
+### Bug Critique du Panier - CORRIGÉ ET TESTÉ
+- [x] Investiguer la logique de synchronisation des quantités entre frontend et backend
+- [x] Identifier la cause du bug (quantité 57 au lieu de 2) - Accumulation au lieu de remplacement
+- [x] Corriger la logique d'ajout au panier dans le backend - Remplacer au lieu d'accumuler
+- [x] Corriger la gestion de l'état du panier dans le frontend - Déjà correct (disabled pendant mutation)
+- [x] Tester l'ajout de plusieurs produits avec différentes quantités - TESTÉ ET VALIDÉ (3 unités)
+- [x] Vérifier la persistance après rafraîchissement de la page - VALIDÉ
+
+### Notifications en Temps Réel (WebSocket)
+- [ ] Installer les dépendances WebSocket (socket.io)
+- [ ] Créer le serveur WebSocket dans le backend
+- [ ] Implémenter les événements pour les changements de statut de commandes
+- [ ] Implémenter les événements pour les changements de statut SAV
+- [ ] Créer le composant NotificationProvider dans le frontend
+- [ ] Intégrer les notifications dans le dashboard utilisateur
+- [ ] Intégrer les notifications dans le dashboard admin
+- [ ] Ajouter des toasts pour afficher les notifications
+- [ ] Tester les notifications en temps réel
+
+## Session 7 janvier 2026 - Notifications WebSocket en temps réel
+
+- [x] Créer l'infrastructure WebSocket serveur (server/websocket.ts)
+- [x] Créer le hook React useWebSocket (client/src/hooks/useWebSocket.ts)
+- [x] Intégrer le hook dans App.tsx
+- [x] Ajouter les notifications WebSocket dans les mutations SAV (routers.ts)
+- [x] Ajouter les notifications WebSocket dans les mutations commandes (alerts.ts)
+- [x] Tester les notifications en temps réel
+- [x] Créer le rapport complet d'intégration (RAPPORT-NOTIFICATIONS-WEBSOCKET.md)
