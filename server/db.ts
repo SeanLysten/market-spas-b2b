@@ -4034,24 +4034,19 @@ export async function getAfterSalesWeeklyStats() {
   const db = await getDb();
   if (!db) return null;
   
-  const { afterSalesServices } = await import("../drizzle/schema");
-  const { count, sql } = await import("drizzle-orm");
+  // Use raw SQL query to avoid Drizzle query builder issues
+  const query = `
+    SELECT 
+      YEARWEEK(createdAt, 1) as week,
+      COUNT(*) as count
+    FROM after_sales_services
+    WHERE createdAt >= DATE_SUB(NOW(), INTERVAL 8 WEEK)
+    GROUP BY YEARWEEK(createdAt, 1)
+    ORDER BY YEARWEEK(createdAt, 1)
+  `;
   
-  // Get weekly stats for the last 8 weeks
-  // Use YEARWEEK() for TiDB compatibility
-  const weeklyStats = await db
-    .select({
-      week: sql<string>`YEARWEEK(${afterSalesServices.createdAt}, 1)`,
-      count: count(),
-    })
-    .from(afterSalesServices)
-    .where(
-      sql`${afterSalesServices.createdAt} >= DATE_SUB(NOW(), INTERVAL 8 WEEK)`
-    )
-    .groupBy(sql`YEARWEEK(${afterSalesServices.createdAt}, 1)`)
-    .orderBy(sql`YEARWEEK(${afterSalesServices.createdAt}, 1)`);
-  
-  return weeklyStats;
+  const [rows] = await db.execute(query) as any;
+  return rows as Array<{ week: string; count: number }>;
 }
 
 

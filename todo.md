@@ -1183,3 +1183,11 @@
 - [x] Utiliser YEARWEEK() ou une requête SQL brute simplifiée
 - [x] Tester la page Statistiques SAV
 - [x] Créer un checkpoint avec la correction définitive
+
+
+## Session 7 janvier 2026 - Correction SQL weeklyStats avec requête brute
+
+- [x] Réécrire getAfterSalesWeeklyStats() avec db.execute() au lieu du query builder
+- [x] Utiliser une requête SQL brute pour éviter les incohérences de noms de colonnes
+- [x] Tester la page Statistiques SAV
+- [x] Créer un checkpoint avec la correction finale
