@@ -14,6 +14,9 @@ import AfterSalesDetail from "@/components/AfterSalesDetail";
 
 
 export default function AfterSales() {
+  const { data: user } = trpc.auth.me.useQuery();
+  const { data: partners } = trpc.partners.list.useQuery({});
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [urgencyFilter, setUrgencyFilter] = useState<string>("all");
@@ -24,6 +27,7 @@ export default function AfterSales() {
   const [orderDirection, setOrderDirection] = useState<"asc" | "desc">("desc");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
+  const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(null);
   const toast = (opts: { title: string; description: string; variant?: string }) => {
     alert(`${opts.title}: ${opts.description}`);
   };
@@ -129,6 +133,7 @@ export default function AfterSales() {
     createMutation.mutate({
       ...formData,
       media: mediaData.length > 0 ? mediaData : undefined,
+      partnerId: selectedPartnerId || undefined,
     });
   };
 

@@ -1010,3 +1010,9 @@
 - [x] Ajouter le bouton "Réinitialiser" dans la section filtres de AfterSales
 - [x] Créer la fonction handleResetFilters dans AdminAfterSales.tsx
 - [x] Ajouter le bouton "Réinitialiser" dans la section filtres de AdminAfterSales
+
+## Bug: Partner ID required pour super admins
+- [x] Adapter le router afterSales.create pour accepter partnerId en paramètre optionnel
+- [x] Permettre aux super admins de spécifier le partnerId lors de la création
+- [x] Ajouter un sélecteur de partenaire dans le formulaire de création SAV pour les admins
+- [x] Masquer le sélecteur de partenaire pour les utilisateurs normaux (utiliser leur partnerId automatiquement)

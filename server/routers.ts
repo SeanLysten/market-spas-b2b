@@ -1997,6 +1997,7 @@ export const appRouter = router({
           customerEmail: z.string().optional(),
           customerAddress: z.string().optional(),
           installationDate: z.string().optional(),
+          partnerId: z.number().optional(),
           media: z.array(
             z.object({
               base64: z.string(),
@@ -2008,7 +2009,15 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ ctx, input }) => {
-        if (!ctx.user.partnerId) {
+        // Determine which partner to use
+        let partnerId = input.partnerId || ctx.user.partnerId;
+        
+        // Only admins can specify a different partner
+        if (input.partnerId && ctx.user.partnerId && input.partnerId !== ctx.user.partnerId && ctx.user.role !== "ADMIN" && ctx.user.role !== "SUPER_ADMIN") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "You can only create SAV requests for your own partner" });
+        }
+        
+        if (!partnerId) {
           throw new TRPCError({ code: "FORBIDDEN", message: "Partner ID required" });
         }
 
@@ -2018,7 +2027,7 @@ export const appRouter = router({
           for (const item of input.media) {
             const buffer = Buffer.from(item.base64, "base64");
             const ext = item.type === "VIDEO" ? "mp4" : "jpg";
-            const fileKey = `sav/${ctx.user.partnerId}/${Date.now()}-${nanoid()}.${ext}`;
+            const fileKey = `sav/${partnerId}/${Date.now()}-${nanoid()}.${ext}`;
             const { url } = await storagePut(fileKey, buffer, item.mimeType);
             uploadedMedia.push({
               url,
@@ -2030,7 +2039,7 @@ export const appRouter = router({
         }
 
         const result = await db.createAfterSalesService({
-          partnerId: ctx.user.partnerId,
+          partnerId: partnerId,
           productId: input.productId,
           serialNumber: input.serialNumber,
           issueType: input.issueType,
