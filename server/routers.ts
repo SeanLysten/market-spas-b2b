@@ -1641,6 +1641,67 @@ export const appRouter = router({
         .mutation(async ({ input }) => {
           return await db.assignLeadToPartner(input.leadId, input.partnerId);
         }),
+
+      // Webhook endpoint for Zapier/Make (public, no auth required)
+      webhook: publicProcedure
+        .input(z.object({
+          firstName: z.string().optional(),
+          lastName: z.string().optional(),
+          email: z.string().email(),
+          phone: z.string().optional(),
+          city: z.string().optional(),
+          postalCode: z.string().optional(),
+          companyName: z.string().optional(),
+          message: z.string().optional(),
+          source: z.enum(["FACEBOOK", "INSTAGRAM", "GOOGLE", "WEBSITE", "REFERRAL", "OTHER"]).optional().default("FACEBOOK"),
+          productInterest: z.string().optional(),
+          budget: z.string().optional(),
+          campaignId: z.string().optional(),
+          campaignName: z.string().optional(),
+          adId: z.string().optional(),
+          adName: z.string().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          // Map source to internal format
+          const sourceMap: Record<string, string> = {
+            FACEBOOK: "META_ADS",
+            INSTAGRAM: "META_ADS",
+            GOOGLE: "GOOGLE_ADS",
+            WEBSITE: "WEBSITE",
+            REFERRAL: "REFERRAL",
+            OTHER: "OTHER",
+          };
+
+          // Create lead in database
+          const lead = await db.createLead({
+            firstName: input.firstName,
+            lastName: input.lastName,
+            email: input.email,
+            phone: input.phone,
+            city: input.city,
+            postalCode: input.postalCode,
+            productInterest: input.productInterest || input.companyName,
+            budget: input.budget,
+            message: input.message,
+            source: sourceMap[input.source] as any,
+            metaCampaignId: input.campaignId,
+            metaAdId: input.adId,
+          });
+
+          // Notify admins about new lead
+          try {
+            notifyAdmins("NEW_LEAD", {
+              title: "Nouveau lead reçu",
+              message: `${input.firstName || ''} ${input.lastName || ''} (${input.email})`,
+              leadId: lead,
+            });
+          } catch (error) {
+            // Log error but don't fail the webhook
+            console.error('Failed to send notification:', error);
+          }
+
+          return { success: true, leadId: lead };
+        }),
     }),
 
     // Territory management
@@ -2481,6 +2542,71 @@ export const appRouter = router({
     responseTemplates: adminProcedure
       .query(async () => {
         return await db.getResponseTemplates();
+      }),
+  }),
+
+  // ============================================
+  // WEBHOOKS (Public endpoints for integrations)
+  // ============================================
+  webhooks: router({
+    // Meta Leads webhook for Zapier/Make
+    metaLeads: publicProcedure
+      .input(z.object({
+        firstName: z.string().optional(),
+        lastName: z.string().optional(),
+        email: z.string().email(),
+        phone: z.string().optional(),
+        city: z.string().optional(),
+        postalCode: z.string().optional(),
+        companyName: z.string().optional(),
+        message: z.string().optional(),
+        source: z.enum(["FACEBOOK", "INSTAGRAM", "GOOGLE", "WEBSITE", "REFERRAL", "OTHER"]).optional().default("FACEBOOK"),
+        productInterest: z.string().optional(),
+        budget: z.string().optional(),
+        campaignId: z.string().optional(),
+        campaignName: z.string().optional(),
+        adId: z.string().optional(),
+        adName: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        // Map source to internal format
+        const sourceMap: Record<string, string> = {
+          FACEBOOK: "META_ADS",
+          INSTAGRAM: "META_ADS",
+          GOOGLE: "GOOGLE_ADS",
+          WEBSITE: "WEBSITE",
+          REFERRAL: "REFERRAL",
+          OTHER: "OTHER",
+        };
+
+        // Create lead in database
+        const lead = await db.createLead({
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
+          phone: input.phone,
+          city: input.city,
+          postalCode: input.postalCode,
+          productInterest: input.productInterest || input.companyName,
+          budget: input.budget,
+          message: input.message,
+          source: sourceMap[input.source] as any,
+          metaCampaignId: input.campaignId,
+          metaAdId: input.adId,
+        });
+
+        // Notify admins about new lead
+        try {
+          notifyAdmins("NEW_LEAD", {
+            title: "Nouveau lead reçu",
+            message: `${input.firstName || ''} ${input.lastName || ''} (${input.email})`,
+            leadId: lead,
+          });
+        } catch (error) {
+          console.error('Failed to send notification:', error);
+        }
+
+        return { success: true, leadId: lead };
       }),
   }),
 });

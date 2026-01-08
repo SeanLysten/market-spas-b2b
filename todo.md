@@ -1251,3 +1251,11 @@
 - [x] Diagnostiquer pourquoi adminProcedure rejette même les utilisateurs SUPER_ADMIN
 - [x] Corriger la logique de vérification des rôles dans le middleware (JWT incompatible)
 - [x] Tester la génération d'invitation avec le compte admin
+
+## INTÉGRATION META LEADS (via Zapier/Make)
+- [x] Créer la table leads dans la base de données (déjà existante)
+- [x] Créer la route API webhook pour recevoir les leads
+- [x] Créer l'interface admin pour visualiser les leads (déjà existante)
+- [x] Ajouter le système de notifications (déjà intégré)
+- [x] Créer la documentation Zapier/Make
+- [ ] Tester avec un lead test
