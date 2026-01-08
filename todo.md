@@ -1259,3 +1259,8 @@
 - [x] Ajouter le système de notifications (déjà intégré)
 - [x] Créer la documentation Zapier/Make
 - [ ] Tester avec un lead test
+
+## CORRECTION WEBHOOK META LEADS
+- [x] Corriger le problème SQL dans la fonction createLead
+- [x] Tester l'enregistrement d'un lead via le webhook
+- [x] Vérifier que le lead apparaît dans l'interface admin

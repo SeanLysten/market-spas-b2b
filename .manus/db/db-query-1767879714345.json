@@ -1,0 +1,25 @@
+{
+  "query": "SELECT id, firstName, lastName, email, phone, city, postalCode, status, source, productInterest, budget, message, createdAt FROM leads ORDER BY id DESC LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, firstName, lastName, email, phone, city, postalCode, status, source, productInterest, budget, message, createdAt FROM leads ORDER BY id DESC LIMIT 1;",
+  "rows": [
+    {
+      "id": "1",
+      "firstName": "Julie",
+      "lastName": "Martin",
+      "email": "julie.martin@test.com",
+      "phone": "+32478123456",
+      "city": "Namur",
+      "postalCode": "5000",
+      "status": "NEW",
+      "source": "META_ADS",
+      "productInterest": "Spa 5 places",
+      "budget": "8000€",
+      "message": "Intéressée par un spa 5 places",
+      "createdAt": "2026-01-08 13:41:29"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\temail\tphone\tcity\tpostalCode\tstatus\tsource\tproductInterest\tbudget\tmessage\tcreatedAt\n1\tJulie\tMartin\tjulie.martin@test.com\t+32478123456\tNamur\t5000\tNEW\tMETA_ADS\tSpa 5 places\t8000€\tIntéressée par un spa 5 places\t2026-01-08 13:41:29\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

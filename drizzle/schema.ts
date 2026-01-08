@@ -1171,7 +1171,7 @@ export const events = mysqlTable(
 // LEADS MANAGEMENT (Meta Ads Integration)
 // ============================================
 
-export const leadStatusEnum = mysqlEnum("lead_status", [
+export const leadStatusEnum = mysqlEnum("status", [
   "NEW",
   "ASSIGNED",
   "CONTACTED",
@@ -1185,7 +1185,7 @@ export const leadStatusEnum = mysqlEnum("lead_status", [
   "LOST",
 ]);
 
-export const leadSourceEnum = mysqlEnum("lead_source", [
+export const leadSourceEnum = mysqlEnum("source", [
   "META_ADS",
   "GOOGLE_ADS",
   "WEBSITE",
