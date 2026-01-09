@@ -1,0 +1,394 @@
+{
+  "query": "SELECT r.id, r.name \nFROM regions r \nJOIN countries c ON c.id = r.countryId \nWHERE c.code = 'FR' AND r.isActive = 1 \nORDER BY r.name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT r.id, r.name \nFROM regions r \nJOIN countries c ON c.id = r.countryId \nWHERE c.code = 'FR' AND r.isActive = 1 \nORDER BY r.name;",
+  "rows": [
+    {
+      "id": "30034",
+      "name": "Ain"
+    },
+    {
+      "id": "30035",
+      "name": "Aisne"
+    },
+    {
+      "id": "30036",
+      "name": "Allier"
+    },
+    {
+      "id": "30037",
+      "name": "Alpes-de-Haute-Provence"
+    },
+    {
+      "id": "30039",
+      "name": "Alpes-Maritimes"
+    },
+    {
+      "id": "30040",
+      "name": "Ardèche"
+    },
+    {
+      "id": "30041",
+      "name": "Ardennes"
+    },
+    {
+      "id": "30042",
+      "name": "Ariège"
+    },
+    {
+      "id": "30043",
+      "name": "Aube"
+    },
+    {
+      "id": "30044",
+      "name": "Aude"
+    },
+    {
+      "id": "30045",
+      "name": "Aveyron"
+    },
+    {
+      "id": "30101",
+      "name": "Bas-Rhin"
+    },
+    {
+      "id": "30046",
+      "name": "Bouches-du-Rhône"
+    },
+    {
+      "id": "30047",
+      "name": "Calvados"
+    },
+    {
+      "id": "30048",
+      "name": "Cantal"
+    },
+    {
+      "id": "30049",
+      "name": "Charente"
+    },
+    {
+      "id": "30050",
+      "name": "Charente-Maritime"
+    },
+    {
+      "id": "30051",
+      "name": "Cher"
+    },
+    {
+      "id": "30052",
+      "name": "Corrèze"
+    },
+    {
+      "id": "30053",
+      "name": "Corse-du-Sud"
+    },
+    {
+      "id": "30055",
+      "name": "Côte-d'Or"
+    },
+    {
+      "id": "30056",
+      "name": "Côtes-d'Armor"
+    },
+    {
+      "id": "30057",
+      "name": "Creuse"
+    },
+    {
+      "id": "30113",
+      "name": "Deux-Sèvres"
+    },
+    {
+      "id": "30058",
+      "name": "Dordogne"
+    },
+    {
+      "id": "30059",
+      "name": "Doubs"
+    },
+    {
+      "id": "30060",
+      "name": "Drôme"
+    },
+    {
+      "id": "30125",
+      "name": "Essonne"
+    },
+    {
+      "id": "30061",
+      "name": "Eure"
+    },
+    {
+      "id": "30062",
+      "name": "Eure-et-Loir"
+    },
+    {
+      "id": "30063",
+      "name": "Finistère"
+    },
+    {
+      "id": "30064",
+      "name": "Gard"
+    },
+    {
+      "id": "30066",
+      "name": "Gers"
+    },
+    {
+      "id": "30067",
+      "name": "Gironde"
+    },
+    {
+      "id": "30102",
+      "name": "Haut-Rhin"
+    },
+    {
+      "id": "30054",
+      "name": "Haute-Corse"
+    },
+    {
+      "id": "30065",
+      "name": "Haute-Garonne"
+    },
+    {
+      "id": "30077",
+      "name": "Haute-Loire"
+    },
+    {
+      "id": "30086",
+      "name": "Haute-Marne"
+    },
+    {
+      "id": "30104",
+      "name": "Haute-Saône"
+    },
+    {
+      "id": "30108",
+      "name": "Haute-Savoie"
+    },
+    {
+      "id": "30121",
+      "name": "Haute-Vienne"
+    },
+    {
+      "id": "30038",
+      "name": "Hautes-Alpes"
+    },
+    {
+      "id": "30099",
+      "name": "Hautes-Pyrénées"
+    },
+    {
+      "id": "30126",
+      "name": "Hauts-de-Seine"
+    },
+    {
+      "id": "30068",
+      "name": "Hérault"
+    },
+    {
+      "id": "30069",
+      "name": "Ille-et-Vilaine"
+    },
+    {
+      "id": "30070",
+      "name": "Indre"
+    },
+    {
+      "id": "30071",
+      "name": "Indre-et-Loire"
+    },
+    {
+      "id": "30072",
+      "name": "Isère"
+    },
+    {
+      "id": "30073",
+      "name": "Jura"
+    },
+    {
+      "id": "30074",
+      "name": "Landes"
+    },
+    {
+      "id": "30075",
+      "name": "Loir-et-Cher"
+    },
+    {
+      "id": "30076",
+      "name": "Loire"
+    },
+    {
+      "id": "30078",
+      "name": "Loire-Atlantique"
+    },
+    {
+      "id": "30079",
+      "name": "Loiret"
+    },
+    {
+      "id": "30080",
+      "name": "Lot"
+    },
+    {
+      "id": "30081",
+      "name": "Lot-et-Garonne"
+    },
+    {
+      "id": "30082",
+      "name": "Lozère"
+    },
+    {
+      "id": "30083",
+      "name": "Maine-et-Loire"
+    },
+    {
+      "id": "30084",
+      "name": "Manche"
+    },
+    {
+      "id": "30085",
+      "name": "Marne"
+    },
+    {
+      "id": "30087",
+      "name": "Mayenne"
+    },
+    {
+      "id": "30088",
+      "name": "Meurthe-et-Moselle"
+    },
+    {
+      "id": "30089",
+      "name": "Meuse"
+    },
+    {
+      "id": "30090",
+      "name": "Morbihan"
+    },
+    {
+      "id": "30091",
+      "name": "Moselle"
+    },
+    {
+      "id": "30092",
+      "name": "Nièvre"
+    },
+    {
+      "id": "30093",
+      "name": "Nord"
+    },
+    {
+      "id": "30094",
+      "name": "Oise"
+    },
+    {
+      "id": "30095",
+      "name": "Orne"
+    },
+    {
+      "id": "30109",
+      "name": "Paris"
+    },
+    {
+      "id": "30096",
+      "name": "Pas-de-Calais"
+    },
+    {
+      "id": "30097",
+      "name": "Puy-de-Dôme"
+    },
+    {
+      "id": "30098",
+      "name": "Pyrénées-Atlantiques"
+    },
+    {
+      "id": "30100",
+      "name": "Pyrénées-Orientales"
+    },
+    {
+      "id": "30103",
+      "name": "Rhône"
+    },
+    {
+      "id": "30105",
+      "name": "Saône-et-Loire"
+    },
+    {
+      "id": "30106",
+      "name": "Sarthe"
+    },
+    {
+      "id": "30107",
+      "name": "Savoie"
+    },
+    {
+      "id": "30111",
+      "name": "Seine-et-Marne"
+    },
+    {
+      "id": "30110",
+      "name": "Seine-Maritime"
+    },
+    {
+      "id": "30127",
+      "name": "Seine-Saint-Denis"
+    },
+    {
+      "id": "30114",
+      "name": "Somme"
+    },
+    {
+      "id": "30115",
+      "name": "Tarn"
+    },
+    {
+      "id": "30116",
+      "name": "Tarn-et-Garonne"
+    },
+    {
+      "id": "30124",
+      "name": "Territoire de Belfort"
+    },
+    {
+      "id": "30129",
+      "name": "Val-d'Oise"
+    },
+    {
+      "id": "30128",
+      "name": "Val-de-Marne"
+    },
+    {
+      "id": "30117",
+      "name": "Var"
+    },
+    {
+      "id": "30118",
+      "name": "Vaucluse"
+    },
+    {
+      "id": "30119",
+      "name": "Vendée"
+    },
+    {
+      "id": "30120",
+      "name": "Vienne"
+    },
+    {
+      "id": "30122",
+      "name": "Vosges"
+    },
+    {
+      "id": "30123",
+      "name": "Yonne"
+    },
+    {
+      "id": "30112",
+      "name": "Yvelines"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n30034\tAin\n30035\tAisne\n30036\tAllier\n30037\tAlpes-de-Haute-Provence\n30039\tAlpes-Maritimes\n30040\tArdèche\n30041\tArdennes\n30042\tAriège\n30043\tAube\n30044\tAude\n30045\tAveyron\n30101\tBas-Rhin\n30046\tBouches-du-Rhône\n30047\tCalvados\n30048\tCantal\n30049\tCharente\n30050\tCharente-Maritime\n30051\tCher\n30052\tCorrèze\n30053\tCorse-du-Sud\n30055\tCôte-d'Or\n30056\tCôtes-d'Armor\n30057\tCreuse\n30113\tDeux-Sèvres\n30058\tDordogne\n30059\tDoubs\n30060\tDrôme\n30125\tEssonne\n30061\tEure\n30062\tEure-et-Loir\n30063\tFinistère\n30064\tGard\n30066\tGers\n30067\tGironde\n30102\tHaut-Rhin\n30054\tHaute-Corse\n30065\tHaute-Garonne\n30077\tHaute-Loire\n30086\tHaute-Marne\n30104\tHaute-Saône\n30108\tHaute-Savoie\n30121\tHaute-Vienne\n30038\tHautes-Alpes\n30099\tHautes-Pyrénées\n30126\tHauts-de-Seine\n30068\tHérault\n30069\tIlle-et-Vilaine\n30070\tIndre\n30071\tIndre-et-Loire\n30072\tIsère\n30073\tJura\n30074\tLandes\n30075\tLoir-et-Cher\n30076\tLoire\n30078\tLoire-Atlantique\n30079\tLoiret\n30080\tLot\n30081\tLot-et-Garonne\n30082\tLozère\n30083\tMaine-et-Loire\n30084\tManche\n30085\tMarne\n30087\tMayenne\n30088\tMeurthe-et-Moselle\n30089\tMeuse\n30090\tMorbihan\n30091\tMoselle\n30092\tNièvre\n30093\tNord\n30094\tOise\n30095\tOrne\n30109\tParis\n30096\tPas-de-Calais\n30097\tPuy-de-Dôme\n30098\tPyrénées-Atlantiques\n30100\tPyrénées-Orientales\n30103\tRhône\n30105\tSaône-et-Loire\n30106\tSarthe\n30107\tSavoie\n30111\tSeine-et-Marne\n30110\tSeine-Maritime\n30127\tSeine-Saint-Denis\n30114\tSomme\n30115\tTarn\n30116\tTarn-et-Garonne\n30124\tTerritoire de Belfort\n30129\tVal-d'Oise\n30128\tVal-de-Marne\n30117\tVar\n30118\tVaucluse\n30119\tVendée\n30120\tVienne\n30122\tVosges\n30123\tYonne\n30112\tYvelines\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

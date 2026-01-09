@@ -1308,3 +1308,8 @@
 - [x] Remplir la table postal_code_ranges avec toutes les plages de codes postaux belges
 - [x] Corriger l'affichage pour montrer le vrai nom du partenaire assigné
 - [x] Réassigner tous les leads existants avec les codes postaux configurés
+
+- [x] Remplir les codes postaux pour la France
+- [x] Remplir les codes postaux pour l'Allemagne
+- [x] Remplir les codes postaux pour l'Espagne
+- [x] Remplir les codes postaux pour les Pays-Bas

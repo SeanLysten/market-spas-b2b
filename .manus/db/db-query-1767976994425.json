@@ -1,0 +1,70 @@
+{
+  "query": "SELECT r.id, r.name \nFROM regions r \nJOIN countries c ON c.id = r.countryId \nWHERE c.code = 'ES' AND r.isActive = 1 \nORDER BY r.name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT r.id, r.name \nFROM regions r \nJOIN countries c ON c.id = r.countryId \nWHERE c.code = 'ES' AND r.isActive = 1 \nORDER BY r.name;",
+  "rows": [
+    {
+      "id": "30166",
+      "name": "Alicante"
+    },
+    {
+      "id": "30157",
+      "name": "Barcelona"
+    },
+    {
+      "id": "30165",
+      "name": "Bilbao"
+    },
+    {
+      "id": "30167",
+      "name": "Córdoba"
+    },
+    {
+      "id": "30170",
+      "name": "Gijón"
+    },
+    {
+      "id": "30164",
+      "name": "Las Palmas"
+    },
+    {
+      "id": "30156",
+      "name": "Madrid"
+    },
+    {
+      "id": "30161",
+      "name": "Málaga"
+    },
+    {
+      "id": "30162",
+      "name": "Murcia"
+    },
+    {
+      "id": "30163",
+      "name": "Palma de Mallorca"
+    },
+    {
+      "id": "30159",
+      "name": "Sevilla"
+    },
+    {
+      "id": "30158",
+      "name": "Valencia"
+    },
+    {
+      "id": "30168",
+      "name": "Valladolid"
+    },
+    {
+      "id": "30169",
+      "name": "Vigo"
+    },
+    {
+      "id": "30160",
+      "name": "Zaragoza"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n30166\tAlicante\n30157\tBarcelona\n30165\tBilbao\n30167\tCórdoba\n30170\tGijón\n30164\tLas Palmas\n30156\tMadrid\n30161\tMálaga\n30162\tMurcia\n30163\tPalma de Mallorca\n30159\tSevilla\n30158\tValencia\n30168\tValladolid\n30169\tVigo\n30160\tZaragoza\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}
