@@ -1666,6 +1666,71 @@ export const appRouter = router({
           return await db.assignLeadToPartner(input.leadId, input.partnerId);
         }),
 
+      reassignAll: adminProcedure
+        .mutation(async () => {
+          const { findBestPartnerForPostalCode } = await import('./territories-db');
+          
+          // Récupérer tous les leads non assignés avec un code postal
+          const unassignedLeads = await db.getLeads({});
+          const leadsWithPostalCode = unassignedLeads.filter((lead: any) => {
+            const postalCode = lead.leads?.postalCode || lead.postalCode;
+            return postalCode && postalCode.trim() !== '';
+          });
+
+          let assignedCount = 0;
+          let notFoundCount = 0;
+          const results = [];
+
+          for (const leadData of leadsWithPostalCode) {
+            const lead = leadData.leads || leadData;
+            const postalCode = lead.postalCode;
+
+            try {
+              if (!postalCode) continue;
+              const partner = await findBestPartnerForPostalCode(postalCode);
+              
+              if (partner) {
+                await db.assignLeadToPartner(lead.id, partner.partnerId);
+                assignedCount++;
+                results.push({
+                  leadId: lead.id,
+                  email: lead.email,
+                  postalCode,
+                  assigned: true,
+                  partnerName: partner.partnerName,
+                  region: partner.region,
+                });
+              } else {
+                notFoundCount++;
+                results.push({
+                  leadId: lead.id,
+                  email: lead.email,
+                  postalCode,
+                  assigned: false,
+                  reason: 'Aucun partenaire trouvé pour cette région',
+                });
+              }
+            } catch (error) {
+              notFoundCount++;
+              results.push({
+                leadId: lead.id,
+                email: lead.email,
+                postalCode,
+                assigned: false,
+                reason: 'Erreur lors de l\'assignation',
+              });
+            }
+          }
+
+          return {
+            success: true,
+            total: leadsWithPostalCode.length,
+            assigned: assignedCount,
+            notFound: notFoundCount,
+            results,
+          };
+        }),
+
       // Webhook endpoint for Zapier/Make (public, no auth required)
       webhook: publicProcedure
         .input(z.object({

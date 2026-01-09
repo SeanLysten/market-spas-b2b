@@ -1301,3 +1301,6 @@
 
 - [x] Implémenter l'assignation automatique des leads aux partenaires selon leur code postal/territoire
 - [x] Tester l'assignation automatique avec les leads belges (+32)
+
+- [x] Créer un script pour réassigner les leads existants non assignés
+- [x] Exécuter le script sur tous les leads avec code postal

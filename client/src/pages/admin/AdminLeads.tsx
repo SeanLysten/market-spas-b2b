@@ -95,6 +95,17 @@ export default function AdminLeads() {
     partnerId: partnerFilter !== "all" ? parseInt(partnerFilter) : undefined,
   });
 
+  // Mutation pour réassigner tous les leads
+  const reassignMutation = trpc.admin.leads.reassignAll.useMutation({
+    onSuccess: (result) => {
+      alert(`Réassignation terminée!\n\n✅ ${result.assigned} leads assignés\n❌ ${result.notFound} leads non assignés\n📊 Total: ${result.total} leads`);
+      refetch();
+    },
+    onError: (error) => {
+      alert(`Erreur lors de la réassignation: ${error.message}`);
+    },
+  });
+
   const leads: Lead[] = (leadsData || []).map((lead: any) => ({
     id: lead.leads?.id || lead.id,
     firstName: lead.leads?.firstName || lead.firstName,
@@ -242,7 +253,24 @@ export default function AdminLeads() {
                 <SelectItem value="365">Cette année</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="icon">
+            <Button 
+              variant="outline" 
+              onClick={() => reassignMutation.mutate()}
+              disabled={reassignMutation.isPending}
+            >
+              {reassignMutation.isPending ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Réassignation...
+                </>
+              ) : (
+                <>
+                  <Target className="w-4 h-4 mr-2" />
+                  Réassigner auto
+                </>
+              )}
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => refetch()}>
               <RefreshCw className="w-4 h-4" />
             </Button>
           </div>
