@@ -23,6 +23,7 @@ export const userRoleEnum = mysqlEnum("user_role", [
   "SALES_REP",
   "PARTNER_ADMIN",
   "PARTNER_USER",
+  "PARTNER",
 ]);
 
 export const partnerStatusEnum = mysqlEnum("partner_status", [

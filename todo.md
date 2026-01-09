@@ -1290,3 +1290,8 @@
 - [ ] Ajouter la route backend pour modifier le rôle d'un utilisateur
 - [x] Ajouter l'interface de modification du rôle dans AdminUsers.tsx
 - [x] Tester la modification de rôle depuis l'interface
+
+## Correction erreur enum role PARTNER
+- [x] Corriger l'enum role dans le schéma pour inclure PARTNER
+- [x] Vérifier la cohérence entre le schéma Drizzle et la base de données
+- [x] Tester la modification de rôle en PARTNER
