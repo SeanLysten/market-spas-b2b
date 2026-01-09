@@ -1295,3 +1295,9 @@
 - [x] Corriger l'enum role dans le schéma pour inclure PARTNER
 - [x] Vérifier la cohérence entre le schéma Drizzle et la base de données
 - [x] Tester la modification de rôle en PARTNER
+
+- [x] Corriger l'affichage des leads dans l'interface admin (leads de Make non visibles)
+- [x] Vérifier pourquoi seuls 3 leads s'affichent alors que 10 sont en base de données
+
+- [x] Implémenter l'assignation automatique des leads aux partenaires selon leur code postal/territoire
+- [x] Tester l'assignation automatique avec les leads belges (+32)

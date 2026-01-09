@@ -89,63 +89,30 @@ export default function AdminLeads() {
   const [dateRange, setDateRange] = useState<string>("30");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
-  // Données de démonstration
-  const leads: Lead[] = [
-    {
-      id: 1,
-      firstName: "Jean",
-      lastName: "Dupont",
-      email: "jean.dupont@email.com",
-      phone: "+32 470 12 34 56",
-      city: "Bruxelles",
-      postalCode: "1000",
-      status: "ASSIGNED",
-      source: "META_ADS",
-      partnerId: 1,
-      partnerName: "Spa Wellness Brussels",
-      productInterest: "Jacuzzi 6 places",
-      budget: "5000-10000€",
-      contactAttempts: 0,
-      receivedAt: new Date().toISOString(),
-      firstContactAt: null,
-    },
-    {
-      id: 2,
-      firstName: "Marie",
-      lastName: "Martin",
-      email: "marie.martin@email.com",
-      phone: "+32 475 98 76 54",
-      city: "Liège",
-      postalCode: "4000",
-      status: "CONTACTED",
-      source: "META_ADS",
-      partnerId: 2,
-      partnerName: "Aqua Détente Liège",
-      productInterest: "Sauna infrarouge",
-      budget: "3000-5000€",
-      contactAttempts: 2,
-      receivedAt: new Date(Date.now() - 86400000).toISOString(),
-      firstContactAt: new Date(Date.now() - 43200000).toISOString(),
-    },
-    {
-      id: 3,
-      firstName: "Pierre",
-      lastName: "Leroy",
-      email: "pierre.leroy@email.com",
-      phone: "+32 478 11 22 33",
-      city: "Namur",
-      postalCode: "5000",
-      status: "CONVERTED",
-      source: "META_ADS",
-      partnerId: 3,
-      partnerName: "Wellness Center Namur",
-      productInterest: "Swim Spa",
-      budget: "15000-20000€",
-      contactAttempts: 3,
-      receivedAt: new Date(Date.now() - 604800000).toISOString(),
-      firstContactAt: new Date(Date.now() - 518400000).toISOString(),
-    },
-  ];
+  // Récupérer les vrais leads depuis la base de données
+  const { data: leadsData, isLoading: leadsLoading, refetch } = trpc.admin.leads.list.useQuery({
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    partnerId: partnerFilter !== "all" ? parseInt(partnerFilter) : undefined,
+  });
+
+  const leads: Lead[] = (leadsData || []).map((lead: any) => ({
+    id: lead.leads?.id || lead.id,
+    firstName: lead.leads?.firstName || lead.firstName,
+    lastName: lead.leads?.lastName || lead.lastName,
+    email: lead.leads?.email || lead.email,
+    phone: lead.leads?.phone || lead.phone,
+    city: lead.leads?.city || lead.city,
+    postalCode: lead.leads?.postalCode || lead.postalCode,
+    status: lead.leads?.status || lead.status,
+    source: lead.leads?.source || lead.source,
+    partnerId: lead.leads?.assignedPartnerId || lead.assignedPartnerId,
+    partnerName: lead.partners?.name || null,
+    productInterest: lead.leads?.productInterest || lead.productInterest,
+    budget: lead.leads?.budget || lead.budget,
+    contactAttempts: lead.leads?.contactAttempts || lead.contactAttempts || 0,
+    receivedAt: lead.leads?.receivedAt || lead.receivedAt,
+    firstContactAt: lead.leads?.firstContactAt || lead.firstContactAt,
+  }));
 
   const campaigns: CampaignStats[] = [
     {

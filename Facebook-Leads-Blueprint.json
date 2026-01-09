@@ -1,0 +1,162 @@
+{
+    "name": "Facebook Leads → Market Spas",
+    "flow": [
+        {
+            "id": 1,
+            "module": "facebook-lead-ads:WatchLeads",
+            "version": 2,
+            "parameters": {
+                "limit": 10
+            },
+            "mapper": {},
+            "metadata": {
+                "designer": {
+                    "x": 0,
+                    "y": 0
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:facebook",
+                        "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "pageId",
+                        "type": "select",
+                        "label": "Page",
+                        "required": true
+                    },
+                    {
+                        "name": "limit",
+                        "type": "uinteger",
+                        "label": "Limit",
+                        "required": true
+                    },
+                    {
+                        "name": "formId",
+                        "type": "select",
+                        "label": "Form",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": 2,
+            "module": "http:MakeRequest",
+            "version": 4,
+            "parameters": {
+                "tlsType": "",
+                "proxyKeychain": "",
+                "authenticationType": "noAuth"
+            },
+            "mapper": {
+                "url": "https://3000-i5ugl2f2mfskmg7cdlknd-f17f2b0d.us2.manus.computer/api/trpc/webhooks.metaLeads",
+                "method": "post",
+                "headers": [
+                    {
+                        "name": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "contentType": "json",
+                "inputMethod": "jsonString",
+                "shareCookies": false,
+                "parseResponse": true,
+                "allowRedirects": true,
+                "stopOnHttpError": true,
+                "jsonStringBodyContent": "{\n  \"firstName\": \"{{1.data.full_name}}\",\n  \"lastName\": \"\",\n  \"email\": \"{{1.data.email}}\",\n  \"phone\": \"{{1.data.phone_number}}\",\n  \"postalCode\": \"{{1.data.post_code}}\",\n  \"city\": \"\",\n  \"message\": \"Magasin: {{join(1.data.quel_magasin_souhaitez-vous_visiter_?; ', ')}} | Recherche: {{join(1.data.que_recherchez-vous_?; ', ')}} | Rappel: {{join(1.data.quand_souhaitez-vous_être_rappelé_?_; ', ')}}\",\n  \"source\": \"FACEBOOK\",\n  \"campaignId\": \"{{1.campaignId}}\",\n  \"campaignName\": \"{{1.campaignName}}\",\n  \"adId\": \"{{1.adId}}\",\n  \"adName\": \"{{1.adName}}\"\n}",
+                "requestCompressedContent": true
+            },
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "method": {
+                            "mode": "chose",
+                            "label": "POST"
+                        },
+                        "headers": {
+                            "mode": "chose",
+                            "items": [
+                                null
+                            ]
+                        },
+                        "contentType": {
+                            "label": "application/json"
+                        },
+                        "inputMethod": {
+                            "label": "JSON string"
+                        },
+                        "shareCookies": {
+                            "mode": "chose"
+                        },
+                        "parseResponse": {
+                            "mode": "chose"
+                        },
+                        "allowRedirects": {
+                            "mode": "chose"
+                        },
+                        "stopOnHttpError": {
+                            "mode": "chose"
+                        },
+                        "requestCompressedContent": {
+                            "mode": "chose"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "url",
+                        "type": "url",
+                        "label": "URL",
+                        "required": true
+                    },
+                    {
+                        "name": "method",
+                        "type": "select",
+                        "label": "Method",
+                        "required": true
+                    },
+                    {
+                        "name": "headers",
+                        "type": "array",
+                        "label": "Headers"
+                    },
+                    {
+                        "name": "contentType",
+                        "type": "select",
+                        "label": "Content type"
+                    },
+                    {
+                        "name": "jsonStringBodyContent",
+                        "type": "text",
+                        "label": "Request content"
+                    }
+                ]
+            }
+        }
+    ],
+    "metadata": {
+        "instant": true,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "eu2.make.com"
+    }
+}

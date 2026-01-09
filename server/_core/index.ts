@@ -10,6 +10,7 @@ import { serveStatic, setupVite } from "./vite";
 import { verifyMetaWebhook, processMetaWebhook } from "../meta-leads";
 import { handleStripeWebhook } from "../stripe-webhook";
 import { initializeWebSocket } from "./websocket";
+import { webhooksRouter } from "../webhooks";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -73,6 +74,9 @@ async function startServer() {
       res.status(500).send("Error processing webhook");
     }
   });
+
+  // Webhooks Make (routes HTTP standard)
+  app.use("/api/webhooks", webhooksRouter);
   // tRPC API
   app.use(
     "/api/trpc",

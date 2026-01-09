@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, firstName, lastName, email, phone, postalCode, city, message, source, createdAt FROM leads ORDER BY createdAt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, firstName, lastName, email, phone, postalCode, city, message, source, createdAt FROM leads ORDER BY createdAt DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "30009",
+      "firstName": "Elodie Lslx",
+      "lastName": "NULL",
+      "email": "elonails88@live.be",
+      "phone": "+32496875133",
+      "postalCode": "7333",
+      "city": "NULL",
+      "message": "Magasin:  | Recherche:  | Rappel: ",
+      "source": "META_ADS",
+      "createdAt": "2026-01-09 15:29:20"
+    },
+    {
+      "id": "30007",
+      "firstName": "Verhaegen Sandra",
+      "lastName": "NULL",
+      "email": "sandraverhaegen2008@hotmail.com",
+      "phone": "+32475826718",
+      "postalCode": "1755",
+      "city": "NULL",
+      "message": "Magasin:  | Recherche:  | Rappel: ",
+      "source": "META_ADS",
+      "createdAt": "2026-01-09 15:29:20"
+    },
+    {
+      "id": "30008",
+      "firstName": "Fleur",
+      "lastName": "NULL",
+      "email": "jessgrace971@gmail.com",
+      "phone": "+32465951068",
+      "postalCode": "91350",
+      "city": "NULL",
+      "message": "Magasin:  | Recherche:  | Rappel: ",
+      "source": "META_ADS",
+      "createdAt": "2026-01-09 15:29:20"
+    },
+    {
+      "id": "30003",
+      "firstName": "Dumitru Roman",
+      "lastName": "NULL",
+      "email": "Romandumitru75@gmail.com",
+      "phone": "+32471075589",
+      "postalCode": "1080",
+      "city": "NULL",
+      "message": "Magasin:  | Recherche:  | Rappel: ",
+      "source": "META_ADS",
+      "createdAt": "2026-01-09 15:29:19"
+    },
+    {
+      "id": "30004",
+      "firstName": "Fvv-architecte van Vyve",
+      "lastName": "NULL",
+      "email": "fvv.architecte@icloud.com",
+      "phone": "+32497554000",
+      "postalCode": "1000",
+      "city": "NULL",
+      "message": "Magasin:  | Recherche:  | Rappel: ",
+      "source": "META_ADS",
+      "createdAt": "2026-01-09 15:29:19"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\temail\tphone\tpostalCode\tcity\tmessage\tsource\tcreatedAt\n30009\tElodie Lslx\tNULL\telonails88@live.be\t+32496875133\t7333\tNULL\tMagasin:  | Recherche:  | Rappel: \tMETA_ADS\t2026-01-09 15:29:20\n30007\tVerhaegen Sandra\tNULL\tsandraverhaegen2008@hotmail.com\t+32475826718\t1755\tNULL\tMagasin:  | Recherche:  | Rappel: \tMETA_ADS\t2026-01-09 15:29:20\n30008\tFleur\tNULL\tjessgrace971@gmail.com\t+32465951068\t91350\tNULL\tMagasin:  | Recherche:  | Rappel: \tMETA_ADS\t2026-01-09 15:29:20\n30003\tDumitru Roman\tNULL\tRomandumitru75@gmail.com\t+32471075589\t1080\tNULL\tMagasin:  | Recherche:  | Rappel: \tMETA_ADS\t2026-01-09 15:29:19\n30004\tFvv-architecte van Vyve\tNULL\tfvv.architecte@icloud.com\t+32497554000\t1000\tNULL\tMagasin:  | Recherche:  | Rappel: \tMETA_ADS\t2026-01-09 15:29:19\n",
+  "stderr": "",
+  "execution_time_ms": 106
+}

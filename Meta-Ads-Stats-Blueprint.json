@@ -1,0 +1,285 @@
+{
+    "name": "Meta Ads Stats → Market Spas",
+    "flow": [
+        {
+            "id": 1,
+            "module": "gateway:CustomWebHook",
+            "version": 1,
+            "parameters": {
+                "hook": 1,
+                "maxResults": 1
+            },
+            "mapper": {},
+            "metadata": {
+                "designer": {
+                    "x": 0,
+                    "y": 0
+                },
+                "restore": {
+                    "parameters": {
+                        "hook": {
+                            "label": "Scheduler - Every hour"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "hook",
+                        "type": "hook",
+                        "label": "Webhook",
+                        "required": true
+                    }
+                ],
+                "advanced": true
+            }
+        },
+        {
+            "id": 2,
+            "module": "facebook-marketing:ListAdInsights",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "level": "campaign",
+                "limit": "100",
+                "fields": [
+                    "campaign_id",
+                    "campaign_name",
+                    "impressions",
+                    "clicks",
+                    "spend",
+                    "reach",
+                    "cpc",
+                    "cpm",
+                    "ctr",
+                    "actions",
+                    "cost_per_action_type"
+                ],
+                "datePreset": "last_7d"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "level": {
+                            "mode": "chose",
+                            "label": "Campaign"
+                        },
+                        "fields": {
+                            "mode": "chose",
+                            "items": [
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null
+                            ]
+                        },
+                        "datePreset": {
+                            "mode": "chose",
+                            "label": "Last 7 days"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:facebook-marketing",
+                        "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "adAccountId",
+                        "type": "select",
+                        "label": "Ad Account",
+                        "required": true
+                    },
+                    {
+                        "name": "level",
+                        "type": "select",
+                        "label": "Level",
+                        "required": true
+                    },
+                    {
+                        "name": "datePreset",
+                        "type": "select",
+                        "label": "Date preset"
+                    },
+                    {
+                        "name": "fields",
+                        "type": "array",
+                        "label": "Fields"
+                    },
+                    {
+                        "name": "limit",
+                        "type": "uinteger",
+                        "label": "Limit"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 3,
+            "module": "builtin:BasicIterator",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "array": "{{2.data}}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 600,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "array": {
+                            "mode": "edit"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "array",
+                        "type": "array",
+                        "label": "Array",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": 4,
+            "module": "http:MakeRequest",
+            "version": 4,
+            "parameters": {
+                "tlsType": "",
+                "proxyKeychain": "",
+                "authenticationType": "noAuth"
+            },
+            "mapper": {
+                "url": "https://3000-i5ugl2f2mfskmg7cdlknd-f17f2b0d.us2.manus.computer/api/trpc/webhooks.metaAdsStats",
+                "method": "post",
+                "headers": [
+                    {
+                        "name": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "contentType": "json",
+                "inputMethod": "jsonString",
+                "shareCookies": false,
+                "parseResponse": true,
+                "allowRedirects": true,
+                "stopOnHttpError": false,
+                "jsonStringBodyContent": "{\n  \"campaignId\": \"{{3.campaign_id}}\",\n  \"campaignName\": \"{{3.campaign_name}}\",\n  \"impressions\": {{if(3.impressions; 3.impressions; 0)}},\n  \"clicks\": {{if(3.clicks; 3.clicks; 0)}},\n  \"spend\": {{if(3.spend; 3.spend; 0)}},\n  \"reach\": {{if(3.reach; 3.reach; 0)}},\n  \"cpc\": {{if(3.cpc; 3.cpc; 0)}},\n  \"cpm\": {{if(3.cpm; 3.cpm; 0)}},\n  \"ctr\": {{if(3.ctr; 3.ctr; 0)}},\n  \"conversions\": {{if(length(3.actions) > 0; first(3.actions).value; 0)}},\n  \"costPerConversion\": {{if(length(3.cost_per_action_type) > 0; first(3.cost_per_action_type).value; 0)}},\n  \"date\": \"{{formatDate(now; 'YYYY-MM-DD')}}\"\n}",
+                "requestCompressedContent": true
+            },
+            "metadata": {
+                "designer": {
+                    "x": 900,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "method": {
+                            "mode": "chose",
+                            "label": "POST"
+                        },
+                        "headers": {
+                            "mode": "chose",
+                            "items": [
+                                null
+                            ]
+                        },
+                        "contentType": {
+                            "label": "application/json"
+                        },
+                        "inputMethod": {
+                            "label": "JSON string"
+                        },
+                        "shareCookies": {
+                            "mode": "chose"
+                        },
+                        "parseResponse": {
+                            "mode": "chose"
+                        },
+                        "allowRedirects": {
+                            "mode": "chose"
+                        },
+                        "stopOnHttpError": {
+                            "mode": "chose"
+                        },
+                        "requestCompressedContent": {
+                            "mode": "chose"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "url",
+                        "type": "url",
+                        "label": "URL",
+                        "required": true
+                    },
+                    {
+                        "name": "method",
+                        "type": "select",
+                        "label": "Method",
+                        "required": true
+                    },
+                    {
+                        "name": "headers",
+                        "type": "array",
+                        "label": "Headers"
+                    },
+                    {
+                        "name": "contentType",
+                        "type": "select",
+                        "label": "Content type"
+                    },
+                    {
+                        "name": "jsonStringBodyContent",
+                        "type": "text",
+                        "label": "Request content"
+                    },
+                    {
+                        "name": "stopOnHttpError",
+                        "type": "boolean",
+                        "label": "Evaluate all states as errors"
+                    }
+                ]
+            }
+        }
+    ],
+    "metadata": {
+        "instant": false,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "scheduling": {
+                "type": "cron",
+                "cron": "0 * * * *"
+            }
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "eu2.make.com"
+    }
+}

@@ -1,0 +1,120 @@
+{
+  "query": "SELECT id, firstName, lastName, email, source, status, assignedPartnerId, receivedAt, createdAt FROM leads WHERE DATE(createdAt) = CURDATE() ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, firstName, lastName, email, source, status, assignedPartnerId, receivedAt, createdAt FROM leads WHERE DATE(createdAt) = CURDATE() ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "60001",
+      "firstName": "Camille Dubois",
+      "lastName": "NULL",
+      "email": "camille.serge.dubois@gmail.com",
+      "source": "META_ADS",
+      "status": "NEW",
+      "assignedPartnerId": "NULL",
+      "receivedAt": "2026-01-09 15:45:36",
+      "createdAt": "2026-01-09 15:45:36"
+    },
+    {
+      "id": "30009",
+      "firstName": "Elodie Lslx",
+      "lastName": "NULL",
+      "email": "elonails88@live.be",
+      "source": "META_ADS",
+      "status": "NEW",
+      "assignedPartnerId": "NULL",
+      "receivedAt": "2026-01-09 15:29:20",
+      "createdAt": "2026-01-09 15:29:20"
+    },
+    {
+      "id": "30008",
+      "firstName": "Fleur",
+      "lastName": "NULL",
+      "email": "jessgrace971@gmail.com",
+      "source": "META_ADS",
+      "status": "NEW",
+      "assignedPartnerId": "NULL",
+      "receivedAt": "2026-01-09 15:29:20",
+      "createdAt": "2026-01-09 15:29:20"
+    },
+    {
+      "id": "30007",
+      "firstName": "Verhaegen Sandra",
+      "lastName": "NULL",
+      "email": "sandraverhaegen2008@hotmail.com",
+      "source": "META_ADS",
+      "status": "NEW",
+      "assignedPartnerId": "NULL",
+      "receivedAt": "2026-01-09 15:29:20",
+      "createdAt": "2026-01-09 15:29:20"
+    },
+    {
+      "id": "30006",
+      "firstName": "Eric Senger",
+      "lastName": "NULL",
+      "email": "ecetnesenger@gmail.com",
+      "source": "META_ADS",
+      "status": "NEW",
+      "assignedPartnerId": "NULL",
+      "receivedAt": "2026-01-09 15:29:19",
+      "createdAt": "2026-01-09 15:29:19"
+    },
+    {
+      "id": "30005",
+      "firstName": "Cengiz Kurum",
+      "lastName": "NULL",
+      "email": "Maxilettrage@hormail.com",
+      "source": "META_ADS",
+      "status": "NEW",
+      "assignedPartnerId": "NULL",
+      "receivedAt": "2026-01-09 15:29:19",
+      "createdAt": "2026-01-09 15:29:19"
+    },
+    {
+      "id": "30004",
+      "firstName": "Fvv-architecte van Vyve",
+      "lastName": "NULL",
+      "email": "fvv.architecte@icloud.com",
+      "source": "META_ADS",
+      "status": "NEW",
+      "assignedPartnerId": "NULL",
+      "receivedAt": "2026-01-09 15:29:19",
+      "createdAt": "2026-01-09 15:29:19"
+    },
+    {
+      "id": "30003",
+      "firstName": "Dumitru Roman",
+      "lastName": "NULL",
+      "email": "Romandumitru75@gmail.com",
+      "source": "META_ADS",
+      "status": "NEW",
+      "assignedPartnerId": "NULL",
+      "receivedAt": "2026-01-09 15:29:19",
+      "createdAt": "2026-01-09 15:29:19"
+    },
+    {
+      "id": "30002",
+      "firstName": "vogeleer",
+      "lastName": "NULL",
+      "email": "stephane-vogeleer@live.fr",
+      "source": "META_ADS",
+      "status": "NEW",
+      "assignedPartnerId": "NULL",
+      "receivedAt": "2026-01-09 15:29:18",
+      "createdAt": "2026-01-09 15:29:18"
+    },
+    {
+      "id": "30001",
+      "firstName": "Test User",
+      "lastName": "NULL",
+      "email": "test@example.com",
+      "source": "META_ADS",
+      "status": "NEW",
+      "assignedPartnerId": "NULL",
+      "receivedAt": "2026-01-09 15:27:36",
+      "createdAt": "2026-01-09 15:27:36"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\temail\tsource\tstatus\tassignedPartnerId\treceivedAt\tcreatedAt\n60001\tCamille Dubois\tNULL\tcamille.serge.dubois@gmail.com\tMETA_ADS\tNEW\tNULL\t2026-01-09 15:45:36\t2026-01-09 15:45:36\n30009\tElodie Lslx\tNULL\telonails88@live.be\tMETA_ADS\tNEW\tNULL\t2026-01-09 15:29:20\t2026-01-09 15:29:20\n30008\tFleur\tNULL\tjessgrace971@gmail.com\tMETA_ADS\tNEW\tNULL\t2026-01-09 15:29:20\t2026-01-09 15:29:20\n30007\tVerhaegen Sandra\tNULL\tsandraverhaegen2008@hotmail.com\tMETA_ADS\tNEW\tNULL\t2026-01-09 15:29:20\t2026-01-09 15:29:20\n30006\tEric Senger\tNULL\tecetnesenger@gmail.com\tMETA_ADS\tNEW\tNULL\t2026-01-09 15:29:19\t2026-01-09 15:29:19\n30005\tCengiz Kurum\tNULL\tMaxilettrage@hormail.com\tMETA_ADS\tNEW\tNULL\t2026-01-09 15:29:19\t2026-01-09 15:29:19\n30004\tFvv-architecte van Vyve\tNULL\tfvv.architecte@icloud.com\tMETA_ADS\tNEW\tNULL\t2026-01-09 15:29:19\t2026-01-09 15:29:19\n30003\tDumitru Roman\tNULL\tRomandumitru75@gmail.com\tMETA_ADS\tNEW\tNULL\t2026-01-09 15:29:19\t2026-01-09 15:29:19\n30002\tvogeleer\tNULL\tstephane-vogeleer@live.fr\tMETA_ADS\tNEW\tNULL\t2026-01-09 15:29:18\t2026-01-09 15:29:18\n30001\tTest User\tNULL\ttest@example.com\tMETA_ADS\tNEW\tNULL\t2026-01-09 15:27:36\t2026-01-09 15:27:36\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

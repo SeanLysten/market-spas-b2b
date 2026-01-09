@@ -1,0 +1,110 @@
+{
+  "query": "SELECT id, firstName, lastName, email, phone, source, message, createdAt FROM leads WHERE DATE(createdAt) = CURDATE() ORDER BY createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, firstName, lastName, email, phone, source, message, createdAt FROM leads WHERE DATE(createdAt) = CURDATE() ORDER BY createdAt DESC;",
+  "rows": [
+    {
+      "id": "60001",
+      "firstName": "Camille Dubois",
+      "lastName": "NULL",
+      "email": "camille.serge.dubois@gmail.com",
+      "phone": "+32474701984",
+      "source": "META_ADS",
+      "message": "Magasin:  | Recherche:  | Rappel: ",
+      "createdAt": "2026-01-09 15:45:36"
+    },
+    {
+      "id": "30007",
+      "firstName": "Verhaegen Sandra",
+      "lastName": "NULL",
+      "email": "sandraverhaegen2008@hotmail.com",
+      "phone": "+32475826718",
+      "source": "META_ADS",
+      "message": "Magasin:  | Recherche:  | Rappel: ",
+      "createdAt": "2026-01-09 15:29:20"
+    },
+    {
+      "id": "30008",
+      "firstName": "Fleur",
+      "lastName": "NULL",
+      "email": "jessgrace971@gmail.com",
+      "phone": "+32465951068",
+      "source": "META_ADS",
+      "message": "Magasin:  | Recherche:  | Rappel: ",
+      "createdAt": "2026-01-09 15:29:20"
+    },
+    {
+      "id": "30009",
+      "firstName": "Elodie Lslx",
+      "lastName": "NULL",
+      "email": "elonails88@live.be",
+      "phone": "+32496875133",
+      "source": "META_ADS",
+      "message": "Magasin:  | Recherche:  | Rappel: ",
+      "createdAt": "2026-01-09 15:29:20"
+    },
+    {
+      "id": "30003",
+      "firstName": "Dumitru Roman",
+      "lastName": "NULL",
+      "email": "Romandumitru75@gmail.com",
+      "phone": "+32471075589",
+      "source": "META_ADS",
+      "message": "Magasin:  | Recherche:  | Rappel: ",
+      "createdAt": "2026-01-09 15:29:19"
+    },
+    {
+      "id": "30004",
+      "firstName": "Fvv-architecte van Vyve",
+      "lastName": "NULL",
+      "email": "fvv.architecte@icloud.com",
+      "phone": "+32497554000",
+      "source": "META_ADS",
+      "message": "Magasin:  | Recherche:  | Rappel: ",
+      "createdAt": "2026-01-09 15:29:19"
+    },
+    {
+      "id": "30005",
+      "firstName": "Cengiz Kurum",
+      "lastName": "NULL",
+      "email": "Maxilettrage@hormail.com",
+      "phone": "+32496387941",
+      "source": "META_ADS",
+      "message": "Magasin:  | Recherche:  | Rappel: ",
+      "createdAt": "2026-01-09 15:29:19"
+    },
+    {
+      "id": "30006",
+      "firstName": "Eric Senger",
+      "lastName": "NULL",
+      "email": "ecetnesenger@gmail.com",
+      "phone": "+32491900715",
+      "source": "META_ADS",
+      "message": "Magasin:  | Recherche:  | Rappel: ",
+      "createdAt": "2026-01-09 15:29:19"
+    },
+    {
+      "id": "30002",
+      "firstName": "vogeleer",
+      "lastName": "NULL",
+      "email": "stephane-vogeleer@live.fr",
+      "phone": "+32476614026",
+      "source": "META_ADS",
+      "message": "Magasin:  | Recherche:  | Rappel: ",
+      "createdAt": "2026-01-09 15:29:18"
+    },
+    {
+      "id": "30001",
+      "firstName": "Test User",
+      "lastName": "NULL",
+      "email": "test@example.com",
+      "phone": "0123456789",
+      "source": "META_ADS",
+      "message": "Test depuis Make",
+      "createdAt": "2026-01-09 15:27:36"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\temail\tphone\tsource\tmessage\tcreatedAt\n60001\tCamille Dubois\tNULL\tcamille.serge.dubois@gmail.com\t+32474701984\tMETA_ADS\tMagasin:  | Recherche:  | Rappel: \t2026-01-09 15:45:36\n30007\tVerhaegen Sandra\tNULL\tsandraverhaegen2008@hotmail.com\t+32475826718\tMETA_ADS\tMagasin:  | Recherche:  | Rappel: \t2026-01-09 15:29:20\n30008\tFleur\tNULL\tjessgrace971@gmail.com\t+32465951068\tMETA_ADS\tMagasin:  | Recherche:  | Rappel: \t2026-01-09 15:29:20\n30009\tElodie Lslx\tNULL\telonails88@live.be\t+32496875133\tMETA_ADS\tMagasin:  | Recherche:  | Rappel: \t2026-01-09 15:29:20\n30003\tDumitru Roman\tNULL\tRomandumitru75@gmail.com\t+32471075589\tMETA_ADS\tMagasin:  | Recherche:  | Rappel: \t2026-01-09 15:29:19\n30004\tFvv-architecte van Vyve\tNULL\tfvv.architecte@icloud.com\t+32497554000\tMETA_ADS\tMagasin:  | Recherche:  | Rappel: \t2026-01-09 15:29:19\n30005\tCengiz Kurum\tNULL\tMaxilettrage@hormail.com\t+32496387941\tMETA_ADS\tMagasin:  | Recherche:  | Rappel: \t2026-01-09 15:29:19\n30006\tEric Senger\tNULL\tecetnesenger@gmail.com\t+32491900715\tMETA_ADS\tMagasin:  | Recherche:  | Rappel: \t2026-01-09 15:29:19\n30002\tvogeleer\tNULL\tstephane-vogeleer@live.fr\t+32476614026\tMETA_ADS\tMagasin:  | Recherche:  | Rappel: \t2026-01-09 15:29:18\n30001\tTest User\tNULL\ttest@example.com\t0123456789\tMETA_ADS\tTest depuis Make\t2026-01-09 15:27:36\n",
+  "stderr": "",
+  "execution_time_ms": 178
+}
