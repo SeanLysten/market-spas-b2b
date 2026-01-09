@@ -10,6 +10,7 @@ import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { notifyOwner } from "./_core/notification";
 import { notifyPartner, notifyAdmins } from "./_core/websocket";
+import { sendInvitationEmail } from "./email";
 
 export const appRouter = router({
   system: systemRouter,
@@ -1159,13 +1160,24 @@ export const appRouter = router({
           // Generate invitation link
           const invitationUrl = `${process.env.VITE_OAUTH_PORTAL_URL || 'http://localhost:3000'}/register?token=${tokenData.token}`;
 
-          // TODO: Send email with invitation link
-          // For now, return the link so admin can share it manually
-          console.log(`[Invitation] Email: ${input.email}, Link: ${invitationUrl}`);
+          // Send invitation email
+          try {
+            await sendInvitationEmail({
+              to: input.email,
+              firstName: input.firstName,
+              lastName: input.lastName,
+              invitationUrl,
+              expiresAt: tokenData.expiresAt,
+            });
+            console.log(`[Invitation] Email sent to ${input.email}`);
+          } catch (emailError) {
+            console.error('[Invitation] Failed to send email:', emailError);
+            // Continue anyway - admin can still share the link manually
+          }
 
           return { 
             success: true, 
-            message: "Invitation créée avec succès",
+            message: "Invitation créée et email envoyé avec succès",
             invitationUrl,
             expiresAt: tokenData.expiresAt
           };

@@ -1264,3 +1264,23 @@
 - [x] Corriger le problème SQL dans la fonction createLead
 - [x] Tester l'enregistrement d'un lead via le webhook
 - [x] Vérifier que le lead apparaît dans l'interface admin
+
+
+## CORRECTION SYSTÈME SAV
+- [ ] Filtrer les tickets SAV par partenaire dans les routes backend
+- [ ] Mettre à jour l'interface utilisateur pour afficher uniquement les tickets du partenaire
+- [ ] Tester avec un compte partenaire
+
+
+## ENVOI AUTOMATIQUE D'EMAILS D'INVITATION
+- [ ] Installer le package Resend
+- [ ] Créer le service d'emailing avec template HTML
+- [ ] Intégrer l'envoi d'email dans la route admin.users.invite
+- [ ] Configurer la clé API Resend
+- [ ] Tester l'envoi d'email d'invitation
+
+
+## CHANGEMENT DE RÔLE MIGUEL DONOSO
+- [x] Trouver l'utilisateur Miguel Donoso dans la base de données
+- [x] Mettre à jour son rôle en SUPER_ADMIN
+- [x] Vérifier la modification
