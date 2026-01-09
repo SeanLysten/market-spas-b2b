@@ -117,7 +117,7 @@ export default function AdminLeads() {
     status: lead.leads?.status || lead.status,
     source: lead.leads?.source || lead.source,
     partnerId: lead.leads?.assignedPartnerId || lead.assignedPartnerId,
-    partnerName: lead.partners?.name || null,
+    partnerName: lead.partners?.companyName || null,
     productInterest: lead.leads?.productInterest || lead.productInterest,
     budget: lead.leads?.budget || lead.budget,
     contactAttempts: lead.leads?.contactAttempts || lead.contactAttempts || 0,

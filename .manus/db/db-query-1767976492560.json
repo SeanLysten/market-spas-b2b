@@ -1,0 +1,1066 @@
+{
+  "query": "SELECT r.id, r.name as regionName, c.name as countryName, c.code as countryCode \nFROM regions r \nJOIN countries c ON c.id = r.countryId \nWHERE r.isActive = 1 \nORDER BY c.name, r.name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT r.id, r.name as regionName, c.name as countryName, c.code as countryCode \nFROM regions r \nJOIN countries c ON c.id = r.countryId \nWHERE r.isActive = 1 \nORDER BY c.name, r.name;",
+  "rows": [
+    {
+      "id": "30171",
+      "regionName": "Baden-Württemberg",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30172",
+      "regionName": "Bayern",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30173",
+      "regionName": "Berlin",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30174",
+      "regionName": "Brandenburg",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30175",
+      "regionName": "Bremen",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30176",
+      "regionName": "Hamburg",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30177",
+      "regionName": "Hessen",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30178",
+      "regionName": "Mecklenburg-Vorpommern",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30179",
+      "regionName": "Niedersachsen",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30180",
+      "regionName": "Nordrhein-Westfalen",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30181",
+      "regionName": "Rheinland-Pfalz",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30182",
+      "regionName": "Saarland",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30183",
+      "regionName": "Sachsen",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30184",
+      "regionName": "Sachsen-Anhalt",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30185",
+      "regionName": "Schleswig-Holstein",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30186",
+      "regionName": "Thüringen",
+      "countryName": "Allemagne",
+      "countryCode": "DE"
+    },
+    {
+      "id": "30029",
+      "regionName": "Province d'Anvers",
+      "countryName": "Belgique",
+      "countryCode": "BE"
+    },
+    {
+      "id": "30030",
+      "regionName": "Province de Flandre occidentale",
+      "countryName": "Belgique",
+      "countryCode": "BE"
+    },
+    {
+      "id": "30031",
+      "regionName": "Province de Flandre orientale",
+      "countryName": "Belgique",
+      "countryCode": "BE"
+    },
+    {
+      "id": "30023",
+      "regionName": "Province de Liège",
+      "countryName": "Belgique",
+      "countryCode": "BE"
+    },
+    {
+      "id": "30025",
+      "regionName": "Province de Namur",
+      "countryName": "Belgique",
+      "countryCode": "BE"
+    },
+    {
+      "id": "30028",
+      "regionName": "Province du Brabant flamand",
+      "countryName": "Belgique",
+      "countryCode": "BE"
+    },
+    {
+      "id": "30027",
+      "regionName": "Province du Brabant wallon",
+      "countryName": "Belgique",
+      "countryCode": "BE"
+    },
+    {
+      "id": "30024",
+      "regionName": "Province du Hainaut",
+      "countryName": "Belgique",
+      "countryCode": "BE"
+    },
+    {
+      "id": "30032",
+      "regionName": "Province du Limbourg",
+      "countryName": "Belgique",
+      "countryCode": "BE"
+    },
+    {
+      "id": "30026",
+      "regionName": "Province du Luxembourg",
+      "countryName": "Belgique",
+      "countryCode": "BE"
+    },
+    {
+      "id": "30033",
+      "regionName": "Région de Bruxelles-Capitale",
+      "countryName": "Belgique",
+      "countryCode": "BE"
+    },
+    {
+      "id": "30166",
+      "regionName": "Alicante",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30157",
+      "regionName": "Barcelona",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30165",
+      "regionName": "Bilbao",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30167",
+      "regionName": "Córdoba",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30170",
+      "regionName": "Gijón",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30164",
+      "regionName": "Las Palmas",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30156",
+      "regionName": "Madrid",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30161",
+      "regionName": "Málaga",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30162",
+      "regionName": "Murcia",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30163",
+      "regionName": "Palma de Mallorca",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30159",
+      "regionName": "Sevilla",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30158",
+      "regionName": "Valencia",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30168",
+      "regionName": "Valladolid",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30169",
+      "regionName": "Vigo",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30160",
+      "regionName": "Zaragoza",
+      "countryName": "Espagne",
+      "countryCode": "ES"
+    },
+    {
+      "id": "30034",
+      "regionName": "Ain",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30035",
+      "regionName": "Aisne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30036",
+      "regionName": "Allier",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30037",
+      "regionName": "Alpes-de-Haute-Provence",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30039",
+      "regionName": "Alpes-Maritimes",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30040",
+      "regionName": "Ardèche",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30041",
+      "regionName": "Ardennes",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30042",
+      "regionName": "Ariège",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30043",
+      "regionName": "Aube",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30044",
+      "regionName": "Aude",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30045",
+      "regionName": "Aveyron",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30101",
+      "regionName": "Bas-Rhin",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30046",
+      "regionName": "Bouches-du-Rhône",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30047",
+      "regionName": "Calvados",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30048",
+      "regionName": "Cantal",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30049",
+      "regionName": "Charente",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30050",
+      "regionName": "Charente-Maritime",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30051",
+      "regionName": "Cher",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30052",
+      "regionName": "Corrèze",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30053",
+      "regionName": "Corse-du-Sud",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30055",
+      "regionName": "Côte-d'Or",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30056",
+      "regionName": "Côtes-d'Armor",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30057",
+      "regionName": "Creuse",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30113",
+      "regionName": "Deux-Sèvres",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30058",
+      "regionName": "Dordogne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30059",
+      "regionName": "Doubs",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30060",
+      "regionName": "Drôme",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30125",
+      "regionName": "Essonne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30061",
+      "regionName": "Eure",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30062",
+      "regionName": "Eure-et-Loir",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30063",
+      "regionName": "Finistère",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30064",
+      "regionName": "Gard",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30066",
+      "regionName": "Gers",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30067",
+      "regionName": "Gironde",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30102",
+      "regionName": "Haut-Rhin",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30054",
+      "regionName": "Haute-Corse",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30065",
+      "regionName": "Haute-Garonne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30077",
+      "regionName": "Haute-Loire",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30086",
+      "regionName": "Haute-Marne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30104",
+      "regionName": "Haute-Saône",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30108",
+      "regionName": "Haute-Savoie",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30121",
+      "regionName": "Haute-Vienne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30038",
+      "regionName": "Hautes-Alpes",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30099",
+      "regionName": "Hautes-Pyrénées",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30126",
+      "regionName": "Hauts-de-Seine",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30068",
+      "regionName": "Hérault",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30069",
+      "regionName": "Ille-et-Vilaine",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30070",
+      "regionName": "Indre",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30071",
+      "regionName": "Indre-et-Loire",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30072",
+      "regionName": "Isère",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30073",
+      "regionName": "Jura",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30074",
+      "regionName": "Landes",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30075",
+      "regionName": "Loir-et-Cher",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30076",
+      "regionName": "Loire",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30078",
+      "regionName": "Loire-Atlantique",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30079",
+      "regionName": "Loiret",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30080",
+      "regionName": "Lot",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30081",
+      "regionName": "Lot-et-Garonne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30082",
+      "regionName": "Lozère",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30083",
+      "regionName": "Maine-et-Loire",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30084",
+      "regionName": "Manche",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30085",
+      "regionName": "Marne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30087",
+      "regionName": "Mayenne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30088",
+      "regionName": "Meurthe-et-Moselle",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30089",
+      "regionName": "Meuse",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30090",
+      "regionName": "Morbihan",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30091",
+      "regionName": "Moselle",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30092",
+      "regionName": "Nièvre",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30093",
+      "regionName": "Nord",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30094",
+      "regionName": "Oise",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30095",
+      "regionName": "Orne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30109",
+      "regionName": "Paris",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30096",
+      "regionName": "Pas-de-Calais",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30097",
+      "regionName": "Puy-de-Dôme",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30098",
+      "regionName": "Pyrénées-Atlantiques",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30100",
+      "regionName": "Pyrénées-Orientales",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30103",
+      "regionName": "Rhône",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30105",
+      "regionName": "Saône-et-Loire",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30106",
+      "regionName": "Sarthe",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30107",
+      "regionName": "Savoie",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30111",
+      "regionName": "Seine-et-Marne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30110",
+      "regionName": "Seine-Maritime",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30127",
+      "regionName": "Seine-Saint-Denis",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30114",
+      "regionName": "Somme",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30115",
+      "regionName": "Tarn",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30116",
+      "regionName": "Tarn-et-Garonne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30124",
+      "regionName": "Territoire de Belfort",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30129",
+      "regionName": "Val-d'Oise",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30128",
+      "regionName": "Val-de-Marne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30117",
+      "regionName": "Var",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30118",
+      "regionName": "Vaucluse",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30119",
+      "regionName": "Vendée",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30120",
+      "regionName": "Vienne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30122",
+      "regionName": "Vosges",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30123",
+      "regionName": "Yonne",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30112",
+      "regionName": "Yvelines",
+      "countryName": "France",
+      "countryCode": "FR"
+    },
+    {
+      "id": "30196",
+      "regionName": "Drenthe",
+      "countryName": "Pays-Bas",
+      "countryCode": "NL"
+    },
+    {
+      "id": "30198",
+      "regionName": "Flevoland",
+      "countryName": "Pays-Bas",
+      "countryCode": "NL"
+    },
+    {
+      "id": "30195",
+      "regionName": "Friesland",
+      "countryName": "Pays-Bas",
+      "countryCode": "NL"
+    },
+    {
+      "id": "30190",
+      "regionName": "Gelderland",
+      "countryName": "Pays-Bas",
+      "countryCode": "NL"
+    },
+    {
+      "id": "30194",
+      "regionName": "Groningen",
+      "countryName": "Pays-Bas",
+      "countryCode": "NL"
+    },
+    {
+      "id": "30192",
+      "regionName": "Limburg",
+      "countryName": "Pays-Bas",
+      "countryCode": "NL"
+    },
+    {
+      "id": "30191",
+      "regionName": "Noord-Brabant",
+      "countryName": "Pays-Bas",
+      "countryCode": "NL"
+    },
+    {
+      "id": "30187",
+      "regionName": "Noord-Holland",
+      "countryName": "Pays-Bas",
+      "countryCode": "NL"
+    },
+    {
+      "id": "30193",
+      "regionName": "Overijssel",
+      "countryName": "Pays-Bas",
+      "countryCode": "NL"
+    },
+    {
+      "id": "30189",
+      "regionName": "Utrecht",
+      "countryName": "Pays-Bas",
+      "countryCode": "NL"
+    },
+    {
+      "id": "30197",
+      "regionName": "Zeeland",
+      "countryName": "Pays-Bas",
+      "countryCode": "NL"
+    },
+    {
+      "id": "30188",
+      "regionName": "Zuid-Holland",
+      "countryName": "Pays-Bas",
+      "countryCode": "NL"
+    },
+    {
+      "id": "30149",
+      "regionName": "Appenzell Rhodes-Extérieures",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30150",
+      "regionName": "Appenzell Rhodes-Intérieures",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30153",
+      "regionName": "Argovie",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30147",
+      "regionName": "Bâle-Campagne",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30146",
+      "regionName": "Bâle-Ville",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30136",
+      "regionName": "Berne",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30133",
+      "regionName": "Fribourg",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30130",
+      "regionName": "Genève",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30143",
+      "regionName": "Glaris",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30152",
+      "regionName": "Grisons",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30135",
+      "regionName": "Jura",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30138",
+      "regionName": "Lucerne",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30134",
+      "regionName": "Neuchâtel",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30142",
+      "regionName": "Nidwald",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30141",
+      "regionName": "Obwald",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30151",
+      "regionName": "Saint-Gall",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30148",
+      "regionName": "Schaffhouse",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30140",
+      "regionName": "Schwyz",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30145",
+      "regionName": "Soleure",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30155",
+      "regionName": "Tessin",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30154",
+      "regionName": "Thurgovie",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30139",
+      "regionName": "Uri",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30132",
+      "regionName": "Valais",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30131",
+      "regionName": "Vaud",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30144",
+      "regionName": "Zoug",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    },
+    {
+      "id": "30137",
+      "regionName": "Zurich",
+      "countryName": "Suisse",
+      "countryCode": "CH"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tregionName\tcountryName\tcountryCode\n30171\tBaden-Württemberg\tAllemagne\tDE\n30172\tBayern\tAllemagne\tDE\n30173\tBerlin\tAllemagne\tDE\n30174\tBrandenburg\tAllemagne\tDE\n30175\tBremen\tAllemagne\tDE\n30176\tHamburg\tAllemagne\tDE\n30177\tHessen\tAllemagne\tDE\n30178\tMecklenburg-Vorpommern\tAllemagne\tDE\n30179\tNiedersachsen\tAllemagne\tDE\n30180\tNordrhein-Westfalen\tAllemagne\tDE\n30181\tRheinland-Pfalz\tAllemagne\tDE\n30182\tSaarland\tAllemagne\tDE\n30183\tSachsen\tAllemagne\tDE\n30184\tSachsen-Anhalt\tAllemagne\tDE\n30185\tSchleswig-Holstein\tAllemagne\tDE\n30186\tThüringen\tAllemagne\tDE\n30029\tProvince d'Anvers\tBelgique\tBE\n30030\tProvince de Flandre occidentale\tBelgique\tBE\n30031\tProvince de Flandre orientale\tBelgique\tBE\n30023\tProvince de Liège\tBelgique\tBE\n30025\tProvince de Namur\tBelgique\tBE\n30028\tProvince du Brabant flamand\tBelgique\tBE\n30027\tProvince du Brabant wallon\tBelgique\tBE\n30024\tProvince du Hainaut\tBelgique\tBE\n30032\tProvince du Limbourg\tBelgique\tBE\n30026\tProvince du Luxembourg\tBelgique\tBE\n30033\tRégion de Bruxelles-Capitale\tBelgique\tBE\n30166\tAlicante\tEspagne\tES\n30157\tBarcelona\tEspagne\tES\n30165\tBilbao\tEspagne\tES\n30167\tCórdoba\tEspagne\tES\n30170\tGijón\tEspagne\tES\n30164\tLas Palmas\tEspagne\tES\n30156\tMadrid\tEspagne\tES\n30161\tMálaga\tEspagne\tES\n30162\tMurcia\tEspagne\tES\n30163\tPalma de Mallorca\tEspagne\tES\n30159\tSevilla\tEspagne\tES\n30158\tValencia\tEspagne\tES\n30168\tValladolid\tEspagne\tES\n30169\tVigo\tEspagne\tES\n30160\tZaragoza\tEspagne\tES\n30034\tAin\tFrance\tFR\n30035\tAisne\tFrance\tFR\n30036\tAllier\tFrance\tFR\n30037\tAlpes-de-Haute-Provence\tFrance\tFR\n30039\tAlpes-Maritimes\tFrance\tFR\n30040\tArdèche\tFrance\tFR\n30041\tArdennes\tFrance\tFR\n30042\tAriège\tFrance\tFR\n30043\tAube\tFrance\tFR\n30044\tAude\tFrance\tFR\n30045\tAveyron\tFrance\tFR\n30101\tBas-Rhin\tFrance\tFR\n30046\tBouches-du-Rhône\tFrance\tFR\n30047\tCalvados\tFrance\tFR\n30048\tCantal\tFrance\tFR\n30049\tCharente\tFrance\tFR\n30050\tCharente-Maritime\tFrance\tFR\n30051\tCher\tFrance\tFR\n30052\tCorrèze\tFrance\tFR\n30053\tCorse-du-Sud\tFrance\tFR\n30055\tCôte-d'Or\tFrance\tFR\n30056\tCôtes-d'Armor\tFrance\tFR\n30057\tCreuse\tFrance\tFR\n30113\tDeux-Sèvres\tFrance\tFR\n30058\tDordogne\tFrance\tFR\n30059\tDoubs\tFrance\tFR\n30060\tDrôme\tFrance\tFR\n30125\tEssonne\tFrance\tFR\n30061\tEure\tFrance\tFR\n30062\tEure-et-Loir\tFrance\tFR\n30063\tFinistère\tFrance\tFR\n30064\tGard\tFrance\tFR\n30066\tGers\tFrance\tFR\n30067\tGironde\tFrance\tFR\n30102\tHaut-Rhin\tFrance\tFR\n30054\tHaute-Corse\tFrance\tFR\n30065\tHaute-Garonne\tFrance\tFR\n30077\tHaute-Loire\tFrance\tFR\n30086\tHaute-Marne\tFrance\tFR\n30104\tHaute-Saône\tFrance\tFR\n30108\tHaute-Savoie\tFrance\tFR\n30121\tHaute-Vienne\tFrance\tFR\n30038\tHautes-Alpes\tFrance\tFR\n30099\tHautes-Pyrénées\tFrance\tFR\n30126\tHauts-de-Seine\tFrance\tFR\n30068\tHérault\tFrance\tFR\n30069\tIlle-et-Vilaine\tFrance\tFR\n30070\tIndre\tFrance\tFR\n30071\tIndre-et-Loire\tFrance\tFR\n30072\tIsère\tFrance\tFR\n30073\tJura\tFrance\tFR\n30074\tLandes\tFrance\tFR\n30075\tLoir-et-Cher\tFrance\tFR\n30076\tLoire\tFrance\tFR\n30078\tLoire-Atlantique\tFrance\tFR\n30079\tLoiret\tFrance\tFR\n30080\tLot\tFrance\tFR\n30081\tLot-et-Garonne\tFrance\tFR\n30082\tLozère\tFrance\tFR\n30083\tMaine-et-Loire\tFrance\tFR\n30084\tManche\tFrance\tFR\n30085\tMarne\tFrance\tFR\n30087\tMayenne\tFrance\tFR\n30088\tMeurthe-et-Moselle\tFrance\tFR\n30089\tMeuse\tFrance\tFR\n30090\tMorbihan\tFrance\tFR\n30091\tMoselle\tFrance\tFR\n30092\tNièvre\tFrance\tFR\n30093\tNord\tFrance\tFR\n30094\tOise\tFrance\tFR\n30095\tOrne\tFrance\tFR\n30109\tParis\tFrance\tFR\n30096\tPas-de-Calais\tFrance\tFR\n30097\tPuy-de-Dôme\tFrance\tFR\n30098\tPyrénées-Atlantiques\tFrance\tFR\n30100\tPyrénées-Orientales\tFrance\tFR\n30103\tRhône\tFrance\tFR\n30105\tSaône-et-Loire\tFrance\tFR\n30106\tSarthe\tFrance\tFR\n30107\tSavoie\tFrance\tFR\n30111\tSeine-et-Marne\tFrance\tFR\n30110\tSeine-Maritime\tFrance\tFR\n30127\tSeine-Saint-Denis\tFrance\tFR\n30114\tSomme\tFrance\tFR\n30115\tTarn\tFrance\tFR\n30116\tTarn-et-Garonne\tFrance\tFR\n30124\tTerritoire de Belfort\tFrance\tFR\n30129\tVal-d'Oise\tFrance\tFR\n30128\tVal-de-Marne\tFrance\tFR\n30117\tVar\tFrance\tFR\n30118\tVaucluse\tFrance\tFR\n30119\tVendée\tFrance\tFR\n30120\tVienne\tFrance\tFR\n30122\tVosges\tFrance\tFR\n30123\tYonne\tFrance\tFR\n30112\tYvelines\tFrance\tFR\n30196\tDrenthe\tPays-Bas\tNL\n30198\tFlevoland\tPays-Bas\tNL\n30195\tFriesland\tPays-Bas\tNL\n30190\tGelderland\tPays-Bas\tNL\n30194\tGroningen\tPays-Bas\tNL\n30192\tLimburg\tPays-Bas\tNL\n30191\tNoord-Brabant\tPays-Bas\tNL\n30187\tNoord-Holland\tPays-Bas\tNL\n30193\tOverijssel\tPays-Bas\tNL\n30189\tUtrecht\tPays-Bas\tNL\n30197\tZeeland\tPays-Bas\tNL\n30188\tZuid-Holland\tPays-Bas\tNL\n30149\tAppenzell Rhodes-Extérieures\tSuisse\tCH\n30150\tAppenzell Rhodes-Intérieures\tSuisse\tCH\n30153\tArgovie\tSuisse\tCH\n30147\tBâle-Campagne\tSuisse\tCH\n30146\tBâle-Ville\tSuisse\tCH\n30136\tBerne\tSuisse\tCH\n30133\tFribourg\tSuisse\tCH\n30130\tGenève\tSuisse\tCH\n30143\tGlaris\tSuisse\tCH\n30152\tGrisons\tSuisse\tCH\n30135\tJura\tSuisse\tCH\n30138\tLucerne\tSuisse\tCH\n30134\tNeuchâtel\tSuisse\tCH\n30142\tNidwald\tSuisse\tCH\n30141\tObwald\tSuisse\tCH\n30151\tSaint-Gall\tSuisse\tCH\n30148\tSchaffhouse\tSuisse\tCH\n30140\tSchwyz\tSuisse\tCH\n30145\tSoleure\tSuisse\tCH\n30155\tTessin\tSuisse\tCH\n30154\tThurgovie\tSuisse\tCH\n30139\tUri\tSuisse\tCH\n30132\tValais\tSuisse\tCH\n30131\tVaud\tSuisse\tCH\n30144\tZoug\tSuisse\tCH\n30137\tZurich\tSuisse\tCH\n",
+  "stderr": "",
+  "execution_time_ms": 125
+}

@@ -1304,3 +1304,7 @@
 
 - [x] Créer un script pour réassigner les leads existants non assignés
 - [x] Exécuter le script sur tous les leads avec code postal
+
+- [x] Remplir la table postal_code_ranges avec toutes les plages de codes postaux belges
+- [x] Corriger l'affichage pour montrer le vrai nom du partenaire assigné
+- [x] Réassigner tous les leads existants avec les codes postaux configurés
