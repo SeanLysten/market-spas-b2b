@@ -1194,6 +1194,18 @@ export const appRouter = router({
           await db.updateUserStatus(input.userId, input.isActive);
           return { success: true };
         }),
+
+      updateRole: adminProcedure
+        .input(
+          z.object({
+            userId: z.number(),
+            role: z.enum(['SUPER_ADMIN', 'ADMIN', 'PARTNER']),
+          })
+        )
+        .mutation(async ({ input }) => {
+          await db.updateUserRole(input.userId, input.role);
+          return { success: true, message: 'Rôle mis à jour avec succès' };
+        }),
     }),
 
     products: router({

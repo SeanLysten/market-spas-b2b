@@ -1284,3 +1284,9 @@
 - [x] Trouver l'utilisateur Miguel Donoso dans la base de données
 - [x] Mettre à jour son rôle en SUPER_ADMIN
 - [x] Vérifier la modification
+
+
+## MODIFICATION DE RÔLE UTILISATEUR DEPUIS L'INTERFACE ADMIN
+- [ ] Ajouter la route backend pour modifier le rôle d'un utilisateur
+- [x] Ajouter l'interface de modification du rôle dans AdminUsers.tsx
+- [x] Tester la modification de rôle depuis l'interface

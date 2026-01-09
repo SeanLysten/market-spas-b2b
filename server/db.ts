@@ -4545,3 +4545,11 @@ export async function getInvitationTokenInfo(token: string) {
 }
 
 
+
+
+export async function updateUserRole(userId: number, role: 'SUPER_ADMIN' | 'ADMIN' | 'PARTNER' | 'SALES_MANAGER' | 'SALES_REP' | 'PARTNER_ADMIN' | 'PARTNER_USER') {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(users).set({ role }).where(eq(users.id, userId));
+}

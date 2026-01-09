@@ -31,7 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { useSafeQuery } from "@/hooks/useSafeQuery";
 import { TableSkeleton } from "@/components/TableSkeleton";
-import { Plus, Mail, UserCheck, UserX, Trash2 } from "lucide-react";
+import { Plus, Mail, UserCheck, UserX, Trash2, Edit } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -49,6 +49,10 @@ export default function AdminUsers() {
   const users = useSafeQuery(usersData);
   const inviteMutation = trpc.admin.users.invite.useMutation();
   const toggleActiveMutation = trpc.admin.users.toggleActive.useMutation();
+  const updateRoleMutation = trpc.admin.users.updateRole.useMutation();
+  
+  const [editingUserId, setEditingUserId] = useState<number | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +89,20 @@ export default function AdminUsers() {
       refetch();
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la modification");
+    }
+  };
+
+  const handleUpdateRole = async (userId: number, newRole: string) => {
+    try {
+      await updateRoleMutation.mutateAsync({
+        userId,
+        role: newRole as 'SUPER_ADMIN' | 'ADMIN' | 'PARTNER',
+      });
+      toast.success("Rôle mis à jour avec succès");
+      setEditingUserId(null);
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de la modification du rôle");
     }
   };
 
@@ -248,9 +266,28 @@ export default function AdminUsers() {
                       </TableCell>
                       <TableCell>{user.email || "—"}</TableCell>
                       <TableCell>
-                        <Badge className={getRoleBadge(user.role || "USER")}>
-                          {user.role?.replace("_", " ") || "USER"}
-                        </Badge>
+                        {editingUserId === user.id ? (
+                          <Select
+                            value={selectedRole}
+                            onValueChange={(value) => {
+                              setSelectedRole(value);
+                              handleUpdateRole(user.id, value);
+                            }}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="PARTNER">Partenaire</SelectItem>
+                              <SelectItem value="ADMIN">Administrateur</SelectItem>
+                              <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Badge className={getRoleBadge(user.role || "USER")}>
+                            {user.role?.replace("_", " ") || "USER"}
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>{user.partnerId || "—"}</TableCell>
                       <TableCell>
@@ -267,6 +304,17 @@ export default function AdminUsers() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingUserId(user.id);
+                              setSelectedRole(user.role || "PARTNER");
+                            }}
+                            title="Modifier le rôle"
+                          >
+                            <Edit className="w-4 h-4 text-blue-600" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
