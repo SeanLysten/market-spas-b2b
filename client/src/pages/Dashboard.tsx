@@ -118,7 +118,7 @@ export default function Dashboard() {
             </Card>
           </Link>
 
-          <Link href="/forum">
+          <Link href="/technical-resources?tab=forum">
             <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
               <CardContent className="pt-6 text-center">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/10 flex items-center justify-center">

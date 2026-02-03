@@ -1316,5 +1316,4 @@
 
 - [x] Corriger l'erreur d'accessibilité DialogTitle manquant sur la page /admin
 
-- [x] Corriger le bouton Forum d'entraide pour qu'il ouvre /forum au lieu de /documentation
-- [x] Vérifier que le bouton Documentation ouvre bien /documentation
+- [x] Corriger le lien du bouton Forum d'entraide vers /technical-resources?tab=forum
