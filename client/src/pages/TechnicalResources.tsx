@@ -30,6 +30,11 @@ export default function TechnicalResources() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
+  
+  // Lire le paramètre tab de l'URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const tabParam = urlParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabParam === 'forum' ? 'forum' : 'resources');
 
   const filters = {
     ...(typeFilter !== "ALL" && { type: typeFilter }),
@@ -90,7 +95,7 @@ export default function TechnicalResources() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="resources" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 max-w-md">
             <TabsTrigger value="resources">
               <FileText className="h-4 w-4 mr-2" />

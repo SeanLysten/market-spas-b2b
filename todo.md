@@ -1317,3 +1317,5 @@
 - [x] Corriger l'erreur d'accessibilité DialogTitle manquant sur la page /admin
 
 - [x] Corriger le lien du bouton Forum d'entraide vers /technical-resources?tab=forum
+
+- [x] Corriger TechnicalResources pour ouvrir automatiquement l'onglet forum avec ?tab=forum
