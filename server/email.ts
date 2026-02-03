@@ -838,3 +838,323 @@ export async function getAdminEmails(): Promise<string[]> {
   // The actual implementation is in db.ts
   return [];
 }
+
+
+// ============================================
+// ORDER STATUS CHANGE NOTIFICATION FOR PARTNERS
+// ============================================
+
+interface StatusConfig {
+  label: string;
+  emoji: string;
+  color: string;
+  bgColor: string;
+  message: string;
+}
+
+const orderStatusConfig: Record<string, StatusConfig> = {
+  PENDING_APPROVAL: {
+    label: "En attente d'approbation",
+    emoji: "⏳",
+    color: "#92400e",
+    bgColor: "#fef3c7",
+    message: "Votre commande est en cours de validation par notre équipe.",
+  },
+  PENDING_DEPOSIT: {
+    label: "Acompte requis",
+    emoji: "💳",
+    color: "#1e40af",
+    bgColor: "#dbeafe",
+    message: "Un acompte est requis pour confirmer votre commande. Veuillez procéder au paiement.",
+  },
+  DEPOSIT_PAID: {
+    label: "Acompte payé",
+    emoji: "✅",
+    color: "#166534",
+    bgColor: "#dcfce7",
+    message: "Votre acompte a été reçu. Votre commande va être mise en production.",
+  },
+  IN_PRODUCTION: {
+    label: "En production",
+    emoji: "🏭",
+    color: "#7c3aed",
+    bgColor: "#ede9fe",
+    message: "Votre commande est actuellement en cours de fabrication.",
+  },
+  READY_TO_SHIP: {
+    label: "Prêt à expédier",
+    emoji: "📦",
+    color: "#0369a1",
+    bgColor: "#e0f2fe",
+    message: "Votre commande est prête et sera expédiée très prochainement.",
+  },
+  SHIPPED: {
+    label: "Expédié",
+    emoji: "🚚",
+    color: "#0891b2",
+    bgColor: "#cffafe",
+    message: "Votre commande a été expédiée ! Elle est en route vers l'adresse de livraison.",
+  },
+  DELIVERED: {
+    label: "Livré",
+    emoji: "🎉",
+    color: "#059669",
+    bgColor: "#d1fae5",
+    message: "Votre commande a été livrée avec succès. Merci pour votre confiance !",
+  },
+  COMPLETED: {
+    label: "Terminé",
+    emoji: "✨",
+    color: "#065f46",
+    bgColor: "#d1fae5",
+    message: "Votre commande est complète. Merci pour votre fidélité !",
+  },
+  CANCELLED: {
+    label: "Annulé",
+    emoji: "❌",
+    color: "#dc2626",
+    bgColor: "#fee2e2",
+    message: "Votre commande a été annulée. Contactez-nous pour plus d'informations.",
+  },
+};
+
+interface OrderStatusChangeParams {
+  orderNumber: string;
+  partnerName: string;
+  contactName: string;
+  oldStatus: string;
+  newStatus: string;
+  totalTTC: number | string;
+  portalUrl: string;
+  trackingNumber?: string;
+  estimatedDelivery?: string;
+}
+
+export async function sendOrderStatusChangeToPartner(
+  partnerEmail: string,
+  params: OrderStatusChangeParams
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const {
+    orderNumber,
+    partnerName,
+    contactName,
+    oldStatus,
+    newStatus,
+    totalTTC,
+    portalUrl,
+    trackingNumber,
+    estimatedDelivery,
+  } = params;
+
+  const formatPrice = (price: number | string): string => {
+    const num = typeof price === 'string' ? parseFloat(price) : price;
+    return num.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const statusInfo = orderStatusConfig[newStatus] || {
+    label: newStatus,
+    emoji: "📋",
+    color: "#64748b",
+    bgColor: "#f1f5f9",
+    message: "Le statut de votre commande a été mis à jour.",
+  };
+
+  const oldStatusInfo = orderStatusConfig[oldStatus] || {
+    label: oldStatus,
+    emoji: "📋",
+    color: "#64748b",
+    bgColor: "#f1f5f9",
+    message: "",
+  };
+
+  // Additional info for shipped orders
+  const trackingHtml = trackingNumber ? `
+    <tr>
+      <td style="padding: 15px 20px; background-color: #f0f9ff; border-radius: 8px; margin-top: 20px;">
+        <p style="margin: 0 0 10px; color: #0369a1; font-size: 14px; font-weight: 600;">
+          📍 Informations de suivi
+        </p>
+        <p style="margin: 0; color: #1e293b; font-size: 14px;">
+          <strong>N° de suivi :</strong> ${trackingNumber}
+        </p>
+        ${estimatedDelivery ? `<p style="margin: 5px 0 0; color: #1e293b; font-size: 14px;"><strong>Livraison estimée :</strong> ${estimatedDelivery}</p>` : ''}
+      </td>
+    </tr>
+  ` : '';
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mise à jour de commande - Market Spas</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 0;">
+        <table role="presentation" style="width: 600px; max-width: 100%; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 30px 40px; text-align: center; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Market Spas</h1>
+              <p style="margin: 10px 0 0; color: #ffffff; font-size: 16px; opacity: 0.95;">Mise à jour de votre commande</p>
+            </td>
+          </tr>
+          
+          <!-- Order Number -->
+          <tr>
+            <td style="padding: 25px 40px 15px; text-align: center;">
+              <p style="margin: 0; color: #64748b; font-size: 14px;">Commande</p>
+              <p style="margin: 5px 0 0; color: #1e293b; font-size: 22px; font-weight: 700;">#${orderNumber}</p>
+            </td>
+          </tr>
+          
+          <!-- Status Change -->
+          <tr>
+            <td style="padding: 0 40px 25px;">
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="width: 45%; text-align: center; padding: 15px;">
+                    <p style="margin: 0 0 8px; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Ancien statut</p>
+                    <span style="display: inline-block; padding: 8px 16px; background-color: #f1f5f9; color: #64748b; border-radius: 20px; font-size: 13px; text-decoration: line-through;">
+                      ${oldStatusInfo.emoji} ${oldStatusInfo.label}
+                    </span>
+                  </td>
+                  <td style="width: 10%; text-align: center; color: #94a3b8; font-size: 20px;">→</td>
+                  <td style="width: 45%; text-align: center; padding: 15px;">
+                    <p style="margin: 0 0 8px; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Nouveau statut</p>
+                    <span style="display: inline-block; padding: 10px 20px; background-color: ${statusInfo.bgColor}; color: ${statusInfo.color}; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                      ${statusInfo.emoji} ${statusInfo.label}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Message -->
+          <tr>
+            <td style="padding: 0 40px 25px;">
+              <div style="padding: 20px; background-color: ${statusInfo.bgColor}; border-left: 4px solid ${statusInfo.color}; border-radius: 4px;">
+                <p style="margin: 0; color: ${statusInfo.color}; font-size: 15px; line-height: 1.6;">
+                  ${statusInfo.message}
+                </p>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Tracking Info (if shipped) -->
+          ${trackingHtml}
+          
+          <!-- Order Summary -->
+          <tr>
+            <td style="padding: 25px 40px;">
+              <table role="presentation" style="width: 100%; background-color: #f8fafc; border-radius: 8px; padding: 20px;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 15px; color: #1e293b; font-size: 16px; font-weight: 600;">Récapitulatif</p>
+                    <table role="presentation" style="width: 100%;">
+                      <tr>
+                        <td style="padding: 5px 0; color: #64748b; font-size: 14px;">Entreprise :</td>
+                        <td style="padding: 5px 0; color: #1e293b; font-size: 14px; text-align: right;">${partnerName}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 5px 0; color: #64748b; font-size: 14px;">Total TTC :</td>
+                        <td style="padding: 5px 0; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">${formatPrice(totalTTC)} €</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- CTA Button -->
+          <tr>
+            <td style="padding: 0 40px 40px;">
+              <table role="presentation" style="width: 100%;">
+                <tr>
+                  <td align="center">
+                    <a href="${portalUrl}/order/${orderNumber}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);">
+                      Suivre ma commande
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 25px 40px; background-color: #f8fafc; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">
+              <p style="margin: 0 0 10px; color: #64748b; font-size: 13px; text-align: center;">
+                Une question ? Contactez notre équipe via le portail partenaires.
+              </p>
+              <p style="margin: 0; color: #94a3b8; font-size: 12px; text-align: center;">
+                © ${new Date().getFullYear()} Market Spas. Tous droits réservés.<br>
+                Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  const textContent = `
+MISE À JOUR DE VOTRE COMMANDE
+=============================
+
+Bonjour ${contactName},
+
+Le statut de votre commande #${orderNumber} a été mis à jour.
+
+CHANGEMENT DE STATUT
+--------------------
+${oldStatusInfo.emoji} ${oldStatusInfo.label} → ${statusInfo.emoji} ${statusInfo.label}
+
+${statusInfo.message}
+${trackingNumber ? `\nN° de suivi : ${trackingNumber}` : ''}
+${estimatedDelivery ? `Livraison estimée : ${estimatedDelivery}` : ''}
+
+RÉCAPITULATIF
+-------------
+Entreprise : ${partnerName}
+Total TTC : ${formatPrice(totalTTC)} €
+
+Suivre ma commande : ${portalUrl}/order/${orderNumber}
+
+---
+© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
+Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+  `.trim();
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [partnerEmail],
+      subject: `${statusInfo.emoji} Commande #${orderNumber} - ${statusInfo.label}`,
+      html: htmlContent,
+      text: textContent,
+    });
+
+    if (error) {
+      console.error(`[Email] Error sending order status change to ${partnerEmail}:`, error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`[Email] Order status change notification sent to ${partnerEmail}:`, data?.id);
+    return { success: true, messageId: data?.id };
+  } catch (error) {
+    console.error(`[Email] Exception sending order status change to ${partnerEmail}:`, error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error) 
+    };
+  }
+}

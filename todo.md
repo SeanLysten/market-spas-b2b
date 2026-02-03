@@ -1347,3 +1347,11 @@
 - [x] Intégrer la notification dans le flux de création de commande
 - [x] Écrire les tests pour la notification
 - [x] Tester l'envoi d'e-mail
+
+## Notification e-mail changement de statut commande (partenaires)
+- [x] Analyser le système de changement de statut existant
+- [x] Créer le template HTML pour l'e-mail de changement de statut
+- [x] Implémenter la fonction d'envoi aux partenaires
+- [x] Intégrer dans le flux de changement de statut
+- [x] Écrire les tests
+- [x] Tester l'envoi d'e-mail

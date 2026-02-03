@@ -1,7 +1,7 @@
 import * as db from "./db";
 import { notifyOwner } from "./_core/notification";
 import { notifyPartner, notifyAdmins } from "./_core/websocket";
-import { sendNewOrderNotificationToAdmins } from "./email";
+import { sendNewOrderNotificationToAdmins, sendOrderStatusChangeToPartner } from "./email";
 
 /**
  * Check for low stock products and send alerts
@@ -113,6 +113,28 @@ export async function notifyOrderStatusChange(
       });
     } catch (err) {
       console.error("[Alerts] Failed to send WebSocket notification:", err);
+    }
+
+    // Send email notification to partner
+    try {
+      const partnerEmail = partner.primaryContactEmail;
+      if (partnerEmail) {
+        const portalUrl = process.env.VITE_APP_URL || 'https://market-spas-b2b.manus.space';
+        const emailResult = await sendOrderStatusChangeToPartner(partnerEmail, {
+          orderNumber: order.orderNumber,
+          partnerName: partner.companyName,
+          contactName: partner.primaryContactName || partner.companyName,
+          oldStatus,
+          newStatus,
+          totalTTC: order.totalTTC,
+          portalUrl,
+        });
+        console.log(`[Alerts] Email notification sent to partner ${partnerEmail}:`, emailResult);
+      } else {
+        console.log("[Alerts] No partner email found for notification");
+      }
+    } catch (err) {
+      console.error("[Alerts] Failed to send email notification to partner:", err);
     }
 
     console.log(`[Alerts] Order status change notification sent for order ${orderId}`);
