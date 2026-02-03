@@ -1158,3 +1158,233 @@ Cet email a été envoyé automatiquement, merci de ne pas y répondre.
     };
   }
 }
+
+
+// ============================================
+// DEPOSIT REMINDER EMAIL FOR PARTNERS
+// ============================================
+
+interface DepositReminderParams {
+  orderNumber: string;
+  partnerName: string;
+  contactName: string;
+  depositAmount: number | string;
+  totalTTC: number | string;
+  orderDate: Date;
+  portalUrl: string;
+  hoursOverdue: number;
+}
+
+export async function sendDepositReminderEmail(
+  partnerEmail: string,
+  params: DepositReminderParams
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const {
+    orderNumber,
+    partnerName,
+    contactName,
+    depositAmount,
+    totalTTC,
+    orderDate,
+    portalUrl,
+    hoursOverdue,
+  } = params;
+
+  const formatPrice = (price: number | string): string => {
+    const num = typeof price === 'string' ? parseFloat(price) : price;
+    return num.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const formatDate = (date: Date): string => {
+    return date.toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  const urgencyLevel = hoursOverdue >= 72 ? 'high' : 'medium';
+  const urgencyColor = urgencyLevel === 'high' ? '#dc2626' : '#f59e0b';
+  const urgencyBgColor = urgencyLevel === 'high' ? '#fef2f2' : '#fffbeb';
+  const urgencyMessage = urgencyLevel === 'high' 
+    ? 'Votre commande risque d\'être annulée si le paiement n\'est pas effectué rapidement.'
+    : 'Nous vous rappelons qu\'un acompte est nécessaire pour confirmer votre commande.';
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rappel de paiement - Market Spas</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 0;">
+        <table role="presentation" style="width: 600px; max-width: 100%; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 30px 40px; text-align: center; background: linear-gradient(135deg, ${urgencyColor} 0%, ${urgencyLevel === 'high' ? '#b91c1c' : '#d97706'} 100%); border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">💳 Rappel de paiement</h1>
+              <p style="margin: 10px 0 0; color: #ffffff; font-size: 16px; opacity: 0.95;">Acompte en attente</p>
+            </td>
+          </tr>
+          
+          <!-- Greeting -->
+          <tr>
+            <td style="padding: 30px 40px 15px;">
+              <p style="margin: 0; color: #1e293b; font-size: 16px; line-height: 1.6;">
+                Bonjour <strong>${contactName}</strong>,
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Alert Box -->
+          <tr>
+            <td style="padding: 0 40px 25px;">
+              <div style="padding: 20px; background-color: ${urgencyBgColor}; border-left: 4px solid ${urgencyColor}; border-radius: 4px;">
+                <p style="margin: 0; color: ${urgencyColor}; font-size: 15px; line-height: 1.6; font-weight: 500;">
+                  ⚠️ ${urgencyMessage}
+                </p>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Order Details -->
+          <tr>
+            <td style="padding: 0 40px 25px;">
+              <table role="presentation" style="width: 100%; background-color: #f8fafc; border-radius: 8px; padding: 20px;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 15px; color: #1e293b; font-size: 16px; font-weight: 600;">📦 Détails de la commande</p>
+                    <table role="presentation" style="width: 100%;">
+                      <tr>
+                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">N° de commande :</td>
+                        <td style="padding: 8px 0; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">#${orderNumber}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Date de commande :</td>
+                        <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${formatDate(orderDate)}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Entreprise :</td>
+                        <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${partnerName}</td>
+                      </tr>
+                      <tr>
+                        <td colspan="2" style="padding: 15px 0 8px;">
+                          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 0;">
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Total de la commande :</td>
+                        <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${formatPrice(totalTTC)} €</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: ${urgencyColor}; font-size: 16px; font-weight: 600;">Acompte à régler :</td>
+                        <td style="padding: 8px 0; color: ${urgencyColor}; font-size: 18px; font-weight: 700; text-align: right;">${formatPrice(depositAmount)} €</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- CTA Button -->
+          <tr>
+            <td style="padding: 0 40px 20px;">
+              <table role="presentation" style="width: 100%;">
+                <tr>
+                  <td align="center">
+                    <a href="${portalUrl}/order/${orderNumber}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, ${urgencyColor} 0%, ${urgencyLevel === 'high' ? '#b91c1c' : '#d97706'} 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+                      Payer mon acompte maintenant
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Help Text -->
+          <tr>
+            <td style="padding: 0 40px 30px;">
+              <p style="margin: 0; color: #64748b; font-size: 14px; text-align: center; line-height: 1.6;">
+                Vous avez déjà effectué le paiement ? Ignorez ce message.<br>
+                Une question ? Contactez notre équipe via le portail partenaires.
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 25px 40px; background-color: #f8fafc; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px; text-align: center;">
+                © ${new Date().getFullYear()} Market Spas. Tous droits réservés.<br>
+                Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  const textContent = `
+RAPPEL DE PAIEMENT - ACOMPTE EN ATTENTE
+=======================================
+
+Bonjour ${contactName},
+
+${urgencyMessage}
+
+DÉTAILS DE LA COMMANDE
+----------------------
+N° de commande : #${orderNumber}
+Date de commande : ${formatDate(orderDate)}
+Entreprise : ${partnerName}
+
+Total de la commande : ${formatPrice(totalTTC)} €
+ACOMPTE À RÉGLER : ${formatPrice(depositAmount)} €
+
+Payer mon acompte : ${portalUrl}/order/${orderNumber}
+
+---
+Vous avez déjà effectué le paiement ? Ignorez ce message.
+Une question ? Contactez notre équipe via le portail partenaires.
+
+© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
+Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+  `.trim();
+
+  const subjectEmoji = urgencyLevel === 'high' ? '🚨' : '💳';
+  const subjectText = urgencyLevel === 'high' ? 'URGENT' : 'Rappel';
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [partnerEmail],
+      subject: `${subjectEmoji} ${subjectText} : Acompte en attente - Commande #${orderNumber}`,
+      html: htmlContent,
+      text: textContent,
+    });
+
+    if (error) {
+      console.error(`[Email] Error sending deposit reminder to ${partnerEmail}:`, error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`[Email] Deposit reminder sent to ${partnerEmail}:`, data?.id);
+    return { success: true, messageId: data?.id };
+  } catch (error) {
+    console.error(`[Email] Exception sending deposit reminder to ${partnerEmail}:`, error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error) 
+    };
+  }
+}

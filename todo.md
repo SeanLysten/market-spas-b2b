@@ -1355,3 +1355,12 @@
 - [x] Intégrer dans le flux de changement de statut
 - [x] Écrire les tests
 - [x] Tester l'envoi d'e-mail
+
+## Rappel automatique acompte non payé (48h)
+- [x] Analyser le système de commandes et le statut PENDING_DEPOSIT
+- [x] Créer la fonction pour trouver les commandes en attente d'acompte > 48h
+- [x] Créer le template e-mail de rappel d'acompte
+- [x] Implémenter la fonction d'envoi de rappels
+- [x] Ajouter un champ pour tracker les rappels envoyés
+- [x] Configurer le cron job pour exécution automatique
+- [x] Écrire les tests

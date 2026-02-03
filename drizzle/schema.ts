@@ -690,6 +690,8 @@ export const orders = mysqlTable(
     depositAmount: decimal("depositAmount", { precision: 12, scale: 2 }).notNull(),
     depositPaid: boolean("depositPaid").default(false),
     depositPaidAt: timestamp("depositPaidAt"),
+    depositReminderSentAt: timestamp("depositReminderSentAt"),
+    depositReminderCount: int("depositReminderCount").default(0),
 
     // Balance
     balanceAmount: decimal("balanceAmount", { precision: 12, scale: 2 }).notNull(),

@@ -1,4 +1,4 @@
-import { eq, and, desc, sql, or, like, lte, gte, asc, ne, gt, isNull } from "drizzle-orm";
+import { eq, and, desc, sql, or, like, lte, gte, asc, ne, gt, lt, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -4574,4 +4574,87 @@ export async function getAdminEmails(): Promise<string[]> {
     );
 
   return admins.map(a => a.email).filter((email): email is string => email !== null);
+}
+
+
+// ============================================
+// DEPOSIT REMINDER FUNCTIONS
+// ============================================
+
+interface PendingDepositOrder {
+  id: number;
+  orderNumber: string;
+  partnerId: number;
+  depositAmount: string;
+  totalTTC: string;
+  createdAt: Date;
+  depositReminderSentAt: Date | null;
+  depositReminderCount: number | null;
+  hoursOverdue: number;
+}
+
+/**
+ * Get orders with PENDING_DEPOSIT status that are older than the specified hours
+ * and haven't received a reminder in the last 24 hours
+ */
+export async function getOrdersPendingDepositReminder(hoursThreshold: number = 48): Promise<PendingDepositOrder[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const thresholdDate = new Date();
+  thresholdDate.setHours(thresholdDate.getHours() - hoursThreshold);
+
+  // Get orders that:
+  // 1. Have status PENDING_DEPOSIT
+  // 2. Were created more than hoursThreshold ago
+  // 3. Haven't received a reminder in the last 24 hours (or never received one)
+  const reminderCooldown = new Date();
+  reminderCooldown.setHours(reminderCooldown.getHours() - 24);
+
+  const result = await db
+    .select({
+      id: orders.id,
+      orderNumber: orders.orderNumber,
+      partnerId: orders.partnerId,
+      depositAmount: orders.depositAmount,
+      totalTTC: orders.totalTTC,
+      createdAt: orders.createdAt,
+      depositReminderSentAt: orders.depositReminderSentAt,
+      depositReminderCount: orders.depositReminderCount,
+    })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.status, "PENDING_DEPOSIT"),
+        lt(orders.createdAt, thresholdDate),
+        isNull(orders.deletedAt),
+        or(
+          isNull(orders.depositReminderSentAt),
+          lt(orders.depositReminderSentAt, reminderCooldown)
+        )
+      )
+    );
+
+  // Calculate hours overdue for each order
+  const now = new Date();
+  return result.map(order => ({
+    ...order,
+    hoursOverdue: Math.floor((now.getTime() - order.createdAt.getTime()) / (1000 * 60 * 60)),
+  }));
+}
+
+/**
+ * Mark an order as having received a deposit reminder
+ */
+export async function markDepositReminderSent(orderId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(orders)
+    .set({
+      depositReminderSentAt: new Date(),
+      depositReminderCount: sql`COALESCE(${orders.depositReminderCount}, 0) + 1`,
+    })
+    .where(eq(orders.id, orderId));
 }

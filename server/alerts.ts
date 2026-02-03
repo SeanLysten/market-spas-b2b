@@ -1,7 +1,7 @@
 import * as db from "./db";
 import { notifyOwner } from "./_core/notification";
 import { notifyPartner, notifyAdmins } from "./_core/websocket";
-import { sendNewOrderNotificationToAdmins, sendOrderStatusChangeToPartner } from "./email";
+import { sendNewOrderNotificationToAdmins, sendOrderStatusChangeToPartner, sendDepositReminderEmail } from "./email";
 
 /**
  * Check for low stock products and send alerts
@@ -216,6 +216,89 @@ export async function notifyNewOrder(orderId: number) {
     return { success: true };
   } catch (error) {
     console.error("[Alerts] Error sending new order notification:", error);
+    return { success: false, error };
+  }
+}
+
+
+/**
+ * Process deposit reminders for orders pending deposit for more than 48 hours
+ * This function should be called by a cron job
+ */
+export async function processDepositReminders(hoursThreshold: number = 48) {
+  try {
+    // Get orders pending deposit reminder
+    const pendingOrders = await db.getOrdersPendingDepositReminder(hoursThreshold);
+    
+    if (pendingOrders.length === 0) {
+      console.log("[Alerts] No orders pending deposit reminder");
+      return { success: true, processed: 0, sent: 0 };
+    }
+
+    console.log(`[Alerts] Found ${pendingOrders.length} orders pending deposit reminder`);
+
+    const portalUrl = process.env.VITE_APP_URL || 'https://market-spas-b2b.manus.space';
+    let sentCount = 0;
+    const results: Array<{ orderId: number; orderNumber: string; success: boolean; error?: string }> = [];
+
+    for (const order of pendingOrders) {
+      try {
+        // Get partner info
+        const partner = await db.getPartnerById(order.partnerId);
+        if (!partner) {
+          console.error(`[Alerts] Partner ${order.partnerId} not found for order ${order.orderNumber}`);
+          results.push({ orderId: order.id, orderNumber: order.orderNumber, success: false, error: "Partner not found" });
+          continue;
+        }
+
+        const partnerEmail = partner.primaryContactEmail;
+        if (!partnerEmail) {
+          console.error(`[Alerts] No email for partner ${order.partnerId} (order ${order.orderNumber})`);
+          results.push({ orderId: order.id, orderNumber: order.orderNumber, success: false, error: "No partner email" });
+          continue;
+        }
+
+        // Send reminder email
+        const emailResult = await sendDepositReminderEmail(partnerEmail, {
+          orderNumber: order.orderNumber,
+          partnerName: partner.companyName,
+          contactName: partner.primaryContactName || partner.companyName,
+          depositAmount: order.depositAmount,
+          totalTTC: order.totalTTC,
+          orderDate: order.createdAt,
+          portalUrl,
+          hoursOverdue: order.hoursOverdue,
+        });
+
+        if (emailResult.success) {
+          // Mark reminder as sent
+          await db.markDepositReminderSent(order.id);
+          sentCount++;
+          results.push({ orderId: order.id, orderNumber: order.orderNumber, success: true });
+          console.log(`[Alerts] Deposit reminder sent for order ${order.orderNumber} to ${partnerEmail}`);
+        } else {
+          results.push({ orderId: order.id, orderNumber: order.orderNumber, success: false, error: emailResult.error });
+          console.error(`[Alerts] Failed to send deposit reminder for order ${order.orderNumber}:`, emailResult.error);
+        }
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        results.push({ orderId: order.id, orderNumber: order.orderNumber, success: false, error: errorMsg });
+        console.error(`[Alerts] Error processing deposit reminder for order ${order.orderNumber}:`, err);
+      }
+    }
+
+    // Notify owner about reminders sent
+    if (sentCount > 0) {
+      await notifyOwner({
+        title: `💳 Rappels d'acompte envoyés (${sentCount})`,
+        content: `${sentCount} rappel(s) d'acompte ont été envoyés aux partenaires pour des commandes en attente depuis plus de ${hoursThreshold} heures.`,
+      });
+    }
+
+    console.log(`[Alerts] Deposit reminders processed: ${sentCount}/${pendingOrders.length} sent`);
+    return { success: true, processed: pendingOrders.length, sent: sentCount, results };
+  } catch (error) {
+    console.error("[Alerts] Error processing deposit reminders:", error);
     return { success: false, error };
   }
 }

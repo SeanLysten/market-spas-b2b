@@ -268,6 +268,25 @@ export const appRouter = router({
         const result = await db.processArrivedStock();
         return { success: true, result };
       }),
+
+    // Process deposit reminders for orders pending deposit > 48h
+    processDepositReminders: publicProcedure
+      .input(z.object({ 
+        secret: z.string(),
+        hoursThreshold: z.number().optional().default(48),
+      }))
+      .mutation(async ({ input }) => {
+        // Vérifier la clé secrète
+        const CRON_SECRET = process.env.CRON_SECRET || 'default-secret-change-me';
+        if (input.secret !== CRON_SECRET) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid secret key' });
+        }
+        
+        // Importer et exécuter la fonction de rappel
+        const { processDepositReminders } = await import("./alerts");
+        const result = await processDepositReminders(input.hoursThreshold);
+        return result;
+      }),
   }),
 
   // ============================================
