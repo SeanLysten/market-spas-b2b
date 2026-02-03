@@ -146,6 +146,7 @@ export const users = mysqlTable(
       "SALES_REP",
       "PARTNER_ADMIN",
       "PARTNER_USER",
+      "PARTNER",
     ]).default("PARTNER_USER").notNull(),
     partnerId: int("partnerId"),
     loginMethod: varchar("loginMethod", { length: 64 }),

@@ -2291,6 +2291,8 @@ export async function getLeadStats(partnerId?: number) {
   
   const allLeads = await query;
   
+  const inProgressStatuses = ['ASSIGNED', 'CONTACTED', 'NO_RESPONSE', 'QUALIFIED', 'MEETING_SCHEDULED', 'QUOTE_SENT', 'NEGOTIATION'];
+  
   const stats = {
     total: allLeads.length,
     new: allLeads.filter(l => l.status === 'NEW').length,
@@ -2299,6 +2301,7 @@ export async function getLeadStats(partnerId?: number) {
     qualified: allLeads.filter(l => l.status === 'QUALIFIED').length,
     converted: allLeads.filter(l => l.status === 'CONVERTED').length,
     lost: allLeads.filter(l => l.status === 'LOST').length,
+    inProgress: allLeads.filter(l => inProgressStatuses.includes(l.status)).length,
     conversionRate: allLeads.length > 0 
       ? Math.round((allLeads.filter(l => l.status === 'CONVERTED').length / allLeads.length) * 100) 
       : 0,

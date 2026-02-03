@@ -386,10 +386,17 @@ export const appRouter = router({
         return await db.updateLeadStatus(input.id, input.status, ctx.user.id, input.notes);
       }),
 
-    // Get stats for current partner
+    // Get stats for current partner (or all leads for admins)
     myStats: protectedProcedure.query(async ({ ctx }) => {
+      const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+      
+      // Admins see all leads stats, partners see only their own
+      if (isAdmin) {
+        return await db.getLeadStats();
+      }
+      
       if (!ctx.user.partnerId) {
-        return { total: 0, byStatus: {}, bySource: {} };
+        return { total: 0, new: 0, assigned: 0, contacted: 0, qualified: 0, converted: 0, lost: 0, inProgress: 0, conversionRate: 0, contactRate: 0 };
       }
       return await db.getLeadStats(ctx.user.partnerId);
     }),

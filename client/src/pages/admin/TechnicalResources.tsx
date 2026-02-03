@@ -229,7 +229,7 @@ export default function AdminTechnicalResources() {
                     <SelectValue placeholder="Toutes les catégories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Toutes les catégories</SelectItem>
+                    <SelectItem value="ALL">Toutes les catégories</SelectItem>
                     <SelectItem value="SPAS">Spas</SelectItem>
                     <SelectItem value="SWIM_SPAS">Spas de nage</SelectItem>
                     <SelectItem value="MAINTENANCE">Produits d'entretien</SelectItem>

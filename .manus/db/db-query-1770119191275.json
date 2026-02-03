@@ -1,0 +1,74 @@
+{
+  "query": "SELECT id, title, type, startDate, endDate, isPublished FROM events ORDER BY startDate DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, title, type, startDate, endDate, isPublished FROM events ORDER BY startDate DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "8",
+      "title": "Promotion Printemps",
+      "type": "PROMOTION",
+      "startDate": "2025-03-19 20:00:00",
+      "endDate": "2025-04-14 20:00:00",
+      "isPublished": "1"
+    },
+    {
+      "id": "7",
+      "title": "Formation Installation Jacuzzis",
+      "type": "TRAINING",
+      "startDate": "2025-03-15 09:00:00",
+      "endDate": "2025-03-15 17:00:00",
+      "isPublished": "1"
+    },
+    {
+      "id": "6",
+      "title": "Lancement Swim Spa 2025",
+      "type": "ANNOUNCEMENT",
+      "startDate": "2025-02-28 19:00:00",
+      "endDate": "NULL",
+      "isPublished": "1"
+    },
+    {
+      "id": "4",
+      "title": "Salon Piscine & Spa Bruxelles",
+      "type": "EVENT",
+      "startDate": "2025-02-09 19:00:00",
+      "endDate": "2025-02-12 19:00:00",
+      "isPublished": "1"
+    },
+    {
+      "id": "5",
+      "title": "Promotion Saint-Valentin",
+      "type": "PROMOTION",
+      "startDate": "2025-01-31 19:00:00",
+      "endDate": "2025-02-13 19:00:00",
+      "isPublished": "1"
+    },
+    {
+      "id": "3",
+      "title": "Webinaire: Nouveautés 2025",
+      "type": "WEBINAR",
+      "startDate": "2025-01-20 14:00:00",
+      "endDate": "2025-01-20 15:30:00",
+      "isPublished": "1"
+    },
+    {
+      "id": "2",
+      "title": "Formation Technique Saunas",
+      "type": "TRAINING",
+      "startDate": "2025-01-15 10:00:00",
+      "endDate": "2025-01-15 16:00:00",
+      "isPublished": "1"
+    },
+    {
+      "id": "1",
+      "title": "Promotion Nouvel An 2025",
+      "type": "PROMOTION",
+      "startDate": "2024-12-31 19:00:00",
+      "endDate": "2025-01-30 19:00:00",
+      "isPublished": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\ttype\tstartDate\tendDate\tisPublished\n8\tPromotion Printemps\tPROMOTION\t2025-03-19 20:00:00\t2025-04-14 20:00:00\t1\n7\tFormation Installation Jacuzzis\tTRAINING\t2025-03-15 09:00:00\t2025-03-15 17:00:00\t1\n6\tLancement Swim Spa 2025\tANNOUNCEMENT\t2025-02-28 19:00:00\tNULL\t1\n4\tSalon Piscine & Spa Bruxelles\tEVENT\t2025-02-09 19:00:00\t2025-02-12 19:00:00\t1\n5\tPromotion Saint-Valentin\tPROMOTION\t2025-01-31 19:00:00\t2025-02-13 19:00:00\t1\n3\tWebinaire: Nouveautés 2025\tWEBINAR\t2025-01-20 14:00:00\t2025-01-20 15:30:00\t1\n2\tFormation Technique Saunas\tTRAINING\t2025-01-15 10:00:00\t2025-01-15 16:00:00\t1\n1\tPromotion Nouvel An 2025\tPROMOTION\t2024-12-31 19:00:00\t2025-01-30 19:00:00\t1\n",
+  "stderr": "",
+  "execution_time_ms": 127
+}
