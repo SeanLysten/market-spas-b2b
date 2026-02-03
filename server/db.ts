@@ -4556,3 +4556,22 @@ export async function updateUserRole(userId: number, role: 'SUPER_ADMIN' | 'ADMI
   
   await db.update(users).set({ role }).where(eq(users.id, userId));
 }
+
+
+// Get all admin emails for notifications
+export async function getAdminEmails(): Promise<string[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const admins = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(
+      or(
+        eq(users.role, "SUPER_ADMIN"),
+        eq(users.role, "ADMIN")
+      )
+    );
+
+  return admins.map(a => a.email).filter((email): email is string => email !== null);
+}

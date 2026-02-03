@@ -1338,3 +1338,12 @@
 - [x] Événements du calendrier datés de 2025 au lieu de 2026 - CORRIGÉ
 - [x] Statistiques des leads affichent 0 dans l'interface utilisateur (mais 12 leads en base) - CORRIGÉ
 - [x] Prix des produits affichent 0.00€ dans l'admin (mais prix corrects dans le catalogue) - CORRIGÉ
+
+## Notifications e-mail pour les nouvelles commandes
+- [x] Analyser le système de commandes existant
+- [x] Analyser le système d'envoi d'e-mails (Resend)
+- [x] Créer la fonction d'envoi de notification aux admins
+- [x] Créer le template HTML pour l'e-mail de notification
+- [x] Intégrer la notification dans le flux de création de commande
+- [x] Écrire les tests pour la notification
+- [x] Tester l'envoi d'e-mail

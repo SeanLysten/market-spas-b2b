@@ -570,3 +570,271 @@ Cette invitation est personnelle et expire dans 7 jours.
     throw error;
   }
 }
+
+
+// ============================================
+// NEW ORDER NOTIFICATION FOR ADMINS
+// ============================================
+
+interface OrderItem {
+  name: string;
+  quantity: number;
+  unitPriceHT: number | string;
+  totalTTC: number | string;
+}
+
+interface NewOrderNotificationParams {
+  orderNumber: string;
+  partnerName: string;
+  partnerEmail: string;
+  items: OrderItem[];
+  totalHT: number | string;
+  totalTTC: number | string;
+  deliveryCity: string;
+  deliveryPostalCode: string;
+  createdAt: Date;
+  portalUrl: string;
+}
+
+export async function sendNewOrderNotificationToAdmins(
+  adminEmails: string[],
+  params: NewOrderNotificationParams
+): Promise<{ success: boolean; results: Array<{ email: string; success: boolean; messageId?: string; error?: string }> }> {
+  const {
+    orderNumber,
+    partnerName,
+    partnerEmail,
+    items,
+    totalHT,
+    totalTTC,
+    deliveryCity,
+    deliveryPostalCode,
+    createdAt,
+    portalUrl,
+  } = params;
+
+  const formatPrice = (price: number | string): string => {
+    const num = typeof price === 'string' ? parseFloat(price) : price;
+    return num.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const formattedDate = new Date(createdAt).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const itemsHtml = items.map(item => `
+    <tr>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${item.name}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center;">${item.quantity}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right;">${formatPrice(item.unitPriceHT)} €</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600;">${formatPrice(item.totalTTC)} €</td>
+    </tr>
+  `).join('');
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nouvelle commande - Market Spas</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 0;">
+        <table role="presentation" style="width: 650px; max-width: 100%; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 30px 40px; text-align: center; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">🛒 Nouvelle Commande</h1>
+              <p style="margin: 10px 0 0; color: #ffffff; font-size: 18px; opacity: 0.95;">#${orderNumber}</p>
+            </td>
+          </tr>
+          
+          <!-- Alert Banner -->
+          <tr>
+            <td style="padding: 20px 40px; background-color: #ecfdf5; border-bottom: 1px solid #d1fae5;">
+              <table role="presentation" style="width: 100%;">
+                <tr>
+                  <td style="width: 40px; vertical-align: top;">
+                    <span style="font-size: 24px;">📬</span>
+                  </td>
+                  <td>
+                    <p style="margin: 0; color: #065f46; font-size: 14px; font-weight: 600;">
+                      Une nouvelle commande a été passée sur le portail B2B
+                    </p>
+                    <p style="margin: 5px 0 0; color: #047857; font-size: 13px;">
+                      ${formattedDate}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Partner Info -->
+          <tr>
+            <td style="padding: 30px 40px;">
+              <h2 style="margin: 0 0 20px; color: #1a1a1a; font-size: 18px; font-weight: 600; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
+                👤 Informations du partenaire
+              </h2>
+              <table role="presentation" style="width: 100%;">
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px; width: 140px;">Entreprise :</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px; font-weight: 600;">${partnerName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Email :</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px;">
+                    <a href="mailto:${partnerEmail}" style="color: #2563eb; text-decoration: none;">${partnerEmail}</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Livraison :</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px;">${deliveryPostalCode} ${deliveryCity}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Order Items -->
+          <tr>
+            <td style="padding: 0 40px 30px;">
+              <h2 style="margin: 0 0 20px; color: #1a1a1a; font-size: 18px; font-weight: 600; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
+                📦 Détails de la commande
+              </h2>
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; text-align: left; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase;">Produit</th>
+                    <th style="padding: 12px; text-align: center; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase;">Qté</th>
+                    <th style="padding: 12px; text-align: right; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase;">Prix HT</th>
+                    <th style="padding: 12px; text-align: right; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase;">Total TTC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsHtml}
+                </tbody>
+              </table>
+              
+              <!-- Totals -->
+              <table role="presentation" style="width: 100%; margin-top: 20px;">
+                <tr>
+                  <td style="text-align: right; padding: 8px 0;">
+                    <span style="color: #64748b; font-size: 14px;">Total HT :</span>
+                    <span style="color: #1e293b; font-size: 14px; font-weight: 600; margin-left: 20px;">${formatPrice(totalHT)} €</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="text-align: right; padding: 12px 0; border-top: 2px solid #e2e8f0;">
+                    <span style="color: #1e293b; font-size: 18px; font-weight: 700;">Total TTC :</span>
+                    <span style="color: #059669; font-size: 20px; font-weight: 700; margin-left: 20px;">${formatPrice(totalTTC)} €</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- CTA Button -->
+          <tr>
+            <td style="padding: 0 40px 40px;">
+              <table role="presentation" style="width: 100%;">
+                <tr>
+                  <td align="center">
+                    <a href="${portalUrl}/admin/orders" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);">
+                      Voir la commande
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 25px 40px; background-color: #f8fafc; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px; text-align: center;">
+                Cette notification a été envoyée automatiquement par le portail B2B Market Spas.<br>
+                © ${new Date().getFullYear()} Market Spas. Tous droits réservés.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  const textContent = `
+NOUVELLE COMMANDE - #${orderNumber}
+=====================================
+
+Une nouvelle commande a été passée sur le portail B2B Market Spas.
+
+Date : ${formattedDate}
+
+PARTENAIRE
+----------
+Entreprise : ${partnerName}
+Email : ${partnerEmail}
+Livraison : ${deliveryPostalCode} ${deliveryCity}
+
+PRODUITS
+--------
+${items.map(item => `- ${item.name} x${item.quantity} : ${formatPrice(item.totalTTC)} €`).join('\n')}
+
+TOTAL HT : ${formatPrice(totalHT)} €
+TOTAL TTC : ${formatPrice(totalTTC)} €
+
+Voir la commande : ${portalUrl}/admin/orders
+
+---
+Cette notification a été envoyée automatiquement par le portail B2B Market Spas.
+  `.trim();
+
+  const results: Array<{ email: string; success: boolean; messageId?: string; error?: string }> = [];
+
+  for (const adminEmail of adminEmails) {
+    try {
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: [adminEmail],
+        subject: `🛒 Nouvelle commande #${orderNumber} - ${partnerName}`,
+        html: htmlContent,
+        text: textContent,
+      });
+
+      if (error) {
+        console.error(`[Email] Error sending new order notification to ${adminEmail}:`, error);
+        results.push({ email: adminEmail, success: false, error: error.message });
+      } else {
+        console.log(`[Email] New order notification sent to ${adminEmail}:`, data?.id);
+        results.push({ email: adminEmail, success: true, messageId: data?.id });
+      }
+    } catch (error) {
+      console.error(`[Email] Exception sending new order notification to ${adminEmail}:`, error);
+      results.push({ 
+        email: adminEmail, 
+        success: false, 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  }
+
+  const allSuccess = results.every(r => r.success);
+  return { success: allSuccess, results };
+}
+
+// Helper function to get admin emails from database
+export async function getAdminEmails(): Promise<string[]> {
+  // This will be called from db.ts to avoid circular imports
+  // The actual implementation is in db.ts
+  return [];
+}

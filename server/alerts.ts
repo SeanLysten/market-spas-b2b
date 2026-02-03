@@ -1,6 +1,7 @@
 import * as db from "./db";
 import { notifyOwner } from "./_core/notification";
 import { notifyPartner, notifyAdmins } from "./_core/websocket";
+import { sendNewOrderNotificationToAdmins } from "./email";
 
 /**
  * Check for low stock products and send alerts
@@ -139,6 +140,10 @@ export async function notifyNewOrder(orderId: number) {
       return { success: false };
     }
 
+    // Get order items for the email
+    const orderWithItems = await db.getOrderWithItems(orderId);
+    const items = orderWithItems?.items || [];
+
     await notifyOwner({
       title: `🎉 Nouvelle Commande ${order.orderNumber}`,
       content: `Partenaire: ${partner.companyName}\nMontant HT: ${order.subtotalHT} €\nMontant TTC: ${order.totalTTC} €\nStatut: En attente d'approbation\n\nConsulter la commande dans l'admin.`,
@@ -153,6 +158,36 @@ export async function notifyNewOrder(orderId: number) {
       });
     } catch (err) {
       console.error("[Alerts] Failed to send WebSocket notification:", err);
+    }
+
+    // Send email notification to all admins
+    try {
+      const adminEmails = await db.getAdminEmails();
+      if (adminEmails.length > 0) {
+        const portalUrl = process.env.VITE_APP_URL || 'https://market-spas-b2b.manus.space';
+        const emailResult = await sendNewOrderNotificationToAdmins(adminEmails, {
+          orderNumber: order.orderNumber,
+          partnerName: partner.companyName,
+          partnerEmail: partner.primaryContactEmail || '',
+          items: items.map((item: any) => ({
+            name: item.name,
+            quantity: item.quantity,
+            unitPriceHT: item.unitPriceHT,
+            totalTTC: item.totalTTC,
+          })),
+          totalHT: order.totalHT,
+          totalTTC: order.totalTTC,
+          deliveryCity: order.deliveryCity || '',
+          deliveryPostalCode: order.deliveryPostalCode || '',
+          createdAt: order.createdAt,
+          portalUrl,
+        });
+        console.log(`[Alerts] Email notifications sent to ${adminEmails.length} admins:`, emailResult);
+      } else {
+        console.log("[Alerts] No admin emails found for notification");
+      }
+    } catch (err) {
+      console.error("[Alerts] Failed to send email notification:", err);
     }
 
     console.log(`[Alerts] New order notification sent for order ${orderId}`);
