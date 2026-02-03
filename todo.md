@@ -1313,3 +1313,5 @@
 - [x] Remplir les codes postaux pour l'Allemagne
 - [x] Remplir les codes postaux pour l'Espagne
 - [x] Remplir les codes postaux pour les Pays-Bas
+
+- [x] Corriger l'erreur d'accessibilité DialogTitle manquant sur la page /admin

@@ -572,6 +572,9 @@ export default function AfterSales() {
       {selectedServiceId && (
         <Dialog open={!!selectedServiceId} onOpenChange={() => setSelectedServiceId(null)}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Détail de la demande SAV</DialogTitle>
+            </DialogHeader>
             <AfterSalesDetail serviceId={selectedServiceId} onClose={() => setSelectedServiceId(null)} />
           </DialogContent>
         </Dialog>
