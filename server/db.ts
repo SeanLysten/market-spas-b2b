@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like, lte, gte, asc, ne, gt, lt, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens, metaAdAccounts } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -4657,4 +4657,120 @@ export async function markDepositReminderSent(orderId: number): Promise<void> {
       depositReminderCount: sql`COALESCE(${orders.depositReminderCount}, 0) + 1`,
     })
     .where(eq(orders.id, orderId));
+}
+
+// ============================================
+// META AD ACCOUNTS
+// ============================================
+
+/**
+ * Connect a Meta ad account (upsert)
+ */
+export async function connectMetaAdAccount(data: {
+  metaUserId: string;
+  metaUserName: string;
+  adAccountId: string;
+  adAccountName: string;
+  currency: string;
+  timezone?: string | null;
+  accessToken: string;
+  tokenExpiresAt?: Date | null;
+  connectedBy: number;
+}): Promise<{ id: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Check if this ad account is already connected
+  const existing = await db
+    .select()
+    .from(metaAdAccounts)
+    .where(eq(metaAdAccounts.adAccountId, data.adAccountId));
+
+  if (existing.length > 0) {
+    // Update existing connection
+    await db
+      .update(metaAdAccounts)
+      .set({
+        metaUserId: data.metaUserId,
+        metaUserName: data.metaUserName,
+        adAccountName: data.adAccountName,
+        currency: data.currency,
+        timezone: data.timezone,
+        accessToken: data.accessToken,
+        tokenExpiresAt: data.tokenExpiresAt,
+        isActive: true,
+        syncError: null,
+        connectedBy: data.connectedBy,
+      })
+      .where(eq(metaAdAccounts.adAccountId, data.adAccountId));
+    return { id: existing[0].id };
+  }
+
+  // Create new connection
+  const [result] = await db.insert(metaAdAccounts).values({
+    metaUserId: data.metaUserId,
+    metaUserName: data.metaUserName,
+    adAccountId: data.adAccountId,
+    adAccountName: data.adAccountName,
+    currency: data.currency,
+    timezone: data.timezone,
+    accessToken: data.accessToken,
+    tokenExpiresAt: data.tokenExpiresAt,
+    connectedBy: data.connectedBy,
+    isActive: true,
+  });
+
+  return { id: result.insertId };
+}
+
+/**
+ * Disconnect a Meta ad account
+ */
+export async function disconnectMetaAdAccount(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(metaAdAccounts)
+    .set({ isActive: false, accessToken: "" })
+    .where(eq(metaAdAccounts.id, id));
+}
+
+/**
+ * Get all connected Meta ad accounts
+ */
+export async function getConnectedMetaAdAccounts() {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select()
+    .from(metaAdAccounts)
+    .where(eq(metaAdAccounts.isActive, true));
+}
+
+/**
+ * Update last synced timestamp for a Meta ad account
+ */
+export async function updateMetaAdAccountLastSynced(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(metaAdAccounts)
+    .set({ lastSyncedAt: new Date(), syncError: null })
+    .where(eq(metaAdAccounts.id, id));
+}
+
+/**
+ * Update sync error for a Meta ad account
+ */
+export async function updateMetaAdAccountSyncError(id: number, error: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(metaAdAccounts)
+    .set({ syncError: error })
+    .where(eq(metaAdAccounts.id, id));
 }

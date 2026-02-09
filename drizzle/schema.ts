@@ -1393,6 +1393,45 @@ export type MetaCampaign = typeof metaCampaigns.$inferSelect;
 export type InsertMetaCampaign = typeof metaCampaigns.$inferInsert;
 
 // ============================================
+// META AD ACCOUNTS (OAuth connected)
+// ============================================
+
+export const metaAdAccounts = mysqlTable(
+  "meta_ad_accounts",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    
+    // Meta identifiers
+    metaUserId: varchar("metaUserId", { length: 100 }).notNull(),
+    metaUserName: varchar("metaUserName", { length: 255 }),
+    adAccountId: varchar("adAccountId", { length: 100 }).notNull(),
+    adAccountName: varchar("adAccountName", { length: 255 }),
+    currency: varchar("currency", { length: 10 }).default("EUR"),
+    timezone: varchar("timezone", { length: 100 }),
+    
+    // OAuth tokens
+    accessToken: text("accessToken").notNull(),
+    tokenExpiresAt: timestamp("tokenExpiresAt"),
+    
+    // Connection info
+    connectedBy: int("connectedBy").notNull(), // userId who connected
+    isActive: boolean("isActive").default(true),
+    lastSyncedAt: timestamp("lastSyncedAt"),
+    syncError: text("syncError"),
+    
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    adAccountIdIdx: index("adAccountId_idx").on(table.adAccountId),
+    connectedByIdx: index("connectedBy_idx").on(table.connectedBy),
+  })
+);
+
+export type MetaAdAccount = typeof metaAdAccounts.$inferSelect;
+export type InsertMetaAdAccount = typeof metaAdAccounts.$inferInsert;
+
+// ============================================
 // TERRITORY MANAGEMENT
 // ============================================
 

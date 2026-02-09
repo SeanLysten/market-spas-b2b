@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import AdminLayout from "@/components/AdminLayout";
@@ -88,6 +88,9 @@ export default function AdminLeads() {
   const [partnerFilter, setPartnerFilter] = useState<string>("all");
   const [dateRange, setDateRange] = useState<string>("30");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [metaConnecting, setMetaConnecting] = useState(false);
+  const [showAccountSelector, setShowAccountSelector] = useState(false);
+  const [metaCallbackData, setMetaCallbackData] = useState<any>(null);
 
   // Récupérer les vrais leads depuis la base de données
   const { data: leadsData, isLoading: leadsLoading, refetch } = trpc.admin.leads.list.useQuery({
@@ -125,41 +128,58 @@ export default function AdminLeads() {
     firstContactAt: lead.leads?.firstContactAt || lead.firstContactAt,
   }));
 
-  const campaigns: CampaignStats[] = [
-    {
-      id: "1",
-      name: "Jacuzzi Promo Été 2024",
-      status: "ACTIVE",
-      spend: 1250.50,
-      impressions: 45000,
-      clicks: 890,
-      leads: 45,
-      cpl: 27.79,
-      ctr: 1.98,
+  // Meta Ads integration
+  const { data: metaCampaignsData, isLoading: metaLoading, refetch: refetchMeta } = trpc.metaAds.getCampaigns.useQuery(
+    { datePreset: dateRange === "7" ? "last_7d" : dateRange === "30" ? "last_30d" : "last_90d" },
+    { retry: false }
+  );
+  const { data: metaOAuthUrl } = trpc.metaAds.getOAuthUrl.useQuery(undefined, { retry: false });
+  const metaCallbackMutation = trpc.metaAds.handleCallback.useMutation();
+  const connectAccountMutation = trpc.metaAds.connectAdAccount.useMutation({
+    onSuccess: () => {
+      setShowAccountSelector(false);
+      setMetaCallbackData(null);
+      refetchMeta();
     },
-    {
-      id: "2",
-      name: "Sauna Infrarouge - Belgique",
-      status: "ACTIVE",
-      spend: 850.00,
-      impressions: 32000,
-      clicks: 520,
-      leads: 28,
-      cpl: 30.36,
-      ctr: 1.63,
-    },
-    {
-      id: "3",
-      name: "Swim Spa Premium",
-      status: "PAUSED",
-      spend: 2100.00,
-      impressions: 28000,
-      clicks: 420,
-      leads: 15,
-      cpl: 140.00,
-      ctr: 1.50,
-    },
-  ];
+  });
+  const disconnectMutation = trpc.metaAds.disconnectAdAccount.useMutation({
+    onSuccess: () => refetchMeta(),
+  });
+
+  // Handle Meta OAuth callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    if (code && metaOAuthUrl?.redirectUri && !metaCallbackData) {
+      setMetaConnecting(true);
+      metaCallbackMutation.mutateAsync({
+        code,
+        redirectUri: metaOAuthUrl.redirectUri,
+      }).then((data) => {
+        setMetaCallbackData(data);
+        setShowAccountSelector(true);
+        setMetaConnecting(false);
+        // Clean URL
+        window.history.replaceState({}, "", window.location.pathname);
+      }).catch((err) => {
+        console.error("Meta OAuth error:", err);
+        setMetaConnecting(false);
+        window.history.replaceState({}, "", window.location.pathname);
+      });
+    }
+  }, [metaOAuthUrl]);
+
+  const campaigns: CampaignStats[] = (metaCampaignsData?.campaigns || []).map((c: any) => ({
+    id: c.campaign_id,
+    name: c.campaign_name,
+    status: c.status,
+    spend: parseFloat(c.spend) || 0,
+    impressions: parseInt(c.impressions) || 0,
+    clicks: parseInt(c.clicks) || 0,
+    leads: parseInt(c.leads) || 0,
+    cpl: parseInt(c.leads) > 0 ? parseFloat(c.spend) / parseInt(c.leads) : 0,
+    ctr: parseFloat(c.ctr) || 0,
+  }));
 
   // Statistiques globales
   const stats = {
@@ -495,52 +515,230 @@ export default function AdminLeads() {
 
           {/* Onglet Campagnes */}
           <TabsContent value="campaigns" className="space-y-4">
-            <div className="grid gap-4">
-              {campaigns.map(campaign => (
-                <Card key={campaign.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-gray-900">{campaign.name}</h3>
-                          <Badge variant={campaign.status === "ACTIVE" ? "default" : "secondary"}>
-                            {campaign.status === "ACTIVE" ? "Active" : "En pause"}
-                          </Badge>
+            {/* Connexion Meta */}
+            {!metaCampaignsData?.connected && (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                    <BarChart3 className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Connecter votre compte Meta Ads</h3>
+                  <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                    Connectez votre compte publicitaire Meta pour voir vos campagnes, dépenses, impressions et leads en temps réel.
+                  </p>
+                  <Button
+                    onClick={() => {
+                      if (metaOAuthUrl?.url) {
+                        window.location.href = metaOAuthUrl.url;
+                      }
+                    }}
+                    disabled={metaConnecting || !metaOAuthUrl}
+                    className="bg-[#1877F2] hover:bg-[#166FE5] text-white"
+                  >
+                    {metaConnecting ? (
+                      <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Connexion en cours...</>
+                    ) : (
+                      <><svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg> Connecter avec Facebook</>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Sélecteur de compte après OAuth */}
+            {showAccountSelector && metaCallbackData && (
+              <Card className="border-blue-200 bg-blue-50">
+                <CardContent className="p-6">
+                  <h3 className="font-semibold mb-4">Sélectionnez un compte publicitaire</h3>
+                  <p className="text-sm text-gray-600 mb-4">Connecté en tant que <strong>{metaCallbackData.metaUserName}</strong></p>
+                  <div className="grid gap-3">
+                    {metaCallbackData.adAccounts?.map((acc: any) => (
+                      <div key={acc.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                        <div>
+                          <p className="font-medium">{acc.name}</p>
+                          <p className="text-sm text-gray-500">ID: {acc.accountId} | {acc.currency} | {acc.timezone}</p>
                         </div>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Budget dépensé: {campaign.spend.toFixed(2)}€
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            connectAccountMutation.mutate({
+                              metaUserId: metaCallbackData.metaUserId,
+                              metaUserName: metaCallbackData.metaUserName,
+                              adAccountId: acc.id,
+                              adAccountName: acc.name,
+                              currency: acc.currency,
+                              timezone: acc.timezone,
+                              accessToken: metaCallbackData.accessToken,
+                              tokenExpiresAt: new Date(Date.now() + (metaCallbackData.expiresIn || 5184000) * 1000).toISOString(),
+                            });
+                          }}
+                          disabled={connectAccountMutation.isPending}
+                        >
+                          {connectAccountMutation.isPending ? "Connexion..." : "Connecter"}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Compte connecté - header */}
+            {metaCampaignsData?.connected && metaCampaignsData?.currentAccount && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                      </div>
+                      <div>
+                        <p className="font-semibold">{metaCampaignsData.currentAccount.adAccountName}</p>
+                        <p className="text-sm text-gray-500">
+                          {metaCampaignsData.currentAccount.currency} | 
+                          Dernière sync: {metaCampaignsData.currentAccount.lastSyncedAt 
+                            ? new Date(metaCampaignsData.currentAccount.lastSyncedAt).toLocaleString("fr-FR")
+                            : "Jamais"}
                         </p>
                       </div>
-                      <Button variant="outline" size="sm">
-                        Voir sur Meta
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => refetchMeta()}>
+                        <RefreshCw className="w-4 h-4 mr-1" /> Actualiser
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => {
+                          if (confirm("Déconnecter ce compte publicitaire ?")) {
+                            disconnectMutation.mutate({ id: metaCampaignsData.currentAccount!.id });
+                          }
+                        }}
+                      >
+                        Déconnecter
                       </Button>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                      <div>
-                        <p className="text-xs text-gray-500">Impressions</p>
-                        <p className="text-lg font-semibold">{(campaign.impressions / 1000).toFixed(1)}K</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Clics</p>
-                        <p className="text-lg font-semibold">{campaign.clicks}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">CTR</p>
-                        <p className="text-lg font-semibold">{campaign.ctr.toFixed(2)}%</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Leads</p>
-                        <p className="text-lg font-semibold text-green-600">{campaign.leads}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Coût/Lead</p>
-                        <p className="text-lg font-semibold">{campaign.cpl.toFixed(2)}€</p>
-                      </div>
+                  </div>
+                  {(metaCampaignsData as any)?.error && (
+                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                      Erreur: {(metaCampaignsData as any).error}
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Loading */}
+            {metaLoading && (
+              <div className="text-center py-8 text-gray-500">
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
+                Chargement des campagnes...
+              </div>
+            )}
+
+            {/* Campagnes */}
+            {campaigns.length > 0 && (
+              <div className="grid gap-4">
+                {/* Résumé global */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-xs text-gray-500">Dépenses totales</p>
+                      <p className="text-xl font-bold text-blue-600">{campaigns.reduce((s, c) => s + c.spend, 0).toFixed(2)}€</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-xs text-gray-500">Impressions</p>
+                      <p className="text-xl font-bold">{(campaigns.reduce((s, c) => s + c.impressions, 0) / 1000).toFixed(1)}K</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-xs text-gray-500">Clics totaux</p>
+                      <p className="text-xl font-bold">{campaigns.reduce((s, c) => s + c.clicks, 0)}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-xs text-gray-500">Leads totaux</p>
+                      <p className="text-xl font-bold text-green-600">{campaigns.reduce((s, c) => s + c.leads, 0)}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-xs text-gray-500">Coût/Lead moyen</p>
+                      <p className="text-xl font-bold">
+                        {campaigns.reduce((s, c) => s + c.leads, 0) > 0
+                          ? (campaigns.reduce((s, c) => s + c.spend, 0) / campaigns.reduce((s, c) => s + c.leads, 0)).toFixed(2)
+                          : "0.00"}€
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Liste des campagnes */}
+                {campaigns.map(campaign => (
+                  <Card key={campaign.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-gray-900">{campaign.name}</h3>
+                            <Badge variant={campaign.status === "ACTIVE" ? "default" : "secondary"}>
+                              {campaign.status === "ACTIVE" ? "Active" : campaign.status === "PAUSED" ? "En pause" : campaign.status}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-500 mt-1">
+                            Budget dépensé: {campaign.spend.toFixed(2)}€
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(`https://business.facebook.com/adsmanager/manage/campaigns?act=${metaCampaignsData?.currentAccount?.adAccountId?.replace('act_', '')}`, '_blank')}
+                        >
+                          Voir sur Meta
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div>
+                          <p className="text-xs text-gray-500">Impressions</p>
+                          <p className="text-lg font-semibold">{campaign.impressions > 1000 ? (campaign.impressions / 1000).toFixed(1) + 'K' : campaign.impressions}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Clics</p>
+                          <p className="text-lg font-semibold">{campaign.clicks}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">CTR</p>
+                          <p className="text-lg font-semibold">{campaign.ctr.toFixed(2)}%</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Leads</p>
+                          <p className="text-lg font-semibold text-green-600">{campaign.leads}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Coût/Lead</p>
+                          <p className="text-lg font-semibold">{campaign.cpl.toFixed(2)}€</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Aucune campagne */}
+            {metaCampaignsData?.connected && !metaLoading && campaigns.length === 0 && !metaCampaignsData?.error && (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <p className="text-gray-500">Aucune campagne trouvée pour cette période.</p>
+                  <p className="text-sm text-gray-400 mt-2">Essayez de changer la période ou vérifiez votre compte Meta Ads Manager.</p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Onglet Par partenaire */}

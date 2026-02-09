@@ -1366,3 +1366,15 @@
 - [x] Ajouter un champ pour tracker les rappels envoyés
 - [x] Configurer le cron job pour exécution automatique
 - [x] Écrire les tests
+
+
+## Intégration OAuth Meta Ads - Dashboard campagnes en temps réel
+- [x] Créer une nouvelle app Facebook sur Meta for Developers (ID: 1228586458787257)
+- [x] Configurer les permissions (ads_read, leads_retrieval, pages_read_engagement)
+- [x] Configurer l'OAuth redirect URI - FAIT
+- [x] Implémenter le flux OAuth Meta dans le portail (bouton Connecter) - FAIT
+- [x] Stocker les tokens OAuth par organisation en base - FAIT (table meta_ad_accounts)
+- [x] Créer les routes API pour récupérer les campagnes via Graph API Marketing - FAIT
+- [x] Remplacer les données fictives du dashboard par les vraies données - FAIT
+- [x] Implémenter la synchronisation automatique des stats - FAIT
+- [x] Tester la connexion avec le compte Market Spas - EN COURS (85 tests passent)

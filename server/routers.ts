@@ -11,6 +11,7 @@ import { nanoid } from "nanoid";
 import { notifyOwner } from "./_core/notification";
 import { notifyPartner, notifyAdmins } from "./_core/websocket";
 import { sendInvitationEmail } from "./email";
+import * as metaOAuth from "./meta-oauth";
 
 export const appRouter = router({
   system: systemRouter,
@@ -2657,6 +2658,150 @@ export const appRouter = router({
     responseTemplates: adminProcedure
       .query(async () => {
         return await db.getResponseTemplates();
+      }),
+  }),
+
+  // ============================================
+  // META ADS INTEGRATION
+  // ============================================
+  metaAds: router({
+    // Get OAuth URL to connect Meta account
+    getOAuthUrl: adminProcedure
+      .query(async ({ ctx }) => {
+        const origin = ctx.req?.headers?.origin || process.env.VITE_APP_URL || "";
+        const redirectUri = `${origin}/api/auth/meta/callback`;
+        const state = Buffer.from(JSON.stringify({ userId: ctx.user.id })).toString("base64");
+        const url = metaOAuth.getMetaOAuthUrl(redirectUri, state);
+        return { url, redirectUri };
+      }),
+
+    // Handle OAuth callback - exchange code for token
+    handleCallback: adminProcedure
+      .input(z.object({
+        code: z.string(),
+        redirectUri: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Exchange code for short-lived token
+        const tokenResponse = await metaOAuth.exchangeCodeForToken(input.code, input.redirectUri);
+        
+        // Exchange for long-lived token (60 days)
+        const longLivedToken = await metaOAuth.getLongLivedToken(tokenResponse.access_token);
+        
+        // Get user info
+        const userInfo = await metaOAuth.getMetaUserInfo(longLivedToken.access_token);
+        
+        // Get ad accounts
+        const adAccounts = await metaOAuth.getAdAccounts(longLivedToken.access_token);
+        
+        return {
+          accessToken: longLivedToken.access_token,
+          expiresIn: longLivedToken.expires_in,
+          metaUserId: userInfo.id,
+          metaUserName: userInfo.name,
+          adAccounts: adAccounts.map(acc => ({
+            id: acc.id,
+            name: acc.name,
+            accountId: acc.account_id,
+            currency: acc.currency,
+            timezone: acc.timezone_name,
+          })),
+        };
+      }),
+
+    // Save selected ad account connection
+    connectAdAccount: adminProcedure
+      .input(z.object({
+        metaUserId: z.string(),
+        metaUserName: z.string(),
+        adAccountId: z.string(),
+        adAccountName: z.string(),
+        currency: z.string().optional(),
+        timezone: z.string().optional(),
+        accessToken: z.string(),
+        tokenExpiresAt: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        return db.connectMetaAdAccount({
+          metaUserId: input.metaUserId,
+          metaUserName: input.metaUserName,
+          adAccountId: input.adAccountId,
+          adAccountName: input.adAccountName,
+          currency: input.currency || "EUR",
+          timezone: input.timezone,
+          accessToken: input.accessToken,
+          tokenExpiresAt: input.tokenExpiresAt ? new Date(input.tokenExpiresAt) : null,
+          connectedBy: ctx.user.id,
+        });
+      }),
+
+    // Disconnect ad account
+    disconnectAdAccount: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return db.disconnectMetaAdAccount(input.id);
+      }),
+
+    // Get connected ad accounts
+    getConnectedAccounts: adminProcedure
+      .query(async () => {
+        return db.getConnectedMetaAdAccounts();
+      }),
+
+    // Fetch campaigns from connected Meta account
+    getCampaigns: adminProcedure
+      .input(z.object({
+        adAccountId: z.string().optional(),
+        datePreset: z.string().optional().default("last_30d"),
+      }).optional())
+      .query(async ({ input }) => {
+        const accounts = await db.getConnectedMetaAdAccounts();
+        if (accounts.length === 0) {
+          return { connected: false, campaigns: [], accounts: [] };
+        }
+
+        const targetAccount = input?.adAccountId
+          ? accounts.find(a => a.adAccountId === input.adAccountId)
+          : accounts[0];
+
+        if (!targetAccount) {
+          return { connected: true, campaigns: [], accounts };
+        }
+
+        try {
+          // Validate token first
+          const isValid = await metaOAuth.validateToken(targetAccount.accessToken);
+          if (!isValid) {
+            await db.updateMetaAdAccountSyncError(targetAccount.id, "Token expiré - veuillez reconnecter votre compte Meta");
+            return { connected: true, campaigns: [], accounts, error: "Token expiré" };
+          }
+
+          const campaigns = await metaOAuth.getCampaignsWithInsights(
+            targetAccount.adAccountId,
+            targetAccount.accessToken,
+            input?.datePreset || "last_30d"
+          );
+
+          // Update last synced
+          await db.updateMetaAdAccountLastSynced(targetAccount.id);
+
+          return {
+            connected: true,
+            campaigns,
+            accounts,
+            currentAccount: {
+              id: targetAccount.id,
+              adAccountId: targetAccount.adAccountId,
+              adAccountName: targetAccount.adAccountName,
+              currency: targetAccount.currency,
+              lastSyncedAt: targetAccount.lastSyncedAt,
+            },
+          };
+        } catch (error: any) {
+          console.error("[Meta] Erreur récupération campagnes:", error);
+          await db.updateMetaAdAccountSyncError(targetAccount.id, error.message);
+          return { connected: true, campaigns: [], accounts, error: error.message };
+        }
       }),
   }),
 
