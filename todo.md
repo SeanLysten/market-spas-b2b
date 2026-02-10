@@ -1402,3 +1402,6 @@
 - [x] Ajouter filtre de statut campagnes Meta : Toutes / Actives / En pause / Archivées
 - [x] Ajouter sélecteur de plage de dates personnalisée pour campagnes Meta Ads
 - [x] Ajouter graphique d'évolution jour par jour des dépenses et leads Meta Ads
+- [x] Filtrage strict : n'afficher que les campagnes avec activité réelle durant la période sélectionnée
+- [x] Priorisation campagnes : Prospects/Trafic/Conversions en priorité, Boost/Engagement en secondaire
+- [x] Tri intelligent : prioritaires en haut, puis par dépenses décroissantes

@@ -61,6 +61,8 @@ interface CampaignStats {
   name: string;
   status: string;
   objective: string;
+  objectiveLabel: string;
+  isPriority: boolean;
   spend: number;
   impressions: number;
   clicks: number;
@@ -104,6 +106,7 @@ export default function AdminLeads() {
   const hasOAuthCode = urlParams.has('code');
   const [activeTab, setActiveTab] = useState(hasOAuthCode ? 'campaigns' : 'leads');
   const [campaignStatusFilter, setCampaignStatusFilter] = useState<string>("all");
+  const [campaignPriorityFilter, setCampaignPriorityFilter] = useState<string>("all");
   const [customDateFrom, setCustomDateFrom] = useState<string>("");
   const [customDateTo, setCustomDateTo] = useState<string>("");
   const [isCustomDate, setIsCustomDate] = useState(false);
@@ -235,12 +238,18 @@ export default function AdminLeads() {
     reach: parseInt(c.reach) || 0,
     frequency: parseFloat(c.frequency) || 0,
     linkClicks: parseInt(c.link_clicks) || 0,
+    objectiveLabel: c.objective_label || c.objective || "",
+    isPriority: c.is_priority ?? true,
   }));
 
-  // Filtrer les campagnes par statut
-  const filteredCampaigns = campaignStatusFilter === "all" 
-    ? campaigns 
-    : campaigns.filter(c => c.status === campaignStatusFilter);
+  // Filtrer les campagnes par statut et priorité
+  const filteredCampaigns = campaigns.filter(c => {
+    const statusMatch = campaignStatusFilter === "all" || c.status === campaignStatusFilter;
+    const priorityMatch = campaignPriorityFilter === "all" 
+      || (campaignPriorityFilter === "priority" && c.isPriority)
+      || (campaignPriorityFilter === "secondary" && !c.isPriority);
+    return statusMatch && priorityMatch;
+  });
 
   // Compteurs par statut pour les badges
   const campaignCounts = {
@@ -889,34 +898,66 @@ export default function AdminLeads() {
                   </Card>
                 )}
 
-                {/* Filtre de statut des campagnes */}
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-sm text-gray-500 mr-1">Filtrer :</span>
-                  {[
-                    { value: "all", label: "Toutes", count: campaignCounts.all },
-                    { value: "ACTIVE", label: "Actives", count: campaignCounts.ACTIVE },
-                    { value: "PAUSED", label: "En pause", count: campaignCounts.PAUSED },
-                    { value: "ARCHIVED", label: "Archivées", count: campaignCounts.ARCHIVED },
-                  ].map((filter) => (
-                    <Button
-                      key={filter.value}
-                      variant={campaignStatusFilter === filter.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCampaignStatusFilter(filter.value)}
-                      className="text-xs"
-                    >
-                      {filter.label}
-                      {filter.count > 0 && (
+                {/* Filtres des campagnes */}
+                <div className="flex flex-wrap items-center gap-4 mb-4">
+                  {/* Filtre par statut */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500 mr-1">Statut :</span>
+                    {[
+                      { value: "all", label: "Toutes", count: campaignCounts.all },
+                      { value: "ACTIVE", label: "Actives", count: campaignCounts.ACTIVE },
+                      { value: "PAUSED", label: "En pause", count: campaignCounts.PAUSED },
+                      { value: "ARCHIVED", label: "Archivées", count: campaignCounts.ARCHIVED },
+                    ].map((filter) => (
+                      <Button
+                        key={filter.value}
+                        variant={campaignStatusFilter === filter.value ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCampaignStatusFilter(filter.value)}
+                        className="text-xs"
+                      >
+                        {filter.label}
+                        {filter.count > 0 && (
+                          <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${
+                            campaignStatusFilter === filter.value 
+                              ? 'bg-white/20 text-white' 
+                              : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {filter.count}
+                          </span>
+                        )}
+                      </Button>
+                    ))}
+                  </div>
+
+                  <div className="w-px h-6 bg-gray-200" />
+
+                  {/* Filtre par priorité / type */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500 mr-1">Type :</span>
+                    {[
+                      { value: "all", label: "Toutes" },
+                      { value: "priority", label: "Prioritaires" },
+                      { value: "secondary", label: "Boost / Autres" },
+                    ].map((filter) => (
+                      <Button
+                        key={filter.value}
+                        variant={campaignPriorityFilter === filter.value ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCampaignPriorityFilter(filter.value)}
+                        className="text-xs"
+                      >
+                        {filter.label}
                         <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${
-                          campaignStatusFilter === filter.value 
+                          campaignPriorityFilter === filter.value 
                             ? 'bg-white/20 text-white' 
                             : 'bg-gray-100 text-gray-600'
                         }`}>
-                          {filter.count}
+                          {filter.value === "all" ? campaigns.length : filter.value === "priority" ? campaigns.filter(c => c.isPriority).length : campaigns.filter(c => !c.isPriority).length}
                         </span>
-                      )}
-                    </Button>
-                  ))}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Tableau des campagnes style Meta Ads Manager */}
@@ -943,9 +984,14 @@ export default function AdminLeads() {
                         <tr key={campaign.id} className="border-b hover:bg-gray-50 transition-colors">
                           <td className="p-3">
                             <div className="flex flex-col">
-                              <span className="font-medium text-gray-900">{campaign.name}</span>
-                              {campaign.objective && (
-                                <span className="text-xs text-gray-400 mt-0.5">{campaign.objective.replace(/_/g, ' ').toLowerCase()}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-gray-900">{campaign.name}</span>
+                                {campaign.isPriority && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">Prioritaire</span>
+                                )}
+                              </div>
+                              {campaign.objectiveLabel && (
+                                <span className={`text-xs mt-0.5 ${campaign.isPriority ? 'text-blue-500' : 'text-gray-400'}`}>{campaign.objectiveLabel}</span>
                               )}
                             </div>
                           </td>

@@ -274,10 +274,75 @@ export async function getCampaignsWithInsights(
     };
   });
 
-  // Filtrer : campagnes ACTIVE ou avec activité durant la période
-  return allCampaigns.filter((c: any) => 
-    c.status === "ACTIVE" || c.has_activity
-  );
+  // Priorité des objectifs de campagne
+  // Prioritaires : Prospects (LEAD_GENERATION), Trafic (LINK_CLICKS), Conversions (CONVERSIONS, OUTCOME_SALES)
+  // Secondaires : Boost (POST_ENGAGEMENT), Notoriété (BRAND_AWARENESS, REACH), Engagement (ENGAGEMENT)
+  const PRIORITY_OBJECTIVES = [
+    "LEAD_GENERATION", "OUTCOME_LEADS",
+    "LINK_CLICKS", "OUTCOME_TRAFFIC",
+    "CONVERSIONS", "OUTCOME_SALES", "OUTCOME_APP_PROMOTION",
+    "PRODUCT_CATALOG_SALES",
+    "MESSAGES",
+    "VIDEO_VIEWS", "OUTCOME_AWARENESS",
+  ];
+  const SECONDARY_OBJECTIVES = [
+    "POST_ENGAGEMENT", "PAGE_LIKES", "EVENT_RESPONSES",
+    "BRAND_AWARENESS", "REACH",
+    "ENGAGEMENT", "OUTCOME_ENGAGEMENT",
+  ];
+
+  function getCampaignPriority(objective: string): number {
+    const upperObj = objective.toUpperCase();
+    const priorityIndex = PRIORITY_OBJECTIVES.findIndex(o => upperObj.includes(o));
+    if (priorityIndex !== -1) return priorityIndex;
+    const secondaryIndex = SECONDARY_OBJECTIVES.findIndex(o => upperObj.includes(o));
+    if (secondaryIndex !== -1) return 100 + secondaryIndex;
+    return 50; // Objectif inconnu = milieu
+  }
+
+  // Filtrer : UNIQUEMENT les campagnes avec activité réelle durant la période
+  // (dépenses > 0 OU clics > 0 OU impressions > 0)
+  const activeCampaigns = allCampaigns.filter((c: any) => c.has_activity);
+
+  // Trier : prioritaires en haut (Prospects, Trafic, Conversions), puis par dépenses décroissantes
+  activeCampaigns.sort((a: any, b: any) => {
+    const priorityA = getCampaignPriority(a.objective);
+    const priorityB = getCampaignPriority(b.objective);
+    if (priorityA !== priorityB) return priorityA - priorityB;
+    // Même priorité : trier par dépenses décroissantes
+    return parseFloat(b.spend) - parseFloat(a.spend);
+  });
+
+  // Ajouter le flag de priorité pour le frontend
+  return activeCampaigns.map((c: any) => ({
+    ...c,
+    is_priority: getCampaignPriority(c.objective) < 100,
+    objective_label: getObjectiveLabel(c.objective),
+  }));
+}
+
+function getObjectiveLabel(objective: string): string {
+  const labels: Record<string, string> = {
+    LEAD_GENERATION: "Prospects",
+    OUTCOME_LEADS: "Prospects",
+    LINK_CLICKS: "Trafic",
+    OUTCOME_TRAFFIC: "Trafic",
+    CONVERSIONS: "Conversions",
+    OUTCOME_SALES: "Ventes",
+    PRODUCT_CATALOG_SALES: "Catalogue",
+    MESSAGES: "Messages",
+    VIDEO_VIEWS: "Vidéos",
+    OUTCOME_AWARENESS: "Notoriété",
+    POST_ENGAGEMENT: "Boost",
+    PAGE_LIKES: "J'aime Page",
+    EVENT_RESPONSES: "Événements",
+    BRAND_AWARENESS: "Notoriété",
+    REACH: "Couverture",
+    ENGAGEMENT: "Engagement",
+    OUTCOME_ENGAGEMENT: "Engagement",
+    OUTCOME_APP_PROMOTION: "App",
+  };
+  return labels[objective.toUpperCase()] || objective;
 }
 
 /**
