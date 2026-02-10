@@ -182,7 +182,8 @@ export async function getAdAccounts(accessToken: string): Promise<MetaAdAccount[
 export async function getCampaignsWithInsights(
   adAccountId: string,
   accessToken: string,
-  datePreset: string = "last_30d"
+  datePreset: string = "last_30d",
+  timeRange?: { since: string; until: string }
 ): Promise<MetaCampaignInsight[]> {
   // Récupérer les campagnes
   const campaignsUrl = `https://graph.facebook.com/${META_GRAPH_VERSION}/${adAccountId}/campaigns?` +
@@ -205,7 +206,9 @@ export async function getCampaignsWithInsights(
   const insightsUrl = `https://graph.facebook.com/${META_GRAPH_VERSION}/${adAccountId}/insights?` +
     `fields=campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,actions,cost_per_action_type,conversions,cost_per_conversion` +
     `&level=campaign` +
-    `&date_preset=${datePreset}` +
+    (timeRange 
+      ? `&time_range=${JSON.stringify(timeRange)}` 
+      : `&date_preset=${datePreset}`) +
     `&access_token=${accessToken}` +
     `&limit=500`;
 

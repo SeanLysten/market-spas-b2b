@@ -1400,3 +1400,4 @@
 - [x] Afficher métriques complètes : dépenses, leads, clics, impressions, CTR, CPC, CPL, ROI
 - [x] S'assurer que les montants sont corrects (vrais montants dépensés)
 - [x] Ajouter filtre de statut campagnes Meta : Toutes / Actives / En pause / Archivées
+- [x] Ajouter sélecteur de plage de dates personnalisée pour campagnes Meta Ads

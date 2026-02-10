@@ -2764,6 +2764,8 @@ export const appRouter = router({
       .input(z.object({
         adAccountId: z.string().optional(),
         datePreset: z.string().optional().default("last_30d"),
+        since: z.string().optional(),
+        until: z.string().optional(),
       }).optional())
       .query(async ({ input }) => {
         const accounts = await db.getConnectedMetaAdAccounts();
@@ -2788,10 +2790,14 @@ export const appRouter = router({
             return { connected: true, campaigns: [], accounts, error: "Token expiré" };
           }
 
+          const timeRange = input?.since && input?.until 
+            ? { since: input.since, until: input.until } 
+            : undefined;
           const campaigns = await metaOAuth.getCampaignsWithInsights(
             targetAccount.adAccountId,
             targetAccount.accessToken,
-            input?.datePreset || "last_30d"
+            input?.datePreset || "last_30d",
+            timeRange
           );
 
           // Update last synced

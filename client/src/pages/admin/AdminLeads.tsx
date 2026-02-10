@@ -103,6 +103,9 @@ export default function AdminLeads() {
   const hasOAuthCode = urlParams.has('code');
   const [activeTab, setActiveTab] = useState(hasOAuthCode ? 'campaigns' : 'leads');
   const [campaignStatusFilter, setCampaignStatusFilter] = useState<string>("all");
+  const [customDateFrom, setCustomDateFrom] = useState<string>("");
+  const [customDateTo, setCustomDateTo] = useState<string>("");
+  const [isCustomDate, setIsCustomDate] = useState(false);
 
   // Récupérer les vrais leads depuis la base de données
   const { data: leadsData, isLoading: leadsLoading, refetch } = trpc.admin.leads.list.useQuery({
@@ -141,8 +144,11 @@ export default function AdminLeads() {
   }));
 
   // Meta Ads integration
+  const metaQueryInput = isCustomDate && customDateFrom && customDateTo
+    ? { since: customDateFrom, until: customDateTo }
+    : { datePreset: dateRange === "7" ? "last_7d" : dateRange === "30" ? "last_30d" : dateRange === "365" ? "last_year" : "last_90d" };
   const { data: metaCampaignsData, isLoading: metaLoading, refetch: refetchMeta } = trpc.metaAds.getCampaigns.useQuery(
-    { datePreset: dateRange === "7" ? "last_7d" : dateRange === "30" ? "last_30d" : "last_90d" },
+    metaQueryInput,
     { retry: false }
   );
   const { data: metaOAuthUrl } = trpc.metaAds.getOAuthUrl.useQuery(undefined, { retry: false });
@@ -329,18 +335,59 @@ export default function AdminLeads() {
             <p className="text-gray-500">Statistiques des campagnes Meta et suivi des prospects</p>
           </div>
           <div className="flex items-center gap-2">
-            <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-[150px]">
-                <Calendar className="w-4 h-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">7 derniers jours</SelectItem>
-                <SelectItem value="30">30 derniers jours</SelectItem>
-                <SelectItem value="90">90 derniers jours</SelectItem>
-                <SelectItem value="365">Cette année</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Select value={isCustomDate ? "custom" : dateRange} onValueChange={(val) => {
+                if (val === "custom") {
+                  setIsCustomDate(true);
+                  // Set default custom range to last 30 days
+                  const today = new Date();
+                  const thirtyDaysAgo = new Date(today);
+                  thirtyDaysAgo.setDate(today.getDate() - 30);
+                  if (!customDateFrom) setCustomDateFrom(thirtyDaysAgo.toISOString().split('T')[0]);
+                  if (!customDateTo) setCustomDateTo(today.toISOString().split('T')[0]);
+                } else {
+                  setIsCustomDate(false);
+                  setDateRange(val);
+                }
+              }}>
+                <SelectTrigger className="w-[170px]">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">7 derniers jours</SelectItem>
+                  <SelectItem value="30">30 derniers jours</SelectItem>
+                  <SelectItem value="90">90 derniers jours</SelectItem>
+                  <SelectItem value="365">Cette année</SelectItem>
+                  <SelectItem value="custom">Période personnalisée</SelectItem>
+                </SelectContent>
+              </Select>
+              {isCustomDate && (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="date"
+                    value={customDateFrom}
+                    onChange={(e) => setCustomDateFrom(e.target.value)}
+                    className="h-9 px-2 text-sm border rounded-md bg-white"
+                  />
+                  <span className="text-gray-400 text-sm">→</span>
+                  <input
+                    type="date"
+                    value={customDateTo}
+                    onChange={(e) => setCustomDateTo(e.target.value)}
+                    className="h-9 px-2 text-sm border rounded-md bg-white"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => refetchMeta()}
+                    className="text-xs"
+                  >
+                    Appliquer
+                  </Button>
+                </div>
+              )}
+            </div>
             <Button 
               variant="outline" 
               onClick={() => reassignMutation.mutate()}
