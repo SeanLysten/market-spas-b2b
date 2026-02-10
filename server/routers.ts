@@ -2669,9 +2669,10 @@ export const appRouter = router({
     getOAuthUrl: adminProcedure
       .query(async ({ ctx }) => {
         // Use the production site URL for the redirect URI
-        // This must match exactly what's configured in Facebook App settings
+        // Facebook Login for Business redirects directly to the frontend page
+        // The redirect_uri must match exactly what Facebook uses
         const siteUrl = process.env.SITE_URL || process.env.VITE_APP_URL || ctx.req?.headers?.origin || "";
-        const redirectUri = `${siteUrl}/api/auth/meta/callback`;
+        const redirectUri = `${siteUrl}/admin/leads`;
         const state = Buffer.from(JSON.stringify({ userId: ctx.user.id })).toString("base64");
         const url = metaOAuth.getMetaOAuthUrl(redirectUri, state);
         return { url, redirectUri };
