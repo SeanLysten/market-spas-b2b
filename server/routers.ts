@@ -2668,8 +2668,10 @@ export const appRouter = router({
     // Get OAuth URL to connect Meta account
     getOAuthUrl: adminProcedure
       .query(async ({ ctx }) => {
-        const origin = ctx.req?.headers?.origin || process.env.VITE_APP_URL || "";
-        const redirectUri = `${origin}/api/auth/meta/callback`;
+        // Use the production site URL for the redirect URI
+        // This must match exactly what's configured in Facebook App settings
+        const siteUrl = process.env.SITE_URL || process.env.VITE_APP_URL || ctx.req?.headers?.origin || "";
+        const redirectUri = `${siteUrl}/api/auth/meta/callback`;
         const state = Buffer.from(JSON.stringify({ userId: ctx.user.id })).toString("base64");
         const url = metaOAuth.getMetaOAuthUrl(redirectUri, state);
         return { url, redirectUri };

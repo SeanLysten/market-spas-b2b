@@ -46,6 +46,32 @@ async function startServer() {
   // Stripe Webhook - Must be before express.json() middleware
   app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), handleStripeWebhook);
 
+  // Meta OAuth Callback - Redirects to frontend with code parameter
+  app.get("/api/auth/meta/callback", (req, res) => {
+    const code = req.query.code as string;
+    const state = req.query.state as string;
+    const error = req.query.error as string;
+    const errorReason = req.query.error_reason as string;
+    const errorDescription = req.query.error_description as string;
+
+    if (error) {
+      console.error(`[Meta OAuth] Error: ${error} - ${errorReason} - ${errorDescription}`);
+      res.redirect(302, `/admin/leads?meta_error=${encodeURIComponent(errorDescription || error)}`);
+      return;
+    }
+
+    if (!code) {
+      res.redirect(302, "/admin/leads?meta_error=no_code");
+      return;
+    }
+
+    // Redirect to frontend with code and state
+    const params = new URLSearchParams();
+    params.set("code", code);
+    if (state) params.set("state", state);
+    res.redirect(302, `/admin/leads?${params.toString()}`);
+  });
+
   // Meta Lead Ads Webhook
   // GET - Vérification du webhook par Meta
   app.get("/api/webhooks/meta-leads", (req, res) => {

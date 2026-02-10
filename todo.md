@@ -1378,3 +1378,16 @@
 - [x] Remplacer les données fictives du dashboard par les vraies données - FAIT
 - [x] Implémenter la synchronisation automatique des stats - FAIT
 - [x] Tester la connexion avec le compte Market Spas - EN COURS (85 tests passent)
+
+## Bug: Connexion OAuth Facebook ne fonctionne pas
+- [ ] Diagnostiquer l'erreur de redirection Facebook
+- [ ] Vérifier l'URL OAuth générée (redirect_uri, scopes, app_id)
+- [ ] Vérifier la configuration de l'app Facebook (mode dev/live, domaines autorisés)
+- [ ] Corriger le problème
+- [ ] Tester la connexion
+
+## Correction OAuth Meta - marketspas.pro
+- [x] Mettre à jour SITE_URL avec https://marketspas.pro
+- [ ] Ajouter marketspas.pro dans les domaines de l'app Facebook
+- [ ] Ajouter https://marketspas.pro/api/auth/meta/callback dans les URI de redirection OAuth valides Facebook
+- [ ] Tester le flux OAuth complet depuis marketspas.pro

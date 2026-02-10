@@ -150,6 +150,16 @@ export default function AdminLeads() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
+    const metaError = urlParams.get("meta_error");
+    
+    // Handle OAuth errors
+    if (metaError) {
+      console.error("Meta OAuth error:", metaError);
+      alert(`Erreur de connexion Meta: ${decodeURIComponent(metaError)}`);
+      window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
+    
     if (code && metaOAuthUrl?.redirectUri && !metaCallbackData) {
       setMetaConnecting(true);
       metaCallbackMutation.mutateAsync({
@@ -163,6 +173,7 @@ export default function AdminLeads() {
         window.history.replaceState({}, "", window.location.pathname);
       }).catch((err) => {
         console.error("Meta OAuth error:", err);
+        alert(`Erreur lors de la connexion Meta: ${err.message}`);
         setMetaConnecting(false);
         window.history.replaceState({}, "", window.location.pathname);
       });
