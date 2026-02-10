@@ -173,25 +173,28 @@ export default function AdminLeads() {
       return;
     }
     
-    if (code && metaOAuthUrl?.redirectUri && !metaCallbackData) {
+    if (code && !metaCallbackData) {
+      // Build redirectUri from current origin - must match what was sent to Facebook
+      const redirectUri = `${window.location.origin}/admin/leads`;
+      console.log("[Meta OAuth] Code found, exchanging with redirectUri:", redirectUri);
       setMetaConnecting(true);
+      // Clean URL immediately to prevent re-processing on re-render
+      window.history.replaceState({}, "", window.location.pathname);
       metaCallbackMutation.mutateAsync({
         code,
-        redirectUri: metaOAuthUrl.redirectUri,
+        redirectUri,
       }).then((data) => {
+        console.log("[Meta OAuth] Token exchange successful, accounts:", data);
         setMetaCallbackData(data);
         setShowAccountSelector(true);
         setMetaConnecting(false);
-        // Clean URL
-        window.history.replaceState({}, "", window.location.pathname);
       }).catch((err) => {
-        console.error("Meta OAuth error:", err);
+        console.error("[Meta OAuth] Token exchange error:", err);
         alert(`Erreur lors de la connexion Meta: ${err.message}`);
         setMetaConnecting(false);
-        window.history.replaceState({}, "", window.location.pathname);
       });
     }
-  }, [metaOAuthUrl]);
+  }, []);
 
   const campaigns: CampaignStats[] = (metaCampaignsData?.campaigns || []).map((c: any) => ({
     id: c.campaign_id,
