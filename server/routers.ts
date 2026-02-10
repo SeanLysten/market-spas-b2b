@@ -2821,6 +2821,43 @@ export const appRouter = router({
           return { connected: true, campaigns: [], accounts, error: error.message };
         }
       }),
+
+    // Fetch daily insights for chart
+    getDailyInsights: adminProcedure
+      .input(z.object({
+        datePreset: z.string().optional().default("last_30d"),
+        since: z.string().optional(),
+        until: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const accounts = await db.getConnectedMetaAdAccounts();
+        if (accounts.length === 0) {
+          return { connected: false, dailyData: [] };
+        }
+
+        const targetAccount = accounts[0];
+        try {
+          const isValid = await metaOAuth.validateToken(targetAccount.accessToken);
+          if (!isValid) {
+            return { connected: true, dailyData: [], error: "Token expir\u00e9" };
+          }
+
+          const timeRange = input?.since && input?.until
+            ? { since: input.since, until: input.until }
+            : undefined;
+          const dailyData = await metaOAuth.getDailyInsights(
+            targetAccount.adAccountId,
+            targetAccount.accessToken,
+            input?.datePreset || "last_30d",
+            timeRange
+          );
+
+          return { connected: true, dailyData };
+        } catch (error: any) {
+          console.error("[Meta] Erreur r\u00e9cup\u00e9ration insights quotidiens:", error);
+          return { connected: true, dailyData: [], error: error.message };
+        }
+      }),
   }),
 
   // ============================================

@@ -34,6 +34,7 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from "lucide-react";
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from "recharts";
 
 // Types
 interface Lead {
@@ -150,6 +151,10 @@ export default function AdminLeads() {
   const { data: metaCampaignsData, isLoading: metaLoading, refetch: refetchMeta } = trpc.metaAds.getCampaigns.useQuery(
     metaQueryInput,
     { retry: false }
+  );
+  const { data: dailyInsightsData } = trpc.metaAds.getDailyInsights.useQuery(
+    metaQueryInput,
+    { retry: false, enabled: !!metaCampaignsData?.connected }
   );
   const { data: metaOAuthUrl } = trpc.metaAds.getOAuthUrl.useQuery(undefined, { retry: false });
   const metaCallbackMutation = trpc.metaAds.handleCallback.useMutation();
@@ -789,6 +794,100 @@ export default function AdminLeads() {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Graphique d'évolution quotidienne */}
+                {dailyInsightsData?.dailyData && dailyInsightsData.dailyData.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">Évolution quotidienne</CardTitle>
+                      <CardDescription>Dépenses et leads par jour sur la période sélectionnée</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart
+                            data={dailyInsightsData.dailyData.map((d: any) => ({
+                              ...d,
+                              dateLabel: new Date(d.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
+                            }))}
+                            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                          >
+                            <defs>
+                              <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                              </linearGradient>
+                              <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis
+                              dataKey="dateLabel"
+                              tick={{ fontSize: 11, fill: '#9ca3af' }}
+                              tickLine={false}
+                              axisLine={{ stroke: '#e5e7eb' }}
+                              interval={dailyInsightsData.dailyData.length > 14 ? Math.floor(dailyInsightsData.dailyData.length / 7) : 0}
+                            />
+                            <YAxis
+                              yAxisId="spend"
+                              orientation="left"
+                              tick={{ fontSize: 11, fill: '#9ca3af' }}
+                              tickLine={false}
+                              axisLine={false}
+                              tickFormatter={(v) => `${v}€`}
+                            />
+                            <YAxis
+                              yAxisId="leads"
+                              orientation="right"
+                              tick={{ fontSize: 11, fill: '#9ca3af' }}
+                              tickLine={false}
+                              axisLine={false}
+                              allowDecimals={false}
+                            />
+                            <Tooltip
+                              contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                              formatter={(value: any, name: string) => {
+                                if (name === 'Dépenses') return [`${parseFloat(value).toFixed(2)}€`, name];
+                                return [value, name];
+                              }}
+                            />
+                            <Legend />
+                            <Area
+                              yAxisId="spend"
+                              type="monotone"
+                              dataKey="spend"
+                              name="Dépenses"
+                              stroke="#3b82f6"
+                              strokeWidth={2}
+                              fill="url(#colorSpend)"
+                            />
+                            <Area
+                              yAxisId="leads"
+                              type="monotone"
+                              dataKey="leads"
+                              name="Leads"
+                              stroke="#22c55e"
+                              strokeWidth={2}
+                              fill="url(#colorLeads)"
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="flex items-center justify-center gap-6 mt-2 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <span className="w-3 h-3 rounded-full bg-blue-500 inline-block"></span>
+                          Dépenses (€)
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+                          Leads (nombre)
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Filtre de statut des campagnes */}
                 <div className="flex items-center gap-2 mb-4">

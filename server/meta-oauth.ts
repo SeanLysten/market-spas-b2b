@@ -281,6 +281,52 @@ export async function getCampaignsWithInsights(
 }
 
 /**
+ * Récupère les insights agrégés jour par jour pour un compte publicitaire
+ */
+export async function getDailyInsights(
+  adAccountId: string,
+  accessToken: string,
+  datePreset: string = "last_30d",
+  timeRange?: { since: string; until: string }
+): Promise<{ date: string; spend: number; leads: number; clicks: number; impressions: number; reach: number }[]> {
+  const dateParam = timeRange
+    ? `&time_range=${JSON.stringify(timeRange)}`
+    : `&date_preset=${datePreset}`;
+
+  const url = `https://graph.facebook.com/${META_GRAPH_VERSION}/${adAccountId}/insights?` +
+    `fields=spend,impressions,clicks,reach,actions` +
+    `&time_increment=1` +
+    dateParam +
+    `&access_token=${accessToken}` +
+    `&limit=500`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.error("[Meta] Erreur récupération insights quotidiens");
+    return [];
+  }
+
+  const data = await response.json();
+  const dailyData = (data.data || []).map((day: any) => {
+    const leadActions = day.actions?.find((a: any) =>
+      a.action_type === "lead" || a.action_type === "onsite_conversion.lead_grouped"
+    );
+    return {
+      date: day.date_start,
+      spend: parseFloat(day.spend || "0"),
+      leads: parseInt(leadActions?.value || "0"),
+      clicks: parseInt(day.clicks || "0"),
+      impressions: parseInt(day.impressions || "0"),
+      reach: parseInt(day.reach || "0"),
+    };
+  });
+
+  // Trier par date
+  dailyData.sort((a: any, b: any) => a.date.localeCompare(b.date));
+  return dailyData;
+}
+
+/**
  * Vérifie si un token est encore valide
  */
 export async function validateToken(accessToken: string): Promise<boolean> {
