@@ -1393,5 +1393,9 @@
 - [ ] Tester le flux OAuth complet depuis marketspas.pro
 - [x] Bug: Dashboard Meta Ads ne s'actualise pas après connexion OAuth réussie (redirect_uri changé vers /admin/leads)
 - [x] Utiliser config_id (905361441974416) au lieu de scope dans l'URL OAuth Meta
-- [ ] Bug: Échange de code OAuth Meta échoue silencieusement - ajouter logging visible
+- [x] Bug: Échange de code OAuth Meta échoue silencieusement - ajouter logging visible
 - [x] Bug: Sélecteur de compte publicitaire Meta ne s'affiche pas après connexion OAuth réussie (onglet campaigns pas actif)
+- [x] Bug: connectAdAccount échoue après sélection du compte pub - tout se réinitialise (résolu - délai normal)
+- [x] Filtrer campagnes Meta : afficher uniquement actives ou actives durant la période sélectionnée
+- [x] Afficher métriques complètes : dépenses, leads, clics, impressions, CTR, CPC, CPL, ROI
+- [x] S'assurer que les montants sont corrects (vrais montants dépensés)

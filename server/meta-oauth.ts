@@ -203,7 +203,7 @@ export async function getCampaignsWithInsights(
 
   // Récupérer les insights pour chaque campagne
   const insightsUrl = `https://graph.facebook.com/${META_GRAPH_VERSION}/${adAccountId}/insights?` +
-    `fields=campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,reach,actions` +
+    `fields=campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,actions,cost_per_action_type,conversions,cost_per_conversion` +
     `&level=campaign` +
     `&date_preset=${datePreset}` +
     `&access_token=${accessToken}` +
@@ -219,12 +219,31 @@ export async function getCampaignsWithInsights(
     }
   }
 
-  // Combiner campagnes et insights
-  return campaigns.map((campaign: any) => {
+  // Combiner campagnes et insights, filtrer les campagnes pertinentes
+  const allCampaigns = campaigns.map((campaign: any) => {
     const insight = insightsMap[campaign.id] || {};
     const leadActions = insight.actions?.find((a: any) => 
       a.action_type === "lead" || a.action_type === "onsite_conversion.lead_grouped"
     );
+    const linkClicks = insight.actions?.find((a: any) => 
+      a.action_type === "link_click"
+    );
+    const costPerLead = insight.cost_per_action_type?.find((a: any) =>
+      a.action_type === "lead" || a.action_type === "onsite_conversion.lead_grouped"
+    );
+    const conversions = insight.actions?.filter((a: any) =>
+      a.action_type === "offsite_conversion" || 
+      a.action_type === "onsite_conversion" ||
+      a.action_type === "lead" ||
+      a.action_type === "onsite_conversion.lead_grouped" ||
+      a.action_type === "purchase" ||
+      a.action_type === "complete_registration"
+    ) || [];
+
+    const spend = parseFloat(insight.spend || "0");
+    const leads = parseInt(leadActions?.value || "0");
+    const clicks = parseInt(insight.clicks || "0");
+    const impressions = parseInt(insight.impressions || "0");
 
     return {
       campaign_id: campaign.id,
@@ -240,12 +259,22 @@ export async function getCampaignsWithInsights(
       cpc: insight.cpc || "0",
       cpm: insight.cpm || "0",
       reach: insight.reach || "0",
+      frequency: insight.frequency || "0",
       leads: leadActions?.value || "0",
+      link_clicks: linkClicks?.value || "0",
+      cost_per_lead: costPerLead?.value || (leads > 0 ? (spend / leads).toFixed(2) : "0"),
+      conversions: conversions.map((c: any) => ({ type: c.action_type, value: c.value })),
       actions: insight.actions || [],
       date_start: insight.date_start || "",
       date_stop: insight.date_stop || "",
+      has_activity: spend > 0 || clicks > 0 || impressions > 0,
     };
   });
+
+  // Filtrer : campagnes ACTIVE ou avec activité durant la période
+  return allCampaigns.filter((c: any) => 
+    c.status === "ACTIVE" || c.has_activity
+  );
 }
 
 /**

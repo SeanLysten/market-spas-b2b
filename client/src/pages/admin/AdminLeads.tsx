@@ -59,12 +59,18 @@ interface CampaignStats {
   id: string;
   name: string;
   status: string;
+  objective: string;
   spend: number;
   impressions: number;
   clicks: number;
   leads: number;
   cpl: number;
   ctr: number;
+  cpc: number;
+  cpm: number;
+  reach: number;
+  frequency: number;
+  linkClicks: number;
 }
 
 const LEAD_STATUSES = {
@@ -205,24 +211,40 @@ export default function AdminLeads() {
     id: c.campaign_id,
     name: c.campaign_name,
     status: c.status,
+    objective: c.objective || "",
     spend: parseFloat(c.spend) || 0,
     impressions: parseInt(c.impressions) || 0,
     clicks: parseInt(c.clicks) || 0,
     leads: parseInt(c.leads) || 0,
-    cpl: parseInt(c.leads) > 0 ? parseFloat(c.spend) / parseInt(c.leads) : 0,
+    cpl: parseFloat(c.cost_per_lead) || (parseInt(c.leads) > 0 ? parseFloat(c.spend) / parseInt(c.leads) : 0),
     ctr: parseFloat(c.ctr) || 0,
+    cpc: parseFloat(c.cpc) || 0,
+    cpm: parseFloat(c.cpm) || 0,
+    reach: parseInt(c.reach) || 0,
+    frequency: parseFloat(c.frequency) || 0,
+    linkClicks: parseInt(c.link_clicks) || 0,
   }));
 
   // Statistiques globales
+  const totalMetaLeads = campaigns.reduce((sum, c) => sum + c.leads, 0);
+  const totalMetaSpend = campaigns.reduce((sum, c) => sum + c.spend, 0);
+  const totalMetaClicks = campaigns.reduce((sum, c) => sum + c.clicks, 0);
+  const totalMetaImpressions = campaigns.reduce((sum, c) => sum + c.impressions, 0);
+  const totalMetaReach = campaigns.reduce((sum, c) => sum + c.reach, 0);
   const stats = {
     totalLeads: leads.length,
     newLeads: leads.filter(l => l.status === "NEW" || l.status === "ASSIGNED").length,
     contactedLeads: leads.filter(l => l.firstContactAt !== null).length,
     convertedLeads: leads.filter(l => l.status === "CONVERTED").length,
     conversionRate: leads.length > 0 ? Math.round((leads.filter(l => l.status === "CONVERTED").length / leads.length) * 100) : 0,
-    totalSpend: campaigns.reduce((sum, c) => sum + c.spend, 0),
-    avgCPL: campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.cpl, 0) / campaigns.length : 0,
-    totalImpressions: campaigns.reduce((sum, c) => sum + c.impressions, 0),
+    totalSpend: totalMetaSpend,
+    avgCPL: totalMetaLeads > 0 ? totalMetaSpend / totalMetaLeads : 0,
+    totalImpressions: totalMetaImpressions,
+    totalClicks: totalMetaClicks,
+    totalReach: totalMetaReach,
+    totalMetaLeads,
+    avgCTR: totalMetaImpressions > 0 ? (totalMetaClicks / totalMetaImpressions) * 100 : 0,
+    avgCPC: totalMetaClicks > 0 ? totalMetaSpend / totalMetaClicks : 0,
   };
 
   // Stats par partenaire
@@ -336,9 +358,8 @@ export default function AdminLeads() {
                 <div>
                   <p className="text-sm text-gray-500">Total Leads</p>
                   <p className="text-2xl font-bold">{stats.totalLeads}</p>
-                  <p className="text-xs text-green-600 flex items-center mt-1">
-                    <ArrowUpRight className="w-3 h-3 mr-1" />
-                    +12% vs période préc.
+                  <p className="text-xs text-gray-500 mt-1">
+                    {stats.newLeads} nouveau{stats.newLeads > 1 ? 'x' : ''}
                   </p>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-full">
@@ -353,9 +374,8 @@ export default function AdminLeads() {
                 <div>
                   <p className="text-sm text-gray-500">Taux de conversion</p>
                   <p className="text-2xl font-bold">{stats.conversionRate}%</p>
-                  <p className="text-xs text-green-600 flex items-center mt-1">
-                    <ArrowUpRight className="w-3 h-3 mr-1" />
-                    +5% vs période préc.
+                  <p className="text-xs text-gray-500 mt-1">
+                    {stats.convertedLeads} converti{stats.convertedLeads > 1 ? 's' : ''}
                   </p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-full">
@@ -369,9 +389,9 @@ export default function AdminLeads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Budget dépensé</p>
-                  <p className="text-2xl font-bold">{stats.totalSpend.toFixed(0)}€</p>
+                  <p className="text-2xl font-bold">{stats.totalSpend.toFixed(2)} €</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    CPL moyen: {stats.avgCPL.toFixed(2)}€
+                    CPL moyen: {stats.avgCPL > 0 ? stats.avgCPL.toFixed(2) + ' €' : '-'}
                   </p>
                 </div>
                 <div className="p-3 bg-yellow-100 rounded-full">
@@ -385,10 +405,9 @@ export default function AdminLeads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Impressions</p>
-                  <p className="text-2xl font-bold">{(stats.totalImpressions / 1000).toFixed(1)}K</p>
-                  <p className="text-xs text-red-600 flex items-center mt-1">
-                    <ArrowDownRight className="w-3 h-3 mr-1" />
-                    -3% vs période préc.
+                  <p className="text-2xl font-bold">{stats.totalImpressions > 1000 ? (stats.totalImpressions / 1000).toFixed(1) + 'K' : stats.totalImpressions}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Portée: {stats.totalReach > 1000 ? (stats.totalReach / 1000).toFixed(1) + 'K' : stats.totalReach}
                   </p>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-full">
@@ -710,55 +729,81 @@ export default function AdminLeads() {
                   </Card>
                 </div>
 
-                {/* Liste des campagnes */}
-                {campaigns.map(campaign => (
-                  <Card key={campaign.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-gray-900">{campaign.name}</h3>
-                            <Badge variant={campaign.status === "ACTIVE" ? "default" : "secondary"}>
-                              {campaign.status === "ACTIVE" ? "Active" : campaign.status === "PAUSED" ? "En pause" : campaign.status}
+                {/* Tableau des campagnes style Meta Ads Manager */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-gray-50">
+                        <th className="text-left p-3 font-medium text-gray-600">Campagne</th>
+                        <th className="text-right p-3 font-medium text-gray-600">Statut</th>
+                        <th className="text-right p-3 font-medium text-gray-600">Dépenses</th>
+                        <th className="text-right p-3 font-medium text-gray-600">Portée</th>
+                        <th className="text-right p-3 font-medium text-gray-600">Impressions</th>
+                        <th className="text-right p-3 font-medium text-gray-600">Fréquence</th>
+                        <th className="text-right p-3 font-medium text-gray-600">Clics</th>
+                        <th className="text-right p-3 font-medium text-gray-600">CTR</th>
+                        <th className="text-right p-3 font-medium text-gray-600">CPC</th>
+                        <th className="text-right p-3 font-medium text-gray-600">CPM</th>
+                        <th className="text-right p-3 font-medium text-gray-600">Leads</th>
+                        <th className="text-right p-3 font-medium text-gray-600">CPL</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {campaigns.map(campaign => (
+                        <tr key={campaign.id} className="border-b hover:bg-gray-50 transition-colors">
+                          <td className="p-3">
+                            <div className="flex flex-col">
+                              <span className="font-medium text-gray-900">{campaign.name}</span>
+                              {campaign.objective && (
+                                <span className="text-xs text-gray-400 mt-0.5">{campaign.objective.replace(/_/g, ' ').toLowerCase()}</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-3 text-right">
+                            <Badge variant={campaign.status === "ACTIVE" ? "default" : "secondary"} className="text-xs">
+                              {campaign.status === "ACTIVE" ? "Active" : campaign.status === "PAUSED" ? "Pause" : campaign.status === "ARCHIVED" ? "Archivée" : campaign.status}
                             </Badge>
-                          </div>
-                          <p className="text-sm text-gray-500 mt-1">
-                            Budget dépensé: {campaign.spend.toFixed(2)}€
-                          </p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(`https://business.facebook.com/adsmanager/manage/campaigns?act=${metaCampaignsData?.currentAccount?.adAccountId?.replace('act_', '')}`, '_blank')}
-                        >
-                          Voir sur Meta
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div>
-                          <p className="text-xs text-gray-500">Impressions</p>
-                          <p className="text-lg font-semibold">{campaign.impressions > 1000 ? (campaign.impressions / 1000).toFixed(1) + 'K' : campaign.impressions}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Clics</p>
-                          <p className="text-lg font-semibold">{campaign.clicks}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">CTR</p>
-                          <p className="text-lg font-semibold">{campaign.ctr.toFixed(2)}%</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Leads</p>
-                          <p className="text-lg font-semibold text-green-600">{campaign.leads}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Coût/Lead</p>
-                          <p className="text-lg font-semibold">{campaign.cpl.toFixed(2)}€</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                          </td>
+                          <td className="p-3 text-right font-medium">{campaign.spend.toFixed(2)} €</td>
+                          <td className="p-3 text-right">{campaign.reach > 1000 ? (campaign.reach / 1000).toFixed(1) + 'K' : campaign.reach}</td>
+                          <td className="p-3 text-right">{campaign.impressions > 1000 ? (campaign.impressions / 1000).toFixed(1) + 'K' : campaign.impressions}</td>
+                          <td className="p-3 text-right">{campaign.frequency.toFixed(2)}</td>
+                          <td className="p-3 text-right">{campaign.clicks}</td>
+                          <td className="p-3 text-right">{campaign.ctr.toFixed(2)}%</td>
+                          <td className="p-3 text-right">{campaign.cpc.toFixed(2)} €</td>
+                          <td className="p-3 text-right">{campaign.cpm.toFixed(2)} €</td>
+                          <td className="p-3 text-right">
+                            <span className={campaign.leads > 0 ? "font-semibold text-green-600" : "text-gray-400"}>
+                              {campaign.leads}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right">
+                            <span className={campaign.cpl > 0 ? "font-semibold" : "text-gray-400"}>
+                              {campaign.cpl > 0 ? campaign.cpl.toFixed(2) + ' €' : '-'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    {/* Ligne de totaux */}
+                    <tfoot>
+                      <tr className="border-t-2 bg-gray-50 font-semibold">
+                        <td className="p-3">Total ({campaigns.length} campagnes)</td>
+                        <td className="p-3"></td>
+                        <td className="p-3 text-right">{campaigns.reduce((s, c) => s + c.spend, 0).toFixed(2)} €</td>
+                        <td className="p-3 text-right">{(() => { const t = campaigns.reduce((s, c) => s + c.reach, 0); return t > 1000 ? (t/1000).toFixed(1)+'K' : t; })()}</td>
+                        <td className="p-3 text-right">{(() => { const t = campaigns.reduce((s, c) => s + c.impressions, 0); return t > 1000 ? (t/1000).toFixed(1)+'K' : t; })()}</td>
+                        <td className="p-3"></td>
+                        <td className="p-3 text-right">{campaigns.reduce((s, c) => s + c.clicks, 0)}</td>
+                        <td className="p-3 text-right">{(() => { const totalClicks = campaigns.reduce((s, c) => s + c.clicks, 0); const totalImpressions = campaigns.reduce((s, c) => s + c.impressions, 0); return totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) + '%' : '-'; })()}</td>
+                        <td className="p-3 text-right">{(() => { const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0); const totalClicks = campaigns.reduce((s, c) => s + c.clicks, 0); return totalClicks > 0 ? (totalSpend / totalClicks).toFixed(2) + ' €' : '-'; })()}</td>
+                        <td className="p-3"></td>
+                        <td className="p-3 text-right text-green-600">{campaigns.reduce((s, c) => s + c.leads, 0)}</td>
+                        <td className="p-3 text-right">{(() => { const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0); const totalLeads = campaigns.reduce((s, c) => s + c.leads, 0); return totalLeads > 0 ? (totalSpend / totalLeads).toFixed(2) + ' €' : '-'; })()}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
               </div>
             )}
 
