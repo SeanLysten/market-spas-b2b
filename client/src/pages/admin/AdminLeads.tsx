@@ -102,6 +102,7 @@ export default function AdminLeads() {
   const urlParams = new URLSearchParams(window.location.search);
   const hasOAuthCode = urlParams.has('code');
   const [activeTab, setActiveTab] = useState(hasOAuthCode ? 'campaigns' : 'leads');
+  const [campaignStatusFilter, setCampaignStatusFilter] = useState<string>("all");
 
   // Récupérer les vrais leads depuis la base de données
   const { data: leadsData, isLoading: leadsLoading, refetch } = trpc.admin.leads.list.useQuery({
@@ -225,12 +226,25 @@ export default function AdminLeads() {
     linkClicks: parseInt(c.link_clicks) || 0,
   }));
 
-  // Statistiques globales
-  const totalMetaLeads = campaigns.reduce((sum, c) => sum + c.leads, 0);
-  const totalMetaSpend = campaigns.reduce((sum, c) => sum + c.spend, 0);
-  const totalMetaClicks = campaigns.reduce((sum, c) => sum + c.clicks, 0);
-  const totalMetaImpressions = campaigns.reduce((sum, c) => sum + c.impressions, 0);
-  const totalMetaReach = campaigns.reduce((sum, c) => sum + c.reach, 0);
+  // Filtrer les campagnes par statut
+  const filteredCampaigns = campaignStatusFilter === "all" 
+    ? campaigns 
+    : campaigns.filter(c => c.status === campaignStatusFilter);
+
+  // Compteurs par statut pour les badges
+  const campaignCounts = {
+    all: campaigns.length,
+    ACTIVE: campaigns.filter(c => c.status === "ACTIVE").length,
+    PAUSED: campaigns.filter(c => c.status === "PAUSED").length,
+    ARCHIVED: campaigns.filter(c => c.status === "ARCHIVED").length,
+  };
+
+  // Statistiques globales (basées sur les campagnes filtrées)
+  const totalMetaLeads = filteredCampaigns.reduce((sum, c) => sum + c.leads, 0);
+  const totalMetaSpend = filteredCampaigns.reduce((sum, c) => sum + c.spend, 0);
+  const totalMetaClicks = filteredCampaigns.reduce((sum, c) => sum + c.clicks, 0);
+  const totalMetaImpressions = filteredCampaigns.reduce((sum, c) => sum + c.impressions, 0);
+  const totalMetaReach = filteredCampaigns.reduce((sum, c) => sum + c.reach, 0);
   const stats = {
     totalLeads: leads.length,
     newLeads: leads.filter(l => l.status === "NEW" || l.status === "ASSIGNED").length,
@@ -696,37 +710,67 @@ export default function AdminLeads() {
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-xs text-gray-500">Dépenses totales</p>
-                      <p className="text-xl font-bold text-blue-600">{campaigns.reduce((s, c) => s + c.spend, 0).toFixed(2)}€</p>
+                      <p className="text-xl font-bold text-blue-600">{filteredCampaigns.reduce((s, c) => s + c.spend, 0).toFixed(2)}€</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-xs text-gray-500">Impressions</p>
-                      <p className="text-xl font-bold">{(campaigns.reduce((s, c) => s + c.impressions, 0) / 1000).toFixed(1)}K</p>
+                      <p className="text-xl font-bold">{filteredCampaigns.reduce((s, c) => s + c.impressions, 0) > 1000 ? (filteredCampaigns.reduce((s, c) => s + c.impressions, 0) / 1000).toFixed(1) + 'K' : filteredCampaigns.reduce((s, c) => s + c.impressions, 0)}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-xs text-gray-500">Clics totaux</p>
-                      <p className="text-xl font-bold">{campaigns.reduce((s, c) => s + c.clicks, 0)}</p>
+                      <p className="text-xl font-bold">{filteredCampaigns.reduce((s, c) => s + c.clicks, 0)}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-xs text-gray-500">Leads totaux</p>
-                      <p className="text-xl font-bold text-green-600">{campaigns.reduce((s, c) => s + c.leads, 0)}</p>
+                      <p className="text-xl font-bold text-green-600">{filteredCampaigns.reduce((s, c) => s + c.leads, 0)}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-xs text-gray-500">Coût/Lead moyen</p>
                       <p className="text-xl font-bold">
-                        {campaigns.reduce((s, c) => s + c.leads, 0) > 0
-                          ? (campaigns.reduce((s, c) => s + c.spend, 0) / campaigns.reduce((s, c) => s + c.leads, 0)).toFixed(2)
+                        {filteredCampaigns.reduce((s, c) => s + c.leads, 0) > 0
+                          ? (filteredCampaigns.reduce((s, c) => s + c.spend, 0) / filteredCampaigns.reduce((s, c) => s + c.leads, 0)).toFixed(2)
                           : "0.00"}€
                       </p>
                     </CardContent>
                   </Card>
+                </div>
+
+                {/* Filtre de statut des campagnes */}
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-sm text-gray-500 mr-1">Filtrer :</span>
+                  {[
+                    { value: "all", label: "Toutes", count: campaignCounts.all },
+                    { value: "ACTIVE", label: "Actives", count: campaignCounts.ACTIVE },
+                    { value: "PAUSED", label: "En pause", count: campaignCounts.PAUSED },
+                    { value: "ARCHIVED", label: "Archivées", count: campaignCounts.ARCHIVED },
+                  ].map((filter) => (
+                    <Button
+                      key={filter.value}
+                      variant={campaignStatusFilter === filter.value ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCampaignStatusFilter(filter.value)}
+                      className="text-xs"
+                    >
+                      {filter.label}
+                      {filter.count > 0 && (
+                        <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${
+                          campaignStatusFilter === filter.value 
+                            ? 'bg-white/20 text-white' 
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {filter.count}
+                        </span>
+                      )}
+                    </Button>
+                  ))}
                 </div>
 
                 {/* Tableau des campagnes style Meta Ads Manager */}
@@ -749,7 +793,7 @@ export default function AdminLeads() {
                       </tr>
                     </thead>
                     <tbody>
-                      {campaigns.map(campaign => (
+                      {filteredCampaigns.map(campaign => (
                         <tr key={campaign.id} className="border-b hover:bg-gray-50 transition-colors">
                           <td className="p-3">
                             <div className="flex flex-col">
@@ -788,18 +832,18 @@ export default function AdminLeads() {
                     {/* Ligne de totaux */}
                     <tfoot>
                       <tr className="border-t-2 bg-gray-50 font-semibold">
-                        <td className="p-3">Total ({campaigns.length} campagnes)</td>
+                        <td className="p-3">Total ({filteredCampaigns.length} campagnes)</td>
                         <td className="p-3"></td>
-                        <td className="p-3 text-right">{campaigns.reduce((s, c) => s + c.spend, 0).toFixed(2)} €</td>
-                        <td className="p-3 text-right">{(() => { const t = campaigns.reduce((s, c) => s + c.reach, 0); return t > 1000 ? (t/1000).toFixed(1)+'K' : t; })()}</td>
-                        <td className="p-3 text-right">{(() => { const t = campaigns.reduce((s, c) => s + c.impressions, 0); return t > 1000 ? (t/1000).toFixed(1)+'K' : t; })()}</td>
+                        <td className="p-3 text-right">{filteredCampaigns.reduce((s, c) => s + c.spend, 0).toFixed(2)} €</td>
+                        <td className="p-3 text-right">{(() => { const t = filteredCampaigns.reduce((s, c) => s + c.reach, 0); return t > 1000 ? (t/1000).toFixed(1)+'K' : t; })()}</td>
+                        <td className="p-3 text-right">{(() => { const t = filteredCampaigns.reduce((s, c) => s + c.impressions, 0); return t > 1000 ? (t/1000).toFixed(1)+'K' : t; })()}</td>
                         <td className="p-3"></td>
-                        <td className="p-3 text-right">{campaigns.reduce((s, c) => s + c.clicks, 0)}</td>
-                        <td className="p-3 text-right">{(() => { const totalClicks = campaigns.reduce((s, c) => s + c.clicks, 0); const totalImpressions = campaigns.reduce((s, c) => s + c.impressions, 0); return totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) + '%' : '-'; })()}</td>
-                        <td className="p-3 text-right">{(() => { const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0); const totalClicks = campaigns.reduce((s, c) => s + c.clicks, 0); return totalClicks > 0 ? (totalSpend / totalClicks).toFixed(2) + ' €' : '-'; })()}</td>
+                        <td className="p-3 text-right">{filteredCampaigns.reduce((s, c) => s + c.clicks, 0)}</td>
+                        <td className="p-3 text-right">{(() => { const totalClicks = filteredCampaigns.reduce((s, c) => s + c.clicks, 0); const totalImpressions = filteredCampaigns.reduce((s, c) => s + c.impressions, 0); return totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) + '%' : '-'; })()}</td>
+                        <td className="p-3 text-right">{(() => { const totalSpend = filteredCampaigns.reduce((s, c) => s + c.spend, 0); const totalClicks = filteredCampaigns.reduce((s, c) => s + c.clicks, 0); return totalClicks > 0 ? (totalSpend / totalClicks).toFixed(2) + ' €' : '-'; })()}</td>
                         <td className="p-3"></td>
-                        <td className="p-3 text-right text-green-600">{campaigns.reduce((s, c) => s + c.leads, 0)}</td>
-                        <td className="p-3 text-right">{(() => { const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0); const totalLeads = campaigns.reduce((s, c) => s + c.leads, 0); return totalLeads > 0 ? (totalSpend / totalLeads).toFixed(2) + ' €' : '-'; })()}</td>
+                        <td className="p-3 text-right text-green-600">{filteredCampaigns.reduce((s, c) => s + c.leads, 0)}</td>
+                        <td className="p-3 text-right">{(() => { const totalSpend = filteredCampaigns.reduce((s, c) => s + c.spend, 0); const totalLeads = filteredCampaigns.reduce((s, c) => s + c.leads, 0); return totalLeads > 0 ? (totalSpend / totalLeads).toFixed(2) + ' €' : '-'; })()}</td>
                       </tr>
                     </tfoot>
                   </table>
