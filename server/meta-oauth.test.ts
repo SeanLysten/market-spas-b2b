@@ -17,19 +17,29 @@ describe("Meta OAuth Integration", () => {
     expect(url).toContain("client_id=");
     expect(url).toContain("redirect_uri=");
     expect(url).toContain("state=test_state");
-    expect(url).toContain("ads_read");
-    expect(url).toContain("scope=");
+    // When META_CONFIG_ID is set, uses config_id instead of scope
+    if (process.env.META_CONFIG_ID) {
+      expect(url).toContain("config_id=");
+    } else {
+      expect(url).toContain("ads_read");
+      expect(url).toContain("scope=");
+    }
   });
 
-  it("should include required permissions in OAuth URL", async () => {
+  it("should include config_id or required permissions in OAuth URL", async () => {
     const { getMetaOAuthUrl } = await import("./meta-oauth");
     
     const url = getMetaOAuthUrl("https://example.com/callback", "state");
     
-    // Must include ads_read for Marketing API
-    expect(url).toContain("ads_read");
-    // Must include leads_retrieval for lead forms
-    expect(url).toContain("leads_retrieval");
+    // Facebook Login for Business uses config_id instead of scope
+    if (process.env.META_CONFIG_ID) {
+      expect(url).toContain("config_id=" + process.env.META_CONFIG_ID);
+      expect(url).toContain("response_type=code");
+    } else {
+      // Standard Facebook Login uses scope
+      expect(url).toContain("ads_read");
+      expect(url).toContain("leads_retrieval");
+    }
   });
 
   it("should validate token format check", async () => {

@@ -392,6 +392,55 @@ export async function getDailyInsights(
 }
 
 /**
+ * Récupère les insights agrégés pour une période donnée (pour comparaison)
+ */
+export async function getPeriodInsights(
+  adAccountId: string,
+  accessToken: string,
+  timeRange: { since: string; until: string }
+): Promise<{ spend: number; leads: number; clicks: number; impressions: number; reach: number; ctr: number; cpc: number; cpm: number; frequency: number; costPerLead: number }> {
+  const url = `https://graph.facebook.com/${META_GRAPH_VERSION}/${adAccountId}/insights?` +
+    `fields=spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,actions,cost_per_action_type` +
+    `&time_range=${JSON.stringify(timeRange)}` +
+    `&access_token=${accessToken}` +
+    `&limit=500`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.error("[Meta] Erreur récupération insights période");
+    return { spend: 0, leads: 0, clicks: 0, impressions: 0, reach: 0, ctr: 0, cpc: 0, cpm: 0, frequency: 0, costPerLead: 0 };
+  }
+
+  const data = await response.json();
+  const entries = data.data || [];
+  
+  // Agréger toutes les entrées de la période
+  let spend = 0, leads = 0, clicks = 0, impressions = 0, reach = 0;
+  let ctr = 0, cpc = 0, cpm = 0, frequency = 0;
+  
+  for (const entry of entries) {
+    spend += parseFloat(entry.spend || "0");
+    clicks += parseInt(entry.clicks || "0");
+    impressions += parseInt(entry.impressions || "0");
+    reach += parseInt(entry.reach || "0");
+    
+    const leadActions = entry.actions?.find((a: any) =>
+      a.action_type === "lead" || a.action_type === "onsite_conversion.lead_grouped"
+    );
+    leads += parseInt(leadActions?.value || "0");
+  }
+  
+  // Calculer les moyennes pondérées
+  ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+  cpc = clicks > 0 ? spend / clicks : 0;
+  cpm = impressions > 0 ? (spend / impressions) * 1000 : 0;
+  frequency = reach > 0 ? impressions / reach : 0;
+  const costPerLead = leads > 0 ? spend / leads : 0;
+
+  return { spend, leads, clicks, impressions, reach, ctr, cpc, cpm, frequency, costPerLead };
+}
+
+/**
  * Vérifie si un token est encore valide
  */
 export async function validateToken(accessToken: string): Promise<boolean> {

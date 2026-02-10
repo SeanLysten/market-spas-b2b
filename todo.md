@@ -1405,3 +1405,6 @@
 - [x] Filtrage strict : n'afficher que les campagnes avec activité réelle durant la période sélectionnée
 - [x] Priorisation campagnes : Prospects/Trafic/Conversions en priorité, Boost/Engagement en secondaire
 - [x] Tri intelligent : prioritaires en haut, puis par dépenses décroissantes
+- [x] Tableau de bord comparatif : comparer performances entre deux périodes
+- [x] Indicateurs d'évolution (%) entre période actuelle et période précédente
+- [x] Graphiques de comparaison côte à côte (barres groupées)

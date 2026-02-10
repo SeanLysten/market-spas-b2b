@@ -2858,6 +2858,42 @@ export const appRouter = router({
           return { connected: true, dailyData: [], error: error.message };
         }
       }),
+    // Compare two periods
+    getComparisonInsights: adminProcedure
+      .input(z.object({
+        currentPeriod: z.object({ since: z.string(), until: z.string() }),
+        previousPeriod: z.object({ since: z.string(), until: z.string() }),
+      }))
+      .query(async ({ input }) => {
+        const accounts = await db.getConnectedMetaAdAccounts();
+        if (accounts.length === 0) {
+          return { connected: false, current: null, previous: null };
+        }
+
+        const targetAccount = accounts[0];
+        try {
+          const isValid = await metaOAuth.validateToken(targetAccount.accessToken);
+          if (!isValid) {
+            return { connected: true, current: null, previous: null, error: "Token expiré" };
+          }
+
+          const [current, previous] = await Promise.all([
+            metaOAuth.getPeriodInsights(targetAccount.adAccountId, targetAccount.accessToken, input.currentPeriod),
+            metaOAuth.getPeriodInsights(targetAccount.adAccountId, targetAccount.accessToken, input.previousPeriod),
+          ]);
+
+          return {
+            connected: true,
+            current,
+            previous,
+            currentPeriod: input.currentPeriod,
+            previousPeriod: input.previousPeriod,
+          };
+        } catch (error: any) {
+          console.error("[Meta] Erreur comparaison périodes:", error);
+          return { connected: true, current: null, previous: null, error: error.message };
+        }
+      }),
   }),
 
   // ============================================

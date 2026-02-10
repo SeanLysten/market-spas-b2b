@@ -32,7 +32,10 @@ import {
   Filter,
   Building2,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Minus,
+  Plus,
+  GitCompareArrows
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from "recharts";
 
@@ -111,6 +114,11 @@ export default function AdminLeads() {
   const [customDateTo, setCustomDateTo] = useState<string>("");
   const [isCustomDate, setIsCustomDate] = useState(false);
 
+  // Comparison tab state
+  const [comparisonMode, setComparisonMode] = useState<"previous" | "year" | "custom">("previous");
+  const [compCustomFrom, setCompCustomFrom] = useState("");
+  const [compCustomTo, setCompCustomTo] = useState("");
+
   // Récupérer les vrais leads depuis la base de données
   const { data: leadsData, isLoading: leadsLoading, refetch } = trpc.admin.leads.list.useQuery({
     status: statusFilter !== "all" ? statusFilter : undefined,
@@ -159,6 +167,54 @@ export default function AdminLeads() {
     metaQueryInput,
     { retry: false, enabled: !!metaCampaignsData?.connected }
   );
+  // Comparison periods calculation
+  const getComparisonPeriods = () => {
+    const now = new Date();
+    let currentSince: string, currentUntil: string, prevSince: string, prevUntil: string;
+    
+    if (isCustomDate && customDateFrom && customDateTo) {
+      currentSince = customDateFrom;
+      currentUntil = customDateTo;
+    } else {
+      const days = dateRange === "7" ? 7 : dateRange === "30" ? 30 : dateRange === "365" ? 365 : 90;
+      currentUntil = now.toISOString().split('T')[0];
+      const sinceDate = new Date(now);
+      sinceDate.setDate(sinceDate.getDate() - days);
+      currentSince = sinceDate.toISOString().split('T')[0];
+    }
+
+    if (comparisonMode === "previous") {
+      const daysDiff = Math.ceil((new Date(currentUntil).getTime() - new Date(currentSince).getTime()) / (1000 * 60 * 60 * 24));
+      const prevEnd = new Date(currentSince);
+      prevEnd.setDate(prevEnd.getDate() - 1);
+      const prevStart = new Date(prevEnd);
+      prevStart.setDate(prevStart.getDate() - daysDiff);
+      prevSince = prevStart.toISOString().split('T')[0];
+      prevUntil = prevEnd.toISOString().split('T')[0];
+    } else if (comparisonMode === "year") {
+      const prevStartDate = new Date(currentSince);
+      prevStartDate.setFullYear(prevStartDate.getFullYear() - 1);
+      const prevEndDate = new Date(currentUntil);
+      prevEndDate.setFullYear(prevEndDate.getFullYear() - 1);
+      prevSince = prevStartDate.toISOString().split('T')[0];
+      prevUntil = prevEndDate.toISOString().split('T')[0];
+    } else {
+      prevSince = compCustomFrom || currentSince;
+      prevUntil = compCustomTo || currentUntil;
+    }
+
+    return {
+      currentPeriod: { since: currentSince, until: currentUntil },
+      previousPeriod: { since: prevSince!, until: prevUntil! },
+    };
+  };
+
+  const comparisonPeriods = getComparisonPeriods();
+  const { data: comparisonData, isLoading: comparisonLoading } = trpc.metaAds.getComparisonInsights.useQuery(
+    comparisonPeriods,
+    { retry: false, enabled: !!metaCampaignsData?.connected && activeTab === 'comparison' }
+  );
+
   const { data: metaOAuthUrl } = trpc.metaAds.getOAuthUrl.useQuery(undefined, { retry: false });
   const metaCallbackMutation = trpc.metaAds.handleCallback.useMutation();
   const connectAccountMutation = trpc.metaAds.connectAdAccount.useMutation({
@@ -506,6 +562,10 @@ export default function AdminLeads() {
             <TabsTrigger value="partners">
               <Building2 className="w-4 h-4 mr-2" />
               Par partenaire
+            </TabsTrigger>
+            <TabsTrigger value="comparison">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Comparaison
             </TabsTrigger>
           </TabsList>
 
@@ -1102,6 +1162,273 @@ export default function AdminLeads() {
                 );
               })}
             </div>
+          </TabsContent>
+
+          {/* Onglet Comparaison */}
+          <TabsContent value="comparison" className="space-y-4">
+            {!metaCampaignsData?.connected ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <GitCompareArrows className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Comparaison de périodes</h3>
+                  <p className="text-gray-500">Connectez d'abord votre compte Meta Ads dans l'onglet Campagnes pour accéder à la comparaison.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                {/* Sélecteur de mode de comparaison */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <GitCompareArrows className="w-5 h-5" />
+                      Mode de comparaison
+                    </CardTitle>
+                    <CardDescription>
+                      Comparez les performances de la période actuelle ({comparisonPeriods.currentPeriod.since} au {comparisonPeriods.currentPeriod.until}) avec une autre période
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {[
+                        { value: "previous" as const, label: "Période précédente" },
+                        { value: "year" as const, label: "Même période, année précédente" },
+                        { value: "custom" as const, label: "Période personnalisée" },
+                      ].map((mode) => (
+                        <Button
+                          key={mode.value}
+                          variant={comparisonMode === mode.value ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setComparisonMode(mode.value)}
+                        >
+                          {mode.label}
+                        </Button>
+                      ))}
+                      {comparisonMode === "custom" && (
+                        <div className="flex items-center gap-2 ml-2">
+                          <Input
+                            type="date"
+                            value={compCustomFrom}
+                            onChange={(e) => setCompCustomFrom(e.target.value)}
+                            className="w-40 h-8 text-xs"
+                          />
+                          <span className="text-gray-400">→</span>
+                          <Input
+                            type="date"
+                            value={compCustomTo}
+                            onChange={(e) => setCompCustomTo(e.target.value)}
+                            className="w-40 h-8 text-xs"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-3">
+                      Comparaison : {comparisonPeriods.previousPeriod.since} au {comparisonPeriods.previousPeriod.until}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Loading */}
+                {comparisonLoading && (
+                  <div className="text-center py-8 text-gray-500">
+                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
+                    Chargement de la comparaison...
+                  </div>
+                )}
+
+                {/* Résultats de la comparaison */}
+                {comparisonData?.current && comparisonData?.previous && !comparisonLoading && (() => {
+                  const current = comparisonData.current;
+                  const previous = comparisonData.previous;
+                  
+                  const calcChange = (curr: number, prev: number) => {
+                    if (prev === 0 && curr === 0) return 0;
+                    if (prev === 0) return 100;
+                    return ((curr - prev) / prev) * 100;
+                  };
+
+                  const metrics = [
+                    { key: "spend", label: "Dépenses", format: (v: number) => v.toFixed(2) + " €", color: "blue", invertColor: true },
+                    { key: "leads", label: "Leads", format: (v: number) => v.toString(), color: "green", invertColor: false },
+                    { key: "clicks", label: "Clics", format: (v: number) => v > 1000 ? (v / 1000).toFixed(1) + 'K' : v.toString(), color: "indigo", invertColor: false },
+                    { key: "impressions", label: "Impressions", format: (v: number) => v > 1000 ? (v / 1000).toFixed(1) + 'K' : v.toString(), color: "purple", invertColor: false },
+                    { key: "reach", label: "Portée", format: (v: number) => v > 1000 ? (v / 1000).toFixed(1) + 'K' : v.toString(), color: "cyan", invertColor: false },
+                    { key: "ctr", label: "CTR", format: (v: number) => v.toFixed(2) + " %", color: "amber", invertColor: false },
+                    { key: "cpc", label: "CPC", format: (v: number) => v.toFixed(2) + " €", color: "orange", invertColor: true },
+                    { key: "cpm", label: "CPM", format: (v: number) => v.toFixed(2) + " €", color: "rose", invertColor: true },
+                    { key: "frequency", label: "Fréquence", format: (v: number) => v.toFixed(2), color: "teal", invertColor: true },
+                    { key: "costPerLead", label: "Coût/Lead", format: (v: number) => v > 0 ? v.toFixed(2) + " €" : "-", color: "emerald", invertColor: true },
+                  ];
+
+                  return (
+                    <>
+                      {/* Cartes de comparaison */}
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        {metrics.map((metric) => {
+                          const currVal = (current as any)[metric.key] || 0;
+                          const prevVal = (previous as any)[metric.key] || 0;
+                          const change = calcChange(currVal, prevVal);
+                          // For cost metrics, decrease is good (green), increase is bad (red)
+                          // For performance metrics, increase is good (green), decrease is bad (red)
+                          const isPositive = metric.invertColor ? change <= 0 : change >= 0;
+                          
+                          return (
+                            <Card key={metric.key} className="relative overflow-hidden">
+                              <CardContent className="p-4">
+                                <p className="text-xs text-gray-500 mb-1">{metric.label}</p>
+                                <p className="text-lg font-bold">{metric.format(currVal)}</p>
+                                <div className="flex items-center gap-1 mt-1">
+                                  {change !== 0 ? (
+                                    <>
+                                      {change > 0 ? (
+                                        <ArrowUpRight className={`w-3.5 h-3.5 ${isPositive ? 'text-green-500' : 'text-red-500'}`} />
+                                      ) : (
+                                        <ArrowDownRight className={`w-3.5 h-3.5 ${isPositive ? 'text-green-500' : 'text-red-500'}`} />
+                                      )}
+                                      <span className={`text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                                        {change > 0 ? '+' : ''}{change.toFixed(1)}%
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Minus className="w-3.5 h-3.5 text-gray-400" />
+                                      <span className="text-xs text-gray-400">0%</span>
+                                    </>
+                                  )}
+                                  <span className="text-xs text-gray-400 ml-1">vs {metric.format(prevVal)}</span>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+
+                      {/* Graphique en barres groupées */}
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">Comparaison visuelle</CardTitle>
+                          <CardDescription>Métriques clés : période actuelle vs période de comparaison</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="h-[350px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart
+                                data={[
+                                  { name: 'Dépenses (€)', current: current.spend, previous: previous.spend },
+                                  { name: 'Leads', current: current.leads, previous: previous.leads },
+                                  { name: 'Clics', current: current.clicks, previous: previous.clicks },
+                                  { name: 'CTR (%)', current: parseFloat(current.ctr.toFixed(2)), previous: parseFloat(previous.ctr.toFixed(2)) },
+                                  { name: 'CPC (€)', current: parseFloat(current.cpc.toFixed(2)), previous: parseFloat(previous.cpc.toFixed(2)) },
+                                  { name: 'CPL (€)', current: parseFloat(current.costPerLead.toFixed(2)), previous: parseFloat(previous.costPerLead.toFixed(2)) },
+                                ]}
+                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                <XAxis
+                                  dataKey="name"
+                                  tick={{ fontSize: 11, fill: '#6b7280' }}
+                                  tickLine={false}
+                                  axisLine={{ stroke: '#e5e7eb' }}
+                                />
+                                <YAxis
+                                  tick={{ fontSize: 11, fill: '#9ca3af' }}
+                                  tickLine={false}
+                                  axisLine={false}
+                                />
+                                <Tooltip
+                                  contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                                  formatter={(value: any, name: string) => [
+                                    typeof value === 'number' ? value.toFixed(2) : value,
+                                    name === 'current' ? 'Période actuelle' : 'Période précédente'
+                                  ]}
+                                />
+                                <Legend
+                                  formatter={(value: string) => value === 'current' ? 'Période actuelle' : 'Période précédente'}
+                                />
+                                <Bar dataKey="current" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="previous" fill="#94a3b8" radius={[4, 4, 0, 0]} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Tableau de comparaison détaillé */}
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">Détail de la comparaison</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="border-b bg-gray-50">
+                                  <th className="text-left p-3 font-medium text-gray-600">Métrique</th>
+                                  <th className="text-right p-3 font-medium text-gray-600">
+                                    Période actuelle
+                                    <span className="block text-xs font-normal text-gray-400">{comparisonPeriods.currentPeriod.since} → {comparisonPeriods.currentPeriod.until}</span>
+                                  </th>
+                                  <th className="text-right p-3 font-medium text-gray-600">
+                                    Période précédente
+                                    <span className="block text-xs font-normal text-gray-400">{comparisonPeriods.previousPeriod.since} → {comparisonPeriods.previousPeriod.until}</span>
+                                  </th>
+                                  <th className="text-right p-3 font-medium text-gray-600">Évolution</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {metrics.map((metric) => {
+                                  const currVal = (current as any)[metric.key] || 0;
+                                  const prevVal = (previous as any)[metric.key] || 0;
+                                  const change = calcChange(currVal, prevVal);
+                                  const isPositive = metric.invertColor ? change <= 0 : change >= 0;
+                                  
+                                  return (
+                                    <tr key={metric.key} className="border-b hover:bg-gray-50 transition-colors">
+                                      <td className="p-3 font-medium text-gray-900">{metric.label}</td>
+                                      <td className="p-3 text-right font-semibold">{metric.format(currVal)}</td>
+                                      <td className="p-3 text-right text-gray-500">{metric.format(prevVal)}</td>
+                                      <td className="p-3 text-right">
+                                        <div className="flex items-center justify-end gap-1">
+                                          {change !== 0 ? (
+                                            <>
+                                              {change > 0 ? (
+                                                <ArrowUpRight className={`w-4 h-4 ${isPositive ? 'text-green-500' : 'text-red-500'}`} />
+                                              ) : (
+                                                <ArrowDownRight className={`w-4 h-4 ${isPositive ? 'text-green-500' : 'text-red-500'}`} />
+                                              )}
+                                              <span className={`font-semibold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                                                {change > 0 ? '+' : ''}{change.toFixed(1)}%
+                                              </span>
+                                            </>
+                                          ) : (
+                                            <span className="text-gray-400">—</span>
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </>
+                  );
+                })()}
+
+                {/* Erreur */}
+                {comparisonData && !comparisonData.current && !comparisonLoading && (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <p className="text-gray-500">Aucune donnée disponible pour cette comparaison.</p>
+                      {(comparisonData as any)?.error && (
+                        <p className="text-sm text-red-500 mt-2">{(comparisonData as any).error}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            )}
           </TabsContent>
         </Tabs>
       </div>
