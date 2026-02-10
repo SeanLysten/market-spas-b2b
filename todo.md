@@ -1391,3 +1391,5 @@
 - [ ] Ajouter marketspas.pro dans les domaines de l'app Facebook
 - [ ] Ajouter https://marketspas.pro/api/auth/meta/callback dans les URI de redirection OAuth valides Facebook
 - [ ] Tester le flux OAuth complet depuis marketspas.pro
+- [ ] Bug: Dashboard Meta Ads ne s'actualise pas après connexion OAuth réussie
+- [x] Utiliser config_id (905361441974416) au lieu de scope dans l'URL OAuth Meta

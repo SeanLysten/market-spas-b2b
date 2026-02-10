@@ -2724,17 +2724,25 @@ export const appRouter = router({
         tokenExpiresAt: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
-        return db.connectMetaAdAccount({
-          metaUserId: input.metaUserId,
-          metaUserName: input.metaUserName,
-          adAccountId: input.adAccountId,
-          adAccountName: input.adAccountName,
-          currency: input.currency || "EUR",
-          timezone: input.timezone,
-          accessToken: input.accessToken,
-          tokenExpiresAt: input.tokenExpiresAt ? new Date(input.tokenExpiresAt) : null,
-          connectedBy: ctx.user.id,
-        });
+        console.log(`[Meta Ads] Connecting ad account ${input.adAccountId} for user ${ctx.user.id}`);
+        try {
+          const result = await db.connectMetaAdAccount({
+            metaUserId: input.metaUserId,
+            metaUserName: input.metaUserName,
+            adAccountId: input.adAccountId,
+            adAccountName: input.adAccountName,
+            currency: input.currency || "EUR",
+            timezone: input.timezone,
+            accessToken: input.accessToken,
+            tokenExpiresAt: input.tokenExpiresAt ? new Date(input.tokenExpiresAt) : null,
+            connectedBy: ctx.user.id,
+          });
+          console.log(`[Meta Ads] Account connected successfully, id: ${result.id}`);
+          return result;
+        } catch (error: any) {
+          console.error(`[Meta Ads] Error connecting account:`, error.message);
+          throw error;
+        }
       }),
 
     // Disconnect ad account
@@ -2758,6 +2766,7 @@ export const appRouter = router({
       }).optional())
       .query(async ({ input }) => {
         const accounts = await db.getConnectedMetaAdAccounts();
+        console.log(`[Meta Ads] getCampaigns: found ${accounts.length} connected accounts`);
         if (accounts.length === 0) {
           return { connected: false, campaigns: [], accounts: [] };
         }

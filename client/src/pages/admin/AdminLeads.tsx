@@ -137,9 +137,22 @@ export default function AdminLeads() {
   const metaCallbackMutation = trpc.metaAds.handleCallback.useMutation();
   const connectAccountMutation = trpc.metaAds.connectAdAccount.useMutation({
     onSuccess: () => {
+      console.log("[Meta] Account connected successfully, refetching campaigns...");
       setShowAccountSelector(false);
       setMetaCallbackData(null);
-      refetchMeta();
+      // Force a small delay before refetching to ensure DB write is committed
+      setTimeout(() => {
+        refetchMeta().then((result) => {
+          console.log("[Meta] Campaigns refetch result:", result.data);
+          if (result.data?.connected) {
+            alert("Compte publicitaire connecté avec succès ! Les campagnes sont en cours de chargement.");
+          }
+        });
+      }, 500);
+    },
+    onError: (error) => {
+      console.error("[Meta] Error connecting account:", error);
+      alert(`Erreur lors de la connexion du compte: ${error.message}`);
     },
   });
   const disconnectMutation = trpc.metaAds.disconnectAdAccount.useMutation({

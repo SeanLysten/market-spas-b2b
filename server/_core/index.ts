@@ -48,6 +48,9 @@ async function startServer() {
 
   // Meta OAuth Callback - Redirects to frontend with code parameter
   app.get("/api/auth/meta/callback", (req, res) => {
+    console.log(`[Meta OAuth Callback] Full URL: ${req.originalUrl}`);
+    console.log(`[Meta OAuth Callback] Query params:`, JSON.stringify(req.query));
+    
     const code = req.query.code as string;
     const state = req.query.state as string;
     const error = req.query.error as string;
@@ -61,10 +64,18 @@ async function startServer() {
     }
 
     if (!code) {
-      res.redirect(302, "/admin/leads?meta_error=no_code");
+      console.warn(`[Meta OAuth] No code received. State: ${state}. All query params:`, req.query);
+      // Instead of showing error, redirect with state so frontend can handle
+      // Facebook Login for Business may not return code in some configurations
+      if (state) {
+        res.redirect(302, `/admin/leads?state=${encodeURIComponent(state)}&meta_error=no_code_received`);
+      } else {
+        res.redirect(302, "/admin/leads?meta_error=no_code");
+      }
       return;
     }
 
+    console.log(`[Meta OAuth] Code received (length: ${code.length}), redirecting to frontend`);
     // Redirect to frontend with code and state
     const params = new URLSearchParams();
     params.set("code", code);

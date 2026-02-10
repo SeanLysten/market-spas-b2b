@@ -53,6 +53,20 @@ export function getMetaOAuthUrl(redirectUri: string, state: string): string {
   const appId = process.env.META_APP_ID;
   if (!appId) throw new Error("META_APP_ID non configuré");
 
+  const configId = process.env.META_CONFIG_ID;
+  
+  // Facebook Login for Business utilise config_id au lieu de scope
+  if (configId) {
+    return `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth?` +
+      `client_id=${appId}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&config_id=${configId}` +
+      `&state=${state}` +
+      `&response_type=code` +
+      `&override_default_response_type=true`;
+  }
+
+  // Fallback: Facebook Login standard avec scope
   const scopes = [
     "ads_read",
     "ads_management",
@@ -66,7 +80,8 @@ export function getMetaOAuthUrl(redirectUri: string, state: string): string {
     `&redirect_uri=${encodeURIComponent(redirectUri)}` +
     `&scope=${scopes}` +
     `&state=${state}` +
-    `&response_type=code`;
+    `&response_type=code` +
+    `&display=page`;
 }
 
 /**

@@ -4707,7 +4707,8 @@ export async function connectMetaAdAccount(data: {
   }
 
   // Create new connection
-  const [result] = await db.insert(metaAdAccounts).values({
+  console.log(`[Meta DB] Inserting new ad account: ${data.adAccountId}`);
+  const insertResult = await db.insert(metaAdAccounts).values({
     metaUserId: data.metaUserId,
     metaUserName: data.metaUserName,
     adAccountId: data.adAccountId,
@@ -4720,7 +4721,11 @@ export async function connectMetaAdAccount(data: {
     isActive: true,
   });
 
-  return { id: result.insertId };
+  // drizzle-orm with mysql2 returns [ResultSetHeader, ...]
+  const result = insertResult[0];
+  const insertId = (result as any).insertId ?? 0;
+  console.log(`[Meta DB] Insert result:`, JSON.stringify(result), `insertId: ${insertId}`);
+  return { id: insertId };
 }
 
 /**
