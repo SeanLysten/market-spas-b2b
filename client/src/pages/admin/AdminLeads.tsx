@@ -91,6 +91,11 @@ export default function AdminLeads() {
   const [metaConnecting, setMetaConnecting] = useState(false);
   const [showAccountSelector, setShowAccountSelector] = useState(false);
   const [metaCallbackData, setMetaCallbackData] = useState<any>(null);
+  
+  // Detect OAuth code in URL to auto-switch to campaigns tab
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasOAuthCode = urlParams.has('code');
+  const [activeTab, setActiveTab] = useState(hasOAuthCode ? 'campaigns' : 'leads');
 
   // Récupérer les vrais leads depuis la base de données
   const { data: leadsData, isLoading: leadsLoading, refetch } = trpc.admin.leads.list.useQuery({
@@ -394,7 +399,7 @@ export default function AdminLeads() {
           </Card>
         </div>
 
-        <Tabs defaultValue="leads" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList>
             <TabsTrigger value="leads">
               <Users className="w-4 h-4 mr-2" />
