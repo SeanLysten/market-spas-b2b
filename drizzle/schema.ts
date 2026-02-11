@@ -2032,6 +2032,10 @@ export const partnerCandidates = mysqlTable(
     // Notes
     notes: text("notes"),
 
+    // Source tracking (Meta Lead Ads integration)
+    metaLeadId: int("metaLeadId"), // Reference to leads table if created from a Meta lead
+    source: varchar("source", { length: 50 }).default("manual"), // 'manual', 'meta_lead', 'csv_import'
+
     // Status
     status: candidateStatusEnum.default("non_contacte").notNull(),
 

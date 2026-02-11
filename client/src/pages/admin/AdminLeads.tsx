@@ -39,7 +39,10 @@ import {
   Plus,
   GitCompareArrows,
   User,
-  FileText
+  FileText,
+  Handshake,
+  ShoppingBag,
+  Map
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from "recharts";
 
@@ -71,6 +74,17 @@ interface Lead {
   firstContactAt: string | null;
   assignedAt: string | null;
   estimatedValue: string | null;
+  assignmentReason: string | null;
+}
+
+// Helper: détecte si un lead est un candidat partenaire
+function isPartnerCandidate(lead: Lead): boolean {
+  if (lead.assignmentReason === "partner_candidate") return true;
+  if (!lead.customFields) return false;
+  try {
+    const cf = JSON.parse(lead.customFields);
+    return !!cf.company_name || !!cf["possédez-vous_un_showroom_?_"] || !!cf["travaillez-vous_déjà_dans_la_vente_de_spa_?_"];
+  } catch { return false; }
 }
 
 interface CampaignStats {
@@ -112,6 +126,7 @@ export default function AdminLeads() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [partnerFilter, setPartnerFilter] = useState<string>("all");
+  const [leadTypeFilter, setLeadTypeFilter] = useState<string>("all");
   const [dateRange, setDateRange] = useState<string>("30");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [metaConnecting, setMetaConnecting] = useState(false);
@@ -219,6 +234,7 @@ export default function AdminLeads() {
     firstContactAt: lead.leads?.firstContactAt || lead.firstContactAt,
     assignedAt: lead.leads?.assignedAt || lead.assignedAt || null,
     estimatedValue: lead.leads?.estimatedValue || lead.estimatedValue || null,
+    assignmentReason: lead.leads?.assignmentReason || lead.assignmentReason || null,
   }));
 
   // Meta Ads integration
@@ -426,6 +442,10 @@ export default function AdminLeads() {
     return acc;
   }, {} as Record<string, { total: number; contacted: number; converted: number }>);
 
+  // Séparer les leads par type
+  const partnerCandidateLeads = leads.filter(l => isPartnerCandidate(l));
+  const customerLeads = leads.filter(l => !isPartnerCandidate(l));
+
   // Filtrer les leads
   const filteredLeads = leads.filter(lead => {
     const matchesSearch = searchQuery === "" || 
@@ -435,8 +455,11 @@ export default function AdminLeads() {
     
     const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
     const matchesPartner = partnerFilter === "all" || lead.partnerName === partnerFilter;
+    const matchesType = leadTypeFilter === "all" || 
+      (leadTypeFilter === "customer" && !isPartnerCandidate(lead)) ||
+      (leadTypeFilter === "partner" && isPartnerCandidate(lead));
     
-    return matchesSearch && matchesStatus && matchesPartner;
+    return matchesSearch && matchesStatus && matchesPartner && matchesType;
   });
 
   const formatDate = (dateStr: string) => {
@@ -565,19 +588,35 @@ export default function AdminLeads() {
         </div>
 
         {/* KPIs principaux */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Total Leads</p>
-                  <p className="text-2xl font-bold">{stats.totalLeads}</p>
+                  <p className="text-sm text-gray-500">Leads clients</p>
+                  <p className="text-2xl font-bold">{customerLeads.length}</p>
                   <p className="text-xs text-gray-500 mt-1">
                     {stats.newLeads} nouveau{stats.newLeads > 1 ? 'x' : ''}
                   </p>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-full">
-                  <Target className="w-6 h-6 text-blue-600" />
+                  <ShoppingBag className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-orange-200 bg-orange-50/30">
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-orange-600">Candidats partenaires</p>
+                  <p className="text-2xl font-bold text-orange-700">{partnerCandidateLeads.length}</p>
+                  <p className="text-xs text-orange-500 mt-1">
+                    Devenir Partenaire
+                  </p>
+                </div>
+                <div className="p-3 bg-orange-100 rounded-full">
+                  <Handshake className="w-6 h-6 text-orange-600" />
                 </div>
               </div>
             </CardContent>
@@ -679,6 +718,17 @@ export default function AdminLeads() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <Select value={leadTypeFilter} onValueChange={setLeadTypeFilter}>
+                    <SelectTrigger className="w-full md:w-[180px]">
+                      <Handshake className="w-4 h-4 mr-2" />
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les types</SelectItem>
+                      <SelectItem value="customer">Clients finaux ({customerLeads.length})</SelectItem>
+                      <SelectItem value="partner">Candidats partenaires ({partnerCandidateLeads.length})</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Select value={partnerFilter} onValueChange={setPartnerFilter}>
                     <SelectTrigger className="w-full md:w-[200px]">
                       <Building2 className="w-4 h-4 mr-2" />
@@ -707,6 +757,7 @@ export default function AdminLeads() {
                     <thead className="bg-gray-50 border-b">
                       <tr>
                         <th className="text-left p-4 font-medium text-gray-600">Lead</th>
+                        <th className="text-left p-4 font-medium text-gray-600">Type</th>
                         <th className="text-left p-4 font-medium text-gray-600">Contact</th>
                         <th className="text-left p-4 font-medium text-gray-600">Partenaire</th>
                         <th className="text-left p-4 font-medium text-gray-600">Statut</th>
@@ -730,6 +781,19 @@ export default function AdminLeads() {
                                 </p>
                                 <p className="text-sm text-gray-500">{lead.productInterest}</p>
                               </div>
+                            </td>
+                            <td className="p-4">
+                              {isPartnerCandidate(lead) ? (
+                                <Badge className="bg-orange-100 text-orange-800 text-xs">
+                                  <Handshake className="w-3 h-3 mr-1" />
+                                  Partenaire
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                  <ShoppingBag className="w-3 h-3 mr-1" />
+                                  Client
+                                </Badge>
+                              )}
                             </td>
                             <td className="p-4">
                               <div className="space-y-1">
@@ -1566,14 +1630,37 @@ export default function AdminLeads() {
             return (
             <>
               <DialogHeader>
-                <DialogTitle className="text-xl">
+                <DialogTitle className="text-xl flex items-center gap-2">
                   {selectedLead.firstName} {selectedLead.lastName}
-                  {companyName && <span className="text-base font-normal text-gray-500 ml-2">({companyName})</span>}
+                  {companyName && <span className="text-base font-normal text-gray-500">({companyName})</span>}
+                  {isPartnerCandidate(selectedLead) && (
+                    <Badge className="bg-orange-100 text-orange-800 text-xs ml-2">
+                      <Handshake className="w-3 h-3 mr-1" />
+                      Candidat Partenaire
+                    </Badge>
+                  )}
                 </DialogTitle>
                 <DialogDescription>
                   Lead reçu le {formatDate(selectedLead.receivedAt)} — Source: {selectedLead.source?.replace('_', ' ')}
                 </DialogDescription>
               </DialogHeader>
+
+              {/* Bandeau candidat partenaire */}
+              {isPartnerCandidate(selectedLead) && (
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Handshake className="w-5 h-5 text-orange-600" />
+                    <div>
+                      <p className="text-sm font-medium text-orange-800">Ce lead est un candidat partenaire</p>
+                      <p className="text-xs text-orange-600">Redirigé automatiquement vers la Carte du Réseau</p>
+                    </div>
+                  </div>
+                  <a href="/admin/partner-map" className="text-sm text-orange-700 hover:text-orange-900 font-medium flex items-center gap-1">
+                    <Map className="w-4 h-4" />
+                    Voir sur la carte
+                  </a>
+                </div>
+              )}
 
               <div className="space-y-5 py-4">
                 {/* Section: Coordonnées */}

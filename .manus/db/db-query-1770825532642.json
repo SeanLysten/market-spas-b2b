@@ -1,0 +1,55 @@
+{
+  "query": "SELECT id, firstName, lastName, email, city, postalCode, LEFT(customFields, 500) as cf FROM leads WHERE customFields LIKE '%company_name%' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, firstName, lastName, email, city, postalCode, LEFT(customFields, 500) as cf FROM leads WHERE customFields LIKE '%company_name%' LIMIT 5;",
+  "rows": [
+    {
+      "id": "120002",
+      "firstName": "Ergün",
+      "lastName": "ERCAN",
+      "email": "ergun.ercan558@gmail.com",
+      "city": "bar le duc",
+      "postalCode": "",
+      "cf": "{\"full_name\":\"Ergün ERCAN\",\"city\":\"bar le duc\",\"company_name\":\"rcn\",\"travaillez-vous_dans_un_domaine_similaire_?_\":\"oui_(_piscine_ou_mobilier_de_jardin_)\",\"phone_number\":\"+33768159881\",\"travaillez-vous_déjà_dans_la_vente_de_spa_?_\":\"non\",\"email\":\"ergun.ercan558@gmail.com\"}"
+    },
+    {
+      "id": "120003",
+      "firstName": "Jonathan",
+      "lastName": "Corbel",
+      "email": "j.corbel71@gmail.com",
+      "city": "Varennes-lès-Mâcon",
+      "postalCode": "",
+      "cf": "{\"company_name\":\"Delta Piscines\",\"city\":\"Varennes-lès-Mâcon\",\"travaillez-vous_déjà_dans_la_vente_de_spa_?_\":\"oui\",\"email\":\"j.corbel71@gmail.com\",\"full_name\":\"Jonathan Corbel\",\"vendez-vous_actuellement_une_autre_marque_?\":\"oui\",\"phone_number\":\"+33786624605\",\"possédez-vous_un_showroom_?_\":\"oui\"}"
+    },
+    {
+      "id": "120004",
+      "firstName": "Jeremy",
+      "lastName": "Hercouet",
+      "email": "jerem5613@hotmail.fr",
+      "city": "Derval",
+      "postalCode": "",
+      "cf": "{\"travaillez-vous_déjà_dans_la_vente_de_spa_?_\":\"oui\",\"possédez-vous_un_showroom_?_\":\"oui\",\"vendez-vous_actuellement_une_autre_marque_?\":\"oui\",\"email\":\"jerem5613@hotmail.fr\",\"full_name\":\"Jeremy Hercouet\",\"phone_number\":\"+33607138649\",\"company_name\":\"Derval\",\"city\":\"Derval\"}"
+    },
+    {
+      "id": "120005",
+      "firstName": "Vogt",
+      "lastName": "",
+      "email": "Rs596267@orange.fr",
+      "city": "Lambres-lez-Douai",
+      "postalCode": "",
+      "cf": "{\"email\":\"Rs596267@orange.fr\",\"full_name\":\"Vogt\",\"phone_number\":\"0666259879\",\"company_name\":\"Sas rs\",\"city\":\"Lambres-lez-Douai\",\"travaillez-vous_déjà_dans_la_vente_de_spa_?_\":\"oui\",\"possédez-vous_un_showroom_?_\":\"oui\",\"vendez-vous_actuellement_une_autre_marque_?\":\"oui\"}"
+    },
+    {
+      "id": "120006",
+      "firstName": "Kevin",
+      "lastName": "",
+      "email": "Kevin.robert56@icloud.com",
+      "city": "Allaire",
+      "postalCode": "",
+      "cf": "{\"email\":\"Kevin.robert56@icloud.com\",\"full_name\":\"Kevin\",\"phone_number\":\"+33676631358\",\"company_name\":\"Robert piscine & spa\",\"city\":\"Allaire\",\"travaillez-vous_déjà_dans_la_vente_de_spa_?_\":\"oui\",\"possédez-vous_un_showroom_?_\":\"en_cours_de_projet\",\"vendez-vous_actuellement_une_autre_marque_?\":\"non\"}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\temail\tcity\tpostalCode\tcf\n120002\tErgün\tERCAN\tergun.ercan558@gmail.com\tbar le duc\t\t{\"full_name\":\"Ergün ERCAN\",\"city\":\"bar le duc\",\"company_name\":\"rcn\",\"travaillez-vous_dans_un_domaine_similaire_?_\":\"oui_(_piscine_ou_mobilier_de_jardin_)\",\"phone_number\":\"+33768159881\",\"travaillez-vous_déjà_dans_la_vente_de_spa_?_\":\"non\",\"email\":\"ergun.ercan558@gmail.com\"}\n120003\tJonathan\tCorbel\tj.corbel71@gmail.com\tVarennes-lès-Mâcon\t\t{\"company_name\":\"Delta Piscines\",\"city\":\"Varennes-lès-Mâcon\",\"travaillez-vous_déjà_dans_la_vente_de_spa_?_\":\"oui\",\"email\":\"j.corbel71@gmail.com\",\"full_name\":\"Jonathan Corbel\",\"vendez-vous_actuellement_une_autre_marque_?\":\"oui\",\"phone_number\":\"+33786624605\",\"possédez-vous_un_showroom_?_\":\"oui\"}\n120004\tJeremy\tHercouet\tjerem5613@hotmail.fr\tDerval\t\t{\"travaillez-vous_déjà_dans_la_vente_de_spa_?_\":\"oui\",\"possédez-vous_un_showroom_?_\":\"oui\",\"vendez-vous_actuellement_une_autre_marque_?\":\"oui\",\"email\":\"jerem5613@hotmail.fr\",\"full_name\":\"Jeremy Hercouet\",\"phone_number\":\"+33607138649\",\"company_name\":\"Derval\",\"city\":\"Derval\"}\n120005\tVogt\t\tRs596267@orange.fr\tLambres-lez-Douai\t\t{\"email\":\"Rs596267@orange.fr\",\"full_name\":\"Vogt\",\"phone_number\":\"0666259879\",\"company_name\":\"Sas rs\",\"city\":\"Lambres-lez-Douai\",\"travaillez-vous_déjà_dans_la_vente_de_spa_?_\":\"oui\",\"possédez-vous_un_showroom_?_\":\"oui\",\"vendez-vous_actuellement_une_autre_marque_?\":\"oui\"}\n120006\tKevin\t\tKevin.robert56@icloud.com\tAllaire\t\t{\"email\":\"Kevin.robert56@icloud.com\",\"full_name\":\"Kevin\",\"phone_number\":\"+33676631358\",\"company_name\":\"Robert piscine & spa\",\"city\":\"Allaire\",\"travaillez-vous_déjà_dans_la_vente_de_spa_?_\":\"oui\",\"possédez-vous_un_showroom_?_\":\"en_cours_de_projet\",\"vendez-vous_actuellement_une_autre_marque_?\":\"non\"}\n",
+  "stderr": "",
+  "execution_time_ms": 356
+}

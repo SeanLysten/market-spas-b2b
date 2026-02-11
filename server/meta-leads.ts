@@ -4,12 +4,14 @@
  * Ce module gère :
  * 1. La réception des webhooks Meta Lead Ads
  * 2. La récupération des données complètes du lead via Graph API
- * 3. La distribution automatique des leads aux partenaires par code postal
- * 4. La synchronisation des statistiques de campagnes
+ * 3. La détection automatique des leads "Devenir Partenaire" vs clients finaux
+ * 4. La distribution automatique des leads clients aux partenaires par code postal
+ * 5. La création automatique de candidats partenaires dans la Carte du Réseau
+ * 6. La synchronisation des statistiques de campagnes
  */
 
 import { drizzle } from "drizzle-orm/mysql2";
-import { leads, leadStatusHistory, partnerPostalCodes, metaCampaigns, partners, notifications } from "../drizzle/schema";
+import { leads, leadStatusHistory, partnerPostalCodes, metaCampaigns, partners, notifications, partnerCandidates } from "../drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { notifyAdmins } from "./_core/websocket";
 
@@ -64,6 +66,141 @@ const META_CONFIG = {
   graphApiVersion: "v24.0",
 };
 
+// ============================================
+// PARTNER LEAD DETECTION
+// ============================================
+
+/**
+ * Clés spécifiques aux formulaires "Devenir Partenaire" dans les customFields.
+ * Si un lead contient l'une de ces clés, il est considéré comme un candidat partenaire.
+ */
+const PARTNER_LEAD_INDICATOR_KEYS = [
+  "company_name",
+  "possédez-vous_un_showroom_?_",
+  "travaillez-vous_déjà_dans_la_vente_de_spa_?_",
+  "vendez-vous_actuellement_une_autre_marque_?",
+  "travaillez-vous_dans_un_domaine_similaire_?_",
+];
+
+/**
+ * Détecte si un lead est de type "Devenir Partenaire" en analysant ses customFields.
+ * Retourne true si le lead contient au moins un champ indicateur de candidature partenaire.
+ */
+export function isPartnerLead(fields: Record<string, string>): boolean {
+  const fieldKeys = Object.keys(fields).map(k => k.toLowerCase());
+  return PARTNER_LEAD_INDICATOR_KEYS.some(indicator => 
+    fieldKeys.includes(indicator.toLowerCase())
+  );
+}
+
+/**
+ * Normalise une réponse oui/non depuis les formulaires Meta.
+ * Les réponses peuvent être "oui", "non", "oui_(_piscine_ou_mobilier_de_jardin_)", etc.
+ */
+function normalizeYesNo(value: string | undefined): string {
+  if (!value) return "non";
+  const lower = value.toLowerCase().trim().replace(/_/g, " ");
+  if (lower.startsWith("oui")) return "oui";
+  if (lower.startsWith("non")) return "non";
+  return value;
+}
+
+/**
+ * Calcule le score de priorité (0-8) pour un candidat partenaire.
+ * +2 points pour chaque critère positif :
+ * - Possède un showroom
+ * - Travaille déjà dans la vente de spa
+ * - Vend actuellement une autre marque
+ * - Travaille dans un domaine similaire (piscine, mobilier de jardin)
+ */
+export function calculatePartnerScore(fields: Record<string, string>): {
+  score: number;
+  showroom: string;
+  vendSpa: string;
+  autreMarque: string;
+  domaineSimilaire: string;
+} {
+  const showroom = normalizeYesNo(fields["possédez-vous_un_showroom_?_"]);
+  const vendSpa = normalizeYesNo(fields["travaillez-vous_déjà_dans_la_vente_de_spa_?_"]);
+  const autreMarque = normalizeYesNo(fields["vendez-vous_actuellement_une_autre_marque_?"]);
+  const domaineSimilaire = normalizeYesNo(fields["travaillez-vous_dans_un_domaine_similaire_?_"]);
+
+  let score = 0;
+  if (showroom === "oui") score += 2;
+  if (vendSpa === "oui") score += 2;
+  if (autreMarque === "oui") score += 2;
+  if (domaineSimilaire === "oui") score += 2;
+
+  return { score, showroom, vendSpa, autreMarque, domaineSimilaire };
+}
+
+/**
+ * Crée un candidat partenaire dans la table partner_candidates à partir d'un lead Meta.
+ * Vérifie d'abord qu'un candidat avec le même email n'existe pas déjà.
+ */
+async function createPartnerCandidateFromLead(
+  leadId: number,
+  fields: Record<string, string>
+): Promise<{ id: number; isNew: boolean }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const email = fields.email || "";
+  const companyName = fields.company_name || fields.city || "Non renseigné";
+  const fullName = fields.full_name || "";
+  const city = fields.city || "";
+  const phoneNumber = fields.phone_number || "";
+
+  // Vérifier si un candidat avec le même email existe déjà
+  if (email) {
+    const existing = await db
+      .select()
+      .from(partnerCandidates)
+      .where(eq(partnerCandidates.email, email))
+      .limit(1);
+
+    if (existing.length > 0) {
+      console.log(`[Meta] Candidat partenaire déjà existant pour ${email} (ID: ${existing[0].id})`);
+      // Mettre à jour le metaLeadId si pas encore lié
+      if (!existing[0].metaLeadId) {
+        await db
+          .update(partnerCandidates)
+          .set({ metaLeadId: leadId, source: "meta_lead" })
+          .where(eq(partnerCandidates.id, existing[0].id));
+      }
+      return { id: existing[0].id, isNew: false };
+    }
+  }
+
+  // Calculer le score de priorité
+  const { score, showroom, vendSpa, autreMarque, domaineSimilaire } = calculatePartnerScore(fields);
+
+  // Créer le candidat partenaire
+  const [result] = await db.insert(partnerCandidates).values({
+    companyName,
+    fullName,
+    city,
+    phoneNumber,
+    email,
+    priorityScore: score,
+    showroom,
+    vendSpa,
+    autreMarque,
+    domaineSimilaire,
+    metaLeadId: leadId,
+    source: "meta_lead",
+    notes: `Créé automatiquement depuis un lead Meta Ads (Lead ID: ${leadId})`,
+    status: "non_contacte",
+  });
+
+  console.log(`[Meta] Nouveau candidat partenaire créé (ID: ${result.insertId}, Score: ${score}/8) depuis lead ${leadId}`);
+  return { id: result.insertId, isNew: true };
+}
+
+// ============================================
+// WEBHOOK PROCESSING
+// ============================================
+
 /**
  * Vérifie le webhook Meta (challenge de vérification)
  */
@@ -79,7 +216,10 @@ export function verifyMetaWebhook(
 }
 
 /**
- * Traite un webhook Meta Lead Ads entrant
+ * Traite un webhook Meta Lead Ads entrant.
+ * Détecte automatiquement le type de lead et route vers le bon flux :
+ * - Lead "Devenir Partenaire" → création de candidat dans la Carte du Réseau
+ * - Lead client final → distribution au partenaire approprié
  */
 export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<void> {
   if (payload.object !== "page") {
@@ -102,30 +242,70 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
             // Créer le lead en base de données avec les données complètes
             const lead = await createLeadFromMeta(leadData, change.value);
             
-            // Distribuer le lead au partenaire approprié
-            await distributeLeadToPartner(lead.id);
-            
-            // Notifier les admins en temps réel via WebSocket
-            notifyAdmins("lead:new", {
-              leadId: lead.id,
-              customerName: leadData.field_data?.find((f: any) => f.name === "full_name")?.values?.[0] || "Nouveau lead",
-              city: leadData.field_data?.find((f: any) => f.name === "city")?.values?.[0] || "",
-            });
-            notifyAdmins("leads:refresh", { timestamp: Date.now() });
+            // Parser les champs pour détecter le type de lead
+            const fields: Record<string, string> = {};
+            for (const field of leadData.field_data || []) {
+              fields[field.name.toLowerCase()] = field.values[0] || "";
+            }
+
+            if (isPartnerLead(fields)) {
+              // === LEAD "DEVENIR PARTENAIRE" ===
+              console.log(`[Meta] Lead ${leadgenId} détecté comme candidat partenaire`);
+              
+              // Marquer le lead comme candidat partenaire
+              const db = await getDb();
+              if (db) {
+                await db.update(leads)
+                  .set({ 
+                    status: "QUALIFIED" as any,
+                    notes: "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau",
+                    assignmentReason: "partner_candidate",
+                  })
+                  .where(eq(leads.id, lead.id));
+              }
+              
+              // Créer le candidat partenaire
+              const candidate = await createPartnerCandidateFromLead(lead.id, fields);
+              
+              // Notifier les admins
+              notifyAdmins("lead:new", {
+                leadId: lead.id,
+                customerName: fields.full_name || "Nouveau candidat partenaire",
+                city: fields.city || "",
+                type: "partner_candidate",
+                candidateId: candidate.id,
+              });
+              notifyAdmins("leads:refresh", { timestamp: Date.now() });
+              notifyAdmins("candidates:refresh", { timestamp: Date.now() });
+            } else {
+              // === LEAD CLIENT FINAL ===
+              console.log(`[Meta] Lead ${leadgenId} détecté comme client final`);
+              
+              // Distribuer le lead au partenaire approprié
+              await distributeLeadToPartner(lead.id);
+              
+              // Notifier les admins
+              notifyAdmins("lead:new", {
+                leadId: lead.id,
+                customerName: fields.full_name || leadData.field_data?.find((f: any) => f.name === "full_name")?.values?.[0] || "Nouveau lead",
+                city: fields.city || leadData.field_data?.find((f: any) => f.name === "city")?.values?.[0] || "",
+                type: "customer",
+              });
+              notifyAdmins("leads:refresh", { timestamp: Date.now() });
+            }
           } else {
             // FALLBACK: Créer le lead avec les données minimales du webhook
-            // Cela arrive si le token est expiré ou si l'API Graph est indisponible
             console.log(`[Meta] Création du lead avec données minimales (fallback)`);
             const lead = await createLeadFromWebhookOnly(change.value);
             
             // Tenter la distribution même avec les données minimales
             await distributeLeadToPartner(lead.id);
             
-            // Notifier les admins en temps réel via WebSocket
             notifyAdmins("lead:new", {
               leadId: lead.id,
               customerName: "Nouveau lead (données partielles)",
               city: "",
+              type: "unknown",
             });
             notifyAdmins("leads:refresh", { timestamp: Date.now() });
           }
@@ -138,11 +318,11 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
             const lead = await createLeadFromWebhookOnly(change.value);
             await distributeLeadToPartner(lead.id);
             
-            // Notifier les admins même en dernier recours
             notifyAdmins("lead:new", {
               leadId: lead.id,
               customerName: "Nouveau lead (récupération partielle)",
               city: "",
+              type: "unknown",
             });
             notifyAdmins("leads:refresh", { timestamp: Date.now() });
           } catch (fallbackError) {
@@ -153,6 +333,10 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
     }
   }
 }
+
+// ============================================
+// PAGE TOKEN MANAGEMENT
+// ============================================
 
 // Cache des Page Tokens (clé: pageId, valeur: pageAccessToken)
 let _pageTokensCache: Map<string, string> | null = null;
@@ -197,6 +381,10 @@ async function getPageToken(pageId: string): Promise<string | null> {
     return null;
   }
 }
+
+// ============================================
+// LEAD DATA FETCHING
+// ============================================
 
 /**
  * Récupère les données complètes d'un lead via Graph API
@@ -251,6 +439,10 @@ async function fetchLeadData(leadgenId: string, pageId?: string): Promise<MetaLe
   }
 }
 
+// ============================================
+// LEAD CREATION
+// ============================================
+
 /**
  * Crée un lead en base de données avec les données minimales du webhook uniquement
  * Utilisé comme fallback quand fetchLeadData échoue (token expiré, API indisponible, etc.)
@@ -297,7 +489,6 @@ async function createLeadFromMeta(
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  // Parser les champs du formulaire
   const fields: Record<string, string> = {};
   for (const field of leadData.field_data) {
     fields[field.name.toLowerCase()] = field.values[0] || "";
@@ -342,6 +533,10 @@ async function createLeadFromMeta(
 
   return { id: result.insertId };
 }
+
+// ============================================
+// LEAD DISTRIBUTION
+// ============================================
 
 /**
  * Distribue un lead au partenaire approprié selon le code postal
@@ -401,6 +596,70 @@ export async function distributeLeadToPartner(leadId: number): Promise<void> {
   }
 }
 
+// ============================================
+// RECLASSIFICATION OF EXISTING LEADS
+// ============================================
+
+/**
+ * Reclasse les leads existants qui sont des candidats partenaires.
+ * Parcourt tous les leads avec company_name dans customFields et les ajoute
+ * comme candidats partenaires s'ils ne le sont pas déjà.
+ */
+export async function reclassifyExistingPartnerLeads(): Promise<{
+  processed: number;
+  created: number;
+  alreadyExists: number;
+  errors: number;
+}> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const allLeads = await db
+    .select()
+    .from(leads)
+    .where(sql`customFields LIKE '%company_name%'`);
+
+  let processed = 0;
+  let created = 0;
+  let alreadyExists = 0;
+  let errors = 0;
+
+  for (const lead of allLeads) {
+    processed++;
+    try {
+      const fields: Record<string, string> = JSON.parse(lead.customFields || "{}");
+      
+      if (!isPartnerLead(fields)) continue;
+
+      const result = await createPartnerCandidateFromLead(lead.id, fields);
+      
+      if (result.isNew) {
+        created++;
+      } else {
+        alreadyExists++;
+      }
+
+      // Marquer le lead comme candidat partenaire
+      await db.update(leads)
+        .set({
+          notes: "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau",
+          assignmentReason: "partner_candidate",
+        })
+        .where(eq(leads.id, lead.id));
+
+    } catch (error) {
+      errors++;
+      console.error(`[Meta] Erreur reclassification lead ${lead.id}:`, error);
+    }
+  }
+
+  return { processed, created, alreadyExists, errors };
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
 /**
  * Notifie un partenaire d'un nouveau lead
  */
@@ -424,6 +683,10 @@ async function notifyPartnerNewLead(partnerId: number, lead: any): Promise<void>
     });
   }
 }
+
+// ============================================
+// LEAD STATUS MANAGEMENT
+// ============================================
 
 /**
  * Met à jour le statut d'un lead
@@ -478,6 +741,10 @@ export async function updateLeadStatus(
   });
 }
 
+// ============================================
+// STATISTICS
+// ============================================
+
 /**
  * Récupère les statistiques de leads pour un partenaire
  */
@@ -515,6 +782,7 @@ export async function getAdminLeadStats() {
       contacted: sql<number>`SUM(CASE WHEN status IN ('CONTACTED', 'QUALIFIED', 'MEETING_SCHEDULED', 'QUOTE_SENT', 'NEGOTIATION', 'CONVERTED') THEN 1 ELSE 0 END)`,
       converted: sql<number>`SUM(CASE WHEN status = 'CONVERTED' THEN 1 ELSE 0 END)`,
       conversionRate: sql<number>`ROUND(SUM(CASE WHEN status = 'CONVERTED' THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0), 2)`,
+      partnerCandidates: sql<number>`SUM(CASE WHEN assignmentReason = 'partner_candidate' THEN 1 ELSE 0 END)`,
     })
     .from(leads);
 
@@ -544,6 +812,10 @@ export async function getLeadsByPartner() {
 
   return result;
 }
+
+// ============================================
+// CAMPAIGN SYNC
+// ============================================
 
 /**
  * Synchronise les statistiques d'une campagne Meta

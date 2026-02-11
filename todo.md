@@ -1506,3 +1506,15 @@
 - [x] Améliorer la vue détaillée du lead avec toutes les informations
 
 - [x] Déplacer le champ post_code des réponses au formulaire vers la section Localisation comme code postal
+
+## Redirection automatique des leads partenaires vers la Carte du Réseau
+- [x] Détecter automatiquement les leads "Devenir Partenaire" (présence de company_name, questions showroom/vente spa)
+- [x] Rediriger ces leads vers la Carte du Réseau comme candidats partenaires (pas dans la répartition leads clients)
+- [x] Ajouter automatiquement le candidat au tableau de la Carte du Réseau avec calcul du score
+- [x] Afficher le candidat sur la carte automatiquement
+- [x] Reclasser les leads partenaires existants déjà importés
+- [x] Ajouter filtre Type (Client/Partenaire) dans le dashboard admin leads
+- [x] Ajouter badge Type dans le tableau des leads
+- [x] Ajouter bandeau candidat partenaire dans le détail du lead avec lien vers la Carte du Réseau
+- [x] Ajouter KPI séparé pour les candidats partenaires dans le dashboard
+- [x] Tests unitaires pour isPartnerLead et calculatePartnerScore (19 tests passés)

@@ -13,6 +13,7 @@ import { notifyPartner, notifyAdmins } from "./_core/websocket";
 import { sendInvitationEmail } from "./email";
 import * as metaOAuth from "./meta-oauth";
 import * as candidatesDb from "./candidates-db";
+import { reclassifyExistingPartnerLeads } from "./meta-leads";
 
 export const appRouter = router({
   system: systemRouter,
@@ -2047,6 +2048,11 @@ export const appRouter = router({
         .input(z.object({ candidateId: z.number(), visited: z.boolean() }))
         .mutation(async ({ input }) => {
           return await candidatesDb.toggleVisited(input.candidateId, input.visited);
+        }),
+
+      reclassifyPartnerLeads: adminProcedure
+        .mutation(async () => {
+          return await reclassifyExistingPartnerLeads();
         }),
 
       importCSV: adminProcedure
