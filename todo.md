@@ -1498,3 +1498,9 @@
 - [x] Vérifier que tous les anciens leads apparaissent dans le dashboard (432 leads total)
 - [x] Vérifier que les futurs leads seront récupérés automatiquement avec données complètes
 - [x] Implémenter le système multi-pages avec Page Tokens dynamiques via me/accounts
+
+## Affichage complet des coordonnées et questions-réponses Meta dans les leads
+- [x] Afficher toutes les coordonnées du lead (adresse, ville, code postal, pays)
+- [x] Afficher les questions-réponses du formulaire Meta (customFields)
+- [x] Vérifier que les données importées contiennent bien les coordonnées
+- [x] Améliorer la vue détaillée du lead avec toutes les informations

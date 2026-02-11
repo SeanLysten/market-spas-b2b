@@ -37,7 +37,9 @@ import {
   ArrowDownRight,
   Minus,
   Plus,
-  GitCompareArrows
+  GitCompareArrows,
+  User,
+  FileText
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from "recharts";
 
@@ -48,17 +50,27 @@ interface Lead {
   lastName: string | null;
   email: string | null;
   phone: string | null;
+  address: string | null;
   city: string | null;
   postalCode: string | null;
+  country: string | null;
   status: string;
   source: string;
   partnerId: number | null;
   partnerName?: string;
   productInterest: string | null;
   budget: string | null;
+  timeline: string | null;
+  message: string | null;
+  notes: string | null;
+  customFields: string | null;
+  metaPageId: string | null;
+  metaFormId: string | null;
   contactAttempts: number;
   receivedAt: string;
   firstContactAt: string | null;
+  assignedAt: string | null;
+  estimatedValue: string | null;
 }
 
 interface CampaignStats {
@@ -186,17 +198,27 @@ export default function AdminLeads() {
     lastName: lead.leads?.lastName || lead.lastName,
     email: lead.leads?.email || lead.email,
     phone: lead.leads?.phone || lead.phone,
+    address: lead.leads?.address || lead.address || null,
     city: lead.leads?.city || lead.city,
     postalCode: lead.leads?.postalCode || lead.postalCode,
+    country: lead.leads?.country || lead.country || null,
     status: lead.leads?.status || lead.status,
     source: lead.leads?.source || lead.source,
     partnerId: lead.leads?.assignedPartnerId || lead.assignedPartnerId,
     partnerName: lead.partners?.companyName || null,
     productInterest: lead.leads?.productInterest || lead.productInterest,
     budget: lead.leads?.budget || lead.budget,
+    timeline: lead.leads?.timeline || lead.timeline || null,
+    message: lead.leads?.message || lead.message || null,
+    notes: lead.leads?.notes || lead.notes || null,
+    customFields: lead.leads?.customFields || lead.customFields || null,
+    metaPageId: lead.leads?.metaPageId || lead.metaPageId || null,
+    metaFormId: lead.leads?.metaFormId || lead.metaFormId || null,
     contactAttempts: lead.leads?.contactAttempts || lead.contactAttempts || 0,
     receivedAt: lead.leads?.receivedAt || lead.receivedAt,
     firstContactAt: lead.leads?.firstContactAt || lead.firstContactAt,
+    assignedAt: lead.leads?.assignedAt || lead.assignedAt || null,
+    estimatedValue: lead.leads?.estimatedValue || lead.estimatedValue || null,
   }));
 
   // Meta Ads integration
@@ -1496,72 +1518,231 @@ export default function AdminLeads() {
 
       {/* Modal détail lead */}
       <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
-        <DialogContent className="max-w-lg">
-          {selectedLead && (
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          {selectedLead && (() => {
+            // Parse customFields JSON
+            let parsedCustomFields: Record<string, string> = {};
+            try {
+              if (selectedLead.customFields) {
+                parsedCustomFields = JSON.parse(selectedLead.customFields);
+              }
+            } catch { /* ignore parse errors */ }
+
+            // Helper to format custom field keys into readable labels
+            const formatFieldLabel = (key: string): string => {
+              return key
+                .replace(/_/g, ' ')
+                .replace(/\?/g, '?')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .replace(/^./, c => c.toUpperCase());
+            };
+
+            // Helper to format custom field values
+            const formatFieldValue = (value: string): string => {
+              return value
+                .replace(/_/g, ' ')
+                .replace(/\(/g, '(')
+                .replace(/\)/g, ')')
+                .trim()
+                .replace(/^./, c => c.toUpperCase());
+            };
+
+            // Separate known fields from Q&A fields
+            const knownKeys = ['full_name', 'email', 'phone_number', 'city', 'zip', 'postal_code', 'postcode', 'street_address', 'state', 'country'];
+            const qaFields = Object.entries(parsedCustomFields).filter(
+              ([key]) => !knownKeys.includes(key.toLowerCase())
+            );
+
+            // Extract company name from customFields if available
+            const companyName = parsedCustomFields.company_name || parsedCustomFields.company || parsedCustomFields.entreprise || null;
+
+            // Build full address from customFields if not in main fields
+            const displayCity = selectedLead.city || parsedCustomFields.city || null;
+            const displayPostalCode = selectedLead.postalCode || parsedCustomFields.zip || parsedCustomFields.postal_code || parsedCustomFields.postcode || null;
+            const displayAddress = selectedLead.address || parsedCustomFields.street_address || null;
+            const displayCountry = selectedLead.country || parsedCustomFields.country || null;
+
+            return (
             <>
               <DialogHeader>
-                <DialogTitle>
+                <DialogTitle className="text-xl">
                   {selectedLead.firstName} {selectedLead.lastName}
+                  {companyName && <span className="text-base font-normal text-gray-500 ml-2">({companyName})</span>}
                 </DialogTitle>
                 <DialogDescription>
-                  Lead reçu le {formatDate(selectedLead.receivedAt)}
+                  Lead reçu le {formatDate(selectedLead.receivedAt)} — Source: {selectedLead.source?.replace('_', ' ')}
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p className="font-medium">{selectedLead.email || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Téléphone</p>
-                    <p className="font-medium">{selectedLead.phone || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Localisation</p>
-                    <p className="font-medium">{selectedLead.postalCode} {selectedLead.city}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Partenaire assigné</p>
-                    <p className="font-medium">{selectedLead.partnerName || "Non assigné"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Produit d'intérêt</p>
-                    <p className="font-medium">{selectedLead.productInterest || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Budget</p>
-                    <p className="font-medium">{selectedLead.budget || "-"}</p>
+
+              <div className="space-y-5 py-4">
+                {/* Section: Coordonnées */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <User className="w-4 h-4" /> Coordonnées
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 bg-gray-50 rounded-lg p-4">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">Email</p>
+                      <p className="font-medium text-sm">{selectedLead.email || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">Téléphone</p>
+                      <p className="font-medium text-sm">{selectedLead.phone || "-"}</p>
+                    </div>
+                    {companyName && (
+                      <div className="col-span-2">
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Entreprise</p>
+                        <p className="font-medium text-sm">{companyName}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
+
+                {/* Section: Localisation */}
+                {(displayAddress || displayCity || displayPostalCode || displayCountry) && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <MapPin className="w-4 h-4" /> Localisation
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3 bg-gray-50 rounded-lg p-4">
+                      {displayAddress && (
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Adresse</p>
+                          <p className="font-medium text-sm">{displayAddress}</p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Ville</p>
+                        <p className="font-medium text-sm">{displayCity || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Code postal</p>
+                        <p className="font-medium text-sm">{displayPostalCode || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Pays</p>
+                        <p className="font-medium text-sm">{displayCountry || "-"}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Section: Détails du lead */}
                 <div>
-                  <p className="text-sm text-gray-500 mb-2">Statut actuel</p>
-                  <Badge className={LEAD_STATUSES[selectedLead.status as keyof typeof LEAD_STATUSES]?.color}>
-                    {LEAD_STATUSES[selectedLead.status as keyof typeof LEAD_STATUSES]?.label}
-                  </Badge>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <Target className="w-4 h-4" /> Détails du lead
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 bg-gray-50 rounded-lg p-4">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">Statut</p>
+                      <Badge className={LEAD_STATUSES[selectedLead.status as keyof typeof LEAD_STATUSES]?.color + " mt-1"}>
+                        {LEAD_STATUSES[selectedLead.status as keyof typeof LEAD_STATUSES]?.label}
+                      </Badge>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">Partenaire assigné</p>
+                      <p className="font-medium text-sm">{selectedLead.partnerName || "Non assigné"}</p>
+                    </div>
+                    {selectedLead.productInterest && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Produit d'intérêt</p>
+                        <p className="font-medium text-sm">{selectedLead.productInterest}</p>
+                      </div>
+                    )}
+                    {selectedLead.budget && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Budget</p>
+                        <p className="font-medium text-sm">{selectedLead.budget}</p>
+                      </div>
+                    )}
+                    {selectedLead.timeline && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Délai</p>
+                        <p className="font-medium text-sm">{selectedLead.timeline}</p>
+                      </div>
+                    )}
+                    {selectedLead.estimatedValue && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Valeur estimée</p>
+                        <p className="font-medium text-sm">{parseFloat(selectedLead.estimatedValue).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Section: Questions-Réponses du formulaire Meta */}
+                {qaFields.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <FileText className="w-4 h-4" /> Réponses au formulaire
+                    </h4>
+                    <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+                      {qaFields.map(([key, value]) => (
+                        <div key={key} className="border-b border-blue-100 last:border-0 pb-2 last:pb-0">
+                          <p className="text-xs text-blue-600 font-medium uppercase tracking-wide">{formatFieldLabel(key)}</p>
+                          <p className="font-medium text-sm text-gray-800 mt-0.5">{formatFieldValue(String(value))}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section: Message / Notes */}
+                {(selectedLead.message || selectedLead.notes) && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <FileText className="w-4 h-4" /> Notes
+                    </h4>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                      {selectedLead.message && (
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Message</p>
+                          <p className="text-sm mt-1">{selectedLead.message}</p>
+                        </div>
+                      )}
+                      {selectedLead.notes && (
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Notes internes</p>
+                          <p className="text-sm mt-1">{selectedLead.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section: Suivi */}
                 <div>
-                  <p className="text-sm text-gray-500 mb-2">Suivi du partenaire</p>
-                  {selectedLead.firstContactAt ? (
-                    <div className="flex items-center gap-2 text-green-600">
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Premier contact: {formatDate(selectedLead.firstContactAt)}</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-orange-600">
-                      <AlertCircle className="w-4 h-4" />
-                      <span>Pas encore contacté ({selectedLead.contactAttempts} tentatives)</span>
-                    </div>
-                  )}
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <Clock className="w-4 h-4" /> Suivi
+                  </h4>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    {selectedLead.firstContactAt ? (
+                      <div className="flex items-center gap-2 text-green-600">
+                        <CheckCircle className="w-4 h-4" />
+                        <span className="text-sm">Premier contact: {formatDate(selectedLead.firstContactAt)}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-orange-600">
+                        <AlertCircle className="w-4 h-4" />
+                        <span className="text-sm">Pas encore contacté ({selectedLead.contactAttempts} tentatives)</span>
+                      </div>
+                    )}
+                    {selectedLead.assignedAt && (
+                      <p className="text-xs text-gray-500 mt-2">Assigné le {formatDate(selectedLead.assignedAt)}</p>
+                    )}
+                  </div>
                 </div>
               </div>
+
               <DialogFooter>
                 <Button variant="outline" onClick={() => setSelectedLead(null)}>
                   Fermer
                 </Button>
               </DialogFooter>
             </>
-          )}
+          );
+          })()}
         </DialogContent>
       </Dialog>
     </AdminLayout>
