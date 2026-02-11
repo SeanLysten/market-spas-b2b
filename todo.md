@@ -1504,3 +1504,5 @@
 - [x] Afficher les questions-réponses du formulaire Meta (customFields)
 - [x] Vérifier que les données importées contiennent bien les coordonnées
 - [x] Améliorer la vue détaillée du lead avec toutes les informations
+
+- [x] Déplacer le champ post_code des réponses au formulaire vers la section Localisation comme code postal

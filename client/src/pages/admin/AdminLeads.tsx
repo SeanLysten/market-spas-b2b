@@ -1549,7 +1549,7 @@ export default function AdminLeads() {
             };
 
             // Separate known fields from Q&A fields
-            const knownKeys = ['full_name', 'email', 'phone_number', 'city', 'zip', 'postal_code', 'postcode', 'street_address', 'state', 'country'];
+            const knownKeys = ['full_name', 'email', 'phone_number', 'city', 'zip', 'postal_code', 'postcode', 'post_code', 'street_address', 'state', 'country'];
             const qaFields = Object.entries(parsedCustomFields).filter(
               ([key]) => !knownKeys.includes(key.toLowerCase())
             );
@@ -1559,7 +1559,7 @@ export default function AdminLeads() {
 
             // Build full address from customFields if not in main fields
             const displayCity = selectedLead.city || parsedCustomFields.city || null;
-            const displayPostalCode = selectedLead.postalCode || parsedCustomFields.zip || parsedCustomFields.postal_code || parsedCustomFields.postcode || null;
+            const displayPostalCode = selectedLead.postalCode || parsedCustomFields.zip || parsedCustomFields.postal_code || parsedCustomFields.postcode || parsedCustomFields.post_code || null;
             const displayAddress = selectedLead.address || parsedCustomFields.street_address || null;
             const displayCountry = selectedLead.country || parsedCustomFields.country || null;
 
