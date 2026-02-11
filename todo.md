@@ -1518,3 +1518,9 @@
 - [x] Ajouter bandeau candidat partenaire dans le détail du lead avec lien vers la Carte du Réseau
 - [x] Ajouter KPI séparé pour les candidats partenaires dans le dashboard
 - [x] Tests unitaires pour isPartnerLead et calculatePartnerScore (19 tests passés)
+
+## Reclassification des leads partenaires existants
+- [x] Analyser les doublons dans partner_candidates (même email)
+- [x] Supprimer les doublons dans partner_candidates (4 doublons supprimés)
+- [x] Exécuter la reclassification des 65 leads partenaires existants vers la Carte du Réseau
+- [x] Vérifier le nombre de candidats créés vs déjà existants (60 liés, 5 créés, 0 erreurs)

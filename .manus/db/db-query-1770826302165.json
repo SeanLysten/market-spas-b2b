@@ -1,0 +1,22 @@
+{
+  "query": "SELECT email, COUNT(*) as cnt, GROUP_CONCAT(id ORDER BY id) as ids, GROUP_CONCAT(companyName ORDER BY id SEPARATOR ' | ') as companies\nFROM partner_candidates \nWHERE email != ''\nGROUP BY email \nHAVING COUNT(*) > 1\nORDER BY cnt DESC\nLIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT email, COUNT(*) as cnt, GROUP_CONCAT(id ORDER BY id) as ids, GROUP_CONCAT(companyName ORDER BY id SEPARATOR ' | ') as companies\nFROM partner_candidates \nWHERE email != ''\nGROUP BY email \nHAVING COUNT(*) > 1\nORDER BY cnt DESC\nLIMIT 30;",
+  "rows": [
+    {
+      "email": "non-renseigne@market-spas.fr",
+      "cnt": "4",
+      "ids": "65,66,67,68",
+      "companies": "Market sps Caen Fabelec | Market Spa Rantigny par Bluemoonspas | Market Spa Par Projet d'eau | Market Spas Palmones spain"
+    },
+    {
+      "email": "info@marketspas.com",
+      "cnt": "2",
+      "ids": "60,62",
+      "companies": "Market Spas par Tahiti Piscine | Market Spa Bruxelles"
+    }
+  ],
+  "messages": [],
+  "stdout": "email\tcnt\tids\tcompanies\nnon-renseigne@market-spas.fr\t4\t65,66,67,68\tMarket sps Caen Fabelec | Market Spa Rantigny par Bluemoonspas | Market Spa Par Projet d'eau | Market Spas Palmones spain\ninfo@marketspas.com\t2\t60,62\tMarket Spas par Tahiti Piscine | Market Spa Bruxelles\n",
+  "stderr": "",
+  "execution_time_ms": 479
+}
