@@ -1435,3 +1435,9 @@
 - [x] Stats cards en haut : Partenaires actifs, En attente, Leads, Candidats, Haute priorité
 - [x] Boutons Import CSV et Ajouter un candidat
 - [x] Tests unitaires (31 tests passent)
+
+## Import contacts JSON dans la carte du réseau
+- [x] Analyser le fichier JSON des contacts (69 contacts, format CSV)
+- [x] Mapper les champs JSON vers la table partner_candidates
+- [x] Importer les 69 contacts en base de données (51 non contactés, 7 en cours, 10 validés, 1 archivé)
+- [x] Vérifier l'affichage sur la carte du réseau (stats, tableau, statistiques OK)
