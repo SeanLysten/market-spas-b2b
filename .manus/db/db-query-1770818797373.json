@@ -1,0 +1,120 @@
+{
+  "query": "SELECT id, firstName, lastName, email, status, source, metaLeadgenId, metaPageId, receivedAt FROM leads ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, firstName, lastName, email, status, source, metaLeadgenId, metaPageId, receivedAt FROM leads ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "120001",
+      "firstName": "",
+      "lastName": "",
+      "email": "",
+      "status": "NEW",
+      "source": "META_ADS",
+      "metaLeadgenId": "TEST_LEAD_002",
+      "metaPageId": "1656566307905615",
+      "receivedAt": "2026-02-11 14:05:13"
+    },
+    {
+      "id": "90001",
+      "firstName": "Test",
+      "lastName": "Auto Assign",
+      "email": "test-auto-assign@example.com",
+      "status": "ASSIGNED",
+      "source": "META_ADS",
+      "metaLeadgenId": "NULL",
+      "metaPageId": "NULL",
+      "receivedAt": "2026-01-09 16:25:08"
+    },
+    {
+      "id": "60001",
+      "firstName": "Camille Dubois",
+      "lastName": "NULL",
+      "email": "camille.serge.dubois@gmail.com",
+      "status": "ASSIGNED",
+      "source": "META_ADS",
+      "metaLeadgenId": "NULL",
+      "metaPageId": "NULL",
+      "receivedAt": "2026-01-09 15:45:36"
+    },
+    {
+      "id": "30009",
+      "firstName": "Elodie Lslx",
+      "lastName": "NULL",
+      "email": "elonails88@live.be",
+      "status": "ASSIGNED",
+      "source": "META_ADS",
+      "metaLeadgenId": "NULL",
+      "metaPageId": "NULL",
+      "receivedAt": "2026-01-09 15:29:20"
+    },
+    {
+      "id": "30008",
+      "firstName": "Fleur",
+      "lastName": "NULL",
+      "email": "jessgrace971@gmail.com",
+      "status": "ASSIGNED",
+      "source": "META_ADS",
+      "metaLeadgenId": "NULL",
+      "metaPageId": "NULL",
+      "receivedAt": "2026-01-09 15:29:20"
+    },
+    {
+      "id": "30007",
+      "firstName": "Verhaegen Sandra",
+      "lastName": "NULL",
+      "email": "sandraverhaegen2008@hotmail.com",
+      "status": "ASSIGNED",
+      "source": "META_ADS",
+      "metaLeadgenId": "NULL",
+      "metaPageId": "NULL",
+      "receivedAt": "2026-01-09 15:29:20"
+    },
+    {
+      "id": "30006",
+      "firstName": "Eric Senger",
+      "lastName": "NULL",
+      "email": "ecetnesenger@gmail.com",
+      "status": "ASSIGNED",
+      "source": "META_ADS",
+      "metaLeadgenId": "NULL",
+      "metaPageId": "NULL",
+      "receivedAt": "2026-01-09 15:29:19"
+    },
+    {
+      "id": "30005",
+      "firstName": "Cengiz Kurum",
+      "lastName": "NULL",
+      "email": "Maxilettrage@hormail.com",
+      "status": "ASSIGNED",
+      "source": "META_ADS",
+      "metaLeadgenId": "NULL",
+      "metaPageId": "NULL",
+      "receivedAt": "2026-01-09 15:29:19"
+    },
+    {
+      "id": "30004",
+      "firstName": "Fvv-architecte van Vyve",
+      "lastName": "NULL",
+      "email": "fvv.architecte@icloud.com",
+      "status": "ASSIGNED",
+      "source": "META_ADS",
+      "metaLeadgenId": "NULL",
+      "metaPageId": "NULL",
+      "receivedAt": "2026-01-09 15:29:19"
+    },
+    {
+      "id": "30003",
+      "firstName": "Dumitru Roman",
+      "lastName": "NULL",
+      "email": "Romandumitru75@gmail.com",
+      "status": "ASSIGNED",
+      "source": "META_ADS",
+      "metaLeadgenId": "NULL",
+      "metaPageId": "NULL",
+      "receivedAt": "2026-01-09 15:29:19"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\temail\tstatus\tsource\tmetaLeadgenId\tmetaPageId\treceivedAt\n120001\t\t\t\tNEW\tMETA_ADS\tTEST_LEAD_002\t1656566307905615\t2026-02-11 14:05:13\n90001\tTest\tAuto Assign\ttest-auto-assign@example.com\tASSIGNED\tMETA_ADS\tNULL\tNULL\t2026-01-09 16:25:08\n60001\tCamille Dubois\tNULL\tcamille.serge.dubois@gmail.com\tASSIGNED\tMETA_ADS\tNULL\tNULL\t2026-01-09 15:45:36\n30009\tElodie Lslx\tNULL\telonails88@live.be\tASSIGNED\tMETA_ADS\tNULL\tNULL\t2026-01-09 15:29:20\n30008\tFleur\tNULL\tjessgrace971@gmail.com\tASSIGNED\tMETA_ADS\tNULL\tNULL\t2026-01-09 15:29:20\n30007\tVerhaegen Sandra\tNULL\tsandraverhaegen2008@hotmail.com\tASSIGNED\tMETA_ADS\tNULL\tNULL\t2026-01-09 15:29:20\n30006\tEric Senger\tNULL\tecetnesenger@gmail.com\tASSIGNED\tMETA_ADS\tNULL\tNULL\t2026-01-09 15:29:19\n30005\tCengiz Kurum\tNULL\tMaxilettrage@hormail.com\tASSIGNED\tMETA_ADS\tNULL\tNULL\t2026-01-09 15:29:19\n30004\tFvv-architecte van Vyve\tNULL\tfvv.architecte@icloud.com\tASSIGNED\tMETA_ADS\tNULL\tNULL\t2026-01-09 15:29:19\n30003\tDumitru Roman\tNULL\tRomandumitru75@gmail.com\tASSIGNED\tMETA_ADS\tNULL\tNULL\t2026-01-09 15:29:19\n",
+  "stderr": "",
+  "execution_time_ms": 442
+}

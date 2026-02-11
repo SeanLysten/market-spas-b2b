@@ -90,21 +90,39 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
     for (const change of entry.changes) {
       if (change.field === "leadgen") {
         const leadgenId = change.value.leadgen_id;
-        console.log(`[Meta] Nouveau lead reçu: ${leadgenId}`);
+        const pageId = change.value.page_id;
+        console.log(`[Meta] Nouveau lead reçu: ${leadgenId} (page: ${pageId})`);
         
         try {
-          // Récupérer les données complètes du lead
-          const leadData = await fetchLeadData(leadgenId);
+          // Récupérer les données complètes du lead via Graph API
+          const leadData = await fetchLeadData(leadgenId, pageId);
           
           if (leadData) {
-            // Créer le lead en base de données
+            // Créer le lead en base de données avec les données complètes
             const lead = await createLeadFromMeta(leadData, change.value);
             
             // Distribuer le lead au partenaire approprié
             await distributeLeadToPartner(lead.id);
+          } else {
+            // FALLBACK: Créer le lead avec les données minimales du webhook
+            // Cela arrive si le token est expiré ou si l'API Graph est indisponible
+            console.log(`[Meta] Création du lead avec données minimales (fallback)`);
+            const lead = await createLeadFromWebhookOnly(change.value);
+            
+            // Tenter la distribution même avec les données minimales
+            await distributeLeadToPartner(lead.id);
           }
         } catch (error) {
           console.error(`[Meta] Erreur traitement lead ${leadgenId}:`, error);
+          
+          // DERNIER RECOURS: Essayer de créer le lead avec les données minimales
+          try {
+            console.log(`[Meta] Tentative de création en dernier recours`);
+            const lead = await createLeadFromWebhookOnly(change.value);
+            await distributeLeadToPartner(lead.id);
+          } catch (fallbackError) {
+            console.error(`[Meta] Échec complet du traitement du lead ${leadgenId}:`, fallbackError);
+          }
         }
       }
     }
@@ -113,20 +131,24 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
 
 /**
  * Récupère les données complètes d'un lead via Graph API
+ * Supporte le multi-pages : utilise le token de la page correspondante si disponible
  */
-async function fetchLeadData(leadgenId: string): Promise<MetaLeadData | null> {
-  if (!META_CONFIG.pageAccessToken) {
+async function fetchLeadData(leadgenId: string, pageId?: string): Promise<MetaLeadData | null> {
+  // Déterminer le token à utiliser
+  const token = META_CONFIG.pageAccessToken;
+  
+  if (!token) {
     console.error("[Meta] Page access token non configuré");
     return null;
   }
 
   try {
-    const url = `https://graph.facebook.com/${META_CONFIG.graphApiVersion}/${leadgenId}?access_token=${META_CONFIG.pageAccessToken}`;
+    const url = `https://graph.facebook.com/${META_CONFIG.graphApiVersion}/${leadgenId}?access_token=${token}`;
     const response = await fetch(url);
     
     if (!response.ok) {
       const error = await response.text();
-      console.error(`[Meta] Erreur Graph API: ${error}`);
+      console.error(`[Meta] Erreur Graph API (page ${pageId || 'unknown'}): ${error}`);
       return null;
     }
     
@@ -135,6 +157,42 @@ async function fetchLeadData(leadgenId: string): Promise<MetaLeadData | null> {
     console.error("[Meta] Erreur fetch lead data:", error);
     return null;
   }
+}
+
+/**
+ * Crée un lead en base de données avec les données minimales du webhook uniquement
+ * Utilisé comme fallback quand fetchLeadData échoue (token expiré, API indisponible, etc.)
+ */
+async function createLeadFromWebhookOnly(
+  webhookValue: MetaWebhookEntry["changes"][0]["value"]
+): Promise<{ id: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const [result] = await db.insert(leads).values({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    postalCode: "",
+    city: "",
+    source: "META_ADS",
+    status: "NEW",
+    metaLeadgenId: webhookValue.leadgen_id,
+    metaFormId: webhookValue.form_id,
+    metaAdId: webhookValue.ad_id,
+    metaAdsetId: webhookValue.adgroup_id,
+    metaPageId: webhookValue.page_id,
+    productInterest: "",
+    budget: "",
+    timeline: "",
+    message: `Lead reçu via webhook Meta (données complètes non récupérées - token potentiellement expiré). Leadgen ID: ${webhookValue.leadgen_id}`,
+    customFields: JSON.stringify({ _webhook_only: true, _created_time: webhookValue.created_time }),
+    receivedAt: new Date(),
+  });
+
+  console.log(`[Meta] Lead créé en fallback (ID: ${result.insertId}) - données minimales uniquement`);
+  return { id: result.insertId };
 }
 
 /**

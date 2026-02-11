@@ -1468,3 +1468,16 @@
 - [x] Correction : filtrage par longueur de code postal + country hint dans findRegionByPostalCode
 - [x] Country hint propagé dans meta-leads.ts, webhooks.ts, routers.ts
 - [x] 16 tests unitaires pour la logique de distribution (tous passent)
+
+## Intégration directe Meta Lead Ads (sans Make)
+- [ ] Analyser l'intégration Meta existante (meta-oauth.ts, meta-leads.ts)
+- [ ] Créer/adapter le endpoint webhook pour recevoir les leads Meta Leadgen directement
+- [ ] Implémenter la vérification du webhook (challenge verify_token)
+- [ ] Implémenter la récupération des données du lead via l'API Meta Leadgen
+- [ ] Configurer l'abonnement webhook leadgen sur Meta Business
+- [ ] Tester la réception d'un lead de test
+- [ ] Écrire les tests unitaires
+
+- [x] Vérifier que le flux webhook Meta → base de données → dashboard admin fonctionne
+- [x] Tester avec un payload webhook simulé
+- [x] Vérifier l affichage des leads dans la page admin Tous les leads
