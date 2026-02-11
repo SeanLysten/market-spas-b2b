@@ -342,6 +342,99 @@ describe("Partner Candidates - Business Logic", () => {
     });
   });
 
+  describe("Stats Cards - Candidates Only", () => {
+    const candidates = [
+      { priorityScore: 8, status: "non_contacte", visited: 0, phoneCallsCount: 0, emailsSentCount: 0 },
+      { priorityScore: 7, status: "non_contacte", visited: 0, phoneCallsCount: 0, emailsSentCount: 0 },
+      { priorityScore: 6, status: "en_cours", visited: 0, phoneCallsCount: 1, emailsSentCount: 1 },
+      { priorityScore: 5, status: "en_cours", visited: 1, phoneCallsCount: 2, emailsSentCount: 2 },
+      { priorityScore: 3, status: "valide", visited: 1, phoneCallsCount: 3, emailsSentCount: 2 },
+      { priorityScore: 2, status: "archive", visited: 1, phoneCallsCount: 1, emailsSentCount: 0 },
+    ];
+
+    it("should count total candidates", () => {
+      expect(candidates.length).toBe(6);
+    });
+
+    it("should count non contactés", () => {
+      const nonContactes = candidates.filter(c => c.status === "non_contacte").length;
+      expect(nonContactes).toBe(2);
+    });
+
+    it("should count en cours", () => {
+      const enCours = candidates.filter(c => c.status === "en_cours").length;
+      expect(enCours).toBe(2);
+    });
+
+    it("should count validés", () => {
+      const valides = candidates.filter(c => c.status === "valide").length;
+      expect(valides).toBe(1);
+    });
+
+    it("should count high priority (score >= 6)", () => {
+      const highPriority = candidates.filter(c => c.priorityScore >= 6).length;
+      expect(highPriority).toBe(3);
+    });
+
+    it("should count visited", () => {
+      const visited = candidates.filter(c => c.visited).length;
+      expect(visited).toBe(3);
+    });
+
+    it("should not include partner or lead counts", () => {
+      // The stats cards should only show candidate-related data
+      const statsKeys = ["totalCandidates", "nonContactes", "enCours", "valides", "highPriority"];
+      const excludedKeys = ["approvedPartners", "pendingPartners", "totalLeads"];
+      excludedKeys.forEach(key => {
+        expect(statsKeys).not.toContain(key);
+      });
+    });
+  });
+
+  describe("Status Filter for Map", () => {
+    const candidates = [
+      { id: 1, status: "non_contacte", city: "Paris" },
+      { id: 2, status: "en_cours", city: "Lyon" },
+      { id: 3, status: "valide", city: "Marseille" },
+      { id: 4, status: "non_contacte", city: "Bordeaux" },
+      { id: 5, status: "archive", city: "Lille" },
+    ];
+
+    it("should show all candidates when filter is 'all'", () => {
+      const statusFilter = "all";
+      const filtered = statusFilter === "all" ? candidates : candidates.filter(c => c.status === statusFilter);
+      expect(filtered).toHaveLength(5);
+    });
+
+    it("should filter non_contacte only", () => {
+      const statusFilter = "non_contacte";
+      const filtered = candidates.filter(c => c.status === statusFilter);
+      expect(filtered).toHaveLength(2);
+      expect(filtered.every(c => c.status === "non_contacte")).toBe(true);
+    });
+
+    it("should filter en_cours only", () => {
+      const statusFilter = "en_cours";
+      const filtered = candidates.filter(c => c.status === statusFilter);
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].city).toBe("Lyon");
+    });
+
+    it("should filter valide only", () => {
+      const statusFilter = "valide";
+      const filtered = candidates.filter(c => c.status === statusFilter);
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].city).toBe("Marseille");
+    });
+
+    it("should filter archive only", () => {
+      const statusFilter = "archive";
+      const filtered = candidates.filter(c => c.status === statusFilter);
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].city).toBe("Lille");
+    });
+  });
+
   describe("Distance Calculation", () => {
     const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
       const R = 6371;

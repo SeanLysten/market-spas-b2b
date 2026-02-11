@@ -1441,3 +1441,12 @@
 - [x] Mapper les champs JSON vers la table partner_candidates
 - [x] Importer les 69 contacts en base de données (51 non contactés, 7 en cours, 10 validés, 1 archivé)
 - [x] Vérifier l'affichage sur la carte du réseau (stats, tableau, statistiques OK)
+
+## Carte du Réseau - Simplifier pour candidats partenaires uniquement
+- [x] Retirer les leads clients finaux (Meta Ads) de la carte et du tableau
+- [x] Retirer les partenaires existants de la carte
+- [x] Adapter les stats cards : Total candidats, Non contactés, En cours, Validés, Haute priorité
+- [x] Adapter les filtres : un seul filtre par statut candidat (non contacté, en cours, validé, archivé)
+- [x] Adapter le composant InteractivePartnerMap pour n'afficher que les candidats
+- [x] Simplifier la légende (retirer Niveaux Partenaires)
+- [x] Mettre à jour les tests (43 tests passent)

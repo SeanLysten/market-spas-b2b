@@ -33,10 +33,8 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Building2,
   Users,
   MapPin,
-  Target,
   Filter,
   Loader2,
   Plus,
@@ -97,13 +95,7 @@ const PRIORITY_COLORS: Record<number, string> = {
   0: 'bg-gray-300 text-gray-700',
 };
 
-const LEVEL_COLORS: Record<string, string> = {
-  VIP: 'bg-violet-100 text-violet-800',
-  PLATINUM: 'bg-blue-100 text-blue-800',
-  GOLD: 'bg-amber-100 text-amber-800',
-  SILVER: 'bg-gray-100 text-gray-800',
-  BRONZE: 'bg-orange-100 text-orange-800',
-};
+
 
 // ============================================
 // ADD CANDIDATE FORM
@@ -864,27 +856,21 @@ function StatsTab({ candidates }: { candidates: any[] }) {
 
 export default function AdminPartnerMap() {
   const [activeTab, setActiveTab] = useState('carte');
-  const [filter, setFilter] = useState<'all' | 'partners' | 'leads' | 'candidates'>('all');
-  const [partnerStatusFilter, setPartnerStatusFilter] = useState('all');
-  const [leadStatusFilter, setLeadStatusFilter] = useState('all');
+  const [candidateStatusFilter, setCandidateStatusFilter] = useState('all');
 
-  const { data: mapData, isLoading: mapLoading } = trpc.admin.territories.mapData.useQuery();
   const { data: candidates, isLoading: candidatesLoading, refetch: refetchCandidates } = trpc.admin.candidates.list.useQuery();
-
-  const partners = mapData?.partners || [];
-  const leads = mapData?.leads || [];
-  const territories = mapData?.territories || [];
 
   const candidatesList = candidates || [];
 
-  // Stats
-  const approvedPartners = partners.filter((p: any) => p.status === 'APPROVED').length;
-  const pendingPartners = partners.filter((p: any) => p.status === 'PENDING').length;
-  const totalLeads = leads.length;
+  // Stats - uniquement candidats
   const totalCandidates = candidatesList.length;
+  const nonContactes = candidatesList.filter((c: any) => c.status === 'non_contacte').length;
+  const enCours = candidatesList.filter((c: any) => c.status === 'en_cours').length;
+  const valides = candidatesList.filter((c: any) => c.status === 'valide').length;
   const highPriorityCandidates = candidatesList.filter((c: any) => c.priorityScore >= 6).length;
+  const visitedCount = candidatesList.filter((c: any) => c.visited).length;
 
-  const isLoading = mapLoading || candidatesLoading;
+  const isLoading = candidatesLoading;
 
   return (
     <AdminLayout>
@@ -894,7 +880,7 @@ export default function AdminPartnerMap() {
           <div>
             <h1 className="text-2xl font-bold">Carte du Réseau</h1>
             <p className="text-muted-foreground mt-1">
-              Gérez vos partenaires, candidats et leads sur une carte interactive
+              Gérez vos candidats partenaires et développez votre réseau de magasins
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -908,12 +894,12 @@ export default function AdminPartnerMap() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Building2 className="w-5 h-5 text-green-600" />
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Users className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Partenaires actifs</p>
-                  <p className="text-2xl font-bold">{approvedPartners}</p>
+                  <p className="text-sm text-muted-foreground">Total candidats</p>
+                  <p className="text-2xl font-bold">{totalCandidates}</p>
                 </div>
               </div>
             </CardContent>
@@ -921,12 +907,12 @@ export default function AdminPartnerMap() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-100 rounded-lg">
-                  <Building2 className="w-5 h-5 text-amber-600" />
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <AlertCircle className="w-5 h-5 text-gray-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">En attente</p>
-                  <p className="text-2xl font-bold">{pendingPartners}</p>
+                  <p className="text-sm text-muted-foreground">Non contactés</p>
+                  <p className="text-2xl font-bold">{nonContactes}</p>
                 </div>
               </div>
             </CardContent>
@@ -935,11 +921,11 @@ export default function AdminPartnerMap() {
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <Target className="w-5 h-5 text-blue-600" />
+                  <Clock className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Leads</p>
-                  <p className="text-2xl font-bold">{totalLeads}</p>
+                  <p className="text-sm text-muted-foreground">En cours</p>
+                  <p className="text-2xl font-bold">{enCours}</p>
                 </div>
               </div>
             </CardContent>
@@ -947,12 +933,12 @@ export default function AdminPartnerMap() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Users className="w-5 h-5 text-purple-600" />
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Candidats</p>
-                  <p className="text-2xl font-bold">{totalCandidates}</p>
+                  <p className="text-sm text-muted-foreground">Validés</p>
+                  <p className="text-2xl font-bold">{valides}</p>
                 </div>
               </div>
             </CardContent>
@@ -964,7 +950,7 @@ export default function AdminPartnerMap() {
                   <Star className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Haute priorité</p>
+                  <p className="text-sm text-muted-foreground">Haute priorité (6+)</p>
                   <p className="text-2xl font-bold">{highPriorityCandidates}</p>
                 </div>
               </div>
@@ -998,52 +984,20 @@ export default function AdminPartnerMap() {
                     <MapPin className="w-5 h-5" />
                     Carte Interactive
                   </CardTitle>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <Filter className="w-4 h-4 text-muted-foreground" />
-                      <Select value={filter} onValueChange={(v) => setFilter(v as any)}>
-                        <SelectTrigger className="w-[160px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Tout afficher</SelectItem>
-                          <SelectItem value="partners">Partenaires</SelectItem>
-                          <SelectItem value="leads">Leads</SelectItem>
-                          <SelectItem value="candidates">Candidats</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {(filter === 'all' || filter === 'partners') && (
-                      <Select value={partnerStatusFilter} onValueChange={setPartnerStatusFilter}>
-                        <SelectTrigger className="w-[160px]">
-                          <SelectValue placeholder="Statut partenaire" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Tous les statuts</SelectItem>
-                          <SelectItem value="APPROVED">Approuvés</SelectItem>
-                          <SelectItem value="PENDING">En attente</SelectItem>
-                          <SelectItem value="SUSPENDED">Suspendus</SelectItem>
-                          <SelectItem value="TERMINATED">Résiliés</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-
-                    {(filter === 'all' || filter === 'leads') && (
-                      <Select value={leadStatusFilter} onValueChange={setLeadStatusFilter}>
-                        <SelectTrigger className="w-[160px]">
-                          <SelectValue placeholder="Statut lead" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Tous les leads</SelectItem>
-                          <SelectItem value="NEW">Nouveaux</SelectItem>
-                          <SelectItem value="CONTACTED">Contactés</SelectItem>
-                          <SelectItem value="QUALIFIED">Qualifiés</SelectItem>
-                          <SelectItem value="WON">Gagnés</SelectItem>
-                          <SelectItem value="LOST">Perdus</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4 text-muted-foreground" />
+                    <Select value={candidateStatusFilter} onValueChange={setCandidateStatusFilter}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous les statuts</SelectItem>
+                        <SelectItem value="non_contacte">Non contacté</SelectItem>
+                        <SelectItem value="en_cours">En cours</SelectItem>
+                        <SelectItem value="valide">Validé</SelectItem>
+                        <SelectItem value="archive">Archivé</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </CardHeader>
@@ -1058,13 +1012,8 @@ export default function AdminPartnerMap() {
                 ) : (
                   <div className="h-[600px] md:h-[700px]">
                     <InteractivePartnerMap
-                      partners={partners}
-                      leads={leads}
-                      territories={territories}
                       candidates={candidatesList}
-                      filter={filter}
-                      partnerStatusFilter={partnerStatusFilter}
-                      leadStatusFilter={leadStatusFilter}
+                      statusFilter={candidateStatusFilter}
                     />
                   </div>
                 )}
@@ -1077,10 +1026,10 @@ export default function AdminPartnerMap() {
                 <CardTitle className="text-base">Légende</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Priority scores */}
                   <div>
-                    <h4 className="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Score de priorité (candidats)</h4>
+                    <h4 className="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Score de priorité</h4>
                     <div className="flex flex-wrap gap-2">
                       {[8, 7, 6, 5, 4, 3, 2, 1].map(score => (
                         <div key={score} className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${PRIORITY_COLORS[score]}`}>
@@ -1088,24 +1037,12 @@ export default function AdminPartnerMap() {
                         </div>
                       ))}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">8 = priorité maximale (contacter absolument)</p>
-                  </div>
-
-                  {/* Partner levels */}
-                  <div>
-                    <h4 className="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Niveaux Partenaires</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(LEVEL_COLORS).map(([level, classes]) => (
-                        <Badge key={level} className={classes}>
-                          {level}
-                        </Badge>
-                      ))}
-                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">8 = priorité maximale (contacter absolument), bordure verte = visité</p>
                   </div>
 
                   {/* Candidate statuses */}
                   <div>
-                    <h4 className="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Statut Candidats</h4>
+                    <h4 className="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Statut</h4>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(STATUS_LABELS).map(([status, label]) => (
                         <Badge key={status} className={STATUS_COLORS[status]}>
@@ -1113,6 +1050,7 @@ export default function AdminPartnerMap() {
                         </Badge>
                       ))}
                     </div>
+                    <p className="text-xs text-muted-foreground mt-2">Pastille bleue = en cours, pastille verte = validé</p>
                   </div>
                 </div>
               </CardContent>

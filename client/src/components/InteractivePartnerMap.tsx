@@ -17,41 +17,6 @@ if (!document.querySelector(`link[href="${fontAwesomeLink.href}"]`)) {
 // TYPES
 // ============================================
 
-interface Partner {
-  id: number;
-  companyName: string;
-  addressStreet: string;
-  addressCity: string;
-  addressPostalCode: string;
-  addressCountry: string | null;
-  primaryContactName: string;
-  primaryContactEmail: string;
-  primaryContactPhone: string;
-  status: string;
-  level: string;
-  totalOrders?: number | null;
-  totalRevenue?: string | null;
-  website?: string | null;
-}
-
-interface LeadData {
-  leads: {
-    id: number;
-    firstName?: string | null;
-    lastName?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    city?: string | null;
-    postalCode?: string | null;
-    status: string;
-    source: string;
-    assignedPartnerId?: number | null;
-    productInterest?: string | null;
-    receivedAt?: string | Date;
-  };
-  partners: Partner | null;
-}
-
 interface Candidate {
   id: number;
   companyName: string;
@@ -74,25 +39,6 @@ interface Candidate {
   visitDate?: string | Date | null;
 }
 
-interface Territory {
-  id: number;
-  partnerId: number;
-  partnerName: string;
-  regionId: number;
-  regionName: string;
-  regionCode: string;
-  countryCode: string;
-  countryName: string;
-}
-
-interface GeocodedItem {
-  id: string;
-  type: 'partner' | 'lead' | 'candidate';
-  lat: number;
-  lng: number;
-  data: any;
-}
-
 interface MeasurePoint {
   id: string;
   name: string;
@@ -104,42 +50,16 @@ interface MeasurePoint {
 // CONSTANTS
 // ============================================
 
-const LEVEL_COLORS: Record<string, string> = {
-  VIP: '#7c3aed',
-  PLATINUM: '#1e40af',
-  GOLD: '#d97706',
-  SILVER: '#6b7280',
-  BRONZE: '#92400e',
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  APPROVED: '#16a34a',
-  PENDING: '#f59e0b',
-  SUSPENDED: '#ef4444',
-  TERMINATED: '#6b7280',
-};
-
-const LEAD_STATUS_COLORS: Record<string, string> = {
-  NEW: '#3b82f6',
-  CONTACTED: '#8b5cf6',
-  QUALIFIED: '#f59e0b',
-  PROPOSAL_SENT: '#f97316',
-  NEGOTIATION: '#ec4899',
-  WON: '#16a34a',
-  LOST: '#ef4444',
-  ARCHIVED: '#6b7280',
-};
-
 const PRIORITY_MARKER_COLORS: Record<number, string> = {
-  8: '#dc2626', // red-600
-  7: '#ef4444', // red-500
-  6: '#f97316', // orange-500
-  5: '#fb923c', // orange-400
-  4: '#eab308', // yellow-500
-  3: '#facc15', // yellow-400
-  2: '#4ade80', // green-400
-  1: '#22c55e', // green-500
-  0: '#d1d5db', // gray-300
+  8: '#dc2626',
+  7: '#ef4444',
+  6: '#f97316',
+  5: '#fb923c',
+  4: '#eab308',
+  3: '#facc15',
+  2: '#4ade80',
+  1: '#22c55e',
+  0: '#d1d5db',
 };
 
 const CANDIDATE_STATUS_LABELS: Record<string, string> = {
@@ -185,23 +105,13 @@ const geocodeAddress = async (address: string): Promise<{ lat: number; lng: numb
 // ============================================
 
 interface InteractivePartnerMapProps {
-  partners: Partner[];
-  leads: LeadData[];
-  territories: Territory[];
-  candidates?: Candidate[];
-  filter: 'all' | 'partners' | 'leads' | 'candidates';
-  partnerStatusFilter: string;
-  leadStatusFilter: string;
+  candidates: Candidate[];
+  statusFilter: string;
 }
 
 export default function InteractivePartnerMap({
-  partners,
-  leads,
-  territories,
-  candidates = [],
-  filter,
-  partnerStatusFilter,
-  leadStatusFilter,
+  candidates,
+  statusFilter,
 }: InteractivePartnerMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
@@ -228,15 +138,21 @@ export default function InteractivePartnerMap({
   const [showNearbyInfo, setShowNearbyInfo] = useState(false);
 
   // Geocoded items
-  const [geocodedItems, setGeocodedItems] = useState<GeocodedItem[]>([]);
+  interface GeocodedCandidate {
+    id: string;
+    lat: number;
+    lng: number;
+    data: Candidate;
+  }
+  const [geocodedItems, setGeocodedItems] = useState<GeocodedCandidate[]>([]);
 
   // Initialize map
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
     const map = L.map(containerRef.current, {
-      center: [50.5, 4.35],
-      zoom: 7,
+      center: [46.5, 2.5], // Centre de la France
+      zoom: 6,
       zoomControl: true,
     });
 
@@ -255,85 +171,47 @@ export default function InteractivePartnerMap({
     };
   }, []);
 
-  // Geocode partners, leads, and candidates
+  // Geocode candidates only
   useEffect(() => {
     let cancelled = false;
 
     const geocodeAll = async () => {
-      const items: GeocodedItem[] = [];
+      const items: GeocodedCandidate[] = [];
       const cache = geocodeCacheRef.current;
 
-      // Geocode partners
-      if (filter === 'all' || filter === 'partners') {
-        const filteredPartners = partnerStatusFilter === 'all'
-          ? partners
-          : partners.filter(p => p.status === partnerStatusFilter);
+      // Filter by status
+      const filtered = statusFilter === 'all'
+        ? candidates
+        : candidates.filter(c => c.status === statusFilter);
 
-        for (const partner of filteredPartners) {
-          if (cancelled) return;
-          const address = `${partner.addressStreet}, ${partner.addressPostalCode} ${partner.addressCity}, ${partner.addressCountry || 'BE'}`;
-          let coords = cache.get(address);
-          if (coords === undefined) {
-            coords = await geocodeAddress(address);
-            cache.set(address, coords);
-            await new Promise(r => setTimeout(r, 200));
-          }
-          if (coords) {
-            items.push({ id: `partner-${partner.id}`, type: 'partner', lat: coords.lat, lng: coords.lng, data: partner });
-          }
-        }
-      }
+      for (const candidate of filtered) {
+        if (cancelled) return;
 
-      // Geocode leads
-      if (filter === 'all' || filter === 'leads') {
-        const filteredLeads = leadStatusFilter === 'all'
-          ? leads
-          : leads.filter(l => l.leads.status === leadStatusFilter);
-
-        for (const leadData of filteredLeads) {
-          if (cancelled) return;
-          const lead = leadData.leads;
-          if (!lead.city && !lead.postalCode) continue;
-          const address = `${lead.postalCode || ''} ${lead.city || ''}, Belgium`;
-          let coords = cache.get(address);
-          if (coords === undefined) {
-            coords = await geocodeAddress(address);
-            cache.set(address, coords);
-            await new Promise(r => setTimeout(r, 200));
-          }
-          if (coords) {
-            items.push({ id: `lead-${lead.id}`, type: 'lead', lat: coords.lat, lng: coords.lng, data: leadData });
-          }
-        }
-      }
-
-      // Geocode candidates
-      if (filter === 'all' || filter === 'candidates') {
-        for (const candidate of candidates) {
-          if (cancelled) return;
-
-          // Use stored coordinates if available
-          if (candidate.latitude && candidate.longitude) {
+        // Use stored coordinates if available
+        if (candidate.latitude && candidate.longitude) {
+          const lat = parseFloat(candidate.latitude);
+          const lng = parseFloat(candidate.longitude);
+          if (!isNaN(lat) && !isNaN(lng)) {
             items.push({
               id: `candidate-${candidate.id}`,
-              type: 'candidate',
-              lat: parseFloat(candidate.latitude),
-              lng: parseFloat(candidate.longitude),
+              lat,
+              lng,
               data: candidate,
             });
             continue;
           }
+        }
 
-          const address = `${candidate.city}, Belgium`;
-          let coords = cache.get(`candidate-${address}`);
-          if (coords === undefined) {
-            coords = await geocodeAddress(address);
-            cache.set(`candidate-${address}`, coords);
-            await new Promise(r => setTimeout(r, 200));
-          }
-          if (coords) {
-            items.push({ id: `candidate-${candidate.id}`, type: 'candidate', lat: coords.lat, lng: coords.lng, data: candidate });
-          }
+        // Geocode by city
+        const address = `${candidate.city}, France`;
+        let coords = cache.get(`candidate-${address}`);
+        if (coords === undefined) {
+          coords = await geocodeAddress(address);
+          cache.set(`candidate-${address}`, coords);
+          await new Promise(r => setTimeout(r, 200));
+        }
+        if (coords) {
+          items.push({ id: `candidate-${candidate.id}`, lat: coords.lat, lng: coords.lng, data: candidate });
         }
       }
 
@@ -344,7 +222,7 @@ export default function InteractivePartnerMap({
 
     geocodeAll();
     return () => { cancelled = true; };
-  }, [partners, leads, candidates, filter, partnerStatusFilter, leadStatusFilter]);
+  }, [candidates, statusFilter]);
 
   // Update markers
   useEffect(() => {
@@ -358,194 +236,85 @@ export default function InteractivePartnerMap({
     geocodedItems.forEach(item => {
       if (!mapRef.current) return;
 
-      let iconHtml: string;
-      let popupContent: string;
+      const c = item.data;
+      const priorityColor = PRIORITY_MARKER_COLORS[c.priorityScore] || '#d1d5db';
+      const visitedBorder = c.visited ? '3px solid #16a34a' : '3px solid white';
+      const textColor = c.priorityScore >= 3 && c.priorityScore <= 4 ? '#1a1a1a' : 'white';
 
-      if (item.type === 'partner') {
-        const p: Partner = item.data;
-        const color = LEVEL_COLORS[p.level] || '#6b7280';
-        const statusColor = STATUS_COLORS[p.status] || '#6b7280';
-        const levelInitial = p.level.charAt(0);
+      const iconHtml = `
+        <div style="position: relative;">
+          <div style="background-color: ${priorityColor}; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${textColor}; font-weight: bold; font-size: 15px; border: ${visitedBorder}; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+            ${c.priorityScore}
+          </div>
+          ${c.status === 'en_cours' ? `<div style="position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; background: #3b82f6; border-radius: 50%; border: 2px solid white;"></div>` : ''}
+          ${c.status === 'valide' ? `<div style="position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; background: #16a34a; border-radius: 50%; border: 2px solid white;"></div>` : ''}
+        </div>`;
 
-        iconHtml = `
-          <div style="position: relative;">
-            <div style="background-color: ${color}; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
-              ${levelInitial}
+      const statusLabel = CANDIDATE_STATUS_LABELS[c.status] || c.status;
+      const criteria = [];
+      if (c.showroom === 'oui' || c.showroom?.toLowerCase().includes('oui')) criteria.push('Showroom');
+      if (c.vendSpa === 'oui' || c.vendSpa?.toLowerCase().includes('oui')) criteria.push('Vend Spa');
+      if (c.autreMarque === 'oui' || c.autreMarque?.toLowerCase().includes('oui')) criteria.push('Autre marque');
+      if (c.domaineSimilaire === 'oui' || c.domaineSimilaire?.toLowerCase().includes('oui')) criteria.push('Domaine similaire');
+
+      const popupContent = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; padding: 4px; min-width: 260px;">
+          <div style="margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+              <div style="background-color: ${priorityColor}; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${textColor}; font-weight: bold; font-size: 14px; flex-shrink: 0;">
+                ${c.priorityScore}
+              </div>
+              <h3 style="margin: 0; font-size: 17px; font-weight: 600; color: #1d1d1f; line-height: 1.3;">${c.companyName}</h3>
             </div>
-            <div style="position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; background: ${statusColor}; border-radius: 50%; border: 2px solid white;"></div>
-          </div>`;
+            <p style="margin: 0; font-size: 13px; color: #86868b;">${c.fullName} &bull; ${c.city}</p>
+          </div>
 
-        const territoryList = territories
-          .filter(t => t.partnerId === p.id)
-          .map(t => `${t.regionName} (${t.countryCode})`)
-          .join(', ') || 'Aucun territoire';
+          <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;">
+            <span style="font-size: 11px; padding: 3px 8px; border-radius: 6px; background: ${c.status === 'valide' ? '#dcfce7' : c.status === 'en_cours' ? '#dbeafe' : c.status === 'archive' ? '#fee2e2' : '#f3f4f6'}; color: ${c.status === 'valide' ? '#166534' : c.status === 'en_cours' ? '#1e40af' : c.status === 'archive' ? '#991b1b' : '#374151'}; font-weight: 500;">${statusLabel}</span>
+            ${c.visited ? `<span style="font-size: 11px; padding: 3px 8px; border-radius: 6px; background: #dcfce7; color: #166534; font-weight: 500;">Visité</span>` : ''}
+          </div>
 
-        popupContent = `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; padding: 4px; min-width: 240px;">
-            <div style="margin-bottom: 12px;">
-              <h3 style="margin: 0 0 4px 0; font-size: 17px; font-weight: 600; color: #1d1d1f;">${p.companyName}</h3>
-              <p style="margin: 0; font-size: 13px; color: #86868b;">${p.addressCity}, ${p.addressPostalCode}</p>
-            </div>
-            <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: ${color}15; border-radius: 8px; margin-bottom: 12px;">
-              <div style="width: 6px; height: 6px; border-radius: 50%; background: ${color};"></div>
-              <span style="font-size: 12px; font-weight: 500; color: ${color};">${p.level} &bull; ${p.status}</span>
-            </div>
+          ${criteria.length > 0 ? `
             <div style="padding: 8px 12px; background: #f5f5f7; border-radius: 10px; margin-bottom: 12px;">
-              <p style="margin: 0 0 4px 0; font-size: 12px; color: #86868b;">Contact</p>
-              <p style="margin: 0; font-size: 13px; font-weight: 500;">${p.primaryContactName}</p>
+              <p style="margin: 0 0 4px 0; font-size: 12px; color: #86868b;">Critères</p>
+              <p style="margin: 0; font-size: 13px; font-weight: 500;">${criteria.join(', ')}</p>
             </div>
-            <div style="padding: 8px 12px; background: #f5f5f7; border-radius: 10px; margin-bottom: 12px;">
-              <p style="margin: 0 0 4px 0; font-size: 12px; color: #86868b;">Territoires</p>
-              <p style="margin: 0; font-size: 13px; font-weight: 500;">${territoryList}</p>
+          ` : ''}
+
+          <div style="display: flex; gap: 12px; padding: 8px 12px; background: #f5f5f7; border-radius: 10px; margin-bottom: 12px;">
+            <div><p style="margin: 0; font-size: 11px; color: #86868b;">Appels</p><p style="margin: 0; font-size: 15px; font-weight: 600;">${c.phoneCallsCount}</p></div>
+            <div><p style="margin: 0; font-size: 11px; color: #86868b;">Emails</p><p style="margin: 0; font-size: 15px; font-weight: 600;">${c.emailsSentCount}</p></div>
+          </div>
+
+          ${c.notes ? `
+            <div style="padding: 8px 12px; background: #fffbeb; border-radius: 10px; margin-bottom: 12px;">
+              <p style="margin: 0 0 4px 0; font-size: 12px; color: #92400e;">Notes</p>
+              <p style="margin: 0; font-size: 13px;">${c.notes}</p>
             </div>
-            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-              ${p.primaryContactPhone ? `<a href="tel:${p.primaryContactPhone}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;"><i class="fas fa-phone" style="font-size: 12px;"></i><span>Appeler</span></a>` : ''}
-              ${p.primaryContactEmail ? `<a href="mailto:${p.primaryContactEmail}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;"><i class="fas fa-envelope" style="font-size: 12px;"></i><span>Email</span></a>` : ''}
-            </div>
-            ${p.totalOrders ? `
-              <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #d2d2d7; display: flex; gap: 16px;">
-                <div><p style="margin: 0; font-size: 11px; color: #86868b;">Commandes</p><p style="margin: 0; font-size: 15px; font-weight: 600;">${p.totalOrders}</p></div>
-                <div><p style="margin: 0; font-size: 11px; color: #86868b;">CA Total</p><p style="margin: 0; font-size: 15px; font-weight: 600;">${parseFloat(p.totalRevenue || '0').toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</p></div>
-              </div>
-            ` : ''}
-          </div>`;
-      } else if (item.type === 'candidate') {
-        // Candidate marker with priority score
-        const c: Candidate = item.data;
-        const priorityColor = PRIORITY_MARKER_COLORS[c.priorityScore] || '#d1d5db';
-        const visitedBorder = c.visited ? '3px solid #16a34a' : '3px solid white';
-        const textColor = c.priorityScore >= 3 && c.priorityScore <= 4 ? '#1a1a1a' : 'white';
+          ` : ''}
 
-        iconHtml = `
-          <div style="position: relative;">
-            <div style="background-color: ${priorityColor}; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${textColor}; font-weight: bold; font-size: 15px; border: ${visitedBorder}; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
-              ${c.priorityScore}
-            </div>
-            ${c.status === 'en_cours' ? `<div style="position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; background: #3b82f6; border-radius: 50%; border: 2px solid white;"></div>` : ''}
-            ${c.status === 'valide' ? `<div style="position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; background: #16a34a; border-radius: 50%; border: 2px solid white;"></div>` : ''}
-          </div>`;
-
-        const statusLabel = CANDIDATE_STATUS_LABELS[c.status] || c.status;
-        const criteria = [];
-        if (c.showroom === 'oui') criteria.push('Showroom');
-        if (c.vendSpa === 'oui') criteria.push('Vend Spa');
-        if (c.autreMarque === 'oui') criteria.push('Autre marque');
-        if (c.domaineSimilaire === 'oui') criteria.push('Domaine similaire');
-
-        popupContent = `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; padding: 4px; min-width: 260px;">
-            <div style="margin-bottom: 12px;">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                <div style="background-color: ${priorityColor}; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${textColor}; font-weight: bold; font-size: 14px; flex-shrink: 0;">
-                  ${c.priorityScore}
-                </div>
-                <h3 style="margin: 0; font-size: 17px; font-weight: 600; color: #1d1d1f; line-height: 1.3;">${c.companyName}</h3>
-              </div>
-              <p style="margin: 0; font-size: 13px; color: #86868b;">${c.fullName} &bull; ${c.city}</p>
-            </div>
-
-            <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;">
-              <span style="font-size: 11px; padding: 3px 8px; border-radius: 6px; background: ${c.status === 'valide' ? '#dcfce7' : c.status === 'en_cours' ? '#dbeafe' : c.status === 'archive' ? '#fee2e2' : '#f3f4f6'}; color: ${c.status === 'valide' ? '#166534' : c.status === 'en_cours' ? '#1e40af' : c.status === 'archive' ? '#991b1b' : '#374151'}; font-weight: 500;">${statusLabel}</span>
-              ${c.visited ? `<span style="font-size: 11px; padding: 3px 8px; border-radius: 6px; background: #dcfce7; color: #166534; font-weight: 500;">Visité</span>` : ''}
-            </div>
-
-            ${criteria.length > 0 ? `
-              <div style="padding: 8px 12px; background: #f5f5f7; border-radius: 10px; margin-bottom: 12px;">
-                <p style="margin: 0 0 4px 0; font-size: 12px; color: #86868b;">Critères</p>
-                <p style="margin: 0; font-size: 13px; font-weight: 500;">${criteria.join(', ')}</p>
-              </div>
-            ` : ''}
-
-            <div style="display: flex; gap: 12px; padding: 8px 12px; background: #f5f5f7; border-radius: 10px; margin-bottom: 12px;">
-              <div><p style="margin: 0; font-size: 11px; color: #86868b;">Appels</p><p style="margin: 0; font-size: 15px; font-weight: 600;">${c.phoneCallsCount}</p></div>
-              <div><p style="margin: 0; font-size: 11px; color: #86868b;">Emails</p><p style="margin: 0; font-size: 15px; font-weight: 600;">${c.emailsSentCount}</p></div>
-            </div>
-
-            ${c.notes ? `
-              <div style="padding: 8px 12px; background: #fffbeb; border-radius: 10px; margin-bottom: 12px;">
-                <p style="margin: 0 0 4px 0; font-size: 12px; color: #92400e;">Notes</p>
-                <p style="margin: 0; font-size: 13px;">${c.notes}</p>
-              </div>
-            ` : ''}
-
-            <div style="display: flex; gap: 6px;">
-              <a href="tel:${c.phoneNumber}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;">
-                <i class="fas fa-phone" style="font-size: 12px;"></i>Appeler
-              </a>
-              <a href="mailto:${c.email}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;">
-                <i class="fas fa-envelope" style="font-size: 12px;"></i>Email
-              </a>
-            </div>
-          </div>`;
-      } else {
-        // Lead marker
-        const leadData: LeadData = item.data;
-        const lead = leadData.leads;
-        const partner = leadData.partners;
-        const statusColor = LEAD_STATUS_COLORS[lead.status] || '#6b7280';
-
-        iconHtml = `
-          <div style="position: relative;">
-            <div style="background-color: ${statusColor}; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
-              <i class="fas fa-user" style="font-size: 11px;"></i>
-            </div>
-          </div>`;
-
-        const leadName = [lead.firstName, lead.lastName].filter(Boolean).join(' ') || 'Anonyme';
-
-        popupContent = `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; padding: 4px; min-width: 220px;">
-            <div style="margin-bottom: 12px;">
-              <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 600; color: #1d1d1f;">${leadName}</h3>
-              <p style="margin: 0; font-size: 13px; color: #86868b;">${lead.city || ''} ${lead.postalCode || ''}</p>
-            </div>
-            <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: ${statusColor}15; border-radius: 8px; margin-bottom: 12px;">
-              <div style="width: 6px; height: 6px; border-radius: 50%; background: ${statusColor};"></div>
-              <span style="font-size: 12px; font-weight: 500; color: ${statusColor};">${lead.status} &bull; ${lead.source}</span>
-            </div>
-            ${lead.productInterest ? `
-              <div style="padding: 8px 12px; background: #f5f5f7; border-radius: 10px; margin-bottom: 8px;">
-                <p style="margin: 0; font-size: 12px; color: #86868b;">Intérêt</p>
-                <p style="margin: 0; font-size: 13px; font-weight: 500;">${lead.productInterest}</p>
-              </div>
-            ` : ''}
-            ${partner ? `
-              <div style="padding: 8px 12px; background: #e8f5e9; border-radius: 10px; margin-bottom: 8px;">
-                <p style="margin: 0; font-size: 12px; color: #2e7d32;">Assigné à</p>
-                <p style="margin: 0; font-size: 13px; font-weight: 500; color: #1b5e20;">${partner.companyName}</p>
-              </div>
-            ` : `
-              <div style="padding: 8px 12px; background: #fff3e0; border-radius: 10px; margin-bottom: 8px;">
-                <p style="margin: 0; font-size: 12px; color: #e65100;">Non assigné</p>
-              </div>
-            `}
-            <div style="display: flex; gap: 6px;">
-              ${lead.phone ? `<a href="tel:${lead.phone}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;"><i class="fas fa-phone" style="font-size: 12px;"></i>Appeler</a>` : ''}
-              ${lead.email ? `<a href="mailto:${lead.email}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;"><i class="fas fa-envelope" style="font-size: 12px;"></i>Email</a>` : ''}
-            </div>
-          </div>`;
-      }
-
-      const iconSize = item.type === 'partner' ? [36, 36] : item.type === 'candidate' ? [34, 34] : [28, 28];
-      const iconAnchor = item.type === 'partner' ? [18, 18] : item.type === 'candidate' ? [17, 17] : [14, 14];
+          <div style="display: flex; gap: 6px;">
+            <a href="tel:${c.phoneNumber}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;">
+              <i class="fas fa-phone" style="font-size: 12px;"></i>Appeler
+            </a>
+            <a href="mailto:${c.email}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;">
+              <i class="fas fa-envelope" style="font-size: 12px;"></i>Email
+            </a>
+          </div>
+        </div>`;
 
       const icon = L.divIcon({
         html: iconHtml,
         className: 'custom-marker',
-        iconSize: iconSize as [number, number],
-        iconAnchor: iconAnchor as [number, number],
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
       });
 
       const marker = L.marker([item.lat, item.lng], { icon }).addTo(mapRef.current!);
 
       marker.on('click', () => {
         if (measureActiveRef.current) {
-          const name = item.type === 'partner'
-            ? item.data.companyName
-            : item.type === 'candidate'
-              ? item.data.companyName
-              : [item.data.leads.firstName, item.data.leads.lastName].filter(Boolean).join(' ') || 'Lead';
-          handleMarkerClickInMeasureMode({ id: item.id, name, lat: item.lat, lng: item.lng });
+          handleMarkerClickInMeasureMode({ id: item.id, name: c.companyName, lat: item.lat, lng: item.lng });
         } else {
           marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' }).openPopup();
         }
@@ -558,7 +327,7 @@ export default function InteractivePartnerMap({
       const bounds = L.latLngBounds(geocodedItems.map(i => [i.lat, i.lng]));
       mapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
     }
-  }, [geocodedItems, territories]);
+  }, [geocodedItems]);
 
   // Measure mode handlers
   const handleMarkerClickInMeasureMode = useCallback((point: MeasurePoint) => {
@@ -716,7 +485,7 @@ export default function InteractivePartnerMap({
                   <MapPin className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-semibold text-sm">
-                      {nearbyCount > 0 ? `${nearbyCount} élément${nearbyCount > 1 ? 's' : ''} à proximité` : 'Aucun élément à proximité'}
+                      {nearbyCount > 0 ? `${nearbyCount} candidat${nearbyCount > 1 ? 's' : ''} à proximité` : 'Aucun candidat à proximité'}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {nearbyCount > 0 ? 'Dans un rayon de 50 km' : 'Essayez d\'élargir la zone'}
