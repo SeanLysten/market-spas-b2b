@@ -15,6 +15,7 @@ webhooksRouter.post('/facebook-leads', async (req, res) => {
       phone,
       city,
       postalCode,
+      country,
       message,
       source = 'FACEBOOK',
       campaignId,
@@ -62,7 +63,7 @@ webhooksRouter.post('/facebook-leads', async (req, res) => {
     // Assignation automatique au partenaire selon le code postal
     if (postalCode && leadId) {
       try {
-        const partner = await findBestPartnerForPostalCode(postalCode);
+        const partner = await findBestPartnerForPostalCode(postalCode, country || undefined);
         if (partner) {
           await db.assignLeadToPartner(leadId[0].insertId, partner.partnerId);
           console.log(`[Webhook] Lead ${leadId[0].insertId} auto-assigné au partenaire ${partner.partnerName} (${partner.region}, ${partner.country})`);

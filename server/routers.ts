@@ -1715,7 +1715,8 @@ export const appRouter = router({
 
             try {
               if (!postalCode) continue;
-              const partner = await findBestPartnerForPostalCode(postalCode);
+              const country = lead.country || undefined;
+              const partner = await findBestPartnerForPostalCode(postalCode, country);
               
               if (partner) {
                 await db.assignLeadToPartner(lead.id, partner.partnerId);
@@ -1932,9 +1933,9 @@ export const appRouter = router({
 
       // Find best partner for postal code
       findPartnerForPostalCode: adminProcedure
-        .input(z.object({ postalCode: z.string() }))
+        .input(z.object({ postalCode: z.string(), country: z.string().optional() }))
         .query(async ({ input }) => {
-          return await territoriesDb.findBestPartnerForPostalCode(input.postalCode);
+          return await territoriesDb.findBestPartnerForPostalCode(input.postalCode, input.country);
         }),
 
       // Map data: partners + leads + territories for interactive map

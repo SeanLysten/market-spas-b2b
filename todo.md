@@ -1458,3 +1458,13 @@
 - [x] Connecter les boutons aux mutations tRPC via refs (updateMutationRef, toggleVisitedMutationRef, etc.)
 - [x] Rafraîchir la carte après modification (onRefresh callback)
 - [x] Tests unitaires (53 tests passent)
+
+## Audit système de répartition des leads
+- [x] Analyser le code findPartnerByPostalCode et la logique d'attribution
+- [x] Vérifier les territoires et codes postaux en base (296 plages, 13 BE, 6 pays)
+- [x] Tester l'attribution : 12/12 leads correctement assignés (cas belges)
+- [x] Vérifier les leads existants et leur attribution
+- [x] Bug critique identifié et corrigé : comparaison string cross-pays (91350 FR -> 9000-9999 BE)
+- [x] Correction : filtrage par longueur de code postal + country hint dans findRegionByPostalCode
+- [x] Country hint propagé dans meta-leads.ts, webhooks.ts, routers.ts
+- [x] 16 tests unitaires pour la logique de distribution (tous passent)

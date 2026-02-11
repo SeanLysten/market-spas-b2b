@@ -1,0 +1,70 @@
+{
+  "query": "SELECT * FROM countries ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT * FROM countries ORDER BY id;",
+  "rows": [
+    {
+      "id": "30006",
+      "code": "BE",
+      "name": "Belgique",
+      "nameEn": "Belgium",
+      "nameFr": "Belgique",
+      "nameNl": "België",
+      "isActive": "1",
+      "createdAt": "2026-01-05 23:10:55"
+    },
+    {
+      "id": "30007",
+      "code": "FR",
+      "name": "France",
+      "nameEn": "France",
+      "nameFr": "France",
+      "nameNl": "Frankrijk",
+      "isActive": "1",
+      "createdAt": "2026-01-05 23:10:55"
+    },
+    {
+      "id": "30008",
+      "code": "CH",
+      "name": "Suisse",
+      "nameEn": "Switzerland",
+      "nameFr": "Suisse",
+      "nameNl": "Zwitserland",
+      "isActive": "1",
+      "createdAt": "2026-01-05 23:10:55"
+    },
+    {
+      "id": "30009",
+      "code": "ES",
+      "name": "Espagne",
+      "nameEn": "Spain",
+      "nameFr": "Espagne",
+      "nameNl": "Spanje",
+      "isActive": "1",
+      "createdAt": "2026-01-05 23:10:55"
+    },
+    {
+      "id": "30010",
+      "code": "DE",
+      "name": "Allemagne",
+      "nameEn": "Germany",
+      "nameFr": "Allemagne",
+      "nameNl": "Duitsland",
+      "isActive": "1",
+      "createdAt": "2026-01-05 23:10:55"
+    },
+    {
+      "id": "30011",
+      "code": "NL",
+      "name": "Pays-Bas",
+      "nameEn": "Netherlands",
+      "nameFr": "Pays-Bas",
+      "nameNl": "Nederland",
+      "isActive": "1",
+      "createdAt": "2026-01-05 23:10:55"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcode\tname\tnameEn\tnameFr\tnameNl\tisActive\tcreatedAt\n30006\tBE\tBelgique\tBelgium\tBelgique\tBelgië\t1\t2026-01-05 23:10:55\n30007\tFR\tFrance\tFrance\tFrance\tFrankrijk\t1\t2026-01-05 23:10:55\n30008\tCH\tSuisse\tSwitzerland\tSuisse\tZwitserland\t1\t2026-01-05 23:10:55\n30009\tES\tEspagne\tSpain\tEspagne\tSpanje\t1\t2026-01-05 23:10:55\n30010\tDE\tAllemagne\tGermany\tAllemagne\tDuitsland\t1\t2026-01-05 23:10:55\n30011\tNL\tPays-Bas\tNetherlands\tPays-Bas\tNederland\t1\t2026-01-05 23:10:55\n",
+  "stderr": "",
+  "execution_time_ms": 600
+}

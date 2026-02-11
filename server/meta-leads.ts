@@ -211,7 +211,7 @@ export async function distributeLeadToPartner(leadId: number): Promise<void> {
 
   // Utiliser le nouveau système de territoires
   const { findBestPartnerForPostalCode } = await import("./territories-db");
-  const partnerMatch = await findBestPartnerForPostalCode(lead.postalCode);
+  const partnerMatch = await findBestPartnerForPostalCode(lead.postalCode, lead.country || undefined);
 
   if (partnerMatch) {
     // Assigner le lead au partenaire
