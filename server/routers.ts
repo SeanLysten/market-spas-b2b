@@ -12,6 +12,7 @@ import { notifyOwner } from "./_core/notification";
 import { notifyPartner, notifyAdmins } from "./_core/websocket";
 import { sendInvitationEmail } from "./email";
 import * as metaOAuth from "./meta-oauth";
+import * as candidatesDb from "./candidates-db";
 
 export const appRouter = router({
   system: systemRouter,
@@ -1951,6 +1952,131 @@ export const appRouter = router({
           regions: allRegions,
         };
       }),
+    }),
+
+    // ============================================
+    // PARTNER CANDIDATES (Prospection)
+    // ============================================
+    candidates: router({
+      list: adminProcedure.query(async () => {
+        return await candidatesDb.getAllCandidates();
+      }),
+
+      getById: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .query(async ({ input }) => {
+          return await candidatesDb.getCandidateById(input.id);
+        }),
+
+      create: adminProcedure
+        .input(z.object({
+          companyName: z.string(),
+          fullName: z.string(),
+          city: z.string(),
+          phoneNumber: z.string(),
+          email: z.string(),
+          priorityScore: z.number().min(0).max(8),
+          showroom: z.string().default("non"),
+          vendSpa: z.string().default("non"),
+          autreMarque: z.string().default("non"),
+          domaineSimilaire: z.string().default("non"),
+          notes: z.string().nullable().optional(),
+          status: z.enum(["non_contacte", "en_cours", "valide", "archive"]).default("non_contacte"),
+          latitude: z.string().nullable().optional(),
+          longitude: z.string().nullable().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          return await candidatesDb.createCandidate(input);
+        }),
+
+      update: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          updates: z.object({
+            companyName: z.string().optional(),
+            fullName: z.string().optional(),
+            city: z.string().optional(),
+            phoneNumber: z.string().optional(),
+            email: z.string().optional(),
+            priorityScore: z.number().min(0).max(8).optional(),
+            showroom: z.string().optional(),
+            vendSpa: z.string().optional(),
+            autreMarque: z.string().optional(),
+            domaineSimilaire: z.string().optional(),
+            notes: z.string().nullable().optional(),
+            status: z.enum(["non_contacte", "en_cours", "valide", "archive"]).optional(),
+            latitude: z.string().nullable().optional(),
+            longitude: z.string().nullable().optional(),
+          }),
+        }))
+        .mutation(async ({ input }) => {
+          return await candidatesDb.updateCandidate(input.id, input.updates);
+        }),
+
+      delete: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await candidatesDb.deleteCandidate(input.id);
+          return { success: true };
+        }),
+
+      incrementPhoneCall: adminProcedure
+        .input(z.object({ candidateId: z.number() }))
+        .mutation(async ({ input }) => {
+          return await candidatesDb.incrementPhoneCall(input.candidateId);
+        }),
+
+      incrementEmail: adminProcedure
+        .input(z.object({ candidateId: z.number() }))
+        .mutation(async ({ input }) => {
+          return await candidatesDb.incrementEmail(input.candidateId);
+        }),
+
+      toggleVisited: adminProcedure
+        .input(z.object({ candidateId: z.number(), visited: z.boolean() }))
+        .mutation(async ({ input }) => {
+          return await candidatesDb.toggleVisited(input.candidateId, input.visited);
+        }),
+
+      importCSV: adminProcedure
+        .input(z.object({
+          candidates: z.array(z.object({
+            companyName: z.string(),
+            fullName: z.string(),
+            city: z.string(),
+            phoneNumber: z.string(),
+            email: z.string(),
+            priorityScore: z.number(),
+            showroom: z.string(),
+            vendSpa: z.string(),
+            autreMarque: z.string(),
+            domaineSimilaire: z.string(),
+            notes: z.string().nullable().optional(),
+            status: z.enum(["non_contacte", "en_cours", "valide", "archive"]).default("non_contacte"),
+            latitude: z.string().nullable().optional(),
+            longitude: z.string().nullable().optional(),
+          })),
+        }))
+        .mutation(async ({ input }) => {
+          return await candidatesDb.importCandidates(input.candidates);
+        }),
+
+      getContactHistory: adminProcedure
+        .input(z.object({ candidateId: z.number() }))
+        .query(async ({ input }) => {
+          return await candidatesDb.getContactHistory(input.candidateId);
+        }),
+
+      addContactHistory: adminProcedure
+        .input(z.object({
+          candidateId: z.number(),
+          type: z.enum(["appel", "email", "visite", "note"]),
+          content: z.string(),
+        }))
+        .mutation(async ({ input }) => {
+          await candidatesDb.addContactHistory(input);
+          return { success: true };
+        }),
     }),
 
     // Analytics & Charts

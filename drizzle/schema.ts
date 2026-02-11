@@ -1998,3 +1998,87 @@ export const notificationPreferences = mysqlTable(
 
 export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
 export type InsertNotificationPreferences = typeof notificationPreferences.$inferInsert;
+
+// ============================================
+// PARTNER CANDIDATES (Prospection commerciale)
+// ============================================
+
+export const candidateStatusEnum = mysqlEnum("candidate_status", [
+  "non_contacte",
+  "en_cours",
+  "valide",
+  "archive",
+]);
+
+export const partnerCandidates = mysqlTable(
+  "partner_candidates",
+  {
+    id: int("id").autoincrement().primaryKey(),
+
+    // Company info
+    companyName: varchar("companyName", { length: 255 }).notNull(),
+    fullName: varchar("fullName", { length: 255 }).notNull(),
+    city: varchar("city", { length: 255 }).notNull(),
+    phoneNumber: varchar("phoneNumber", { length: 50 }).notNull(),
+    email: varchar("email", { length: 320 }).notNull(),
+
+    // Priority scoring (1-8)
+    priorityScore: int("priorityScore").notNull().default(0),
+    showroom: varchar("showroom", { length: 100 }).notNull().default("non"),
+    vendSpa: varchar("vendSpa", { length: 100 }).notNull().default("non"),
+    autreMarque: varchar("autreMarque", { length: 100 }).notNull().default("non"),
+    domaineSimilaire: varchar("domaineSimilaire", { length: 100 }).notNull().default("non"),
+
+    // Notes
+    notes: text("notes"),
+
+    // Status
+    status: candidateStatusEnum.default("non_contacte").notNull(),
+
+    // Geolocation
+    latitude: varchar("latitude", { length: 50 }),
+    longitude: varchar("longitude", { length: 50 }),
+
+    // Contact tracking
+    phoneCallsCount: int("phoneCallsCount").default(0).notNull(),
+    emailsSentCount: int("emailsSentCount").default(0).notNull(),
+    lastContactDate: timestamp("lastContactDate"),
+
+    // Visit tracking
+    visited: int("visited").default(0).notNull(),
+    visitDate: timestamp("visitDate"),
+
+    // Timestamps
+    dateAdded: timestamp("dateAdded").defaultNow().notNull(),
+    lastContact: timestamp("lastContact"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    statusIdx: index("candidate_status_idx").on(table.status),
+    priorityIdx: index("candidate_priority_idx").on(table.priorityScore),
+    cityIdx: index("candidate_city_idx").on(table.city),
+  })
+);
+
+export type PartnerCandidate = typeof partnerCandidates.$inferSelect;
+export type InsertPartnerCandidate = typeof partnerCandidates.$inferInsert;
+
+// Contact history for partner candidates
+export const candidateContactHistory = mysqlTable(
+  "candidate_contact_history",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    candidateId: int("candidateId").notNull(),
+    date: timestamp("date").defaultNow().notNull(),
+    type: mysqlEnum("contact_type", ["appel", "email", "visite", "note"]).notNull(),
+    content: text("content").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    candidateIdIdx: index("candidateId_idx").on(table.candidateId),
+  })
+);
+
+export type CandidateContactHistory = typeof candidateContactHistory.$inferSelect;
+export type InsertCandidateContactHistory = typeof candidateContactHistory.$inferInsert;

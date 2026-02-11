@@ -3,8 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Navigation, MapPin, X, Ruler, Plane, Car } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Navigation, MapPin, X, Ruler } from 'lucide-react';
 
 // Load Font Awesome for marker icons
 const fontAwesomeLink = document.createElement('link');
@@ -53,6 +52,28 @@ interface LeadData {
   partners: Partner | null;
 }
 
+interface Candidate {
+  id: number;
+  companyName: string;
+  fullName: string;
+  city: string;
+  phoneNumber: string;
+  email: string;
+  priorityScore: number;
+  showroom: string;
+  vendSpa: string;
+  autreMarque: string;
+  domaineSimilaire: string;
+  notes?: string | null;
+  status: string;
+  latitude?: string | null;
+  longitude?: string | null;
+  phoneCallsCount: number;
+  emailsSentCount: number;
+  visited: number;
+  visitDate?: string | Date | null;
+}
+
 interface Territory {
   id: number;
   partnerId: number;
@@ -66,7 +87,7 @@ interface Territory {
 
 interface GeocodedItem {
   id: string;
-  type: 'partner' | 'lead';
+  type: 'partner' | 'lead' | 'candidate';
   lat: number;
   lng: number;
   data: any;
@@ -109,6 +130,25 @@ const LEAD_STATUS_COLORS: Record<string, string> = {
   ARCHIVED: '#6b7280',
 };
 
+const PRIORITY_MARKER_COLORS: Record<number, string> = {
+  8: '#dc2626', // red-600
+  7: '#ef4444', // red-500
+  6: '#f97316', // orange-500
+  5: '#fb923c', // orange-400
+  4: '#eab308', // yellow-500
+  3: '#facc15', // yellow-400
+  2: '#4ade80', // green-400
+  1: '#22c55e', // green-500
+  0: '#d1d5db', // gray-300
+};
+
+const CANDIDATE_STATUS_LABELS: Record<string, string> = {
+  non_contacte: 'Non contacté',
+  en_cours: 'En cours',
+  valide: 'Validé',
+  archive: 'Archivé',
+};
+
 // ============================================
 // HELPERS
 // ============================================
@@ -125,7 +165,6 @@ const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * c;
 };
 
-// Geocode an address using Nominatim
 const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | null> => {
   try {
     const res = await fetch(
@@ -149,7 +188,8 @@ interface InteractivePartnerMapProps {
   partners: Partner[];
   leads: LeadData[];
   territories: Territory[];
-  filter: 'all' | 'partners' | 'leads';
+  candidates?: Candidate[];
+  filter: 'all' | 'partners' | 'leads' | 'candidates';
   partnerStatusFilter: string;
   leadStatusFilter: string;
 }
@@ -158,6 +198,7 @@ export default function InteractivePartnerMap({
   partners,
   leads,
   territories,
+  candidates = [],
   filter,
   partnerStatusFilter,
   leadStatusFilter,
@@ -194,7 +235,7 @@ export default function InteractivePartnerMap({
     if (!containerRef.current || mapRef.current) return;
 
     const map = L.map(containerRef.current, {
-      center: [50.5, 4.35], // Belgium center
+      center: [50.5, 4.35],
       zoom: 7,
       zoomControl: true,
     });
@@ -214,7 +255,7 @@ export default function InteractivePartnerMap({
     };
   }, []);
 
-  // Geocode partners and leads
+  // Geocode partners, leads, and candidates
   useEffect(() => {
     let cancelled = false;
 
@@ -235,17 +276,10 @@ export default function InteractivePartnerMap({
           if (coords === undefined) {
             coords = await geocodeAddress(address);
             cache.set(address, coords);
-            // Rate limit Nominatim
             await new Promise(r => setTimeout(r, 200));
           }
           if (coords) {
-            items.push({
-              id: `partner-${partner.id}`,
-              type: 'partner',
-              lat: coords.lat,
-              lng: coords.lng,
-              data: partner,
-            });
+            items.push({ id: `partner-${partner.id}`, type: 'partner', lat: coords.lat, lng: coords.lng, data: partner });
           }
         }
       }
@@ -268,13 +302,37 @@ export default function InteractivePartnerMap({
             await new Promise(r => setTimeout(r, 200));
           }
           if (coords) {
+            items.push({ id: `lead-${lead.id}`, type: 'lead', lat: coords.lat, lng: coords.lng, data: leadData });
+          }
+        }
+      }
+
+      // Geocode candidates
+      if (filter === 'all' || filter === 'candidates') {
+        for (const candidate of candidates) {
+          if (cancelled) return;
+
+          // Use stored coordinates if available
+          if (candidate.latitude && candidate.longitude) {
             items.push({
-              id: `lead-${lead.id}`,
-              type: 'lead',
-              lat: coords.lat,
-              lng: coords.lng,
-              data: leadData,
+              id: `candidate-${candidate.id}`,
+              type: 'candidate',
+              lat: parseFloat(candidate.latitude),
+              lng: parseFloat(candidate.longitude),
+              data: candidate,
             });
+            continue;
+          }
+
+          const address = `${candidate.city}, Belgium`;
+          let coords = cache.get(`candidate-${address}`);
+          if (coords === undefined) {
+            coords = await geocodeAddress(address);
+            cache.set(`candidate-${address}`, coords);
+            await new Promise(r => setTimeout(r, 200));
+          }
+          if (coords) {
+            items.push({ id: `candidate-${candidate.id}`, type: 'candidate', lat: coords.lat, lng: coords.lng, data: candidate });
           }
         }
       }
@@ -286,13 +344,12 @@ export default function InteractivePartnerMap({
 
     geocodeAll();
     return () => { cancelled = true; };
-  }, [partners, leads, filter, partnerStatusFilter, leadStatusFilter]);
+  }, [partners, leads, candidates, filter, partnerStatusFilter, leadStatusFilter]);
 
   // Update markers
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Remove old markers
     markersRef.current.forEach(marker => {
       if (mapRef.current) mapRef.current.removeLayer(marker);
     });
@@ -324,64 +381,102 @@ export default function InteractivePartnerMap({
           .join(', ') || 'Aucun territoire';
 
         popupContent = `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; padding: 4px; min-width: 250px;">
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; padding: 4px; min-width: 240px;">
             <div style="margin-bottom: 12px;">
-              <h3 style="margin: 0 0 4px 0; font-size: 17px; font-weight: 600; color: #1d1d1f; line-height: 1.3;">
-                ${p.companyName}
-              </h3>
-              <p style="margin: 0; font-size: 13px; color: #86868b;">
-                ${p.addressCity}, ${p.addressPostalCode}
-              </p>
+              <h3 style="margin: 0 0 4px 0; font-size: 17px; font-weight: 600; color: #1d1d1f;">${p.companyName}</h3>
+              <p style="margin: 0; font-size: 13px; color: #86868b;">${p.addressCity}, ${p.addressPostalCode}</p>
             </div>
-
             <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: ${color}15; border-radius: 8px; margin-bottom: 12px;">
               <div style="width: 6px; height: 6px; border-radius: 50%; background: ${color};"></div>
-              <span style="font-size: 12px; font-weight: 500; color: ${color};">
-                ${p.level} • ${p.status}
-              </span>
+              <span style="font-size: 12px; font-weight: 500; color: ${color};">${p.level} &bull; ${p.status}</span>
             </div>
-
             <div style="padding: 8px 12px; background: #f5f5f7; border-radius: 10px; margin-bottom: 12px;">
               <p style="margin: 0 0 4px 0; font-size: 12px; color: #86868b;">Contact</p>
               <p style="margin: 0; font-size: 13px; font-weight: 500;">${p.primaryContactName}</p>
             </div>
-
             <div style="padding: 8px 12px; background: #f5f5f7; border-radius: 10px; margin-bottom: 12px;">
               <p style="margin: 0 0 4px 0; font-size: 12px; color: #86868b;">Territoires</p>
               <p style="margin: 0; font-size: 13px; font-weight: 500;">${territoryList}</p>
             </div>
-
             <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-              ${p.primaryContactPhone ? `
-                <a href="tel:${p.primaryContactPhone}" 
-                   style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500; transition: all 0.2s;">
-                  <i class="fas fa-phone" style="font-size: 12px;"></i>
-                  <span>Appeler</span>
-                </a>
-              ` : ''}
-              ${p.primaryContactEmail ? `
-                <a href="mailto:${p.primaryContactEmail}" 
-                   style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500; transition: all 0.2s;">
-                  <i class="fas fa-envelope" style="font-size: 12px;"></i>
-                  <span>Email</span>
-                </a>
-              ` : ''}
+              ${p.primaryContactPhone ? `<a href="tel:${p.primaryContactPhone}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;"><i class="fas fa-phone" style="font-size: 12px;"></i><span>Appeler</span></a>` : ''}
+              ${p.primaryContactEmail ? `<a href="mailto:${p.primaryContactEmail}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;"><i class="fas fa-envelope" style="font-size: 12px;"></i><span>Email</span></a>` : ''}
             </div>
-
             ${p.totalOrders ? `
               <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #d2d2d7; display: flex; gap: 16px;">
-                <div>
-                  <p style="margin: 0; font-size: 11px; color: #86868b;">Commandes</p>
-                  <p style="margin: 0; font-size: 15px; font-weight: 600;">${p.totalOrders}</p>
-                </div>
-                <div>
-                  <p style="margin: 0; font-size: 11px; color: #86868b;">CA Total</p>
-                  <p style="margin: 0; font-size: 15px; font-weight: 600;">${parseFloat(p.totalRevenue || '0').toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</p>
-                </div>
+                <div><p style="margin: 0; font-size: 11px; color: #86868b;">Commandes</p><p style="margin: 0; font-size: 15px; font-weight: 600;">${p.totalOrders}</p></div>
+                <div><p style="margin: 0; font-size: 11px; color: #86868b;">CA Total</p><p style="margin: 0; font-size: 15px; font-weight: 600;">${parseFloat(p.totalRevenue || '0').toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</p></div>
               </div>
             ` : ''}
-          </div>
-        `;
+          </div>`;
+      } else if (item.type === 'candidate') {
+        // Candidate marker with priority score
+        const c: Candidate = item.data;
+        const priorityColor = PRIORITY_MARKER_COLORS[c.priorityScore] || '#d1d5db';
+        const visitedBorder = c.visited ? '3px solid #16a34a' : '3px solid white';
+        const textColor = c.priorityScore >= 3 && c.priorityScore <= 4 ? '#1a1a1a' : 'white';
+
+        iconHtml = `
+          <div style="position: relative;">
+            <div style="background-color: ${priorityColor}; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${textColor}; font-weight: bold; font-size: 15px; border: ${visitedBorder}; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+              ${c.priorityScore}
+            </div>
+            ${c.status === 'en_cours' ? `<div style="position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; background: #3b82f6; border-radius: 50%; border: 2px solid white;"></div>` : ''}
+            ${c.status === 'valide' ? `<div style="position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; background: #16a34a; border-radius: 50%; border: 2px solid white;"></div>` : ''}
+          </div>`;
+
+        const statusLabel = CANDIDATE_STATUS_LABELS[c.status] || c.status;
+        const criteria = [];
+        if (c.showroom === 'oui') criteria.push('Showroom');
+        if (c.vendSpa === 'oui') criteria.push('Vend Spa');
+        if (c.autreMarque === 'oui') criteria.push('Autre marque');
+        if (c.domaineSimilaire === 'oui') criteria.push('Domaine similaire');
+
+        popupContent = `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; padding: 4px; min-width: 260px;">
+            <div style="margin-bottom: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <div style="background-color: ${priorityColor}; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${textColor}; font-weight: bold; font-size: 14px; flex-shrink: 0;">
+                  ${c.priorityScore}
+                </div>
+                <h3 style="margin: 0; font-size: 17px; font-weight: 600; color: #1d1d1f; line-height: 1.3;">${c.companyName}</h3>
+              </div>
+              <p style="margin: 0; font-size: 13px; color: #86868b;">${c.fullName} &bull; ${c.city}</p>
+            </div>
+
+            <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;">
+              <span style="font-size: 11px; padding: 3px 8px; border-radius: 6px; background: ${c.status === 'valide' ? '#dcfce7' : c.status === 'en_cours' ? '#dbeafe' : c.status === 'archive' ? '#fee2e2' : '#f3f4f6'}; color: ${c.status === 'valide' ? '#166534' : c.status === 'en_cours' ? '#1e40af' : c.status === 'archive' ? '#991b1b' : '#374151'}; font-weight: 500;">${statusLabel}</span>
+              ${c.visited ? `<span style="font-size: 11px; padding: 3px 8px; border-radius: 6px; background: #dcfce7; color: #166534; font-weight: 500;">Visité</span>` : ''}
+            </div>
+
+            ${criteria.length > 0 ? `
+              <div style="padding: 8px 12px; background: #f5f5f7; border-radius: 10px; margin-bottom: 12px;">
+                <p style="margin: 0 0 4px 0; font-size: 12px; color: #86868b;">Critères</p>
+                <p style="margin: 0; font-size: 13px; font-weight: 500;">${criteria.join(', ')}</p>
+              </div>
+            ` : ''}
+
+            <div style="display: flex; gap: 12px; padding: 8px 12px; background: #f5f5f7; border-radius: 10px; margin-bottom: 12px;">
+              <div><p style="margin: 0; font-size: 11px; color: #86868b;">Appels</p><p style="margin: 0; font-size: 15px; font-weight: 600;">${c.phoneCallsCount}</p></div>
+              <div><p style="margin: 0; font-size: 11px; color: #86868b;">Emails</p><p style="margin: 0; font-size: 15px; font-weight: 600;">${c.emailsSentCount}</p></div>
+            </div>
+
+            ${c.notes ? `
+              <div style="padding: 8px 12px; background: #fffbeb; border-radius: 10px; margin-bottom: 12px;">
+                <p style="margin: 0 0 4px 0; font-size: 12px; color: #92400e;">Notes</p>
+                <p style="margin: 0; font-size: 13px;">${c.notes}</p>
+              </div>
+            ` : ''}
+
+            <div style="display: flex; gap: 6px;">
+              <a href="tel:${c.phoneNumber}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;">
+                <i class="fas fa-phone" style="font-size: 12px;"></i>Appeler
+              </a>
+              <a href="mailto:${c.email}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;">
+                <i class="fas fa-envelope" style="font-size: 12px;"></i>Email
+              </a>
+            </div>
+          </div>`;
       } else {
         // Lead marker
         const leadData: LeadData = item.data;
@@ -401,28 +496,19 @@ export default function InteractivePartnerMap({
         popupContent = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; padding: 4px; min-width: 220px;">
             <div style="margin-bottom: 12px;">
-              <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 600; color: #1d1d1f;">
-                ${leadName}
-              </h3>
-              <p style="margin: 0; font-size: 13px; color: #86868b;">
-                ${lead.city || ''} ${lead.postalCode || ''}
-              </p>
+              <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 600; color: #1d1d1f;">${leadName}</h3>
+              <p style="margin: 0; font-size: 13px; color: #86868b;">${lead.city || ''} ${lead.postalCode || ''}</p>
             </div>
-
             <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: ${statusColor}15; border-radius: 8px; margin-bottom: 12px;">
               <div style="width: 6px; height: 6px; border-radius: 50%; background: ${statusColor};"></div>
-              <span style="font-size: 12px; font-weight: 500; color: ${statusColor};">
-                ${lead.status} • ${lead.source}
-              </span>
+              <span style="font-size: 12px; font-weight: 500; color: ${statusColor};">${lead.status} &bull; ${lead.source}</span>
             </div>
-
             ${lead.productInterest ? `
               <div style="padding: 8px 12px; background: #f5f5f7; border-radius: 10px; margin-bottom: 8px;">
                 <p style="margin: 0; font-size: 12px; color: #86868b;">Intérêt</p>
                 <p style="margin: 0; font-size: 13px; font-weight: 500;">${lead.productInterest}</p>
               </div>
             ` : ''}
-
             ${partner ? `
               <div style="padding: 8px 12px; background: #e8f5e9; border-radius: 10px; margin-bottom: 8px;">
                 <p style="margin: 0; font-size: 12px; color: #2e7d32;">Assigné à</p>
@@ -433,56 +519,41 @@ export default function InteractivePartnerMap({
                 <p style="margin: 0; font-size: 12px; color: #e65100;">Non assigné</p>
               </div>
             `}
-
             <div style="display: flex; gap: 6px;">
-              ${lead.phone ? `
-                <a href="tel:${lead.phone}" 
-                   style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;">
-                  <i class="fas fa-phone" style="font-size: 12px;"></i>
-                  Appeler
-                </a>
-              ` : ''}
-              ${lead.email ? `
-                <a href="mailto:${lead.email}" 
-                   style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;">
-                  <i class="fas fa-envelope" style="font-size: 12px;"></i>
-                  Email
-                </a>
-              ` : ''}
+              ${lead.phone ? `<a href="tel:${lead.phone}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;"><i class="fas fa-phone" style="font-size: 12px;"></i>Appeler</a>` : ''}
+              ${lead.email ? `<a href="mailto:${lead.email}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #f5f5f7; border-radius: 10px; text-decoration: none; color: #007aff; font-size: 13px; font-weight: 500;"><i class="fas fa-envelope" style="font-size: 12px;"></i>Email</a>` : ''}
             </div>
-          </div>
-        `;
+          </div>`;
       }
+
+      const iconSize = item.type === 'partner' ? [36, 36] : item.type === 'candidate' ? [34, 34] : [28, 28];
+      const iconAnchor = item.type === 'partner' ? [18, 18] : item.type === 'candidate' ? [17, 17] : [14, 14];
 
       const icon = L.divIcon({
         html: iconHtml,
         className: 'custom-marker',
-        iconSize: item.type === 'partner' ? [36, 36] : [28, 28],
-        iconAnchor: item.type === 'partner' ? [18, 18] : [14, 14],
+        iconSize: iconSize as [number, number],
+        iconAnchor: iconAnchor as [number, number],
       });
 
       const marker = L.marker([item.lat, item.lng], { icon }).addTo(mapRef.current!);
 
       marker.on('click', () => {
         if (measureActiveRef.current) {
-          handleMarkerClickInMeasureMode({
-            id: item.id,
-            name: item.type === 'partner' ? item.data.companyName : [item.data.leads.firstName, item.data.leads.lastName].filter(Boolean).join(' ') || 'Lead',
-            lat: item.lat,
-            lng: item.lng,
-          });
+          const name = item.type === 'partner'
+            ? item.data.companyName
+            : item.type === 'candidate'
+              ? item.data.companyName
+              : [item.data.leads.firstName, item.data.leads.lastName].filter(Boolean).join(' ') || 'Lead';
+          handleMarkerClickInMeasureMode({ id: item.id, name, lat: item.lat, lng: item.lng });
         } else {
-          marker.bindPopup(popupContent, {
-            maxWidth: 320,
-            className: 'custom-popup',
-          }).openPopup();
+          marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' }).openPopup();
         }
       });
 
       markersRef.current.push(marker);
     });
 
-    // Fit bounds if there are markers
     if (geocodedItems.length > 0 && mapRef.current) {
       const bounds = L.latLngBounds(geocodedItems.map(i => [i.lat, i.lng]));
       mapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
@@ -500,18 +571,10 @@ export default function InteractivePartnerMap({
     } else if (measureStartRef.current.id !== point.id) {
       measureEndRef.current = point;
       setMeasureEnd(point);
-
-      const dist = calculateDistance(
-        measureStartRef.current.lat, measureStartRef.current.lng,
-        point.lat, point.lng
-      );
+      const dist = calculateDistance(measureStartRef.current.lat, measureStartRef.current.lng, point.lat, point.lng);
       setStraightDistance(dist);
-
-      // Draw line
       if (mapRef.current) {
-        if (measureLineRef.current) {
-          mapRef.current.removeLayer(measureLineRef.current);
-        }
+        if (measureLineRef.current) mapRef.current.removeLayer(measureLineRef.current);
         const line = L.polyline(
           [[measureStartRef.current.lat, measureStartRef.current.lng], [point.lat, point.lng]],
           { color: '#3b82f6', weight: 3, dashArray: '10, 10', opacity: 0.8 }
@@ -560,7 +623,6 @@ export default function InteractivePartnerMap({
 
         if (!mapRef.current) return;
 
-        // Remove old markers
         if (userMarkerRef.current) mapRef.current.removeLayer(userMarkerRef.current);
         if (userCircleRef.current) mapRef.current.removeLayer(userCircleRef.current);
 
@@ -572,7 +634,7 @@ export default function InteractivePartnerMap({
         });
 
         const userMarker = L.marker([latitude, longitude], { icon: userIcon }).addTo(mapRef.current);
-        userMarker.bindPopup(`<div style="text-align: center;"><strong>Votre position</strong><br/><span style="font-size: 12px; color: #666;">Précision: ±${Math.round(accuracy)}m</span></div>`);
+        userMarker.bindPopup(`<div style="text-align: center;"><strong>Votre position</strong><br/><span style="font-size: 12px; color: #666;">Précision: &plusmn;${Math.round(accuracy)}m</span></div>`);
         userMarkerRef.current = userMarker;
 
         const userCircle = L.circle([latitude, longitude], {
@@ -586,21 +648,17 @@ export default function InteractivePartnerMap({
 
         mapRef.current.setView([latitude, longitude], 10, { animate: true });
 
-        // Count nearby items
         const nearby = geocodedItems.filter(item => {
           const dist = calculateDistance(latitude, longitude, item.lat, item.lng);
           return dist <= 50;
         });
         setNearbyCount(nearby.length);
       },
-      () => {
-        setIsLocating(false);
-      },
+      () => { setIsLocating(false); },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
-  // Auto-hide nearby info
   useEffect(() => {
     if (showNearbyInfo) {
       const timer = setTimeout(() => setShowNearbyInfo(false), 5000);
@@ -617,57 +675,20 @@ export default function InteractivePartnerMap({
           padding: 16px;
           background: #ffffff;
         }
-        .custom-popup .leaflet-popup-tip {
-          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        .custom-marker {
-          background: transparent;
-          border: none;
-        }
-        .leaflet-popup-close-button {
-          width: 32px !important;
-          height: 32px !important;
-          font-size: 20px !important;
-          padding: 0 !important;
-          line-height: 32px !important;
-          right: 8px !important;
-          top: 8px !important;
-          color: #8e8e93 !important;
-          font-weight: 300 !important;
-        }
-        .leaflet-popup-close-button:hover {
-          background-color: rgba(0,0,0,0.05) !important;
-          border-radius: 50%;
-          color: #000 !important;
-        }
+        .custom-popup .leaflet-popup-tip { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .custom-marker { background: transparent; border: none; }
+        .leaflet-popup-close-button { width: 32px !important; height: 32px !important; font-size: 20px !important; padding: 0 !important; line-height: 32px !important; right: 8px !important; top: 8px !important; color: #8e8e93 !important; font-weight: 300 !important; }
+        .leaflet-popup-close-button:hover { background-color: rgba(0,0,0,0.05) !important; border-radius: 50%; color: #000 !important; }
         @media (max-width: 768px) {
-          .leaflet-control-zoom a {
-            width: 44px !important;
-            height: 44px !important;
-            line-height: 44px !important;
-            font-size: 24px !important;
-          }
-          .leaflet-popup-close-button {
-            width: 44px !important;
-            height: 44px !important;
-            font-size: 28px !important;
-            line-height: 44px !important;
-          }
-          .leaflet-popup-content-wrapper {
-            max-width: 90vw !important;
-          }
-          .custom-marker {
-            transform: scale(1.2);
-          }
+          .leaflet-control-zoom a { width: 44px !important; height: 44px !important; line-height: 44px !important; font-size: 24px !important; }
+          .leaflet-popup-close-button { width: 44px !important; height: 44px !important; font-size: 28px !important; line-height: 44px !important; }
+          .leaflet-popup-content-wrapper { max-width: 90vw !important; }
+          .custom-marker { transform: scale(1.2); }
         }
       `}</style>
 
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-        <div
-          ref={containerRef}
-          className="w-full h-full rounded-lg"
-          style={{ minHeight: '600px' }}
-        />
+        <div ref={containerRef} className="w-full h-full rounded-lg" style={{ minHeight: '600px' }} />
 
         {/* User location control */}
         <div className="absolute top-2 left-2 md:top-4 md:left-4 z-[1000] flex flex-col gap-2">
@@ -731,7 +752,6 @@ export default function InteractivePartnerMap({
                   <p>Cliquez sur un premier marqueur pour commencer</p>
                 </div>
               )}
-
               {measureStart && !measureEnd && (
                 <div className="text-sm">
                   <p className="font-semibold mb-2 text-blue-600">Étape 2/2</p>
@@ -740,7 +760,6 @@ export default function InteractivePartnerMap({
                   <p className="text-muted-foreground mt-3">Cliquez sur un deuxième marqueur</p>
                 </div>
               )}
-
               {measureStart && measureEnd && straightDistance !== null && (
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -749,25 +768,14 @@ export default function InteractivePartnerMap({
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
-
                   <div className="space-y-3 mb-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground text-xs">De</p>
-                      <p className="font-medium">{measureStart.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground text-xs">À</p>
-                      <p className="font-medium">{measureEnd.name}</p>
-                    </div>
+                    <div><p className="text-muted-foreground text-xs">De</p><p className="font-medium">{measureStart.name}</p></div>
+                    <div><p className="text-muted-foreground text-xs">À</p><p className="font-medium">{measureEnd.name}</p></div>
                   </div>
-
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <p className="text-3xl font-bold text-blue-600">
-                      {straightDistance.toFixed(1)} km
-                    </p>
+                    <p className="text-3xl font-bold text-blue-600">{straightDistance.toFixed(1)} km</p>
                     <p className="text-xs text-muted-foreground mt-1">Distance à vol d'oiseau</p>
                   </div>
-
                   <Button onClick={handleResetMeasure} variant="outline" size="sm" className="w-full mt-4">
                     Nouvelle mesure
                   </Button>

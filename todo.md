@@ -1420,3 +1420,18 @@
 - [x] Créer le composant InteractivePartnerMap avec géocodage, popups, mesure de distance, géolocalisation
 - [x] Créer la page AdminPartnerMap avec filtres, stats et légende
 - [x] Écrire les tests unitaires (23 tests passent)
+
+## Carte des partenaires - Compléter pour correspondre à l'original
+- [x] Créer la table partner_candidates avec score priorité (1-8), statuts, visité, compteurs
+- [x] Créer les routes CRUD tRPC pour candidats (create, update, delete, list, importCSV)
+- [x] Créer les routes incrementPhoneCall, incrementEmail, toggleVisited, updateStatus
+- [x] Créer l'onglet Tableau avec édition inline (statut, score, interactions, recherche, filtres, tri)
+- [x] Créer l'onglet Statistiques (taux de conversion, répartition par priorité et statut)
+- [x] Enrichir les popups de carte : score de priorité, compteurs interactions, critères
+- [x] Marqueurs avec couleur par score de priorité (1-8), numéro dans le marqueur, bordure verte si visité
+- [x] Légende des priorités (8=rouge, 6-7=orange, 4-5=jaune, <4=vert)
+- [x] Formulaire Ajouter un candidat (AddCandidateForm avec calcul score auto)
+- [x] Composant Import CSV (CSVImport)
+- [x] Stats cards en haut : Partenaires actifs, En attente, Leads, Candidats, Haute priorité
+- [x] Boutons Import CSV et Ajouter un candidat
+- [x] Tests unitaires (31 tests passent)
