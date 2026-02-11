@@ -1450,3 +1450,11 @@
 - [x] Adapter le composant InteractivePartnerMap pour n'afficher que les candidats
 - [x] Simplifier la légende (retirer Niveaux Partenaires)
 - [x] Mettre à jour les tests (43 tests passent)
+
+## Modification statut candidat depuis la carte
+- [x] Ajouter sélecteur de statut interactif dans les popups (4 boutons : Non contacté, En cours, Validé, Archivé)
+- [x] Ajouter bouton "Marquer comme visité" dans les popups
+- [x] Ajouter boutons d'incrémentation appels/emails dans les popups
+- [x] Connecter les boutons aux mutations tRPC via refs (updateMutationRef, toggleVisitedMutationRef, etc.)
+- [x] Rafraîchir la carte après modification (onRefresh callback)
+- [x] Tests unitaires (53 tests passent)

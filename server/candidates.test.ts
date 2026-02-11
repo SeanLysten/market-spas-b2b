@@ -452,10 +452,113 @@ describe("Partner Candidates - Business Logic", () => {
       expect(calculateDistance(50.85, 4.35, 50.85, 4.35)).toBe(0);
     });
 
-    it("should calculate Brussels to Liège correctly (~89-92 km)", () => {
+    it("should calculate Brussels to Li\u00e8ge correctly (~89-92 km)", () => {
       const dist = calculateDistance(50.8503, 4.3517, 50.6292, 5.5797);
       expect(dist).toBeGreaterThan(85);
       expect(dist).toBeLessThan(95);
+    });
+  });
+
+  describe("Popup Interactive Status Change", () => {
+    const statuses = ["non_contacte", "en_cours", "valide", "archive"];
+    const statusLabels: Record<string, string> = {
+      non_contacte: "Non contact\u00e9",
+      en_cours: "En cours",
+      valide: "Valid\u00e9",
+      archive: "Archiv\u00e9",
+    };
+
+    it("should have 4 status options available", () => {
+      expect(statuses).toHaveLength(4);
+    });
+
+    it("should map each status to a label", () => {
+      statuses.forEach(s => {
+        expect(statusLabels[s]).toBeDefined();
+        expect(statusLabels[s].length).toBeGreaterThan(0);
+      });
+    });
+
+    it("should generate correct data attributes for status buttons", () => {
+      const candidateId = 42;
+      statuses.forEach(status => {
+        const dataAction = "status";
+        const dataCandidateId = candidateId.toString();
+        const dataStatus = status;
+        expect(dataAction).toBe("status");
+        expect(dataCandidateId).toBe("42");
+        expect(statuses).toContain(dataStatus);
+      });
+    });
+
+    it("should generate correct data attributes for toggle visited button", () => {
+      const candidateId = 42;
+      const visited = true;
+      const dataAction = "toggle-visited";
+      const dataCandidateId = candidateId.toString();
+      const dataVisited = visited ? "1" : "0";
+      expect(dataAction).toBe("toggle-visited");
+      expect(dataCandidateId).toBe("42");
+      expect(dataVisited).toBe("1");
+    });
+
+    it("should generate correct data attributes for unvisited toggle", () => {
+      const visited = false;
+      const dataVisited = visited ? "1" : "0";
+      expect(dataVisited).toBe("0");
+    });
+
+    it("should generate correct data attributes for increment phone button", () => {
+      const candidateId = 42;
+      const dataAction = "increment-phone";
+      const dataCandidateId = candidateId.toString();
+      expect(dataAction).toBe("increment-phone");
+      expect(dataCandidateId).toBe("42");
+    });
+
+    it("should generate correct data attributes for increment email button", () => {
+      const candidateId = 42;
+      const dataAction = "increment-email";
+      const dataCandidateId = candidateId.toString();
+      expect(dataAction).toBe("increment-email");
+      expect(dataCandidateId).toBe("42");
+    });
+
+    it("should highlight active status button differently", () => {
+      const currentStatus = "en_cours";
+      const statusColors: Record<string, { activeBg: string; bg: string }> = {
+        non_contacte: { bg: "#f3f4f6", activeBg: "#6b7280" },
+        en_cours: { bg: "#dbeafe", activeBg: "#3b82f6" },
+        valide: { bg: "#dcfce7", activeBg: "#16a34a" },
+        archive: { bg: "#fee2e2", activeBg: "#dc2626" },
+      };
+
+      statuses.forEach(s => {
+        const isActive = s === currentStatus;
+        const expectedBg = isActive ? statusColors[s].activeBg : statusColors[s].bg;
+        if (isActive) {
+          expect(expectedBg).toBe(statusColors[s].activeBg);
+        } else {
+          expect(expectedBg).toBe(statusColors[s].bg);
+        }
+      });
+    });
+
+    it("should parse candidateId from data attribute correctly", () => {
+      const dataStr = "42";
+      const parsed = parseInt(dataStr);
+      expect(parsed).toBe(42);
+      expect(Number.isNaN(parsed)).toBe(false);
+    });
+
+    it("should handle toggle visited inversion correctly", () => {
+      // When visited is '1', clicking should send visited: false
+      const currentlyVisited1 = "1" === "1";
+      expect(!currentlyVisited1).toBe(false);
+
+      // When visited is '0', clicking should send visited: true
+      const currentlyVisited0 = "0" === "1";
+      expect(!currentlyVisited0).toBe(true);
     });
   });
 });

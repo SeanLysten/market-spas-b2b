@@ -1014,6 +1014,7 @@ export default function AdminPartnerMap() {
                     <InteractivePartnerMap
                       candidates={candidatesList}
                       statusFilter={candidateStatusFilter}
+                      onRefresh={() => refetchCandidates()}
                     />
                   </div>
                 )}

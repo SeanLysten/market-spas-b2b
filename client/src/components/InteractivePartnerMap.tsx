@@ -4,6 +4,8 @@ import 'leaflet/dist/leaflet.css';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Navigation, MapPin, X, Ruler } from 'lucide-react';
+import { trpc } from '@/lib/trpc';
+import { toast } from 'sonner';
 
 // Load Font Awesome for marker icons
 const fontAwesomeLink = document.createElement('link');
@@ -107,11 +109,13 @@ const geocodeAddress = async (address: string): Promise<{ lat: number; lng: numb
 interface InteractivePartnerMapProps {
   candidates: Candidate[];
   statusFilter: string;
+  onRefresh?: () => void;
 }
 
 export default function InteractivePartnerMap({
   candidates,
   statusFilter,
+  onRefresh,
 }: InteractivePartnerMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
@@ -145,6 +149,49 @@ export default function InteractivePartnerMap({
     data: Candidate;
   }
   const [geocodedItems, setGeocodedItems] = useState<GeocodedCandidate[]>([]);
+
+  // tRPC mutations for status change, visited toggle, increment calls/emails
+  const updateMutation = trpc.admin.candidates.update.useMutation({
+    onSuccess: () => {
+      toast.success('Statut mis à jour');
+      onRefresh?.();
+    },
+    onError: () => toast.error('Erreur lors de la mise à jour'),
+  });
+
+  const toggleVisitedMutation = trpc.admin.candidates.toggleVisited.useMutation({
+    onSuccess: () => {
+      toast.success('Statut de visite mis à jour');
+      onRefresh?.();
+    },
+    onError: () => toast.error('Erreur lors de la mise à jour'),
+  });
+
+  const incrementPhoneMutation = trpc.admin.candidates.incrementPhoneCall.useMutation({
+    onSuccess: () => {
+      toast.success('Appel enregistré');
+      onRefresh?.();
+    },
+  });
+
+  const incrementEmailMutation = trpc.admin.candidates.incrementEmail.useMutation({
+    onSuccess: () => {
+      toast.success('Email enregistré');
+      onRefresh?.();
+    },
+  });
+
+  // Refs to keep mutations accessible in popup event handlers
+  const updateMutationRef = useRef(updateMutation);
+  const toggleVisitedMutationRef = useRef(toggleVisitedMutation);
+  const incrementPhoneMutationRef = useRef(incrementPhoneMutation);
+  const incrementEmailMutationRef = useRef(incrementEmailMutation);
+  useEffect(() => {
+    updateMutationRef.current = updateMutation;
+    toggleVisitedMutationRef.current = toggleVisitedMutation;
+    incrementPhoneMutationRef.current = incrementPhoneMutation;
+    incrementEmailMutationRef.current = incrementEmailMutation;
+  }, [updateMutation, toggleVisitedMutation, incrementPhoneMutation, incrementEmailMutation]);
 
   // Initialize map
   useEffect(() => {
@@ -257,8 +304,20 @@ export default function InteractivePartnerMap({
       if (c.autreMarque === 'oui' || c.autreMarque?.toLowerCase().includes('oui')) criteria.push('Autre marque');
       if (c.domaineSimilaire === 'oui' || c.domaineSimilaire?.toLowerCase().includes('oui')) criteria.push('Domaine similaire');
 
+      // Status button styles
+      const statusBtnStyle = (s: string, active: boolean) => {
+        const colors: Record<string, { bg: string; activeBg: string; color: string; activeColor: string }> = {
+          non_contacte: { bg: '#f3f4f6', activeBg: '#6b7280', color: '#374151', activeColor: '#ffffff' },
+          en_cours: { bg: '#dbeafe', activeBg: '#3b82f6', color: '#1e40af', activeColor: '#ffffff' },
+          valide: { bg: '#dcfce7', activeBg: '#16a34a', color: '#166534', activeColor: '#ffffff' },
+          archive: { bg: '#fee2e2', activeBg: '#dc2626', color: '#991b1b', activeColor: '#ffffff' },
+        };
+        const col = colors[s] || colors.non_contacte;
+        return `background: ${active ? col.activeBg : col.bg}; color: ${active ? col.activeColor : col.color}; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s;`;
+      };
+
       const popupContent = `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; padding: 4px; min-width: 260px;">
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; padding: 4px; min-width: 280px;">
           <div style="margin-bottom: 12px;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
               <div style="background-color: ${priorityColor}; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${textColor}; font-weight: bold; font-size: 14px; flex-shrink: 0;">
@@ -269,9 +328,23 @@ export default function InteractivePartnerMap({
             <p style="margin: 0; font-size: 13px; color: #86868b;">${c.fullName} &bull; ${c.city}</p>
           </div>
 
-          <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;">
-            <span style="font-size: 11px; padding: 3px 8px; border-radius: 6px; background: ${c.status === 'valide' ? '#dcfce7' : c.status === 'en_cours' ? '#dbeafe' : c.status === 'archive' ? '#fee2e2' : '#f3f4f6'}; color: ${c.status === 'valide' ? '#166534' : c.status === 'en_cours' ? '#1e40af' : c.status === 'archive' ? '#991b1b' : '#374151'}; font-weight: 500;">${statusLabel}</span>
-            ${c.visited ? `<span style="font-size: 11px; padding: 3px 8px; border-radius: 6px; background: #dcfce7; color: #166534; font-weight: 500;">Visité</span>` : ''}
+          <!-- Status selector -->
+          <div style="margin-bottom: 12px;">
+            <p style="margin: 0 0 6px 0; font-size: 12px; color: #86868b; font-weight: 500;">Statut</p>
+            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+              <button data-action="status" data-candidate-id="${c.id}" data-status="non_contacte" style="${statusBtnStyle('non_contacte', c.status === 'non_contacte')}">Non contacté</button>
+              <button data-action="status" data-candidate-id="${c.id}" data-status="en_cours" style="${statusBtnStyle('en_cours', c.status === 'en_cours')}">En cours</button>
+              <button data-action="status" data-candidate-id="${c.id}" data-status="valide" style="${statusBtnStyle('valide', c.status === 'valide')}">Validé</button>
+              <button data-action="status" data-candidate-id="${c.id}" data-status="archive" style="${statusBtnStyle('archive', c.status === 'archive')}">Archivé</button>
+            </div>
+          </div>
+
+          <!-- Visited toggle -->
+          <div style="margin-bottom: 12px;">
+            <button data-action="toggle-visited" data-candidate-id="${c.id}" data-visited="${c.visited ? '1' : '0'}" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: 10px; border: 2px solid ${c.visited ? '#16a34a' : '#d1d5db'}; background: ${c.visited ? '#dcfce7' : '#ffffff'}; color: ${c.visited ? '#166534' : '#6b7280'}; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;">
+              <i class="fas ${c.visited ? 'fa-check-circle' : 'fa-circle'}" style="font-size: 14px;"></i>
+              ${c.visited ? 'Visité ✓' : 'Marquer comme visité'}
+            </button>
           </div>
 
           ${criteria.length > 0 ? `
@@ -281,9 +354,22 @@ export default function InteractivePartnerMap({
             </div>
           ` : ''}
 
-          <div style="display: flex; gap: 12px; padding: 8px 12px; background: #f5f5f7; border-radius: 10px; margin-bottom: 12px;">
-            <div><p style="margin: 0; font-size: 11px; color: #86868b;">Appels</p><p style="margin: 0; font-size: 15px; font-weight: 600;">${c.phoneCallsCount}</p></div>
-            <div><p style="margin: 0; font-size: 11px; color: #86868b;">Emails</p><p style="margin: 0; font-size: 15px; font-weight: 600;">${c.emailsSentCount}</p></div>
+          <!-- Interactions counters with increment buttons -->
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <div style="flex: 1; padding: 8px 12px; background: #f5f5f7; border-radius: 10px; display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <p style="margin: 0; font-size: 11px; color: #86868b;">Appels</p>
+                <p style="margin: 0; font-size: 15px; font-weight: 600;">${c.phoneCallsCount}</p>
+              </div>
+              <button data-action="increment-phone" data-candidate-id="${c.id}" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid #d1d5db; background: white; color: #007aff; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+            </div>
+            <div style="flex: 1; padding: 8px 12px; background: #f5f5f7; border-radius: 10px; display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <p style="margin: 0; font-size: 11px; color: #86868b;">Emails</p>
+                <p style="margin: 0; font-size: 15px; font-weight: 600;">${c.emailsSentCount}</p>
+              </div>
+              <button data-action="increment-email" data-candidate-id="${c.id}" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid #d1d5db; background: white; color: #007aff; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+            </div>
           </div>
 
           ${c.notes ? `
@@ -312,11 +398,57 @@ export default function InteractivePartnerMap({
 
       const marker = L.marker([item.lat, item.lng], { icon }).addTo(mapRef.current!);
 
+      const popup = L.popup({ maxWidth: 340, className: 'custom-popup' }).setContent(popupContent);
+
+      // Attach event listeners after popup opens
+      popup.on('add', () => {
+        const container = popup.getElement();
+        if (!container) return;
+
+        // Status buttons
+        container.querySelectorAll<HTMLButtonElement>('[data-action="status"]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const candidateId = parseInt(btn.dataset.candidateId || '0');
+            const newStatus = btn.dataset.status || 'non_contacte';
+            updateMutationRef.current.mutate({ id: candidateId, updates: { status: newStatus as any } });
+          });
+        });
+
+        // Toggle visited button
+        container.querySelectorAll<HTMLButtonElement>('[data-action="toggle-visited"]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const candidateId = parseInt(btn.dataset.candidateId || '0');
+            const currentlyVisited = btn.dataset.visited === '1';
+            toggleVisitedMutationRef.current.mutate({ candidateId, visited: !currentlyVisited });
+          });
+        });
+
+        // Increment phone button
+        container.querySelectorAll<HTMLButtonElement>('[data-action="increment-phone"]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const candidateId = parseInt(btn.dataset.candidateId || '0');
+            incrementPhoneMutationRef.current.mutate({ candidateId });
+          });
+        });
+
+        // Increment email button
+        container.querySelectorAll<HTMLButtonElement>('[data-action="increment-email"]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const candidateId = parseInt(btn.dataset.candidateId || '0');
+            incrementEmailMutationRef.current.mutate({ candidateId });
+          });
+        });
+      });
+
       marker.on('click', () => {
         if (measureActiveRef.current) {
           handleMarkerClickInMeasureMode({ id: item.id, name: c.companyName, lat: item.lat, lng: item.lng });
         } else {
-          marker.bindPopup(popupContent, { maxWidth: 320, className: 'custom-popup' }).openPopup();
+          marker.bindPopup(popup).openPopup();
         }
       });
 
