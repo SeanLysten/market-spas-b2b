@@ -1,0 +1,130 @@
+{
+  "query": "SELECT pt.id, pt.partnerId, p.companyName, r.name as regionName, r.code as regionCode, c.name as countryName FROM partner_territories pt JOIN partners p ON pt.partnerId = p.id JOIN regions r ON pt.regionId = r.id JOIN countries c ON r.countryId = c.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT pt.id, pt.partnerId, p.companyName, r.name as regionName, r.code as regionCode, c.name as countryName FROM partner_territories pt JOIN partners p ON pt.partnerId = p.id JOIN regions r ON pt.regionId = r.id JOIN countries c ON r.countryId = c.id;",
+  "rows": [
+    {
+      "id": "60003",
+      "partnerId": "1",
+      "companyName": "Spa Paradise SPRL",
+      "regionName": "Province du Brabant wallon",
+      "regionCode": "BE-WBR",
+      "countryName": "Belgique"
+    },
+    {
+      "id": "60004",
+      "partnerId": "1",
+      "companyName": "Spa Paradise SPRL",
+      "regionName": "Province du Brabant flamand",
+      "regionCode": "BE-VBR",
+      "countryName": "Belgique"
+    },
+    {
+      "id": "60002",
+      "partnerId": "1",
+      "companyName": "Spa Paradise SPRL",
+      "regionName": "Province de Flandre occidentale",
+      "regionCode": "BE-VWV",
+      "countryName": "Belgique"
+    },
+    {
+      "id": "60005",
+      "partnerId": "1",
+      "companyName": "Spa Paradise SPRL",
+      "regionName": "Province de Flandre orientale",
+      "regionCode": "BE-VOV",
+      "countryName": "Belgique"
+    },
+    {
+      "id": "60001",
+      "partnerId": "1",
+      "companyName": "Spa Paradise SPRL",
+      "regionName": "Région de Bruxelles-Capitale",
+      "regionCode": "BE-BRU",
+      "countryName": "Belgique"
+    },
+    {
+      "id": "1",
+      "partnerId": "3",
+      "companyName": "Aqua Dreams SA",
+      "regionName": "Province de Liège",
+      "regionCode": "BE-WLG",
+      "countryName": "Belgique"
+    },
+    {
+      "id": "30001",
+      "partnerId": "3",
+      "companyName": "Aqua Dreams SA",
+      "regionName": "Province du Hainaut",
+      "regionCode": "BE-WHT",
+      "countryName": "Belgique"
+    },
+    {
+      "id": "30002",
+      "partnerId": "3",
+      "companyName": "Aqua Dreams SA",
+      "regionName": "Province de Namur",
+      "regionCode": "BE-WNA",
+      "countryName": "Belgique"
+    },
+    {
+      "id": "2",
+      "partnerId": "3",
+      "companyName": "Aqua Dreams SA",
+      "regionName": "Province du Luxembourg",
+      "regionCode": "BE-WLX",
+      "countryName": "Belgique"
+    },
+    {
+      "id": "30003",
+      "partnerId": "3",
+      "companyName": "Aqua Dreams SA",
+      "regionName": "Zuid-Holland",
+      "regionCode": "NL-ZH",
+      "countryName": "Pays-Bas"
+    },
+    {
+      "id": "30004",
+      "partnerId": "3",
+      "companyName": "Aqua Dreams SA",
+      "regionName": "Noord-Brabant",
+      "regionCode": "NL-NB",
+      "countryName": "Pays-Bas"
+    },
+    {
+      "id": "4",
+      "partnerId": "4",
+      "companyName": "Relax Zone BVBA",
+      "regionName": "Province d'Anvers",
+      "regionCode": "BE-VAN",
+      "countryName": "Belgique"
+    },
+    {
+      "id": "5",
+      "partnerId": "4",
+      "companyName": "Relax Zone BVBA",
+      "regionName": "Province du Limbourg",
+      "regionCode": "BE-VLI",
+      "countryName": "Belgique"
+    },
+    {
+      "id": "6",
+      "partnerId": "4",
+      "companyName": "Relax Zone BVBA",
+      "regionName": "Ain",
+      "regionCode": "FR-01",
+      "countryName": "France"
+    },
+    {
+      "id": "7",
+      "partnerId": "4",
+      "companyName": "Relax Zone BVBA",
+      "regionName": "Alpes-de-Haute-Provence",
+      "regionCode": "FR-04",
+      "countryName": "France"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tpartnerId\tcompanyName\tregionName\tregionCode\tcountryName\n60003\t1\tSpa Paradise SPRL\tProvince du Brabant wallon\tBE-WBR\tBelgique\n60004\t1\tSpa Paradise SPRL\tProvince du Brabant flamand\tBE-VBR\tBelgique\n60002\t1\tSpa Paradise SPRL\tProvince de Flandre occidentale\tBE-VWV\tBelgique\n60005\t1\tSpa Paradise SPRL\tProvince de Flandre orientale\tBE-VOV\tBelgique\n60001\t1\tSpa Paradise SPRL\tRégion de Bruxelles-Capitale\tBE-BRU\tBelgique\n1\t3\tAqua Dreams SA\tProvince de Liège\tBE-WLG\tBelgique\n30001\t3\tAqua Dreams SA\tProvince du Hainaut\tBE-WHT\tBelgique\n30002\t3\tAqua Dreams SA\tProvince de Namur\tBE-WNA\tBelgique\n2\t3\tAqua Dreams SA\tProvince du Luxembourg\tBE-WLX\tBelgique\n30003\t3\tAqua Dreams SA\tZuid-Holland\tNL-ZH\tPays-Bas\n30004\t3\tAqua Dreams SA\tNoord-Brabant\tNL-NB\tPays-Bas\n4\t4\tRelax Zone BVBA\tProvince d'Anvers\tBE-VAN\tBelgique\n5\t4\tRelax Zone BVBA\tProvince du Limbourg\tBE-VLI\tBelgique\n6\t4\tRelax Zone BVBA\tAin\tFR-01\tFrance\n7\t4\tRelax Zone BVBA\tAlpes-de-Haute-Provence\tFR-04\tFrance\n",
+  "stderr": "",
+  "execution_time_ms": 372
+}

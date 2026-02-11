@@ -1935,6 +1935,22 @@ export const appRouter = router({
         .query(async ({ input }) => {
           return await territoriesDb.findBestPartnerForPostalCode(input.postalCode);
         }),
+
+      // Map data: partners + leads + territories for interactive map
+      mapData: adminProcedure.query(async () => {
+        const [allPartners, allLeads, allTerritories, allRegions] = await Promise.all([
+          db.getAllPartners({}),
+          db.getLeads({}),
+          territoriesDb.getAllPartnerTerritories(),
+          territoriesDb.getAllRegionsWithCountry(),
+        ]);
+        return {
+          partners: allPartners,
+          leads: allLeads,
+          territories: allTerritories,
+          regions: allRegions,
+        };
+      }),
     }),
 
     // Analytics & Charts

@@ -18,6 +18,7 @@ import AdminOrders from "@/pages/admin/AdminOrders";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminLeads from "@/pages/admin/AdminLeads";
 import AdminAfterSales from "@/pages/admin/AdminAfterSales";
+import AdminPartnerMap from "@/pages/admin/AdminPartnerMap";
 
 import AdminTechnicalResources from "@/pages/admin/TechnicalResources";
 
@@ -94,6 +95,7 @@ function Router() {
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin/leads" component={AdminLeads} />
       <Route path="/admin/after-sales" component={AdminAfterSales} />
+      <Route path="/admin/partner-map" component={AdminPartnerMap} />
 
       <Route path="/admin/technical-resources" component={AdminTechnicalResources} />
 

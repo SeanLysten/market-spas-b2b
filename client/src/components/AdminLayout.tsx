@@ -20,6 +20,7 @@ import {
   TrendingUp,
   MapPin,
   Wrench,
+  Map,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -112,6 +113,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: "Ressources Techniques",
       href: "/admin/technical-resources",
       icon: BookOpen,
+    },
+    {
+      name: "Carte du Réseau",
+      href: "/admin/partner-map",
+      icon: Map,
     },
     {
       name: "SAV",

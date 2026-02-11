@@ -1408,3 +1408,15 @@
 - [x] Tableau de bord comparatif : comparer performances entre deux périodes
 - [x] Indicateurs d'évolution (%) entre période actuelle et période précédente
 - [x] Graphiques de comparaison côte à côte (barres groupées)
+
+## Carte des partenaires - Intégration depuis autre conversation
+- [x] Récupérer le code de la carte interactive des partenaires
+- [x] Créer la page AdminPartnerMap dans le dashboard admin
+- [x] Ajouter l'onglet "Carte du réseau" dans le menu admin
+- [x] Configurer le routing pour la nouvelle page
+- [x] Adapter le code au style et aux données du projet Market Spas B2B
+- [x] Installer Leaflet et @types/leaflet
+- [x] Créer la route API mapData (admin.territories.mapData)
+- [x] Créer le composant InteractivePartnerMap avec géocodage, popups, mesure de distance, géolocalisation
+- [x] Créer la page AdminPartnerMap avec filtres, stats et légende
+- [x] Écrire les tests unitaires (23 tests passent)
