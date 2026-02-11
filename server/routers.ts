@@ -404,7 +404,12 @@ export const appRouter = router({
           throw new TRPCError({ code: 'FORBIDDEN', message: 'Unauthorized' });
         }
         
-        return await db.updateLeadStatus(input.id, input.status, ctx.user.id, input.notes);
+        const result = await db.updateLeadStatus(input.id, input.status, ctx.user.id, input.notes);
+        
+        // Notifier les admins pour rafraîchir les KPIs en temps réel
+        notifyAdmins("leads:refresh", { timestamp: Date.now(), leadId: input.id, newStatus: input.status });
+        
+        return result;
       }),
 
     // Get stats for current partner (or all leads for admins)
@@ -1680,7 +1685,12 @@ export const appRouter = router({
           })
         )
         .mutation(async ({ ctx, input }) => {
-          return await db.updateLeadStatus(input.id, input.status, ctx.user.id, input.notes);
+          const result = await db.updateLeadStatus(input.id, input.status, ctx.user.id, input.notes);
+          
+          // Notifier les admins pour rafraîchir les KPIs en temps réel
+          notifyAdmins("leads:refresh", { timestamp: Date.now(), leadId: input.id, newStatus: input.status });
+          
+          return result;
         }),
 
       assign: adminProcedure

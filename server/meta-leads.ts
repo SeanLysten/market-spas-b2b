@@ -11,6 +11,7 @@
 import { drizzle } from "drizzle-orm/mysql2";
 import { leads, leadStatusHistory, partnerPostalCodes, metaCampaigns, partners, notifications } from "../drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
+import { notifyAdmins } from "./_core/websocket";
 
 // Lazy DB connection
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -103,6 +104,14 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
             
             // Distribuer le lead au partenaire approprié
             await distributeLeadToPartner(lead.id);
+            
+            // Notifier les admins en temps réel via WebSocket
+            notifyAdmins("lead:new", {
+              leadId: lead.id,
+              customerName: leadData.field_data?.find((f: any) => f.name === "full_name")?.values?.[0] || "Nouveau lead",
+              city: leadData.field_data?.find((f: any) => f.name === "city")?.values?.[0] || "",
+            });
+            notifyAdmins("leads:refresh", { timestamp: Date.now() });
           } else {
             // FALLBACK: Créer le lead avec les données minimales du webhook
             // Cela arrive si le token est expiré ou si l'API Graph est indisponible
@@ -111,6 +120,14 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
             
             // Tenter la distribution même avec les données minimales
             await distributeLeadToPartner(lead.id);
+            
+            // Notifier les admins en temps réel via WebSocket
+            notifyAdmins("lead:new", {
+              leadId: lead.id,
+              customerName: "Nouveau lead (données partielles)",
+              city: "",
+            });
+            notifyAdmins("leads:refresh", { timestamp: Date.now() });
           }
         } catch (error) {
           console.error(`[Meta] Erreur traitement lead ${leadgenId}:`, error);
@@ -120,6 +137,14 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
             console.log(`[Meta] Tentative de création en dernier recours`);
             const lead = await createLeadFromWebhookOnly(change.value);
             await distributeLeadToPartner(lead.id);
+            
+            // Notifier les admins même en dernier recours
+            notifyAdmins("lead:new", {
+              leadId: lead.id,
+              customerName: "Nouveau lead (récupération partielle)",
+              city: "",
+            });
+            notifyAdmins("leads:refresh", { timestamp: Date.now() });
           } catch (fallbackError) {
             console.error(`[Meta] Échec complet du traitement du lead ${leadgenId}:`, fallbackError);
           }

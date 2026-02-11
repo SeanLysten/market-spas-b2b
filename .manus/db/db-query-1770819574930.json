@@ -1,0 +1,121 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'leads' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'leads' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "firstName"
+    },
+    {
+      "COLUMN_NAME": "lastName"
+    },
+    {
+      "COLUMN_NAME": "email"
+    },
+    {
+      "COLUMN_NAME": "phone"
+    },
+    {
+      "COLUMN_NAME": "address"
+    },
+    {
+      "COLUMN_NAME": "city"
+    },
+    {
+      "COLUMN_NAME": "postalCode"
+    },
+    {
+      "COLUMN_NAME": "country"
+    },
+    {
+      "COLUMN_NAME": "status"
+    },
+    {
+      "COLUMN_NAME": "source"
+    },
+    {
+      "COLUMN_NAME": "metaLeadgenId"
+    },
+    {
+      "COLUMN_NAME": "metaFormId"
+    },
+    {
+      "COLUMN_NAME": "metaAdId"
+    },
+    {
+      "COLUMN_NAME": "metaAdsetId"
+    },
+    {
+      "COLUMN_NAME": "metaCampaignId"
+    },
+    {
+      "COLUMN_NAME": "metaPageId"
+    },
+    {
+      "COLUMN_NAME": "productInterest"
+    },
+    {
+      "COLUMN_NAME": "budget"
+    },
+    {
+      "COLUMN_NAME": "timeline"
+    },
+    {
+      "COLUMN_NAME": "message"
+    },
+    {
+      "COLUMN_NAME": "customFields"
+    },
+    {
+      "COLUMN_NAME": "assignedPartnerId"
+    },
+    {
+      "COLUMN_NAME": "assignedAt"
+    },
+    {
+      "COLUMN_NAME": "assignmentReason"
+    },
+    {
+      "COLUMN_NAME": "firstContactAt"
+    },
+    {
+      "COLUMN_NAME": "lastContactAt"
+    },
+    {
+      "COLUMN_NAME": "contactAttempts"
+    },
+    {
+      "COLUMN_NAME": "convertedAt"
+    },
+    {
+      "COLUMN_NAME": "convertedOrderId"
+    },
+    {
+      "COLUMN_NAME": "estimatedValue"
+    },
+    {
+      "COLUMN_NAME": "actualValue"
+    },
+    {
+      "COLUMN_NAME": "notes"
+    },
+    {
+      "COLUMN_NAME": "lostReason"
+    },
+    {
+      "COLUMN_NAME": "receivedAt"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    },
+    {
+      "COLUMN_NAME": "updatedAt"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\nfirstName\nlastName\nemail\nphone\naddress\ncity\npostalCode\ncountry\nstatus\nsource\nmetaLeadgenId\nmetaFormId\nmetaAdId\nmetaAdsetId\nmetaCampaignId\nmetaPageId\nproductInterest\nbudget\ntimeline\nmessage\ncustomFields\nassignedPartnerId\nassignedAt\nassignmentReason\nfirstContactAt\nlastContactAt\ncontactAttempts\nconvertedAt\nconvertedOrderId\nestimatedValue\nactualValue\nnotes\nlostReason\nreceivedAt\ncreatedAt\nupdatedAt\n",
+  "stderr": "",
+  "execution_time_ms": 342
+}

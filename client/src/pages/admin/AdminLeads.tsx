@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import AdminLayout from "@/components/AdminLayout";
+import { io, Socket } from "socket.io-client";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -119,11 +121,53 @@ export default function AdminLeads() {
   const [compCustomFrom, setCompCustomFrom] = useState("");
   const [compCustomTo, setCompCustomTo] = useState("");
 
-  // Récupérer les vrais leads depuis la base de données
+  // Récupérer les vrais leads depuis la base de données avec polling automatique toutes les 30s
   const { data: leadsData, isLoading: leadsLoading, refetch } = trpc.admin.leads.list.useQuery({
     status: statusFilter !== "all" ? statusFilter : undefined,
     partnerId: partnerFilter !== "all" ? parseInt(partnerFilter) : undefined,
+  }, {
+    refetchInterval: 30000, // Polling toutes les 30 secondes
+    refetchIntervalInBackground: false, // Pas de polling quand l'onglet est en arrière-plan
   });
+
+  // État pour l'animation du bouton refresh
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
+
+  // WebSocket : écouter les nouveaux leads en temps réel
+  const socketRef = useRef<Socket | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    if (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN") return;
+
+    const socket = io(window.location.origin, {
+      transports: ["websocket", "polling"],
+    });
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      socket.emit("join:admin");
+    });
+
+    // Quand un nouveau lead arrive, rafraîchir automatiquement
+    socket.on("leads:refresh", () => {
+      console.log("[Leads] Nouveau lead détecté via WebSocket, rafraîchissement...");
+      refetch();
+      setLastRefreshTime(new Date());
+    });
+
+    // Toast de notification pour nouveau lead
+    socket.on("lead:new", (data: { leadId: number; customerName: string; city: string }) => {
+      toast.success("Nouveau lead reçu !", {
+        description: data.customerName + (data.city ? ` de ${data.city}` : ""),
+        duration: 5000,
+      });
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user, refetch]);
 
   // Mutation pour réassigner tous les leads
   const reassignMutation = trpc.admin.leads.reassignAll.useMutation({
@@ -163,6 +207,17 @@ export default function AdminLeads() {
     metaQueryInput,
     { retry: false }
   );
+
+  // Fonction de rafraîchissement complète (leads + campagnes Meta)
+  const refreshAll = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([refetch(), refetchMeta()]);
+      setLastRefreshTime(new Date());
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  }, [refetch, refetchMeta]);
   const { data: dailyInsightsData } = trpc.metaAds.getDailyInsights.useQuery(
     metaQueryInput,
     { retry: false, enabled: !!metaCampaignsData?.connected }
@@ -475,8 +530,14 @@ export default function AdminLeads() {
                 </>
               )}
             </Button>
-            <Button variant="outline" size="icon" onClick={() => refetch()}>
-              <RefreshCw className="w-4 h-4" />
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={refreshAll}
+              disabled={isRefreshing}
+              title={`Dernière actualisation : ${lastRefreshTime.toLocaleTimeString('fr-FR')}`}
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </Button>
           </div>
         </div>

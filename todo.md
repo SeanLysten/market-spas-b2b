@@ -1470,14 +1470,23 @@
 - [x] 16 tests unitaires pour la logique de distribution (tous passent)
 
 ## Intégration directe Meta Lead Ads (sans Make)
-- [ ] Analyser l'intégration Meta existante (meta-oauth.ts, meta-leads.ts)
-- [ ] Créer/adapter le endpoint webhook pour recevoir les leads Meta Leadgen directement
-- [ ] Implémenter la vérification du webhook (challenge verify_token)
-- [ ] Implémenter la récupération des données du lead via l'API Meta Leadgen
-- [ ] Configurer l'abonnement webhook leadgen sur Meta Business
-- [ ] Tester la réception d'un lead de test
-- [ ] Écrire les tests unitaires
+- [x] Analyser l'intégration Meta existante (meta-oauth.ts, meta-leads.ts)
+- [x] Créer/adapter le endpoint webhook pour recevoir les leads Meta Leadgen directement
+- [x] Implémenter la vérification du webhook (challenge verify_token)
+- [x] Implémenter la récupération des données du lead via l'API Meta Leadgen
+- [x] Configurer l'abonnement webhook leadgen sur Meta Business
+- [x] Tester la réception d'un lead de test
+- [x] Écrire les tests unitaires
 
 - [x] Vérifier que le flux webhook Meta → base de données → dashboard admin fonctionne
 - [x] Tester avec un payload webhook simulé
 - [x] Vérifier l affichage des leads dans la page admin Tous les leads
+
+## Dashboard Leads - Actualisation temps réel et KPIs
+- [x] Actualisation automatique des leads (polling toutes les 30s)
+- [x] Notification WebSocket quand un nouveau lead arrive
+- [x] Bouton refresh fonctionnel pour actualiser manuellement
+- [x] KPI Total Leads dynamique et temps réel
+- [x] KPI Taux de conversion dynamique (basé sur les statuts CONVERTED)
+- [x] KPI statistiques campagnes actualisées
+- [x] Tous les leads de toutes les pages et campagnes récupérés
