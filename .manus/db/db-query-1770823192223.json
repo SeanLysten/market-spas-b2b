@@ -1,0 +1,158 @@
+{
+  "query": "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'leads' ORDER BY ordinal_position",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'leads' ORDER BY ordinal_position",
+  "rows": [
+    {
+      "column_name": "id",
+      "data_type": "int"
+    },
+    {
+      "column_name": "firstName",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "lastName",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "email",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "phone",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "address",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "city",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "postalCode",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "country",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "status",
+      "data_type": "enum"
+    },
+    {
+      "column_name": "source",
+      "data_type": "enum"
+    },
+    {
+      "column_name": "metaLeadgenId",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "metaFormId",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "metaAdId",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "metaAdsetId",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "metaCampaignId",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "metaPageId",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "productInterest",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "budget",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "timeline",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "message",
+      "data_type": "text"
+    },
+    {
+      "column_name": "customFields",
+      "data_type": "text"
+    },
+    {
+      "column_name": "assignedPartnerId",
+      "data_type": "int"
+    },
+    {
+      "column_name": "assignedAt",
+      "data_type": "timestamp"
+    },
+    {
+      "column_name": "assignmentReason",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "firstContactAt",
+      "data_type": "timestamp"
+    },
+    {
+      "column_name": "lastContactAt",
+      "data_type": "timestamp"
+    },
+    {
+      "column_name": "contactAttempts",
+      "data_type": "int"
+    },
+    {
+      "column_name": "convertedAt",
+      "data_type": "timestamp"
+    },
+    {
+      "column_name": "convertedOrderId",
+      "data_type": "int"
+    },
+    {
+      "column_name": "estimatedValue",
+      "data_type": "decimal"
+    },
+    {
+      "column_name": "actualValue",
+      "data_type": "decimal"
+    },
+    {
+      "column_name": "notes",
+      "data_type": "text"
+    },
+    {
+      "column_name": "lostReason",
+      "data_type": "varchar"
+    },
+    {
+      "column_name": "receivedAt",
+      "data_type": "timestamp"
+    },
+    {
+      "column_name": "createdAt",
+      "data_type": "timestamp"
+    },
+    {
+      "column_name": "updatedAt",
+      "data_type": "timestamp"
+    }
+  ],
+  "messages": [],
+  "stdout": "column_name\tdata_type\nid\tint\nfirstName\tvarchar\nlastName\tvarchar\nemail\tvarchar\nphone\tvarchar\naddress\tvarchar\ncity\tvarchar\npostalCode\tvarchar\ncountry\tvarchar\nstatus\tenum\nsource\tenum\nmetaLeadgenId\tvarchar\nmetaFormId\tvarchar\nmetaAdId\tvarchar\nmetaAdsetId\tvarchar\nmetaCampaignId\tvarchar\nmetaPageId\tvarchar\nproductInterest\tvarchar\nbudget\tvarchar\ntimeline\tvarchar\nmessage\ttext\ncustomFields\ttext\nassignedPartnerId\tint\nassignedAt\ttimestamp\nassignmentReason\tvarchar\nfirstContactAt\ttimestamp\nlastContactAt\ttimestamp\ncontactAttempts\tint\nconvertedAt\ttimestamp\nconvertedOrderId\tint\nestimatedValue\tdecimal\nactualValue\tdecimal\nnotes\ttext\nlostReason\tvarchar\nreceivedAt\ttimestamp\ncreatedAt\ttimestamp\nupdatedAt\ttimestamp\n",
+  "stderr": "",
+  "execution_time_ms": 357
+}

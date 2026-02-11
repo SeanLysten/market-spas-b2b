@@ -1490,3 +1490,11 @@
 - [x] KPI Taux de conversion dynamique (basé sur les statuts CONVERTED)
 - [x] KPI statistiques campagnes actualisées
 - [x] Tous les leads de toutes les pages et campagnes récupérés
+
+## Import leads existants et token permanent Meta
+- [x] Importer tous les leads existants des campagnes Meta actuelles dans le dashboard (420 leads importés)
+- [x] Créer un System User Token permanent dans Meta Business Suite (API W - n'expire jamais)
+- [x] Mettre à jour le META_PAGE_ACCESS_TOKEN avec le token permanent
+- [x] Vérifier que tous les anciens leads apparaissent dans le dashboard (432 leads total)
+- [x] Vérifier que les futurs leads seront récupérés automatiquement avec données complètes
+- [x] Implémenter le système multi-pages avec Page Tokens dynamiques via me/accounts

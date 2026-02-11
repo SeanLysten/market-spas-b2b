@@ -1,0 +1,306 @@
+{
+  "query": "DESCRIBE leads",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute DESCRIBE leads",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "firstName",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "lastName",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "email",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "phone",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "address",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "city",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "postalCode",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "MUL",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "country",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "Belgium",
+      "Extra": ""
+    },
+    {
+      "Field": "status",
+      "Type": "enum('NEW','ASSIGNED','CONTACTED','NO_RESPONSE','QUALIFIED','NOT_QUALIFIED','MEETING_SCHEDULED','QUOTE_SENT','NEGOTIATION','CONVERTED','LOST')",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "NEW",
+      "Extra": ""
+    },
+    {
+      "Field": "source",
+      "Type": "enum('META_ADS','GOOGLE_ADS','WEBSITE','REFERRAL','PHONE','EMAIL','TRADE_SHOW','OTHER')",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "META_ADS",
+      "Extra": ""
+    },
+    {
+      "Field": "metaLeadgenId",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "MUL",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "metaFormId",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "metaAdId",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "metaAdsetId",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "metaCampaignId",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "metaPageId",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "productInterest",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "budget",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "timeline",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "message",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "customFields",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "assignedPartnerId",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "MUL",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "assignedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "assignmentReason",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "firstContactAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "lastContactAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "contactAttempts",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "convertedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "convertedOrderId",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "estimatedValue",
+      "Type": "decimal(12,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "actualValue",
+      "Type": "decimal(12,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "notes",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "lostReason",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "receivedAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint(11)\tNO\tPRI\tNULL\tauto_increment\nfirstName\tvarchar(100)\tYES\t\tNULL\t\nlastName\tvarchar(100)\tYES\t\tNULL\t\nemail\tvarchar(255)\tYES\t\tNULL\t\nphone\tvarchar(50)\tYES\t\tNULL\t\naddress\tvarchar(255)\tYES\t\tNULL\t\ncity\tvarchar(100)\tYES\t\tNULL\t\npostalCode\tvarchar(20)\tYES\tMUL\tNULL\t\ncountry\tvarchar(100)\tYES\t\tBelgium\t\nstatus\tenum('NEW','ASSIGNED','CONTACTED','NO_RESPONSE','QUALIFIED','NOT_QUALIFIED','MEETING_SCHEDULED','QUOTE_SENT','NEGOTIATION','CONVERTED','LOST')\tNO\tMUL\tNEW\t\nsource\tenum('META_ADS','GOOGLE_ADS','WEBSITE','REFERRAL','PHONE','EMAIL','TRADE_SHOW','OTHER')\tNO\tMUL\tMETA_ADS\t\nmetaLeadgenId\tvarchar(100)\tYES\tMUL\tNULL\t\nmetaFormId\tvarchar(100)\tYES\t\tNULL\t\nmetaAdId\tvarchar(100)\tYES\t\tNULL\t\nmetaAdsetId\tvarchar(100)\tYES\t\tNULL\t\nmetaCampaignId\tvarchar(100)\tYES\t\tNULL\t\nmetaPageId\tvarchar(100)\tYES\t\tNULL\t\nproductInterest\tvarchar(255)\tYES\t\tNULL\t\nbudget\tvarchar(100)\tYES\t\tNULL\t\ntimeline\tvarchar(100)\tYES\t\tNULL\t\nmessage\ttext\tYES\t\tNULL\t\ncustomFields\ttext\tYES\t\tNULL\t\nassignedPartnerId\tint(11)\tYES\tMUL\tNULL\t\nassignedAt\ttimestamp\tYES\t\tNULL\t\nassignmentReason\tvarchar(255)\tYES\t\tNULL\t\nfirstContactAt\ttimestamp\tYES\t\tNULL\t\nlastContactAt\ttimestamp\tYES\t\tNULL\t\ncontactAttempts\tint(11)\tYES\t\t0\t\nconvertedAt\ttimestamp\tYES\t\tNULL\t\nconvertedOrderId\tint(11)\tYES\t\tNULL\t\nestimatedValue\tdecimal(12,2)\tYES\t\tNULL\t\nactualValue\tdecimal(12,2)\tYES\t\tNULL\t\nnotes\ttext\tYES\t\tNULL\t\nlostReason\tvarchar(255)\tYES\t\tNULL\t\nreceivedAt\ttimestamp\tNO\tMUL\tCURRENT_TIMESTAMP\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\n",
+  "stderr": "",
+  "execution_time_ms": 342
+}

@@ -154,17 +154,73 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
   }
 }
 
+// Cache des Page Tokens (clé: pageId, valeur: pageAccessToken)
+let _pageTokensCache: Map<string, string> | null = null;
+let _pageTokensCacheTime = 0;
+const PAGE_TOKENS_CACHE_TTL = 3600000; // 1 heure
+
+/**
+ * Récupère le Page Access Token pour une page spécifique
+ * Utilise le System User Token pour obtenir les Page Tokens via me/accounts
+ */
+async function getPageToken(pageId: string): Promise<string | null> {
+  const systemToken = META_CONFIG.pageAccessToken;
+  if (!systemToken) return null;
+
+  // Vérifier le cache
+  const now = Date.now();
+  if (_pageTokensCache && (now - _pageTokensCacheTime) < PAGE_TOKENS_CACHE_TTL) {
+    const cached = _pageTokensCache.get(pageId);
+    if (cached) return cached;
+  }
+
+  try {
+    // Récupérer tous les Page Tokens via me/accounts
+    const url = `https://graph.facebook.com/${META_CONFIG.graphApiVersion}/me/accounts?fields=id,access_token&limit=50&access_token=${systemToken}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`[Meta] Erreur récupération Page Tokens: ${await response.text()}`);
+      return null;
+    }
+    const data = await response.json();
+    
+    // Mettre à jour le cache
+    _pageTokensCache = new Map();
+    _pageTokensCacheTime = now;
+    for (const page of data.data || []) {
+      _pageTokensCache.set(page.id, page.access_token);
+    }
+
+    return _pageTokensCache.get(pageId) || null;
+  } catch (error) {
+    console.error("[Meta] Erreur récupération Page Tokens:", error);
+    return null;
+  }
+}
+
 /**
  * Récupère les données complètes d'un lead via Graph API
- * Supporte le multi-pages : utilise le token de la page correspondante si disponible
+ * Utilise le Page Token spécifique de la page (via System User Token)
+ * Fallback sur le System User Token directement si le Page Token n'est pas disponible
  */
 async function fetchLeadData(leadgenId: string, pageId?: string): Promise<MetaLeadData | null> {
-  // Déterminer le token à utiliser
-  const token = META_CONFIG.pageAccessToken;
+  const systemToken = META_CONFIG.pageAccessToken;
   
-  if (!token) {
+  if (!systemToken) {
     console.error("[Meta] Page access token non configuré");
     return null;
+  }
+
+  // Essayer d'abord avec le Page Token spécifique
+  let token = systemToken;
+  if (pageId) {
+    const pageToken = await getPageToken(pageId);
+    if (pageToken) {
+      token = pageToken;
+      console.log(`[Meta] Utilisation du Page Token pour la page ${pageId}`);
+    } else {
+      console.log(`[Meta] Page Token non trouvé pour ${pageId}, utilisation du System User Token`);
+    }
   }
 
   try {
@@ -172,8 +228,19 @@ async function fetchLeadData(leadgenId: string, pageId?: string): Promise<MetaLe
     const response = await fetch(url);
     
     if (!response.ok) {
-      const error = await response.text();
-      console.error(`[Meta] Erreur Graph API (page ${pageId || 'unknown'}): ${error}`);
+      const errorText = await response.text();
+      console.error(`[Meta] Erreur Graph API (page ${pageId || 'unknown'}): ${errorText}`);
+      
+      // Si le Page Token a échoué, essayer avec le System User Token
+      if (token !== systemToken) {
+        console.log(`[Meta] Retry avec le System User Token`);
+        const retryUrl = `https://graph.facebook.com/${META_CONFIG.graphApiVersion}/${leadgenId}?access_token=${systemToken}`;
+        const retryResponse = await fetch(retryUrl);
+        if (retryResponse.ok) {
+          return await retryResponse.json();
+        }
+        console.error(`[Meta] Retry échoué aussi: ${await retryResponse.text()}`);
+      }
       return null;
     }
     
