@@ -1396,8 +1396,10 @@ export const appRouter = router({
 
           // Update product or variant with image URL
           if (input.variantId) {
+            console.log(`[uploadImage] Updating variant ${input.variantId} with imageUrl`);
             await db.updateProductVariant(input.variantId, { imageUrl: url });
           } else if (input.productId) {
+            console.log(`[uploadImage] Updating product ${input.productId} with imageUrl`);
             await db.updateProduct(input.productId, { imageUrl: url });
           }
 

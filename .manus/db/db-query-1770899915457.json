@@ -1,0 +1,50 @@
+{
+  "query": "SELECT id, name FROM products ORDER BY id LIMIT 15;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, name FROM products ORDER BY id LIMIT 15;",
+  "rows": [
+    {
+      "id": "60001",
+      "name": "Easy Relax"
+    },
+    {
+      "id": "60002",
+      "name": "Kos"
+    },
+    {
+      "id": "60003",
+      "name": "Mykonos"
+    },
+    {
+      "id": "60004",
+      "name": "Neptune"
+    },
+    {
+      "id": "60005",
+      "name": "Volcano"
+    },
+    {
+      "id": "60006",
+      "name": "Delight"
+    },
+    {
+      "id": "60007",
+      "name": "Devotion"
+    },
+    {
+      "id": "60008",
+      "name": "Ecstatic"
+    },
+    {
+      "id": "60009",
+      "name": "Euphoria"
+    },
+    {
+      "id": "60010",
+      "name": "Happy"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n60001\tEasy Relax\n60002\tKos\n60003\tMykonos\n60004\tNeptune\n60005\tVolcano\n60006\tDelight\n60007\tDevotion\n60008\tEcstatic\n60009\tEuphoria\n60010\tHappy\n",
+  "stderr": "",
+  "execution_time_ms": 359
+}
