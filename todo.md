@@ -1539,3 +1539,9 @@
 - [x] Joindre les variantes dans la requête getIncomingStock (backend)
 - [x] Mettre à jour le IncomingStockTab par produit avec sélecteur de variante
 - [x] Tests unitaires pour la gestion du stock par variante (20 tests passés)
+
+## UX Admin Produits - Menu déroulant variantes
+- [x] Remplacer l'onglet Variantes par un menu déroulant sous chaque produit dans le tableau principal
+- [x] Afficher toutes les variantes (couleurs) avec stock inline quand on clique sur un produit
+- [x] Permettre la modification du stock directement dans le menu déroulant
+- [x] Garder l'interface simple et rapide (pas de navigation vers un onglet séparé)

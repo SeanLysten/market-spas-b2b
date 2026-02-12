@@ -26,7 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { useSafeQuery } from "@/hooks/useSafeQuery";
 import { TableSkeleton } from "@/components/TableSkeleton";
-import { Plus, Edit, Trash2, Package, Palette, TruckIcon, Pencil, CheckCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Palette, TruckIcon, Pencil, CheckCircle, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
@@ -161,8 +161,14 @@ export default function AdminProducts() {
     }
   };
 
+  const [expandedProductId, setExpandedProductId] = useState<number | null>(null);
+
   const handleManageVariants = (product: any) => {
     setSelectedProduct(product);
+  };
+
+  const handleToggleExpand = (productId: number) => {
+    setExpandedProductId(expandedProductId === productId ? null : productId);
   };
 
   return (
@@ -171,7 +177,7 @@ export default function AdminProducts() {
         <div>
           <h1 className="text-3xl font-bold">Gestion des produits</h1>
           <p className="text-muted-foreground mt-1">
-            Gérez vos produits, variantes et arrivages programmés
+            Gérez vos produits, variantes et arrivages programmés. Cliquez sur un produit pour voir et modifier le stock de chaque variante.
           </p>
         </div>
 
@@ -315,17 +321,11 @@ export default function AdminProducts() {
           </Dialog>
         </div>
 
-        {selectedProduct ? (
-          <ProductVariantsManager
-            product={selectedProduct}
-            onBack={() => setSelectedProduct(null)}
-          />
-        ) : (
           <Card>
             <CardHeader>
               <CardTitle>Liste des produits</CardTitle>
               <CardDescription>
-                {products?.length || 0} produit(s) au total
+                {products?.length || 0} produit(s) au total — Cliquez sur un produit pour voir/modifier le stock de chaque variante
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -335,57 +335,79 @@ export default function AdminProducts() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-10"></TableHead>
                       <TableHead>SKU</TableHead>
                       <TableHead>Nom</TableHead>
                       <TableHead>Prix HT</TableHead>
-                      <TableHead>Stock</TableHead>
+                      <TableHead>Stock total</TableHead>
                       <TableHead>Statut</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {products.map((product: any) => (
-                      <TableRow key={product.id}>
-                        <TableCell className="font-mono text-sm">{product.sku}</TableCell>
-                        <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>{Number(product.pricePublicHT || 0).toFixed(2)} €</TableCell>
-                        <TableCell>
-                          <Badge variant={product.stockQuantity > 0 ? "default" : "secondary"}>
-                            {product.stockQuantity}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {product.isActive ? (
-                            <Badge variant="default">Actif</Badge>
-                          ) : (
-                            <Badge variant="secondary">Inactif</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleManageVariants(product)}
-                          >
-                            <Palette className="h-4 w-4 mr-1" />
-                            Variantes
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditProduct(product)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDeleteProduct(product.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+                      <>
+                        <TableRow
+                          key={product.id}
+                          className={`cursor-pointer hover:bg-muted/50 transition-colors ${expandedProductId === product.id ? "bg-muted/30 border-b-0" : ""}`}
+                          onClick={() => handleToggleExpand(product.id)}
+                        >
+                          <TableCell className="w-10 px-2">
+                            {expandedProductId === product.id ? (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </TableCell>
+                          <TableCell className="font-mono text-sm">{product.sku}</TableCell>
+                          <TableCell className="font-medium">{product.name}</TableCell>
+                          <TableCell>{Number(product.pricePublicHT || 0).toFixed(2)} \u20ac</TableCell>
+                          <TableCell>
+                            <Badge variant={product.stockQuantity > 0 ? "default" : "secondary"}>
+                              {product.stockQuantity}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {product.isActive ? (
+                              <Badge variant="default">Actif</Badge>
+                            ) : (
+                              <Badge variant="secondary">Inactif</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right space-x-2" onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleManageVariants(product)}
+                              title="Gérer les variantes (ajout/suppression)"
+                            >
+                              <Palette className="h-4 w-4 mr-1" />
+                              Gérer
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditProduct(product)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteProduct(product.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                        {expandedProductId === product.id && (
+                          <TableRow key={`${product.id}-variants`} className="bg-muted/10 hover:bg-muted/10">
+                            <TableCell colSpan={7} className="p-0">
+                              <ExpandedVariantsRow productId={product.id} />
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </>
                     ))}
                   </TableBody>
                 </Table>
@@ -396,7 +418,6 @@ export default function AdminProducts() {
               )}
             </CardContent>
           </Card>
-        )}
           </TabsContent>
 
           <TabsContent value="incoming" className="space-y-6">
@@ -405,6 +426,130 @@ export default function AdminProducts() {
         </Tabs>
       </div>
     </AdminLayout>
+  );
+}
+
+function ExpandedVariantsRow({ productId }: { productId: number }) {
+  const { data: variantsData, refetch } = trpc.admin.products.getVariants.useQuery({ productId });
+  const variants = useSafeQuery(variantsData);
+  const updateMutation = trpc.admin.products.updateVariant.useMutation();
+  const [editingVariantId, setEditingVariantId] = useState<number | null>(null);
+  const [editStockValue, setEditStockValue] = useState("");
+
+  const handleStartEdit = (variant: any) => {
+    setEditingVariantId(variant.id);
+    setEditStockValue(variant.stockQuantity?.toString() || "0");
+  };
+
+  const handleSaveStock = async (variantId: number) => {
+    try {
+      await updateMutation.mutateAsync({
+        id: variantId,
+        stockQuantity: parseInt(editStockValue) || 0,
+      });
+      toast.success("Stock mis \u00e0 jour");
+      setEditingVariantId(null);
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de la mise \u00e0 jour du stock");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingVariantId(null);
+    setEditStockValue("");
+  };
+
+  if (!variants || variants.length === 0) {
+    return (
+      <div className="px-6 py-4 text-sm text-muted-foreground italic">
+        Aucune variante pour ce produit.
+      </div>
+    );
+  }
+
+  const totalStock = variants.reduce((sum: number, v: any) => sum + (v.stockQuantity || 0), 0);
+
+  return (
+    <div className="px-6 py-3">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Variantes &mdash; Stock total : {totalStock}</p>
+      </div>
+      <div className="rounded-md border border-border/50 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-muted/40">
+              <th className="text-left px-4 py-2 font-medium text-muted-foreground">Couleur</th>
+              <th className="text-left px-4 py-2 font-medium text-muted-foreground">SKU</th>
+              <th className="text-left px-4 py-2 font-medium text-muted-foreground">Stock</th>
+            </tr>
+          </thead>
+          <tbody>
+            {variants.map((variant: any) => (
+              <tr key={variant.id} className="border-t border-border/30 hover:bg-muted/20">
+                <td className="px-4 py-2">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full border border-border/50"
+                      style={{
+                        backgroundColor:
+                          variant.color?.toLowerCase() === "blanc" ? "#ffffff" :
+                          variant.color?.toLowerCase() === "noir" ? "#1a1a1a" :
+                          variant.color?.toLowerCase() === "gris" ? "#808080" :
+                          variant.color?.toLowerCase() === "sterling silver" ? "#C0C0C0" :
+                          "#e5e5e5",
+                      }}
+                    />
+                    <span className="font-medium">{variant.color || variant.name}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{variant.sku}</td>
+                <td className="px-4 py-2">
+                  {editingVariantId === variant.id ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        value={editStockValue}
+                        onChange={(e) => setEditStockValue(e.target.value)}
+                        className="w-20 h-7 text-sm"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleSaveStock(variant.id);
+                          }
+                          if (e.key === "Escape") handleCancelEdit();
+                        }}
+                      />
+                      <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={() => handleSaveStock(variant.id)}>
+                        <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={handleCancelEdit}>
+                        <span className="text-xs">&times;</span>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      className="flex items-center gap-2 cursor-pointer group"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStartEdit(variant);
+                      }}
+                    >
+                      <Badge variant={variant.stockQuantity > 0 ? "default" : "secondary"} className="text-xs">
+                        {variant.stockQuantity || 0}
+                      </Badge>
+                      <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
