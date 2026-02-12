@@ -361,7 +361,7 @@ export default function AdminProducts() {
                           </TableCell>
                           <TableCell className="font-mono text-sm">{product.sku}</TableCell>
                           <TableCell className="font-medium">{product.name}</TableCell>
-                          <TableCell>{Number(product.pricePublicHT || 0).toFixed(2)} \u20ac</TableCell>
+                          <TableCell>{Number(product.pricePublicHT || 0).toFixed(2)} €</TableCell>
                           <TableCell>
                             <Badge variant={product.stockQuantity > 0 ? "default" : "secondary"}>
                               {product.stockQuantity}
