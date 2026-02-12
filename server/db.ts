@@ -1052,9 +1052,11 @@ export async function getIncomingStock(filters?: {
       createdAt: incomingStock.createdAt,
       updatedAt: incomingStock.updatedAt,
       product: products,
+      variant: productVariants,
     })
     .from(incomingStock)
-    .leftJoin(products, eq(incomingStock.productId, products.id));
+    .leftJoin(products, eq(incomingStock.productId, products.id))
+    .leftJoin(productVariants, eq(incomingStock.variantId, productVariants.id));
 
   const conditions = [];
   if (filters?.productId) {

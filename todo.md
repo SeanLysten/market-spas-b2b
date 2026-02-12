@@ -1530,3 +1530,12 @@
 - [x] Supprimer les produits de test existants du catalogue
 - [x] Ajouter les 10 spas avec caractéristiques complètes, prix HT 0€, stock 0
 - [x] Créer 4 variantes de couleur par produit : Blanc, Sterling Silver, Noir, Gris
+
+## Gestion du stock par variante et arrivages par variante
+- [x] Permettre de modifier le stock de chaque variante (couleur) dans l'admin produits (édition inline)
+- [x] Afficher le stock par variante dans le tableau des variantes admin (avec stock total)
+- [x] Permettre de créer des arrivages par variante (sélecteur de couleur dans le formulaire)
+- [x] Afficher la variante dans le tableau des arrivages (badge couleur ou "Global")
+- [x] Joindre les variantes dans la requête getIncomingStock (backend)
+- [x] Mettre à jour le IncomingStockTab par produit avec sélecteur de variante
+- [x] Tests unitaires pour la gestion du stock par variante (20 tests passés)

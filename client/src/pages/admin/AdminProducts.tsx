@@ -441,6 +441,8 @@ function ProductVariantsManager({ product, onBack }: { product: any; onBack: () 
 
 function VariantsTab({ productId }: { productId: number }) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingVariantId, setEditingVariantId] = useState<number | null>(null);
+  const [editStockValue, setEditStockValue] = useState("");
   const [form, setForm] = useState({
     sku: "",
     name: "",
@@ -455,6 +457,7 @@ function VariantsTab({ productId }: { productId: number }) {
   const { data: variantsData, refetch } = trpc.admin.products.getVariants.useQuery({ productId });
   const variants = useSafeQuery(variantsData);
   const createMutation = trpc.admin.products.createVariant.useMutation();
+  const updateMutation = trpc.admin.products.updateVariant.useMutation();
   const deleteMutation = trpc.admin.products.deleteVariant.useMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -493,6 +496,30 @@ function VariantsTab({ productId }: { productId: number }) {
     }
   };
 
+  const handleStartEditStock = (variant: any) => {
+    setEditingVariantId(variant.id);
+    setEditStockValue(variant.stockQuantity?.toString() || "0");
+  };
+
+  const handleSaveStock = async (variantId: number) => {
+    try {
+      await updateMutation.mutateAsync({
+        id: variantId,
+        stockQuantity: parseInt(editStockValue) || 0,
+      });
+      toast.success("Stock mis à jour");
+      setEditingVariantId(null);
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de la mise à jour du stock");
+    }
+  };
+
+  const handleCancelEditStock = () => {
+    setEditingVariantId(null);
+    setEditStockValue("");
+  };
+
   const handleDelete = async (id: number) => {
     if (!confirm("Supprimer cette variante ?")) return;
 
@@ -505,13 +532,18 @@ function VariantsTab({ productId }: { productId: number }) {
     }
   };
 
+  // Compute total stock across all variants
+  const totalStock = variants?.reduce((sum: number, v: any) => sum + (v.stockQuantity || 0), 0) || 0;
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Variantes du produit</CardTitle>
-            <CardDescription>Gérez les différentes variantes (couleurs, tailles, etc.)</CardDescription>
+            <CardDescription>
+              Gérez les différentes variantes (couleurs, tailles, etc.) — Stock total : <strong>{totalStock}</strong>
+            </CardDescription>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
@@ -580,7 +612,7 @@ function VariantsTab({ productId }: { productId: number }) {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="variant-stock">Stock</Label>
+                  <Label htmlFor="variant-stock">Stock initial</Label>
                   <Input
                     id="variant-stock"
                     type="number"
@@ -616,7 +648,7 @@ function VariantsTab({ productId }: { productId: number }) {
               <TableRow>
                 <TableHead>SKU</TableHead>
                 <TableHead>Nom</TableHead>
-                <TableHead>Options</TableHead>
+                <TableHead>Couleur</TableHead>
                 <TableHead>Stock</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -625,19 +657,47 @@ function VariantsTab({ productId }: { productId: number }) {
               {variants.map((variant: any) => (
                 <TableRow key={variant.id}>
                   <TableCell className="font-mono text-sm">{variant.sku}</TableCell>
-                  <TableCell>{variant.name}</TableCell>
+                  <TableCell className="font-medium">{variant.name}</TableCell>
                   <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {variant.color && <Badge variant="outline">Couleur: {variant.color}</Badge>}
-                      {variant.size && <Badge variant="outline">Taille: {variant.size}</Badge>}
-                      {variant.voltage && <Badge variant="outline">Voltage: {variant.voltage}</Badge>}
-                      {variant.material && <Badge variant="outline">Matériau: {variant.material}</Badge>}
-                    </div>
+                    {variant.color ? (
+                      <Badge variant="outline">{variant.color}</Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={variant.stockQuantity > 0 ? "default" : "secondary"}>
-                      {variant.stockQuantity}
-                    </Badge>
+                    {editingVariantId === variant.id ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min="0"
+                          value={editStockValue}
+                          onChange={(e) => setEditStockValue(e.target.value)}
+                          className="w-20 h-8"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleSaveStock(variant.id);
+                            }
+                            if (e.key === "Escape") handleCancelEditStock();
+                          }}
+                        />
+                        <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => handleSaveStock(variant.id)}>
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-8 px-2" onClick={handleCancelEditStock}>
+                          ✕
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 cursor-pointer group" onClick={() => handleStartEditStock(variant)}>
+                        <Badge variant={variant.stockQuantity > 0 ? "default" : "secondary"}>
+                          {variant.stockQuantity || 0}
+                        </Badge>
+                        <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button
@@ -672,6 +732,50 @@ function IncomingStockTab({ productId }: { productId: number }) {
     notes: "",
   });
 
+  const { data: variantsData } = trpc.admin.products.getVariants.useQuery({ productId });
+  const variants = useSafeQuery(variantsData);
+  const { data: incomingData, refetch } = trpc.admin.incomingStock.list.useQuery({ productId });
+  const incomingList = useSafeQuery(incomingData);
+  const createMutation = trpc.admin.incomingStock.create.useMutation();
+  const deleteMutation = trpc.admin.incomingStock.delete.useMutation();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await createMutation.mutateAsync({
+        productId,
+        variantId: form.variantId ? parseInt(form.variantId) : undefined,
+        quantity: parseInt(form.quantity),
+        expectedWeek: parseInt(form.expectedWeek),
+        expectedYear: parseInt(form.expectedYear),
+        notes: form.notes || undefined,
+      });
+      toast.success("Arrivage programmé");
+      setDialogOpen(false);
+      setForm({ variantId: "", quantity: "", expectedWeek: "", expectedYear: new Date().getFullYear().toString(), notes: "" });
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur");
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Supprimer cet arrivage ?")) return;
+    try {
+      await deleteMutation.mutateAsync({ id });
+      toast.success("Arrivage supprimé");
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur");
+    }
+  };
+
+  const statusLabels: Record<string, string> = {
+    PENDING: "En attente",
+    ARRIVED: "Arrivé",
+    CANCELLED: "Annulé",
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -679,7 +783,7 @@ function IncomingStockTab({ productId }: { productId: number }) {
           <div>
             <CardTitle>Arrivages programmés</CardTitle>
             <CardDescription>
-              Gérez les arrivages de spas en production avec leur semaine d'arrivée prévue
+              Gérez les arrivages par variante (couleur) avec leur semaine d'arrivée prévue
             </CardDescription>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -693,16 +797,35 @@ function IncomingStockTab({ productId }: { productId: number }) {
               <DialogHeader>
                 <DialogTitle>Programmer un arrivage</DialogTitle>
                 <DialogDescription>
-                  Les produits seront automatiquement ajoutés au stock à la semaine indiquée
+                  Sélectionnez la variante (couleur) et la quantité attendue
                 </DialogDescription>
               </DialogHeader>
-              <form className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {variants.length > 0 && (
+                  <div>
+                    <Label htmlFor="variantId">Variante (couleur)</Label>
+                    <select
+                      id="variantId"
+                      value={form.variantId}
+                      onChange={(e) => setForm({ ...form, variantId: e.target.value })}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="">Global (toutes variantes)</option>
+                      {variants.map((v: any) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name} {v.color ? `(${v.color})` : ""} — Stock: {v.stockQuantity || 0}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="quantity">Quantité *</Label>
                     <Input
                       id="quantity"
                       type="number"
+                      min="1"
                       value={form.quantity}
                       onChange={(e) => setForm({ ...form, quantity: e.target.value })}
                       required
@@ -737,7 +860,7 @@ function IncomingStockTab({ productId }: { productId: number }) {
                     id="notes"
                     value={form.notes}
                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                    rows={3}
+                    rows={2}
                   />
                 </div>
                 <DialogFooter>
@@ -752,9 +875,60 @@ function IncomingStockTab({ productId }: { productId: number }) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-center py-8 text-muted-foreground">
-          Fonctionnalité en cours de développement
-        </div>
+        {incomingList.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Variante</TableHead>
+                <TableHead>Quantité</TableHead>
+                <TableHead>Semaine</TableHead>
+                <TableHead>Année</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Notes</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {incomingList.map((item: any) => (
+                <TableRow key={item.id}>
+                  <TableCell>
+                    {item.variant ? (
+                      <Badge variant="outline">
+                        {item.variant.color || item.variant.name}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Global</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-semibold">{item.quantity}</TableCell>
+                  <TableCell>S{item.expectedWeek}</TableCell>
+                  <TableCell>{item.expectedYear}</TableCell>
+                  <TableCell>
+                    <Badge variant={item.status === "PENDING" ? "default" : item.status === "ARRIVED" ? "secondary" : "destructive"}>
+                      {statusLabels[item.status] || item.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                    {item.notes || "—"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            Aucun arrivage programmé pour ce produit
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -769,6 +943,7 @@ function GlobalIncomingStockView() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [form, setForm] = useState({
     productId: "",
+    variantId: "",
     quantity: "",
     expectedWeek: "",
     expectedYear: new Date().getFullYear().toString(),
@@ -791,6 +966,14 @@ function GlobalIncomingStockView() {
   const deleteMutation = trpc.admin.incomingStock.delete.useMutation();
   const processArrivedMutation = trpc.admin.incomingStock.processArrived.useMutation();
 
+  // Fetch variants for the selected product in the create form
+  const selectedProductId = form.productId ? parseInt(form.productId) : undefined;
+  const { data: variantsForProduct } = trpc.admin.products.getVariants.useQuery(
+    { productId: selectedProductId! },
+    { enabled: !!selectedProductId }
+  );
+  const variantsList = useSafeQuery(variantsForProduct);
+
   const handleProcessArrived = async () => {
     try {
       await processArrivedMutation.mutateAsync();
@@ -812,6 +995,7 @@ function GlobalIncomingStockView() {
     try {
       await createMutation.mutateAsync({
         productId: parseInt(form.productId),
+        variantId: form.variantId ? parseInt(form.variantId) : undefined,
         quantity: parseInt(form.quantity),
         expectedWeek: parseInt(form.expectedWeek),
         expectedYear: parseInt(form.expectedYear),
@@ -821,6 +1005,7 @@ function GlobalIncomingStockView() {
       setDialogOpen(false);
       setForm({
         productId: "",
+        variantId: "",
         quantity: "",
         expectedWeek: "",
         expectedYear: new Date().getFullYear().toString(),
@@ -876,6 +1061,12 @@ function GlobalIncomingStockView() {
     }
   };
 
+  const statusLabels: Record<string, string> = {
+    PENDING: "En attente",
+    ARRIVED: "Arrivé",
+    CANCELLED: "Annulé",
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -906,7 +1097,7 @@ function GlobalIncomingStockView() {
               <DialogHeader>
                 <DialogTitle>Programmer un arrivage</DialogTitle>
                 <DialogDescription>
-                  Ajoutez un arrivage programmé pour un produit
+                  Ajoutez un arrivage programmé pour un produit et sa variante (couleur)
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -915,7 +1106,7 @@ function GlobalIncomingStockView() {
                   <select
                     id="productId"
                     value={form.productId}
-                    onChange={(e) => setForm({ ...form, productId: e.target.value })}
+                    onChange={(e) => setForm({ ...form, productId: e.target.value, variantId: "" })}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     required
                   >
@@ -927,6 +1118,27 @@ function GlobalIncomingStockView() {
                     ))}
                   </select>
                 </div>
+                {selectedProductId && variantsList.length > 0 && (
+                  <div>
+                    <Label htmlFor="variantId">Variante (couleur)</Label>
+                    <select
+                      id="variantId"
+                      value={form.variantId}
+                      onChange={(e) => setForm({ ...form, variantId: e.target.value })}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="">Toutes les variantes (global)</option>
+                      {variantsList.map((v: any) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name} {v.color ? `(${v.color})` : ""} — Stock: {v.stockQuantity || 0}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Sélectionnez une variante pour préciser la couleur de l'arrivage
+                    </p>
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="quantity">Quantité *</Label>
                   <Input
@@ -1016,7 +1228,7 @@ function GlobalIncomingStockView() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Produit</TableHead>
-                  <TableHead>SKU</TableHead>
+                  <TableHead>Variante</TableHead>
                   <TableHead>Quantité</TableHead>
                   <TableHead>Semaine</TableHead>
                   <TableHead>Année</TableHead>
@@ -1027,18 +1239,33 @@ function GlobalIncomingStockView() {
               <TableBody>
                 {filteredStock.map((item: any) => (
                   <TableRow key={item.id}>
-                    <TableCell>{item.product?.name || "N/A"}</TableCell>
-                    <TableCell>{item.product?.sku || "N/A"}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
-                    <TableCell>Semaine {item.expectedWeek}</TableCell>
+                    <TableCell>
+                      <div>
+                        <span className="font-medium">{item.product?.name || "N/A"}</span>
+                        <span className="text-xs text-muted-foreground ml-2">{item.product?.sku || ""}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {item.variant ? (
+                        <Badge variant="outline">
+                          {item.variant.color || item.variant.name}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Global</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-semibold">{item.quantity}</span>
+                    </TableCell>
+                    <TableCell>S{item.expectedWeek}</TableCell>
                     <TableCell>{item.expectedYear}</TableCell>
                     <TableCell>
                       <Badge variant={item.status === "PENDING" ? "default" : item.status === "ARRIVED" ? "secondary" : "destructive"}>
-                        {item.status}
+                        {statusLabels[item.status] || item.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -1072,6 +1299,11 @@ function GlobalIncomingStockView() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Modifier l'arrivage</DialogTitle>
+            {editingItem && (
+              <DialogDescription>
+                {editingItem.product?.name}{editingItem.variant ? ` — ${editingItem.variant.color || editingItem.variant.name}` : ""}
+              </DialogDescription>
+            )}
           </DialogHeader>
           <form onSubmit={handleUpdate} className="space-y-4">
             <div>
@@ -1083,44 +1315,47 @@ function GlobalIncomingStockView() {
                 required
               />
             </div>
-            <div>
-              <Label>Semaine</Label>
-              <Input
-                type="number"
-                min="1"
-                max="53"
-                value={editForm.expectedWeek}
-                onChange={(e) => setEditForm({ ...editForm, expectedWeek: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <Label>Année</Label>
-              <Input
-                type="number"
-                value={editForm.expectedYear}
-                onChange={(e) => setEditForm({ ...editForm, expectedYear: e.target.value })}
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Semaine</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="53"
+                  value={editForm.expectedWeek}
+                  onChange={(e) => setEditForm({ ...editForm, expectedWeek: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <Label>Année</Label>
+                <Input
+                  type="number"
+                  value={editForm.expectedYear}
+                  onChange={(e) => setEditForm({ ...editForm, expectedYear: e.target.value })}
+                  required
+                />
+              </div>
             </div>
             <div>
               <Label>Statut</Label>
               <select
-                className="w-full border rounded-md p-2"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={editForm.status}
                 onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
                 required
               >
-                <option value="PENDING">PENDING</option>
-                <option value="ARRIVED">ARRIVED</option>
-                <option value="CANCELLED">CANCELLED</option>
+                <option value="PENDING">En attente</option>
+                <option value="ARRIVED">Arrivé</option>
+                <option value="CANCELLED">Annulé</option>
               </select>
             </div>
             <div>
               <Label>Notes (optionnel)</Label>
-              <Input
+              <Textarea
                 value={editForm.notes}
                 onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                rows={2}
               />
             </div>
             <div className="flex justify-end gap-2">
