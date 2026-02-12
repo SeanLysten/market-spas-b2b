@@ -1583,3 +1583,10 @@
 - [x] L'image du produit (uploadée dans "Modifier le produit") s'affiche comme image principale sur les cartes du catalogue
 - [x] Les images de variantes ne s'affichent que quand on clique sur une pastille de couleur ou dans le dialogue
 - [x] Corrigé le bug "update products set where id = ?" (guard contre SET vide dans updateProduct)
+
+## Bug fix - Image produit non affichée dans le formulaire de modification
+- [x] Charger l'image existante du produit quand on ouvre le formulaire de modification (useEffect dans ImageUpload)
+- [x] Afficher l'image avec un bouton de suppression (X) au-dessus
+- [x] Permettre de remplacer l'image existante par une nouvelle (bouton "Remplacer l'image")
+- [x] Corrigé le mapping priceHT → pricePublicHT dans updateProduct (bug silencieux)
+- [x] 6 tests unitaires pour imageUrl et updateProduct passés

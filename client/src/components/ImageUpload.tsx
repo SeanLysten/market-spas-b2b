@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
@@ -17,6 +17,11 @@ export function ImageUpload({ currentImageUrl, onImageUploaded, productId, varia
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const uploadImageMutation = trpc.admin.products.uploadImage.useMutation();
+
+  // Synchronize previewUrl when currentImageUrl changes (e.g., when opening edit dialog)
+  useEffect(() => {
+    setPreviewUrl(currentImageUrl || null);
+  }, [currentImageUrl]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -83,7 +88,7 @@ export function ImageUpload({ currentImageUrl, onImageUploaded, productId, varia
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <input
         ref={fileInputRef}
         type="file"
@@ -94,22 +99,47 @@ export function ImageUpload({ currentImageUrl, onImageUploaded, productId, varia
       />
 
       {previewUrl ? (
-        <div className="relative inline-block">
-          <img
-            src={previewUrl}
-            alt="Preview"
-            className="w-48 h-48 object-cover rounded-lg border-2 border-border"
-          />
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            className="absolute top-2 right-2"
-            onClick={handleRemove}
-            disabled={uploading}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+        <div className="space-y-2">
+          <div className="relative inline-block">
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-48 h-48 object-contain rounded-lg border-2 border-border bg-muted/30"
+            />
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute top-1 right-1 h-7 w-7"
+              onClick={handleRemove}
+              disabled={uploading}
+              title="Supprimer l'image"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="gap-2"
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Upload en cours...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4" />
+                  Remplacer l'image
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       ) : (
         <Button

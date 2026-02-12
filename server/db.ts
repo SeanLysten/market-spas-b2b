@@ -629,10 +629,8 @@ export async function updateProduct(id: number, data: Partial<{
   if (data.category !== undefined) updateData.category = data.category;
   if (data.brand !== undefined) updateData.brand = data.brand;
   if (data.priceHT !== undefined) {
-    updateData.priceHT = data.priceHT.toString();
-    if (data.vatRate !== undefined) {
-      updateData.priceTTC = ((data.priceHT * (1 + data.vatRate / 100))).toString();
-    }
+    updateData.pricePublicHT = data.priceHT.toString();
+    updateData.pricePartnerHT = data.priceHT.toString();
   }
   if (data.vatRate !== undefined) updateData.vatRate = data.vatRate.toString();
   if (data.stockQuantity !== undefined) updateData.stockQuantity = data.stockQuantity;

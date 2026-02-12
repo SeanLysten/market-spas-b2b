@@ -1,0 +1,60 @@
+{
+  "query": "SELECT id, name, \"imageUrl\" FROM products ORDER BY id LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, name, \"imageUrl\" FROM products ORDER BY id LIMIT 10;",
+  "rows": [
+    {
+      "id": "60001",
+      "name": "Easy Relax",
+      "imageUrl": "imageUrl"
+    },
+    {
+      "id": "60002",
+      "name": "Kos",
+      "imageUrl": "imageUrl"
+    },
+    {
+      "id": "60003",
+      "name": "Mykonos",
+      "imageUrl": "imageUrl"
+    },
+    {
+      "id": "60004",
+      "name": "Neptune",
+      "imageUrl": "imageUrl"
+    },
+    {
+      "id": "60005",
+      "name": "Volcano",
+      "imageUrl": "imageUrl"
+    },
+    {
+      "id": "60006",
+      "name": "Delight",
+      "imageUrl": "imageUrl"
+    },
+    {
+      "id": "60007",
+      "name": "Devotion",
+      "imageUrl": "imageUrl"
+    },
+    {
+      "id": "60008",
+      "name": "Ecstatic",
+      "imageUrl": "imageUrl"
+    },
+    {
+      "id": "60009",
+      "name": "Euphoria",
+      "imageUrl": "imageUrl"
+    },
+    {
+      "id": "60010",
+      "name": "Happy",
+      "imageUrl": "imageUrl"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\timageUrl\n60001\tEasy Relax\timageUrl\n60002\tKos\timageUrl\n60003\tMykonos\timageUrl\n60004\tNeptune\timageUrl\n60005\tVolcano\timageUrl\n60006\tDelight\timageUrl\n60007\tDevotion\timageUrl\n60008\tEcstatic\timageUrl\n60009\tEuphoria\timageUrl\n60010\tHappy\timageUrl\n",
+  "stderr": "",
+  "execution_time_ms": 361
+}
