@@ -1590,3 +1590,9 @@
 - [x] Permettre de remplacer l'image existante par une nouvelle (bouton "Remplacer l'image")
 - [x] Corrigé le mapping priceHT → pricePublicHT dans updateProduct (bug silencieux)
 - [x] 6 tests unitaires pour imageUrl et updateProduct passés
+
+## Améliorations UX catalogue et admin - Format images et calcul stock
+- [x] Images catalogue affichées en format carré 1:1 (aspect-square + object-cover) pour remplir toute la zone
+- [x] Badge stock catalogue affiche la somme du stock de toutes les variantes actives par défaut
+- [x] Badge stock catalogue affiche uniquement le stock de la variante sélectionnée quand on clique sur une couleur
+- [x] Stock total admin affiche la somme du stock de toutes les variantes (composant ProductStockCell)

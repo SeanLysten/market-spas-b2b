@@ -66,8 +66,9 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
   // Determine the image to display: selected variant image > product image > placeholder
   const displayImage = selectedVariant?.imageUrl || product.imageUrl;
 
-  // Calculate stock based on selected variant or total
-  const variantStock = selectedVariant ? (selectedVariant.stockQuantity || 0) : (product.stockQuantity || 0);
+  // Calculate stock based on selected variant or sum of all active variants
+  const totalVariantsStock = activeVariants?.reduce((sum: number, v: any) => sum + (v.stockQuantity || 0), 0) || 0;
+  const variantStock = selectedVariant ? (selectedVariant.stockQuantity || 0) : totalVariantsStock;
   const hasStock = variantStock > 0;
 
   const getPartnerPrice = () => {
@@ -87,12 +88,12 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
   return (
     <Card className="overflow-hidden flex flex-col">
       {/* Product Image */}
-      <div className="relative h-48 bg-muted flex items-center justify-center">
+      <div className="relative aspect-square bg-muted flex items-center justify-center overflow-hidden">
         {displayImage ? (
           <img
             src={displayImage}
             alt={selectedVariant ? `${product.name} - ${selectedVariant.color || selectedVariant.name}` : product.name}
-            className="w-full h-full object-contain transition-all duration-300 p-2"
+            className="w-full h-full object-cover transition-all duration-300"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

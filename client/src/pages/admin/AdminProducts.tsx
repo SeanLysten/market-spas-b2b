@@ -363,9 +363,7 @@ export default function AdminProducts() {
                           <TableCell className="font-medium">{product.name}</TableCell>
                           <TableCell>{Number(product.pricePublicHT || 0).toFixed(2)} €</TableCell>
                           <TableCell>
-                            <Badge variant={product.stockQuantity > 0 ? "default" : "secondary"}>
-                              {product.stockQuantity}
-                            </Badge>
+                            <ProductStockCell productId={product.id} />
                           </TableCell>
                           <TableCell>
                             {product.isActive ? (
@@ -443,6 +441,19 @@ const ADMIN_COLOR_MAP: Record<string, string> = {
   "brun": "#6B3A2A",
   "brown": "#6B3A2A",
 };
+
+function ProductStockCell({ productId }: { productId: number }) {
+  const { data: variantsData } = trpc.admin.products.getVariants.useQuery({ productId });
+  const variants = useSafeQuery(variantsData);
+  
+  const totalStock = variants?.reduce((sum: number, v: any) => sum + (v.stockQuantity || 0), 0) || 0;
+  
+  return (
+    <Badge variant={totalStock > 0 ? "default" : "secondary"}>
+      {totalStock}
+    </Badge>
+  );
+}
 
 function ExpandedVariantsRow({ productId }: { productId: number }) {
   const { data: variantsData, refetch } = trpc.admin.products.getVariants.useQuery({ productId });
