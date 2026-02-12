@@ -1573,3 +1573,11 @@
 - [x] Badge "Masqué" sur les variantes désactivées dans l'admin
 - [x] Opacité réduite sur les variantes désactivées dans l'admin
 - [x] Tests unitaires pour le filtrage des variantes actives et les nouvelles couleurs (16 tests passés)
+
+## Bug fix - Upload image produit
+- [x] Corrigé l'erreur "update products set where id = ?" lors de l'upload d'image sur un produit (guard Object.keys)
+
+## Image produit principale sur les cartes du catalogue
+- [x] L'image du produit (uploadée dans "Modifier le produit") s'affiche comme image principale sur les cartes du catalogue
+- [x] Les images de variantes ne s'affichent que quand on clique sur une pastille de couleur ou dans le dialogue
+- [x] Corrigé le bug "update products set where id = ?" (guard contre SET vide dans updateProduct)

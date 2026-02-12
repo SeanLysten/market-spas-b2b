@@ -643,6 +643,9 @@ export async function updateProduct(id: number, data: Partial<{
   if (data.isActive !== undefined) updateData.isActive = data.isActive;
   if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
 
+  // Guard: skip update if no fields to update
+  if (Object.keys(updateData).length === 0) return;
+
   await db.update(products).set(updateData).where(eq(products.id, id));
 }
 
