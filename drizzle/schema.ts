@@ -490,6 +490,9 @@ export const products = mysqlTable(
     width: decimal("width", { precision: 10, scale: 2 }),
     height: decimal("height", { precision: 10, scale: 2 }),
 
+    // Image
+    imageUrl: text("imageUrl"),
+
     // External IDs
     sheetsRowId: int("sheetsRowId"),
     odooProductId: int("odooProductId"),

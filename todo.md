@@ -1575,7 +1575,9 @@
 - [x] Tests unitaires pour le filtrage des variantes actives et les nouvelles couleurs (16 tests passés)
 
 ## Bug fix - Upload image produit
-- [x] Corrigé l'erreur "update products set where id = ?" lors de l'upload d'image sur un produit (guard Object.keys)
+- [x] Corrigé l'erreur "update products set where id = ?" - cause racine : colonne imageUrl manquante dans la table products du schéma Drizzle
+- [x] Ajouté la colonne imageUrl (TEXT) à la table products dans le schéma Drizzle et en DB via ALTER TABLE
+- [x] Guard Object.keys ajouté en sécurité supplémentaire dans updateProduct
 
 ## Image produit principale sur les cartes du catalogue
 - [x] L'image du produit (uploadée dans "Modifier le produit") s'affiche comme image principale sur les cartes du catalogue
