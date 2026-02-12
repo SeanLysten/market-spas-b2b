@@ -1596,3 +1596,9 @@
 - [x] Badge stock catalogue affiche la somme du stock de toutes les variantes actives par défaut
 - [x] Badge stock catalogue affiche uniquement le stock de la variante sélectionnée quand on clique sur une couleur
 - [x] Stock total admin affiche la somme du stock de toutes les variantes (composant ProductStockCell)
+
+## Améliorations gestion produits et UX catalogue
+- [x] Supprimer le bouton "Gérer" (variantes) de chaque ligne produit dans l'admin
+- [x] Ajouter un bouton "Gérer les couleurs" à côté de "Nouveau produit" en haut de la page admin produits
+- [x] Créer une interface de gestion globale des couleurs (ajouter/modifier/supprimer couleurs avec nom et code hex)
+- [x] Corriger le scroll du dialogue de commande dans le catalogue (max-h-[90vh] + overflow-y-auto)

@@ -36,6 +36,7 @@ export default function AdminProducts() {
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [variantDialogOpen, setVariantDialogOpen] = useState(false);
   const [incomingDialogOpen, setIncomingDialogOpen] = useState(false);
+  const [colorsDialogOpen, setColorsDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
 
@@ -190,13 +191,14 @@ export default function AdminProducts() {
 
           <TabsContent value="products" className="space-y-6">
             <div className="flex items-center justify-between">
-          <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => { setEditingProduct(null); resetProductForm(); }}>
-                <Plus className="mr-2 h-4 w-4" />
-                Nouveau produit
-              </Button>
-            </DialogTrigger>
+              <div className="flex gap-2">
+                <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => { setEditingProduct(null); resetProductForm(); }}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Nouveau produit
+                    </Button>
+                  </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
@@ -320,7 +322,13 @@ export default function AdminProducts() {
               </form>
             </DialogContent>
           </Dialog>
+          
+          <Button variant="outline" onClick={() => setColorsDialogOpen(true)}>
+            <Palette className="mr-2 h-4 w-4" />
+            Gérer les couleurs
+          </Button>
         </div>
+      </div>
 
           <Card>
             <CardHeader>
@@ -376,16 +384,8 @@ export default function AdminProducts() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleManageVariants(product)}
-                              title="Gérer les variantes (ajout/suppression)"
-                            >
-                              <Palette className="h-4 w-4 mr-1" />
-                              Gérer
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
                               onClick={() => handleEditProduct(product)}
+                              title="Modifier le produit"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -423,6 +423,12 @@ export default function AdminProducts() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Colors Management Dialog */}
+      <ColorsManagementDialog 
+        open={colorsDialogOpen} 
+        onOpenChange={setColorsDialogOpen}
+      />
     </AdminLayout>
   );
 }
@@ -1633,5 +1639,142 @@ function GlobalIncomingStockView() {
         </DialogContent>
       </Dialog>
     </Card>
+  );
+}
+
+
+// Colors Management Dialog Component
+function ColorsManagementDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const [colors, setColors] = useState<Array<{ name: string; hex: string }>>([
+    { name: "Blanc", hex: "#FFFFFF" },
+    { name: "Noir", hex: "#1A1A1A" },
+    { name: "Gris", hex: "#808080" },
+    { name: "Sterling Silver", hex: "#C0C0C0" },
+    { name: "Beige", hex: "#D4B896" },
+    { name: "Brun", hex: "#6B3A2A" },
+  ]);
+  
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [newColor, setNewColor] = useState({ name: "", hex: "#000000" });
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAddColor = () => {
+    if (newColor.name.trim() && newColor.hex) {
+      setColors([...colors, { name: newColor.name.trim(), hex: newColor.hex }]);
+      setNewColor({ name: "", hex: "#000000" });
+      setIsAdding(false);
+      toast.success("Couleur ajoutée");
+    }
+  };
+
+  const handleUpdateColor = (index: number, updated: { name: string; hex: string }) => {
+    const newColors = [...colors];
+    newColors[index] = updated;
+    setColors(newColors);
+    setEditingIndex(null);
+    toast.success("Couleur modifiée");
+  };
+
+  const handleDeleteColor = (index: number) => {
+    if (confirm("Êtes-vous sûr de vouloir supprimer cette couleur ?")) {
+      setColors(colors.filter((_, i) => i !== index));
+      toast.success("Couleur supprimée");
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Gestion des couleurs</DialogTitle>
+          <DialogDescription>
+            Ajoutez, modifiez ou supprimez les couleurs disponibles pour les variantes de produits
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          {/* Existing Colors List */}
+          <div className="space-y-2">
+            {colors.map((color, index) => (
+              <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
+                {editingIndex === index ? (
+                  <>
+                    <input
+                      type="color"
+                      value={color.hex}
+                      onChange={(e) => handleUpdateColor(index, { ...color, hex: e.target.value })}
+                      className="w-12 h-12 rounded border cursor-pointer"
+                    />
+                    <Input
+                      value={color.name}
+                      onChange={(e) => handleUpdateColor(index, { ...color, name: e.target.value })}
+                      className="flex-1"
+                      placeholder="Nom de la couleur"
+                    />
+                    <Button size="sm" variant="ghost" onClick={() => setEditingIndex(null)}>
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      className="w-12 h-12 rounded border border-border/50 shadow-sm"
+                      style={{ backgroundColor: color.hex }}
+                      title={color.hex}
+                    />
+                    <div className="flex-1">
+                      <p className="font-medium">{color.name}</p>
+                      <p className="text-sm text-muted-foreground">{color.hex}</p>
+                    </div>
+                    <Button size="sm" variant="ghost" onClick={() => setEditingIndex(index)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleDeleteColor(index)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Add New Color */}
+          {isAdding ? (
+            <div className="flex items-center gap-3 p-3 border-2 border-dashed rounded-lg">
+              <input
+                type="color"
+                value={newColor.hex}
+                onChange={(e) => setNewColor({ ...newColor, hex: e.target.value })}
+                className="w-12 h-12 rounded border cursor-pointer"
+              />
+              <Input
+                value={newColor.name}
+                onChange={(e) => setNewColor({ ...newColor, name: e.target.value })}
+                className="flex-1"
+                placeholder="Nom de la couleur"
+                autoFocus
+              />
+              <Button size="sm" onClick={handleAddColor}>
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setIsAdding(false)}>
+                ✕
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" className="w-full" onClick={() => setIsAdding(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Ajouter une couleur
+            </Button>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Fermer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
