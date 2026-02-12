@@ -1,4 +1,5 @@
 import AdminLayout from "@/components/AdminLayout";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -346,9 +347,8 @@ export default function AdminProducts() {
                   </TableHeader>
                   <TableBody>
                     {products.map((product: any) => (
-                      <>
+                      <React.Fragment key={product.id}>
                         <TableRow
-                          key={product.id}
                           className={`cursor-pointer hover:bg-muted/50 transition-colors ${expandedProductId === product.id ? "bg-muted/30 border-b-0" : ""}`}
                           onClick={() => handleToggleExpand(product.id)}
                         >
@@ -401,13 +401,13 @@ export default function AdminProducts() {
                           </TableCell>
                         </TableRow>
                         {expandedProductId === product.id && (
-                          <TableRow key={`${product.id}-variants`} className="bg-muted/10 hover:bg-muted/10">
+                          <TableRow className="bg-muted/10 hover:bg-muted/10">
                             <TableCell colSpan={7} className="p-0">
                               <ExpandedVariantsRow productId={product.id} />
                             </TableCell>
                           </TableRow>
                         )}
-                      </>
+                      </React.Fragment>
                     ))}
                   </TableBody>
                 </Table>
