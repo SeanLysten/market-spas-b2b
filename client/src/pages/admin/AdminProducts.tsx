@@ -435,6 +435,7 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
   const updateMutation = trpc.admin.products.updateVariant.useMutation();
   const [editingVariantId, setEditingVariantId] = useState<number | null>(null);
   const [editStockValue, setEditStockValue] = useState("");
+  const [uploadingVariantId, setUploadingVariantId] = useState<number | null>(null);
 
   const handleStartEdit = (variant: any) => {
     setEditingVariantId(variant.id);
@@ -460,6 +461,33 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
     setEditStockValue("");
   };
 
+  const handleImageUploaded = async (variantId: number, url: string) => {
+    try {
+      await updateMutation.mutateAsync({
+        id: variantId,
+        imageUrl: url,
+      });
+      toast.success("Image mise \u00e0 jour");
+      setUploadingVariantId(null);
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de la mise \u00e0 jour de l'image");
+    }
+  };
+
+  const handleRemoveImage = async (variantId: number) => {
+    try {
+      await updateMutation.mutateAsync({
+        id: variantId,
+        imageUrl: null,
+      });
+      toast.success("Image supprim\u00e9e");
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de la suppression de l'image");
+    }
+  };
+
   if (!variants || variants.length === 0) {
     return (
       <div className="px-6 py-4 text-sm text-muted-foreground italic">
@@ -479,6 +507,7 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-muted/40">
+              <th className="text-left px-4 py-2 font-medium text-muted-foreground w-16">Image</th>
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">Couleur</th>
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">SKU</th>
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">Stock</th>
@@ -487,6 +516,50 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
           <tbody>
             {variants.map((variant: any) => (
               <tr key={variant.id} className="border-t border-border/30 hover:bg-muted/20">
+                <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
+                  {uploadingVariantId === variant.id ? (
+                    <div className="w-40">
+                      <ImageUpload
+                        currentImageUrl={variant.imageUrl}
+                        onImageUploaded={(url) => handleImageUploaded(variant.id, url)}
+                        productId={productId}
+                        variantId={variant.id}
+                      />
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="mt-1 h-6 text-xs w-full"
+                        onClick={() => setUploadingVariantId(null)}
+                      >
+                        Fermer
+                      </Button>
+                    </div>
+                  ) : variant.imageUrl ? (
+                    <div className="relative group w-12 h-12">
+                      <img
+                        src={variant.imageUrl}
+                        alt={variant.color || variant.name}
+                        className="w-12 h-12 object-cover rounded border border-border/50 cursor-pointer"
+                        onClick={() => setUploadingVariantId(variant.id)}
+                      />
+                      <button
+                        className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-4 h-4 flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemoveImage(variant.id)}
+                        title="Supprimer l'image"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      className="w-12 h-12 rounded border-2 border-dashed border-border/50 flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer"
+                      onClick={() => setUploadingVariantId(variant.id)}
+                      title="Ajouter une image"
+                    >
+                      <Package className="h-4 w-4" />
+                    </button>
+                  )}
+                </td>
                 <td className="px-4 py-2">
                   <div className="flex items-center gap-2">
                     <div

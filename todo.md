@@ -1545,3 +1545,13 @@
 - [x] Afficher toutes les variantes (couleurs) avec stock inline quand on clique sur un produit
 - [x] Permettre la modification du stock directement dans le menu déroulant
 - [x] Garder l'interface simple et rapide (pas de navigation vers un onglet séparé)
+
+## Images par variante
+- [x] Ajouter un bouton d'upload d'image par variante dans le menu déroulant admin
+- [x] Permettre la modification/suppression de l'image de chaque variante
+- [x] Afficher la miniature de l'image dans le menu déroulant des variantes
+- [x] Afficher l'image de la variante sélectionnée dans le catalogue partenaire (dialogue d'ajout au panier)
+- [x] Changer l'image du catalogue quand le partenaire sélectionne une couleur différente
+- [x] Activer la sélection de variante (couleur) dans le dialogue d'ajout au panier avec pastilles et stock
+- [x] Backend : accepter imageUrl (y compris null) dans updateVariant
+- [x] Tests unitaires pour l'image par variante (18 tests passés)

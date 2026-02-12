@@ -19,6 +19,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
+import { useSafeQuery } from "@/hooks/useSafeQuery";
 import { toast } from "sonner";
 import { Package, Calendar, Check } from "lucide-react";
 
@@ -28,22 +29,29 @@ interface ProductAddToCartDialogProps {
   product: any;
 }
 
+const COLOR_MAP: Record<string, string> = {
+  blanc: "#ffffff",
+  noir: "#1a1a1a",
+  gris: "#808080",
+  "sterling silver": "#C0C0C0",
+};
+
 export default function ProductAddToCartDialog({
   open,
   onOpenChange,
   product,
 }: ProductAddToCartDialogProps) {
-  // const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
+  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [sourceType, setSourceType] = useState<"stock" | "incoming">("stock");
   const [selectedIncomingId, setSelectedIncomingId] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
 
-  // Fetch variants for this product (disabled for now)
-  // const { data: variants } = trpc.admin.products.listVariants.useQuery(
-  //   { productId: product.id },
-  //   { enabled: open && !!product.id }
-  // );
-  const variants = [];
+  // Fetch variants for this product
+  const { data: variantsData } = trpc.products.getVariants.useQuery(
+    { productId: product?.id },
+    { enabled: open && !!product?.id }
+  );
+  const variants = useSafeQuery(variantsData) || [];
 
   // Fetch incoming stock for this product
   const { data: incomingStock } = trpc.products.getIncomingStock.useQuery(
@@ -63,7 +71,7 @@ export default function ProductAddToCartDialog({
   });
 
   const resetForm = () => {
-    // setSelectedVariantId(null);
+    setSelectedVariantId(null);
     setSourceType("stock");
     setSelectedIncomingId("");
     setQuantity(1);
@@ -75,6 +83,13 @@ export default function ProductAddToCartDialog({
     }
   }, [open]);
 
+  // Auto-select first variant when variants load
+  useEffect(() => {
+    if (variants && variants.length > 0 && !selectedVariantId) {
+      setSelectedVariantId(variants[0].id);
+    }
+  }, [variants, selectedVariantId]);
+
   const handleAddToCart = () => {
     if (!product) return;
 
@@ -82,18 +97,23 @@ export default function ProductAddToCartDialog({
 
     addToCartMutation.mutate({
       productId: product.id,
-      // variantId: selectedVariantId || undefined,
       quantity,
       isPreorder,
     });
   };
 
-  const hasVariants = false; // variants && variants.length > 0;
+  const hasVariants = variants && variants.length > 0;
   const hasIncomingStock = incomingStock && incomingStock.length > 0;
   
-  // const selectedVariant = variants?.find((v: any) => v.id === selectedVariantId);
-  const selectedVariant = null;
-  const stockAvailable = product.stockQuantity || 0;
+  const selectedVariant = variants?.find((v: any) => v.id === selectedVariantId);
+  
+  // Use variant stock if a variant is selected, otherwise product stock
+  const stockAvailable = selectedVariant
+    ? (selectedVariant.stockQuantity || 0)
+    : (product.stockQuantity || 0);
+
+  // Get the image to display: variant image > product image > null
+  const displayImage = selectedVariant?.imageUrl || product.imageUrl;
 
   const pendingIncoming = incomingStock?.filter((s) => s.status === "PENDING") || [];
 
@@ -106,7 +126,60 @@ export default function ProductAddToCartDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Variant Selection - Disabled for now */}
+          {/* Product Image - changes based on selected variant */}
+          <div className="relative w-full h-48 bg-muted rounded-lg overflow-hidden">
+            {displayImage ? (
+              <img
+                src={displayImage}
+                alt={selectedVariant?.name || product.name}
+                className="w-full h-full object-cover transition-all duration-300"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Package className="w-16 h-16 text-muted-foreground" />
+              </div>
+            )}
+            {/* Stock badge */}
+            <div className="absolute top-2 right-2">
+              <Badge variant={stockAvailable > 0 ? "default" : "secondary"} className={stockAvailable > 0 ? "bg-green-600" : ""}>
+                {stockAvailable > 0 ? `En stock (${stockAvailable})` : "Rupture"}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Variant Selection (Color) */}
+          {hasVariants && (
+            <div className="space-y-3">
+              <Label>Couleur</Label>
+              <div className="flex gap-2 flex-wrap">
+                {variants.map((variant: any) => {
+                  const isSelected = selectedVariantId === variant.id;
+                  const colorHex = COLOR_MAP[variant.color?.toLowerCase()] || "#e5e5e5";
+                  return (
+                    <button
+                      key={variant.id}
+                      onClick={() => setSelectedVariantId(variant.id)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all cursor-pointer ${
+                        isSelected
+                          ? "border-primary bg-primary/5 shadow-sm"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                      title={`${variant.color || variant.name} — Stock: ${variant.stockQuantity || 0}`}
+                    >
+                      <div
+                        className="w-5 h-5 rounded-full border border-border/50 shadow-inner"
+                        style={{ backgroundColor: colorHex }}
+                      />
+                      <span className="text-sm font-medium">{variant.color || variant.name}</span>
+                      <Badge variant={variant.stockQuantity > 0 ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
+                        {variant.stockQuantity || 0}
+                      </Badge>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Source Type Selection */}
           <div className="space-y-3">
@@ -230,7 +303,7 @@ export default function ProductAddToCartDialog({
             onClick={handleAddToCart}
             disabled={
               addToCartMutation.isPending ||
-              // (hasVariants && !selectedVariantId) ||
+              (hasVariants && !selectedVariantId) ||
               (sourceType === "incoming" && !selectedIncomingId) ||
               (sourceType === "stock" && stockAvailable < quantity)
             }

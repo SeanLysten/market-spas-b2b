@@ -1349,6 +1349,7 @@ export const appRouter = router({
             stockQuantity: z.number().optional(),
             isActive: z.boolean().optional(),
             isDefault: z.boolean().optional(),
+            imageUrl: z.string().nullable().optional(),
           })
         )
         .mutation(async ({ input }) => {

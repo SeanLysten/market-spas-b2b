@@ -994,7 +994,7 @@ export async function updateProductVariant(
     voltage?: string;
     material?: string;
     stockQuantity?: number;
-    imageUrl?: string;
+    imageUrl?: string | null;
     isActive?: boolean;
   }
 ) {
@@ -1009,6 +1009,7 @@ export async function updateProductVariant(
   if (data.voltage !== undefined) updateData.voltage = data.voltage;
   if (data.material !== undefined) updateData.material = data.material;
   if (data.stockQuantity !== undefined) updateData.stockQuantity = data.stockQuantity;
+  if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl;
   if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
   await db.update(productVariants).set(updateData).where(eq(productVariants.id, id));
