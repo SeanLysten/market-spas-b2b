@@ -1555,3 +1555,11 @@
 - [x] Activer la sélection de variante (couleur) dans le dialogue d'ajout au panier avec pastilles et stock
 - [x] Backend : accepter imageUrl (y compris null) dans updateVariant
 - [x] Tests unitaires pour l'image par variante (18 tests passés)
+
+## Pastilles de couleur cliquables sur les cartes du catalogue
+- [x] Ajouter des pastilles de couleur sur chaque carte produit du catalogue
+- [x] Rendre les pastilles cliquables avec changement d'image dynamique
+- [x] Afficher la couleur sélectionnée visuellement (bordure/anneau + coche sur la pastille active)
+- [x] Mettre à jour le stock affiché selon la variante sélectionnée
+- [x] Afficher le nom de la couleur et le stock sous les pastilles quand une variante est sélectionnée
+- [x] Tests unitaires pour le mapping de couleurs et la logique de sélection (20 tests passés)

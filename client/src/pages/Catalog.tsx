@@ -12,11 +12,189 @@ import { toast } from "sonner";
 import ProductAddToCartDialog from "@/components/ProductAddToCartDialog";
 import { CSVImportDialog } from "@/components/CSVImportDialog";
 
+const COLOR_MAP: Record<string, string> = {
+  "blanc": "#FFFFFF",
+  "white": "#FFFFFF",
+  "noir": "#1a1a1a",
+  "black": "#1a1a1a",
+  "gris": "#808080",
+  "grey": "#808080",
+  "gray": "#808080",
+  "sterling silver": "#C4C4C4",
+  "silver": "#C4C4C4",
+  "argent": "#C4C4C4",
+  "bleu": "#2563EB",
+  "blue": "#2563EB",
+  "rouge": "#DC2626",
+  "red": "#DC2626",
+};
+
+function getColorHex(colorName: string): string {
+  const lower = colorName.toLowerCase().trim();
+  return COLOR_MAP[lower] || "#9CA3AF";
+}
+
+function isLightColor(hex: string): boolean {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 186;
+}
+
+// Component for a single product card with variant color dots
+function ProductCard({ product, allIncomingStock, onOpenDialog }: {
+  product: any;
+  allIncomingStock: any[] | undefined;
+  onOpenDialog: (product: any) => void;
+}) {
+  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
+
+  // Fetch variants for this product
+  const { data: variants } = trpc.products.getVariants.useQuery(
+    { productId: product.id },
+    { staleTime: 60000 }
+  );
+
+  const selectedVariant = variants?.find((v: any) => v.id === selectedVariantId) || null;
+
+  // Determine the image to display: selected variant image > product image > placeholder
+  const displayImage = selectedVariant?.imageUrl || product.imageUrl;
+
+  // Calculate stock based on selected variant or total
+  const variantStock = selectedVariant ? (selectedVariant.stockQuantity || 0) : (product.stockQuantity || 0);
+  const hasStock = variantStock > 0;
+
+  const getPartnerPrice = () => {
+    return Number(product.pricePartnerHT || product.pricePublicHT || 0);
+  };
+
+  const formatPrice = (price: number) => {
+    return price.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const partnerPrice = getPartnerPrice();
+
+  const hasIncomingStock = allIncomingStock?.some(
+    (incoming: any) => incoming.productId === product.id && incoming.status === "PENDING"
+  );
+
+  return (
+    <Card className="overflow-hidden flex flex-col">
+      {/* Product Image */}
+      <div className="relative h-48 bg-muted">
+        {displayImage ? (
+          <img
+            src={displayImage}
+            alt={selectedVariant ? `${product.name} - ${selectedVariant.color || selectedVariant.name}` : product.name}
+            className="w-full h-full object-cover transition-all duration-300"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Package className="w-16 h-16 text-muted-foreground" />
+          </div>
+        )}
+        {/* Stock Badge */}
+        <div className="absolute top-2 right-2 flex flex-col gap-1">
+          {hasStock ? (
+            <Badge variant="default" className="bg-green-600">
+              En stock ({variantStock})
+            </Badge>
+          ) : (
+            <Badge variant="secondary">
+              Rupture
+            </Badge>
+          )}
+          {hasIncomingStock && (
+            <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">
+              <TruckIcon className="mr-1 h-3 w-3" />
+              Arrivage
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      <CardHeader className="flex-1 pb-2">
+        <CardTitle className="line-clamp-2">{product.name}</CardTitle>
+        <CardDescription className="line-clamp-2">
+          {product.description || "Aucune description"}
+        </CardDescription>
+        <div className="text-sm text-muted-foreground mt-1">
+          SKU: {product.sku}
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-3 pt-0">
+        {/* Color Swatches */}
+        {variants && variants.length > 0 && (
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              {variants.map((variant: any) => {
+                const colorHex = getColorHex(variant.color || variant.name || "");
+                const isSelected = selectedVariantId === variant.id;
+                const isLight = isLightColor(colorHex);
+                const vStock = variant.stockQuantity || 0;
+
+                return (
+                  <button
+                    key={variant.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedVariantId(isSelected ? null : variant.id);
+                    }}
+                    className={`relative w-7 h-7 rounded-full transition-all duration-200 focus:outline-none ${
+                      isSelected
+                        ? "ring-2 ring-primary ring-offset-2 scale-110"
+                        : "ring-1 ring-border hover:ring-2 hover:ring-primary/50 hover:scale-105"
+                    }`}
+                    style={{ backgroundColor: colorHex }}
+                    title={`${variant.color || variant.name} — Stock: ${vStock}`}
+                  >
+                    {isSelected && (
+                      <span className={`absolute inset-0 flex items-center justify-center text-xs font-bold ${isLight ? "text-gray-800" : "text-white"}`}>
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedVariant && (
+              <p className="text-xs text-muted-foreground">
+                {selectedVariant.color || selectedVariant.name}
+                {selectedVariant.stockQuantity != null && (
+                  <span className="ml-1">— Stock: {selectedVariant.stockQuantity}</span>
+                )}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Price */}
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-bold text-primary">
+            {formatPrice(partnerPrice)} €
+          </span>
+          <span className="text-sm text-muted-foreground">HT</span>
+        </div>
+      </CardContent>
+
+      <CardFooter className="flex-col gap-2">
+        <Button 
+          className="w-full gap-2" 
+          onClick={() => onOpenDialog(product)}
+        >
+          <ShoppingCart className="w-4 h-4" />
+          {hasStock ? "Ajouter au panier" : "Pré-commander"}
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
 export default function Catalog() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
-  const [quantities, setQuantities] = useState<Record<number, number>>({});
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -29,38 +207,10 @@ export default function Catalog() {
   // Fetch all incoming stock for badge display
   const { data: allIncomingStock } = trpc.admin.incomingStock.list.useQuery({});
 
-  // Remove direct add to cart mutation - now handled by ProductAddToCartDialog
-
-  const getQuantity = (productId: number) => quantities[productId] || 1;
-
-  const setQuantity = (productId: number, quantity: number, maxStock: number) => {
-    const newQty = Math.max(1, Math.min(quantity, maxStock));
-    setQuantities({ ...quantities, [productId]: newQty });
-  };
-
   const handleOpenDialog = (product: any) => {
     setSelectedProduct(product);
     setDialogOpen(true);
   };
-
-  const getPartnerPrice = (product: any) => {
-    // TODO: Apply partner level discount
-    return Number(product.pricePartnerHT || product.pricePublicHT || 0);
-  };
-
-  const formatPrice = (price: number) => {
-    return price.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
-
-  const getCurrentWeek = () => {
-    const now = new Date();
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-    return Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7);
-  };
-
-  // Incoming stock will be fetched per product in the dialog
-  // For now, we'll show badges based on product data
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -185,118 +335,14 @@ export default function Catalog() {
           </div>
         ) : products && products.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {products.map((product: any) => {
-              const stock = product.stockQuantity || 0;
-              const hasStock = stock > 0;
-              const quantity = getQuantity(product.id);
-              const partnerPrice = getPartnerPrice(product);
-              
-              // Check if product has incoming stock
-              const hasIncomingStock = allIncomingStock?.some(
-                (incoming: any) => incoming.productId === product.id && incoming.status === "PENDING"
-              );
-
-              return (
-                <Card key={product.id} className="overflow-hidden flex flex-col">
-                  {/* Product Image */}
-                  <div className="relative h-48 bg-muted">
-                    {product.imageUrl ? (
-                      <img
-                        src={product.imageUrl}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Package className="w-16 h-16 text-muted-foreground" />
-                      </div>
-                    )}
-                    {/* Stock Badge */}
-                    <div className="absolute top-2 right-2 flex flex-col gap-1">
-                      {hasStock ? (
-                        <Badge variant="default" className="bg-green-600">
-                          En stock ({stock})
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">
-                          Rupture
-                        </Badge>
-                      )}
-                      {/* Incoming Stock Badge */}
-                      {hasIncomingStock && (
-                        <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">
-                          <TruckIcon className="mr-1 h-3 w-3" />
-                          Arrivage
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  <CardHeader className="flex-1">
-                    <CardTitle className="line-clamp-2">{product.name}</CardTitle>
-                    <CardDescription className="line-clamp-2">
-                      {product.description || "Aucune description"}
-                    </CardDescription>
-                    <div className="text-sm text-muted-foreground mt-2">
-                      SKU: {product.sku}
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="space-y-3">
-                    {/* Price */}
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-bold text-primary">
-                        {formatPrice(partnerPrice)} €
-                      </span>
-                      <span className="text-sm text-muted-foreground">HT</span>
-                    </div>
-
-                    {/* Quantity Selector (only if in stock) */}
-                    {hasStock && (
-                      <div className="space-y-2">
-                        <Label className="text-sm">Quantité</Label>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setQuantity(product.id, quantity - 1, stock)}
-                            disabled={quantity <= 1}
-                          >
-                            <Minus className="w-4 h-4" />
-                          </Button>
-                          <Input
-                            type="number"
-                            min="1"
-                            max={stock}
-                            value={quantity}
-                            onChange={(e) => setQuantity(product.id, parseInt(e.target.value) || 1, stock)}
-                            className="w-20 text-center"
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setQuantity(product.id, quantity + 1, stock)}
-                            disabled={quantity >= stock}
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-
-                  <CardFooter className="flex-col gap-2">
-                    <Button 
-                      className="w-full gap-2" 
-                      onClick={() => handleOpenDialog(product)}
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                      {hasStock ? "Ajouter au panier" : "Pré-commander"}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              );
-            })}
+            {products.map((product: any) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                allIncomingStock={allIncomingStock}
+                onOpenDialog={handleOpenDialog}
+              />
+            ))}
           </div>
         ) : (
           <div className="text-center py-16">
