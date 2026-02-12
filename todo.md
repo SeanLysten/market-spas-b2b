@@ -1524,3 +1524,9 @@
 - [x] Supprimer les doublons dans partner_candidates (4 doublons supprimés)
 - [x] Exécuter la reclassification des 65 leads partenaires existants vers la Carte du Réseau
 - [x] Vérifier le nombre de candidats créés vs déjà existants (60 liés, 5 créés, 0 erreurs)
+
+## Catalogue produits - Ajout des 10 spas réels
+- [x] Extraire les caractéristiques des 10 fiches PDF (EasyRelax, Kos, Mykonos, Neptune, Volcano, Delight, Devotion, Ecstatic, Euphoria, Happy)
+- [x] Supprimer les produits de test existants du catalogue
+- [x] Ajouter les 10 spas avec caractéristiques complètes, prix HT 0€, stock 0
+- [x] Créer 4 variantes de couleur par produit : Blanc, Sterling Silver, Noir, Gris
