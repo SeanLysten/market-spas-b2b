@@ -1602,3 +1602,6 @@
 - [x] Ajouter un bouton "Gérer les couleurs" à côté de "Nouveau produit" en haut de la page admin produits
 - [x] Créer une interface de gestion globale des couleurs (ajouter/modifier/supprimer couleurs avec nom et code hex)
 - [x] Corriger le scroll du dialogue de commande dans le catalogue (max-h-[90vh] + overflow-y-auto)
+
+## Augmentation limite upload images
+- [x] Augmenter la limite d'upload d'images de 5 MB à 10 MB pour permettre des photos haute résolution (modifié dans ImageUpload.tsx)
