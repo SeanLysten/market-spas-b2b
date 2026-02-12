@@ -1563,3 +1563,13 @@
 - [x] Mettre à jour le stock affiché selon la variante sélectionnée
 - [x] Afficher le nom de la couleur et le stock sous les pastilles quand une variante est sélectionnée
 - [x] Tests unitaires pour le mapping de couleurs et la logique de sélection (20 tests passés)
+
+## Gestion des couleurs par modèle et correction images
+- [x] Ajouter Beige et Brun dans les couleurs possibles (20 variantes créées, désactivées par défaut)
+- [x] Permettre d'activer/désactiver les couleurs disponibles par modèle dans l'admin (toggle switch par variante)
+- [x] Masquer les variantes désactivées côté catalogue partenaire (filtre activeVariants)
+- [x] Corriger l'affichage tronqué des images dans le dialogue produit (object-contain + padding)
+- [x] Afficher l'image en entier quand on clique sur un produit (h-64 + object-contain)
+- [x] Badge "Masqué" sur les variantes désactivées dans l'admin
+- [x] Opacité réduite sur les variantes désactivées dans l'admin
+- [x] Tests unitaires pour le filtrage des variantes actives et les nouvelles couleurs (16 tests passés)

@@ -429,6 +429,21 @@ export default function AdminProducts() {
   );
 }
 
+const ADMIN_COLOR_MAP: Record<string, string> = {
+  "blanc": "#ffffff",
+  "white": "#ffffff",
+  "noir": "#1a1a1a",
+  "black": "#1a1a1a",
+  "gris": "#808080",
+  "grey": "#808080",
+  "gray": "#808080",
+  "sterling silver": "#C0C0C0",
+  "silver": "#C0C0C0",
+  "beige": "#D4B896",
+  "brun": "#6B3A2A",
+  "brown": "#6B3A2A",
+};
+
 function ExpandedVariantsRow({ productId }: { productId: number }) {
   const { data: variantsData, refetch } = trpc.admin.products.getVariants.useQuery({ productId });
   const variants = useSafeQuery(variantsData);
@@ -488,6 +503,19 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
     }
   };
 
+  const handleToggleActive = async (variantId: number, currentActive: boolean) => {
+    try {
+      await updateMutation.mutateAsync({
+        id: variantId,
+        isActive: !currentActive,
+      });
+      toast.success(!currentActive ? "Variante activée" : "Variante désactivée");
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de la mise à jour");
+    }
+  };
+
   if (!variants || variants.length === 0) {
     return (
       <div className="px-6 py-4 text-sm text-muted-foreground italic">
@@ -507,6 +535,7 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-muted/40">
+              <th className="text-left px-4 py-2 font-medium text-muted-foreground w-12">Actif</th>
               <th className="text-left px-4 py-2 font-medium text-muted-foreground w-16">Image</th>
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">Couleur</th>
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">SKU</th>
@@ -515,7 +544,16 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
           </thead>
           <tbody>
             {variants.map((variant: any) => (
-              <tr key={variant.id} className="border-t border-border/30 hover:bg-muted/20">
+              <tr key={variant.id} className={`border-t border-border/30 hover:bg-muted/20 ${variant.isActive === false ? 'opacity-50' : ''}`}>
+                <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => handleToggleActive(variant.id, variant.isActive !== false)}
+                    className={`w-8 h-5 rounded-full relative transition-colors duration-200 ${variant.isActive !== false ? 'bg-green-500' : 'bg-gray-300'}`}
+                    title={variant.isActive !== false ? 'Désactiver cette couleur' : 'Activer cette couleur'}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${variant.isActive !== false ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
+                  </button>
+                </td>
                 <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
                   {uploadingVariantId === variant.id ? (
                     <div className="w-40">
@@ -565,15 +603,13 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
                     <div
                       className="w-3 h-3 rounded-full border border-border/50"
                       style={{
-                        backgroundColor:
-                          variant.color?.toLowerCase() === "blanc" ? "#ffffff" :
-                          variant.color?.toLowerCase() === "noir" ? "#1a1a1a" :
-                          variant.color?.toLowerCase() === "gris" ? "#808080" :
-                          variant.color?.toLowerCase() === "sterling silver" ? "#C0C0C0" :
-                          "#e5e5e5",
+                        backgroundColor: ADMIN_COLOR_MAP[variant.color?.toLowerCase()] || "#e5e5e5",
                       }}
                     />
                     <span className="font-medium">{variant.color || variant.name}</span>
+                    {variant.isActive === false && (
+                      <Badge variant="outline" className="text-[10px] px-1 py-0 text-muted-foreground">Masqué</Badge>
+                    )}
                   </div>
                 </td>
                 <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{variant.sku}</td>

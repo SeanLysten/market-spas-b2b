@@ -23,6 +23,9 @@ const COLOR_MAP: Record<string, string> = {
   "sterling silver": "#C4C4C4",
   "silver": "#C4C4C4",
   "argent": "#C4C4C4",
+  "beige": "#D4B896",
+  "brun": "#6B3A2A",
+  "brown": "#6B3A2A",
   "bleu": "#2563EB",
   "blue": "#2563EB",
   "rouge": "#DC2626",
@@ -55,7 +58,10 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
     { staleTime: 60000 }
   );
 
-  const selectedVariant = variants?.find((v: any) => v.id === selectedVariantId) || null;
+  // Filter only active variants
+  const activeVariants = variants?.filter((v: any) => v.isActive !== false) || [];
+
+  const selectedVariant = activeVariants?.find((v: any) => v.id === selectedVariantId) || null;
 
   // Determine the image to display: selected variant image > product image > placeholder
   const displayImage = selectedVariant?.imageUrl || product.imageUrl;
@@ -81,12 +87,12 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
   return (
     <Card className="overflow-hidden flex flex-col">
       {/* Product Image */}
-      <div className="relative h-48 bg-muted">
+      <div className="relative h-48 bg-muted flex items-center justify-center">
         {displayImage ? (
           <img
             src={displayImage}
             alt={selectedVariant ? `${product.name} - ${selectedVariant.color || selectedVariant.name}` : product.name}
-            className="w-full h-full object-cover transition-all duration-300"
+            className="w-full h-full object-contain transition-all duration-300 p-2"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -125,10 +131,10 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
 
       <CardContent className="space-y-3 pt-0">
         {/* Color Swatches */}
-        {variants && variants.length > 0 && (
+        {activeVariants && activeVariants.length > 0 && (
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
-              {variants.map((variant: any) => {
+              {activeVariants.map((variant: any) => {
                 const colorHex = getColorHex(variant.color || variant.name || "");
                 const isSelected = selectedVariantId === variant.id;
                 const isLight = isLightColor(colorHex);

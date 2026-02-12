@@ -34,6 +34,8 @@ const COLOR_MAP: Record<string, string> = {
   noir: "#1a1a1a",
   gris: "#808080",
   "sterling silver": "#C0C0C0",
+  beige: "#D4B896",
+  brun: "#6B3A2A",
 };
 
 export default function ProductAddToCartDialog({
@@ -83,12 +85,17 @@ export default function ProductAddToCartDialog({
     }
   }, [open]);
 
-  // Auto-select first variant when variants load
+  // Filter only active variants
+  const activeVariants = variants?.filter((v: any) => v.isActive !== false) || [];
+
+  // Auto-select first active variant when variants load
   useEffect(() => {
-    if (variants && variants.length > 0 && !selectedVariantId) {
-      setSelectedVariantId(variants[0].id);
+    if (activeVariants.length > 0 && !selectedVariantId) {
+      setSelectedVariantId(activeVariants[0].id);
+    } else if (activeVariants.length > 0 && selectedVariantId && !activeVariants.find((v: any) => v.id === selectedVariantId)) {
+      setSelectedVariantId(activeVariants[0].id);
     }
-  }, [variants, selectedVariantId]);
+  }, [activeVariants, selectedVariantId]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -102,7 +109,7 @@ export default function ProductAddToCartDialog({
     });
   };
 
-  const hasVariants = variants && variants.length > 0;
+  const hasVariants = activeVariants && activeVariants.length > 0;
   const hasIncomingStock = incomingStock && incomingStock.length > 0;
   
   const selectedVariant = variants?.find((v: any) => v.id === selectedVariantId);
@@ -127,12 +134,12 @@ export default function ProductAddToCartDialog({
 
         <div className="space-y-6 py-4">
           {/* Product Image - changes based on selected variant */}
-          <div className="relative w-full h-48 bg-muted rounded-lg overflow-hidden">
+          <div className="relative w-full h-64 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
             {displayImage ? (
               <img
                 src={displayImage}
                 alt={selectedVariant?.name || product.name}
-                className="w-full h-full object-cover transition-all duration-300"
+                className="w-full h-full object-contain transition-all duration-300 p-2"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -152,7 +159,7 @@ export default function ProductAddToCartDialog({
             <div className="space-y-3">
               <Label>Couleur</Label>
               <div className="flex gap-2 flex-wrap">
-                {variants.map((variant: any) => {
+                {activeVariants.map((variant: any) => {
                   const isSelected = selectedVariantId === variant.id;
                   const colorHex = COLOR_MAP[variant.color?.toLowerCase()] || "#e5e5e5";
                   return (
