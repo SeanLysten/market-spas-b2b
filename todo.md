@@ -1653,3 +1653,14 @@
 - [x] Vérifier que le Client ID correspond à celui créé dans Google Cloud Console (différence identifiée)
 - [x] Reconfigurer les identifiants si nécessaire (GOOGLE_ADS_CLIENT_ID corrigé avec ID complet)
 - [x] Tester la connexion Google Ads (5 tests OAuth passés)
+
+## Finalisation intégration Google Ads
+- [x] Corriger la restriction du compte Google (application publiée en production, accessible à tous les comptes Google)
+- [ ] Créer le module de récupération des campagnes Google Ads via l'API (google-ads-api.ts)
+- [ ] Implémenter getCampaignsWithInsights pour Google Ads (similaire à Meta)
+- [ ] Récupérer les statistiques (dépenses, impressions, clics, conversions) par période
+- [ ] Créer le tableau de bord unifié Meta + Google Ads
+- [ ] Afficher les dépenses totales combinées (Meta + Google)
+- [ ] Ajouter des graphiques comparatifs des performances par canal
+- [ ] Calculer et afficher le ROI global par canal publicitaire
+- [ ] Écrire des tests pour la récupération des campagnes Google Ads
