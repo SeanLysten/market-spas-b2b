@@ -1623,9 +1623,11 @@
 ## Intégration Google Ads dans Campagnes Lead
 - [x] Créer le schéma de base de données pour stocker les comptes Google Ads et leurs tokens (table google_ad_accounts)
 - [x] Implémenter l'authentification OAuth 2.0 pour Google Ads (module google-ads-oauth.ts)
+- [x] Créer les fonctions DB pour Google Ads (connectGoogleAdAccount, disconnectGoogleAdAccount, etc.)
+- [x] Créer le router googleAds avec toutes les routes API (getOAuthUrl, handleCallback, connectAdAccount, etc.)
+- [ ] Créer le module de récupération des campagnes Google Ads via l'API
 - [ ] Créer l'interface avec deux onglets : "Campagnes Meta" et "Campagnes Google Ads"
 - [ ] Ajouter un bouton "Connecter Google Ads" avec flux OAuth
-- [ ] Implémenter la récupération des campagnes Google Ads via l'API
 - [ ] Récupérer les statistiques (dépenses, impressions, clics, conversions) par période
 - [ ] Créer un tableau de bord unifié montrant les dépenses totales Meta + Google
 - [ ] Ajouter des graphiques comparatifs des performances

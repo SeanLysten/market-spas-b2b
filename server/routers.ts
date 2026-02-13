@@ -3059,6 +3059,139 @@ export const appRouter = router({
   }),
 
   // ============================================
+  // GOOGLE ADS INTEGRATION
+  // ============================================
+  googleAds: router({
+    // Get OAuth URL to connect Google Ads account
+    getOAuthUrl: adminProcedure
+      .query(async ({ ctx }) => {
+        const googleAdsOAuth = await import("./google-ads-oauth");
+        const state = Buffer.from(JSON.stringify({ userId: ctx.user.id })).toString("base64");
+        const url = googleAdsOAuth.getGoogleAdsAuthUrl(state);
+        return { url };
+      }),
+
+    // Handle OAuth callback - exchange code for token
+    handleCallback: adminProcedure
+      .input(z.object({
+        code: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const googleAdsOAuth = await import("./google-ads-oauth");
+        
+        // Exchange code for tokens
+        const tokens = await googleAdsOAuth.exchangeCodeForTokens(input.code);
+        
+        // Get user info
+        const userInfo = await googleAdsOAuth.getGoogleUserInfo(tokens.accessToken);
+        
+        return {
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          expiresAt: tokens.expiresAt,
+          googleUserId: userInfo.googleUserId,
+          googleUserEmail: userInfo.googleUserEmail,
+        };
+      }),
+
+    // Save selected Google Ads account connection
+    connectAdAccount: adminProcedure
+      .input(z.object({
+        googleUserId: z.string(),
+        googleUserEmail: z.string().nullable(),
+        customerId: z.string(),
+        customerName: z.string().nullable(),
+        currency: z.string().optional(),
+        timezone: z.string().optional(),
+        accessToken: z.string(),
+        refreshToken: z.string().nullable(),
+        tokenExpiresAt: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        console.log(`[Google Ads] Connecting customer ${input.customerId} for user ${ctx.user.id}`);
+        try {
+          const result = await db.connectGoogleAdAccount({
+            googleUserId: input.googleUserId,
+            googleUserEmail: input.googleUserEmail,
+            customerId: input.customerId,
+            customerName: input.customerName,
+            currency: input.currency || "EUR",
+            timezone: input.timezone,
+            accessToken: input.accessToken,
+            refreshToken: input.refreshToken,
+            tokenExpiresAt: input.tokenExpiresAt ? new Date(input.tokenExpiresAt) : null,
+            connectedBy: ctx.user.id,
+          });
+          console.log(`[Google Ads] Account connected successfully, id: ${result.id}`);
+          return result;
+        } catch (error: any) {
+          console.error(`[Google Ads] Error connecting account:`, error.message);
+          throw error;
+        }
+      }),
+
+    // Disconnect Google Ads account
+    disconnectAdAccount: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return db.disconnectGoogleAdAccount(input.id);
+      }),
+
+    // Get connected Google Ads accounts
+    getConnectedAccounts: adminProcedure
+      .query(async () => {
+        return db.getConnectedGoogleAdAccounts();
+      }),
+
+    // Fetch campaigns from connected Google Ads account
+    getCampaigns: adminProcedure
+      .input(z.object({
+        customerId: z.string().optional(),
+        datePreset: z.string().optional().default("last_30d"),
+        since: z.string().optional(),
+        until: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const accounts = await db.getConnectedGoogleAdAccounts();
+        console.log(`[Google Ads] getCampaigns: found ${accounts.length} connected accounts`);
+        if (accounts.length === 0) {
+          return { connected: false, campaigns: [], accounts: [] };
+        }
+
+        const targetAccount = input?.customerId
+          ? accounts.find(a => a.customerId === input.customerId)
+          : accounts[0];
+
+        if (!targetAccount) {
+          return { connected: true, campaigns: [], accounts };
+        }
+
+        try {
+          // TODO: Implement Google Ads API campaign fetching
+          // For now, return empty campaigns
+          await db.updateGoogleAdAccountLastSynced(targetAccount.id);
+
+          return {
+            connected: true,
+            campaigns: [],
+            accounts,
+            currentAccount: {
+              id: targetAccount.id,
+              customerId: targetAccount.customerId,
+              customerName: targetAccount.customerName,
+              currency: targetAccount.currency,
+              lastSyncedAt: targetAccount.lastSyncedAt,
+            },
+          };
+        } catch (error: any) {
+          console.error("[Google Ads] Erreur récupération campagnes:", error);
+          await db.updateGoogleAdAccountSyncError(targetAccount.id, error.message);
+          return { connected: true, campaigns: [], accounts, error: error.message };
+        }
+      }),
+  }),
+
+  // ============================================
   // WEBHOOKS (Public endpoints for integrations)
   // ============================================
   webhooks: router({

@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like, lte, gte, asc, ne, gt, lt, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens, metaAdAccounts } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -4786,4 +4786,128 @@ export async function updateMetaAdAccountSyncError(id: number, error: string): P
     .update(metaAdAccounts)
     .set({ syncError: error })
     .where(eq(metaAdAccounts.id, id));
+}
+
+// ============================================
+// GOOGLE ADS ACCOUNT FUNCTIONS
+// ============================================
+
+/**
+ * Connect a Google Ads account (upsert)
+ */
+export async function connectGoogleAdAccount(data: {
+  googleUserId: string;
+  googleUserEmail: string | null;
+  customerId: string;
+  customerName: string | null;
+  currency: string;
+  timezone?: string | null;
+  accessToken: string;
+  refreshToken?: string | null;
+  tokenExpiresAt?: Date | null;
+  connectedBy: number;
+}): Promise<{ id: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Check if this customer ID is already connected
+  const existing = await db
+    .select()
+    .from(googleAdAccounts)
+    .where(eq(googleAdAccounts.customerId, data.customerId));
+
+  if (existing.length > 0) {
+    // Update existing connection
+    await db
+      .update(googleAdAccounts)
+      .set({
+        googleUserId: data.googleUserId,
+        googleUserEmail: data.googleUserEmail,
+        customerName: data.customerName,
+        currency: data.currency,
+        timezone: data.timezone,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        tokenExpiresAt: data.tokenExpiresAt,
+        isActive: true,
+        syncError: null,
+        connectedBy: data.connectedBy,
+      })
+      .where(eq(googleAdAccounts.customerId, data.customerId));
+    return { id: existing[0].id };
+  }
+
+  // Create new connection
+  console.log(`[Google Ads DB] Inserting new customer: ${data.customerId}`);
+  const insertResult = await db.insert(googleAdAccounts).values({
+    googleUserId: data.googleUserId,
+    googleUserEmail: data.googleUserEmail,
+    customerId: data.customerId,
+    customerName: data.customerName,
+    currency: data.currency,
+    timezone: data.timezone,
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+    tokenExpiresAt: data.tokenExpiresAt,
+    connectedBy: data.connectedBy,
+    isActive: true,
+  });
+
+  // drizzle-orm with mysql2 returns [ResultSetHeader, ...]
+  const result = insertResult[0];
+  const insertId = (result as any).insertId ?? 0;
+  console.log(`[Google Ads DB] Insert result:`, JSON.stringify(result), `insertId: ${insertId}`);
+  return { id: insertId };
+}
+
+/**
+ * Disconnect a Google Ads account
+ */
+export async function disconnectGoogleAdAccount(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(googleAdAccounts)
+    .set({ isActive: false, accessToken: "", refreshToken: null })
+    .where(eq(googleAdAccounts.id, id));
+}
+
+/**
+ * Get all connected Google Ads accounts
+ */
+export async function getConnectedGoogleAdAccounts() {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select()
+    .from(googleAdAccounts)
+    .where(eq(googleAdAccounts.isActive, true));
+}
+
+/**
+ * Update last synced timestamp for a Google Ads account
+ */
+export async function updateGoogleAdAccountLastSynced(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(googleAdAccounts)
+    .set({ lastSyncedAt: new Date(), syncError: null })
+    .where(eq(googleAdAccounts.id, id));
+}
+
+/**
+ * Update sync error for a Google Ads account
+ */
+export async function updateGoogleAdAccountSyncError(id: number, error: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(googleAdAccounts)
+    .set({ syncError: error })
+    .where(eq(googleAdAccounts.id, id));
 }
