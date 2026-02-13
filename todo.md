@@ -1611,3 +1611,11 @@
 - [x] Afficher un spinner animé pendant le traitement de l'image
 - [x] Afficher la taille du fichier uploadé
 - [x] Afficher des messages de statut ("Lecture du fichier...", "Upload en cours...", "Traitement...", "Terminé !")
+
+## Transfert automatique stock arrivages
+- [x] Créer une fonction pour détecter les arrivages dont la semaine prévue est atteinte ou dépassée (processArrivedStock existe déjà)
+- [x] Transférer automatiquement le stock de l'arrivage vers le stock réel de la variante
+- [x] Changer le statut de l'arrivage de "PENDING" à "ARRIVED" automatiquement
+- [x] Créer un job périodique qui vérifie les arrivages toutes les heures (processIncomingStock.ts)
+- [x] Exécuter la vérification au démarrage du serveur
+- [x] Écrire des tests pour valider le transfert automatique (5 tests passés)

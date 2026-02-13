@@ -138,6 +138,11 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    
+    // Démarrer le job périodique de traitement des arrivages
+    import("../jobs/processIncomingStock").then(({ startIncomingStockJob }) => {
+      startIncomingStockJob();
+    }).catch(console.error);
   });
 }
 
