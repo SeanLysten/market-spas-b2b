@@ -1638,3 +1638,12 @@
 - [x] Modifier la route getOAuthUrl pour retourner null au lieu d'une erreur quand les identifiants ne sont pas configurés (google-ads-oauth.ts)
 - [x] Mettre à jour l'interface pour afficher un message informatif au lieu d'un bouton désactivé (card amber avec étapes de configuration)
 - [x] Ajouter un lien vers la documentation pour configurer Google Cloud Console (lien vers console.cloud.google.com)
+
+## Configuration Google Cloud Console pour Google Ads
+- [x] Accéder à Google Cloud Console et créer/sélectionner un projet (projet ALhome)
+- [x] Activer l'API Google Ads (activée avec succès)
+- [x] Créer des identifiants OAuth 2.0 (Application Web - Market Spas - Google Ads)
+- [x] Configurer l'URL de redirection autorisée (https://marketspas.pro/api/google-ads/callback)
+- [x] Récupérer le Client ID et Client Secret (sauvegardés dans /home/ubuntu/google-ads-credentials.txt)
+- [x] Ajouter les identifiants au projet via webdev_request_secrets (GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET)
+- [x] Tester la connexion Google Ads (5 tests OAuth passés)
