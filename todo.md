@@ -1647,3 +1647,9 @@
 - [x] Récupérer le Client ID et Client Secret (sauvegardés dans /home/ubuntu/google-ads-credentials.txt)
 - [x] Ajouter les identifiants au projet via webdev_request_secrets (GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET)
 - [x] Tester la connexion Google Ads (5 tests OAuth passés)
+
+## Correction erreur 401 invalid_client Google Ads OAuth
+- [x] Diagnostiquer l'erreur et vérifier les identifiants configurés (ID client incomplet trouvé)
+- [x] Vérifier que le Client ID correspond à celui créé dans Google Cloud Console (différence identifiée)
+- [x] Reconfigurer les identifiants si nécessaire (GOOGLE_ADS_CLIENT_ID corrigé avec ID complet)
+- [x] Tester la connexion Google Ads (5 tests OAuth passés)
