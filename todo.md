@@ -1619,3 +1619,15 @@
 - [x] Créer un job périodique qui vérifie les arrivages toutes les heures (processIncomingStock.ts)
 - [x] Exécuter la vérification au démarrage du serveur
 - [x] Écrire des tests pour valider le transfert automatique (5 tests passés)
+
+## Intégration Google Ads dans Campagnes Lead
+- [x] Créer le schéma de base de données pour stocker les comptes Google Ads et leurs tokens (table google_ad_accounts)
+- [x] Implémenter l'authentification OAuth 2.0 pour Google Ads (module google-ads-oauth.ts)
+- [ ] Créer l'interface avec deux onglets : "Campagnes Meta" et "Campagnes Google Ads"
+- [ ] Ajouter un bouton "Connecter Google Ads" avec flux OAuth
+- [ ] Implémenter la récupération des campagnes Google Ads via l'API
+- [ ] Récupérer les statistiques (dépenses, impressions, clics, conversions) par période
+- [ ] Créer un tableau de bord unifié montrant les dépenses totales Meta + Google
+- [ ] Ajouter des graphiques comparatifs des performances
+- [ ] Permettre la déconnexion et reconnexion du compte Google Ads
+- [ ] Écrire des tests pour l'intégration Google Ads

@@ -1435,6 +1435,46 @@ export type MetaAdAccount = typeof metaAdAccounts.$inferSelect;
 export type InsertMetaAdAccount = typeof metaAdAccounts.$inferInsert;
 
 // ============================================
+// GOOGLE AD ACCOUNTS (OAuth connected)
+// ============================================
+
+export const googleAdAccounts = mysqlTable(
+  "google_ad_accounts",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    
+    // Google identifiers
+    googleUserId: varchar("googleUserId", { length: 100 }).notNull(),
+    googleUserEmail: varchar("googleUserEmail", { length: 255 }),
+    customerId: varchar("customerId", { length: 100 }).notNull(), // Google Ads Customer ID
+    customerName: varchar("customerName", { length: 255 }),
+    currency: varchar("currency", { length: 10 }).default("EUR"),
+    timezone: varchar("timezone", { length: 100 }),
+    
+    // OAuth tokens
+    accessToken: text("accessToken").notNull(),
+    refreshToken: text("refreshToken"), // Google provides refresh tokens
+    tokenExpiresAt: timestamp("tokenExpiresAt"),
+    
+    // Connection info
+    connectedBy: int("connectedBy").notNull(), // userId who connected
+    isActive: boolean("isActive").default(true),
+    lastSyncedAt: timestamp("lastSyncedAt"),
+    syncError: text("syncError"),
+    
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+  },
+  (table) => ({
+    customerIdIdx: index("customerId_idx").on(table.customerId),
+    connectedByIdx: index("connectedBy_idx").on(table.connectedBy),
+  })
+);
+
+export type GoogleAdAccount = typeof googleAdAccounts.$inferSelect;
+export type InsertGoogleAdAccount = typeof googleAdAccounts.$inferInsert;
+
+// ============================================
 // TERRITORY MANAGEMENT
 // ============================================
 
