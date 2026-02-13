@@ -1633,3 +1633,8 @@
 - [ ] Ajouter des graphiques comparatifs des performances
 - [ ] Permettre la déconnexion et reconnexion du compte Google Ads
 - [x] Écrire des tests pour l'intégration Google Ads (6 tests passés)
+
+## Correction erreur OAuth Google Ads
+- [x] Modifier la route getOAuthUrl pour retourner null au lieu d'une erreur quand les identifiants ne sont pas configurés (google-ads-oauth.ts)
+- [x] Mettre à jour l'interface pour afficher un message informatif au lieu d'un bouton désactivé (card amber avec étapes de configuration)
+- [x] Ajouter un lien vers la documentation pour configurer Google Cloud Console (lien vers console.cloud.google.com)

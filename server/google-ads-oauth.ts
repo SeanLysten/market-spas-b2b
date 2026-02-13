@@ -29,7 +29,7 @@ export function getGoogleAdsOAuthClient() {
     : "http://localhost:3000/api/google-ads/callback";
 
   if (!clientId || !clientSecret) {
-    throw new Error("Google Ads OAuth credentials not configured. Please set GOOGLE_ADS_CLIENT_ID and GOOGLE_ADS_CLIENT_SECRET environment variables.");
+    return null; // Return null instead of throwing error
   }
 
   const oauth2Client = new google.auth.OAuth2(
@@ -44,6 +44,10 @@ export function getGoogleAdsOAuthClient() {
 export function getGoogleAdsAuthUrl(state?: string) {
   const oauth2Client = getGoogleAdsOAuthClient();
 
+  if (!oauth2Client) {
+    return null; // Return null if credentials not configured
+  }
+
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: "offline", // Pour obtenir un refresh token
     scope: GOOGLE_ADS_SCOPES,
@@ -56,6 +60,10 @@ export function getGoogleAdsAuthUrl(state?: string) {
 
 export async function exchangeCodeForTokens(code: string) {
   const oauth2Client = getGoogleAdsOAuthClient();
+  
+  if (!oauth2Client) {
+    throw new Error("Google Ads OAuth credentials not configured");
+  }
 
   const { tokens } = await oauth2Client.getToken(code);
   oauth2Client.setCredentials(tokens);
@@ -69,6 +77,10 @@ export async function exchangeCodeForTokens(code: string) {
 
 export async function refreshAccessToken(refreshToken: string) {
   const oauth2Client = getGoogleAdsOAuthClient();
+  
+  if (!oauth2Client) {
+    throw new Error("Google Ads OAuth credentials not configured");
+  }
   oauth2Client.setCredentials({ refresh_token: refreshToken });
 
   const { credentials } = await oauth2Client.refreshAccessToken();
@@ -81,6 +93,10 @@ export async function refreshAccessToken(refreshToken: string) {
 
 export async function getGoogleUserInfo(accessToken: string) {
   const oauth2Client = getGoogleAdsOAuthClient();
+  
+  if (!oauth2Client) {
+    throw new Error("Google Ads OAuth credentials not configured");
+  }
   oauth2Client.setCredentials({ access_token: accessToken });
 
   const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
