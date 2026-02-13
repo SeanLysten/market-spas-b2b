@@ -1626,10 +1626,10 @@
 - [x] Créer les fonctions DB pour Google Ads (connectGoogleAdAccount, disconnectGoogleAdAccount, etc.)
 - [x] Créer le router googleAds avec toutes les routes API (getOAuthUrl, handleCallback, connectAdAccount, etc.)
 - [ ] Créer le module de récupération des campagnes Google Ads via l'API
-- [ ] Créer l'interface avec deux onglets : "Campagnes Meta" et "Campagnes Google Ads"
-- [ ] Ajouter un bouton "Connecter Google Ads" avec flux OAuth
+- [x] Créer l'interface avec deux sous-onglets : "Meta Ads" et "Google Ads" dans l'onglet Campagnes
+- [x] Ajouter un bouton "Connecter Google Ads" avec flux OAuth (queries/mutations tRPC ajoutées)
 - [ ] Récupérer les statistiques (dépenses, impressions, clics, conversions) par période
 - [ ] Créer un tableau de bord unifié montrant les dépenses totales Meta + Google
 - [ ] Ajouter des graphiques comparatifs des performances
 - [ ] Permettre la déconnexion et reconnexion du compte Google Ads
-- [ ] Écrire des tests pour l'intégration Google Ads
+- [x] Écrire des tests pour l'intégration Google Ads (6 tests passés)
