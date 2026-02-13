@@ -1672,3 +1672,10 @@
 - [ ] Calculer et afficher le ROI global sur les deux canaux
 - [ ] Créer un tableau récapitulatif des campagnes Meta et Google côte à côte
 - [ ] Ajouter des filtres de période communs aux deux canaux
+
+## Correction erreur 500 connexion Google Ads OAuth
+- [x] Diagnostiquer l'erreur 500 en vérifiant les logs du serveur (route callback manquante)
+- [x] Identifier la cause (route /api/google-ads/callback n'existait pas)
+- [x] Corriger le problème identifié (route callback créée dans server/_core/index.ts)
+- [x] Mettre à jour le frontend pour gérer le callback Google Ads (useEffect modifié dans AdminLeads)
+- [x] Tester la connexion Google Ads complète (4 tests de route callback passés)

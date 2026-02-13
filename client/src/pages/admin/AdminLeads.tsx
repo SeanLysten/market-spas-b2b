@@ -362,11 +362,13 @@ export default function AdminLeads() {
     },
   });
 
-  // Handle Meta OAuth callback
+  // Handle Meta & Google Ads OAuth callbacks
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
+    const isGoogleAds = urlParams.get("google_ads") === "true";
     const metaError = urlParams.get("meta_error");
+    const googleError = urlParams.get("google_error");
     
     // Handle OAuth errors
     if (metaError) {
@@ -376,7 +378,36 @@ export default function AdminLeads() {
       return;
     }
     
-    if (code && !metaCallbackData) {
+    if (googleError) {
+      console.error("Google Ads OAuth error:", googleError);
+      alert(`Erreur de connexion Google Ads: ${decodeURIComponent(googleError)}`);
+      window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
+    
+    // Handle Google Ads callback
+    if (code && isGoogleAds && !googleCallbackData) {
+      console.log("[Google Ads OAuth] Code found, exchanging...");
+      setGoogleConnecting(true);
+      // Clean URL immediately to prevent re-processing on re-render
+      window.history.replaceState({}, "", window.location.pathname);
+      googleCallbackMutation.mutateAsync({ code }).then((data) => {
+        console.log("[Google Ads OAuth] Token exchange successful:", data);
+        setGoogleCallbackData(data);
+        toast.success("Compte Google Ads connecté avec succès !");
+        setGoogleConnecting(false);
+        // Refresh Google Ads accounts list
+        googleAccountsQuery.refetch();
+      }).catch((err) => {
+        console.error("[Google Ads OAuth] Token exchange error:", err);
+        alert(`Erreur lors de la connexion Google Ads: ${err.message}`);
+        setGoogleConnecting(false);
+      });
+      return;
+    }
+    
+    // Handle Meta callback
+    if (code && !isGoogleAds && !metaCallbackData) {
       // Build redirectUri from current origin - must match what was sent to Facebook
       const redirectUri = `${window.location.origin}/admin/leads`;
       console.log("[Meta OAuth] Code found, exchanging with redirectUri:", redirectUri);

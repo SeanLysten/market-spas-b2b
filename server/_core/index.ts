@@ -83,6 +83,41 @@ async function startServer() {
     res.redirect(302, `/admin/leads?${params.toString()}`);
   });
 
+  // Google Ads OAuth Callback - Redirects to frontend with code parameter
+  app.get("/api/google-ads/callback", (req, res) => {
+    console.log(`[Google Ads OAuth Callback] Full URL: ${req.originalUrl}`);
+    console.log(`[Google Ads OAuth Callback] Query params:`, JSON.stringify(req.query));
+    
+    const code = req.query.code as string;
+    const state = req.query.state as string;
+    const error = req.query.error as string;
+    const errorDescription = req.query.error_description as string;
+
+    if (error) {
+      console.error(`[Google Ads OAuth] Error: ${error} - ${errorDescription}`);
+      res.redirect(302, `/admin/leads?google_error=${encodeURIComponent(errorDescription || error)}`);
+      return;
+    }
+
+    if (!code) {
+      console.warn(`[Google Ads OAuth] No code received. State: ${state}. All query params:`, req.query);
+      if (state) {
+        res.redirect(302, `/admin/leads?state=${encodeURIComponent(state)}&google_error=no_code_received`);
+      } else {
+        res.redirect(302, "/admin/leads?google_error=no_code");
+      }
+      return;
+    }
+
+    console.log(`[Google Ads OAuth] Code received (length: ${code.length}), redirecting to frontend`);
+    // Redirect to frontend with code and state
+    const params = new URLSearchParams();
+    params.set("code", code);
+    params.set("google_ads", "true"); // Flag to indicate Google Ads callback
+    if (state) params.set("state", state);
+    res.redirect(302, `/admin/leads?${params.toString()}`);
+  });
+
   // Meta Lead Ads Webhook
   // GET - Vérification du webhook par Meta
   app.get("/api/webhooks/meta-leads", (req, res) => {
