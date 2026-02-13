@@ -1664,3 +1664,11 @@
 - [ ] Ajouter des graphiques comparatifs des performances par canal
 - [ ] Calculer et afficher le ROI global par canal publicitaire
 - [ ] Écrire des tests pour la récupération des campagnes Google Ads
+
+## Tableau de bord unifié Meta + Google Ads
+- [ ] Créer un composant UnifiedDashboard dans AdminLeads
+- [ ] Afficher les dépenses totales combinées (Meta + Google) avec évolution
+- [ ] Créer des graphiques comparatifs des performances par canal (bar chart, line chart)
+- [ ] Calculer et afficher le ROI global sur les deux canaux
+- [ ] Créer un tableau récapitulatif des campagnes Meta et Google côte à côte
+- [ ] Ajouter des filtres de période communs aux deux canaux

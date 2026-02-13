@@ -3167,20 +3167,63 @@ export const appRouter = router({
         }
 
         try {
-          // TODO: Implement Google Ads API campaign fetching
-          // For now, return empty campaigns
+          // Calculer les dates selon le preset
+          let startDate: string;
+          let endDate: string;
+
+          if (input?.since && input?.until) {
+            startDate = input.since;
+            endDate = input.until;
+          } else {
+            const preset = input?.datePreset || "last_30d";
+            const today = new Date();
+            endDate = today.toISOString().split('T')[0];
+
+            switch (preset) {
+              case "today":
+                startDate = endDate;
+                break;
+              case "yesterday":
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                startDate = yesterday.toISOString().split('T')[0];
+                endDate = startDate;
+                break;
+              case "last_7d":
+                const last7d = new Date(today);
+                last7d.setDate(last7d.getDate() - 7);
+                startDate = last7d.toISOString().split('T')[0];
+                break;
+              case "last_30d":
+              default:
+                const last30d = new Date(today);
+                last30d.setDate(last30d.getDate() - 30);
+                startDate = last30d.toISOString().split('T')[0];
+                break;
+            }
+          }
+
+          // Récupérer les campagnes via l'API Google Ads
+          const googleAdsApi = await import("./google-ads-api");
+          const campaigns = await googleAdsApi.getCampaignsWithInsights(
+            targetAccount.refreshToken || "",
+            targetAccount.customerId,
+            startDate,
+            endDate
+          );
+
           await db.updateGoogleAdAccountLastSynced(targetAccount.id);
 
           return {
             connected: true,
-            campaigns: [],
+            campaigns,
             accounts,
             currentAccount: {
               id: targetAccount.id,
               customerId: targetAccount.customerId,
               customerName: targetAccount.customerName,
               currency: targetAccount.currency,
-              lastSyncedAt: targetAccount.lastSyncedAt,
+              lastSyncedAt: new Date().toISOString(),
             },
           };
         } catch (error: any) {

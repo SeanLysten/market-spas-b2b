@@ -75,7 +75,7 @@ export async function exchangeCodeForTokens(code: string) {
   };
 }
 
-export async function refreshAccessToken(refreshToken: string) {
+export async function refreshGoogleAdsAccessToken(refreshToken: string) {
   const oauth2Client = getGoogleAdsOAuthClient();
   
   if (!oauth2Client) {
