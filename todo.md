@@ -1605,3 +1605,9 @@
 
 ## Augmentation limite upload images
 - [x] Augmenter la limite d'upload d'images de 5 MB à 10 MB pour permettre des photos haute résolution (modifié dans ImageUpload.tsx)
+
+## Indicateur de progression upload images
+- [x] Ajouter une barre de progression avec pourcentage pendant l'upload
+- [x] Afficher un spinner animé pendant le traitement de l'image
+- [x] Afficher la taille du fichier uploadé
+- [x] Afficher des messages de statut ("Lecture du fichier...", "Upload en cours...", "Traitement...", "Terminé !")
