@@ -1749,3 +1749,14 @@
 - [ ] Tests unitaires pour les routes SAV (à compléter)
 - [ ] Tests d'intégration workflow complet (à compléter)
 - [x] Vérification de tous les cas de figure et edge cases
+
+
+## Onglet Pièces Détachées (Admin + Utilisateur)
+- [x] Créer la page admin AdminSpareParts.tsx (CRUD complet : ajout, modification, suppression de pièces)
+- [x] Gestion des compatibilités par modèle de spa dans l'admin
+- [x] Gestion des prix, stock, catégories et images des pièces
+- [x] Ajouter la route /admin/spare-parts dans App.tsx et le menu admin
+- [x] Améliorer le catalogue pièces détachées utilisateur avec tri par modèle de spa
+- [x] Connecter le catalogue pièces au système SAV (identification automatique des pièces)
+- [x] Ajouter la route /spare-parts dans le menu utilisateur
+- [x] Tests et vérification (407 tests passent, 0 régressions)

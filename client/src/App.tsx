@@ -19,6 +19,7 @@ import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminLeads from "@/pages/admin/AdminLeads";
 import AdminAfterSales from "@/pages/admin/AdminAfterSales";
 import AdminPartnerMap from "@/pages/admin/AdminPartnerMap";
+import AdminSpareParts from "@/pages/admin/AdminSpareParts";
 
 import AdminTechnicalResources from "@/pages/admin/TechnicalResources";
 
@@ -103,6 +104,7 @@ function Router() {
       <Route path="/admin/leads" component={AdminLeads} />
       <Route path="/admin/after-sales" component={AdminAfterSales} />
       <Route path="/admin/partner-map" component={AdminPartnerMap} />
+      <Route path="/admin/spare-parts" component={AdminSpareParts} />
 
       <Route path="/admin/technical-resources" component={AdminTechnicalResources} />
 

@@ -21,6 +21,7 @@ import {
   MapPin,
   Wrench,
   Map,
+  Cog,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -123,6 +124,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: "SAV",
       href: "/admin/after-sales",
       icon: Wrench,
+    },
+    {
+      name: "Pièces Détachées",
+      href: "/admin/spare-parts",
+      icon: Cog,
     },
     {
       name: "Paramètres",
