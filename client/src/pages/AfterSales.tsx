@@ -111,7 +111,7 @@ interface SavStats {
   total: number;
   open: number;
   actionRequired: number;
-  paymentPending: number;
+  quotePending: number;
   inProgress: number;
   shipped: number;
   resolved: number;
@@ -123,7 +123,7 @@ function computeSavStats(services: any[]): SavStats {
     total: 0,
     open: 0,
     actionRequired: 0,
-    paymentPending: 0,
+    quotePending: 0,
     inProgress: 0,
     shipped: 0,
     resolved: 0,
@@ -135,9 +135,9 @@ function computeSavStats(services: any[]): SavStats {
     const s = item.service;
     const status = s.status;
     if (status === "NEW" || status === "ANALYZING") stats.open++;
-    if (status === "INFO_REQUIRED" || status === "QUOTE_PENDING") stats.actionRequired++;
-    if (status === "PAYMENT_PENDING") stats.paymentPending++;
-    if (status === "PAYMENT_CONFIRMED" || status === "PARTS_ORDERED") stats.inProgress++;
+    if (status === "INFO_REQUIRED") stats.actionRequired++;
+    if (status === "QUOTE_PENDING") stats.quotePending++;
+    if (status === "PAYMENT_CONFIRMED" || status === "WAITING_PARTS" || status === "PREPARING" || status === "IN_PROGRESS") stats.inProgress++;
     if (status === "SHIPPED") stats.shipped++;
     if (status === "RESOLVED" || status === "CLOSED") stats.resolved++;
     if (s.urgency === "URGENT" || s.urgency === "CRITICAL") stats.urgentOrCritical++;
@@ -178,12 +178,12 @@ function SavDashboard({ services, isLoading, onFilterClick }: {
       filterValue: "INFO_REQUIRED",
     },
     {
-      label: "Paiement en attente",
-      value: stats.paymentPending,
+      label: "Devis en attente",
+      value: stats.quotePending,
       icon: CreditCard,
-      color: "text-red-600",
-      bg: "bg-red-50 border-red-200",
-      filterValue: "PAYMENT_PENDING",
+      color: "text-orange-600",
+      bg: "bg-orange-50 border-orange-200",
+      filterValue: "QUOTE_PENDING",
     },
     {
       label: "En cours",
@@ -191,7 +191,7 @@ function SavDashboard({ services, isLoading, onFilterClick }: {
       icon: Timer,
       color: "text-purple-600",
       bg: "bg-purple-50 border-purple-200",
-      filterValue: "PARTS_ORDERED",
+      filterValue: "PAYMENT_CONFIRMED",
     },
     {
       label: "Expédiés",

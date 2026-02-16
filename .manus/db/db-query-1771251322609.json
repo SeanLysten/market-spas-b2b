@@ -1,0 +1,26 @@
+{
+  "query": "SELECT 'after_sales_services' as tbl, COUNT(*) as cnt FROM after_sales_services UNION ALL SELECT 'after_sales_media', COUNT(*) FROM after_sales_media UNION ALL SELECT 'after_sales_notes', COUNT(*) FROM after_sales_notes UNION ALL SELECT 'sav_spare_parts', COUNT(*) FROM sav_spare_parts;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT 'after_sales_services' as tbl, COUNT(*) as cnt FROM after_sales_services UNION ALL SELECT 'after_sales_media', COUNT(*) FROM after_sales_media UNION ALL SELECT 'after_sales_notes', COUNT(*) FROM after_sales_notes UNION ALL SELECT 'sav_spare_parts', COUNT(*) FROM sav_spare_parts;",
+  "rows": [
+    {
+      "tbl": "after_sales_services",
+      "cnt": "17"
+    },
+    {
+      "tbl": "after_sales_notes",
+      "cnt": "0"
+    },
+    {
+      "tbl": "sav_spare_parts",
+      "cnt": "0"
+    },
+    {
+      "tbl": "after_sales_media",
+      "cnt": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\tcnt\nafter_sales_services\t17\nafter_sales_notes\t0\nsav_spare_parts\t0\nafter_sales_media\t0\n",
+  "stderr": "",
+  "execution_time_ms": 358
+}

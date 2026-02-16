@@ -4,13 +4,17 @@ import { describe, it, expect } from "vitest";
  * Tests for the SAV Dashboard stats computation logic.
  * The computeSavStats function is a pure client-side function that
  * calculates counters from the list of SAV tickets.
+ * 
+ * DB status enum: NEW, ANALYZING, INFO_REQUIRED, QUOTE_PENDING,
+ * PAYMENT_CONFIRMED, PREPARING, SHIPPED, RESOLVED, CLOSED,
+ * IN_PROGRESS, WAITING_PARTS
  */
 
 interface SavStats {
   total: number;
   open: number;
   actionRequired: number;
-  paymentPending: number;
+  quotePending: number;
   inProgress: number;
   shipped: number;
   resolved: number;
@@ -23,7 +27,7 @@ function computeSavStats(services: any[]): SavStats {
     total: 0,
     open: 0,
     actionRequired: 0,
-    paymentPending: 0,
+    quotePending: 0,
     inProgress: 0,
     shipped: 0,
     resolved: 0,
@@ -35,9 +39,9 @@ function computeSavStats(services: any[]): SavStats {
     const s = item.service;
     const status = s.status;
     if (status === "NEW" || status === "ANALYZING") stats.open++;
-    if (status === "INFO_REQUIRED" || status === "QUOTE_PENDING") stats.actionRequired++;
-    if (status === "PAYMENT_PENDING") stats.paymentPending++;
-    if (status === "PAYMENT_CONFIRMED" || status === "PARTS_ORDERED") stats.inProgress++;
+    if (status === "INFO_REQUIRED") stats.actionRequired++;
+    if (status === "QUOTE_PENDING") stats.quotePending++;
+    if (status === "PAYMENT_CONFIRMED" || status === "WAITING_PARTS" || status === "PREPARING" || status === "IN_PROGRESS") stats.inProgress++;
     if (status === "SHIPPED") stats.shipped++;
     if (status === "RESOLVED" || status === "CLOSED") stats.resolved++;
     if (s.urgency === "URGENT" || s.urgency === "CRITICAL") stats.urgentOrCritical++;
@@ -55,7 +59,7 @@ describe("SAV Dashboard Stats Computation", () => {
     expect(stats.total).toBe(0);
     expect(stats.open).toBe(0);
     expect(stats.actionRequired).toBe(0);
-    expect(stats.paymentPending).toBe(0);
+    expect(stats.quotePending).toBe(0);
     expect(stats.inProgress).toBe(0);
     expect(stats.shipped).toBe(0);
     expect(stats.resolved).toBe(0);
@@ -86,22 +90,34 @@ describe("SAV Dashboard Stats Computation", () => {
     expect(stats.actionRequired).toBe(1);
   });
 
-  it("should count QUOTE_PENDING as action required", () => {
-    const services = [makeTicket("QUOTE_PENDING")];
+  it("should count QUOTE_PENDING as quote pending", () => {
+    const services = [makeTicket("QUOTE_PENDING"), makeTicket("QUOTE_PENDING")];
     const stats = computeSavStats(services);
-    expect(stats.actionRequired).toBe(1);
+    expect(stats.quotePending).toBe(2);
   });
 
-  it("should count PAYMENT_PENDING correctly", () => {
-    const services = [makeTicket("PAYMENT_PENDING"), makeTicket("PAYMENT_PENDING")];
+  it("should count PAYMENT_CONFIRMED as in progress", () => {
+    const services = [makeTicket("PAYMENT_CONFIRMED")];
     const stats = computeSavStats(services);
-    expect(stats.paymentPending).toBe(2);
+    expect(stats.inProgress).toBe(1);
   });
 
-  it("should count PAYMENT_CONFIRMED and PARTS_ORDERED as in progress", () => {
-    const services = [makeTicket("PAYMENT_CONFIRMED"), makeTicket("PARTS_ORDERED")];
+  it("should count WAITING_PARTS as in progress", () => {
+    const services = [makeTicket("WAITING_PARTS")];
     const stats = computeSavStats(services);
-    expect(stats.inProgress).toBe(2);
+    expect(stats.inProgress).toBe(1);
+  });
+
+  it("should count PREPARING as in progress", () => {
+    const services = [makeTicket("PREPARING")];
+    const stats = computeSavStats(services);
+    expect(stats.inProgress).toBe(1);
+  });
+
+  it("should count IN_PROGRESS as in progress", () => {
+    const services = [makeTicket("IN_PROGRESS")];
+    const stats = computeSavStats(services);
+    expect(stats.inProgress).toBe(1);
   });
 
   it("should count SHIPPED correctly", () => {
@@ -134,46 +150,60 @@ describe("SAV Dashboard Stats Computation", () => {
     expect(stats.urgentOrCritical).toBe(0);
   });
 
-  it("should compute correct stats for a mixed set of tickets", () => {
+  it("should compute correct stats for the actual test data set (20 tickets)", () => {
+    // Mirrors the seed-sav.mjs data:
+    // NEW: 2, ANALYZING: 2, INFO_REQUIRED: 1, QUOTE_PENDING: 4,
+    // PAYMENT_CONFIRMED: 2, WAITING_PARTS: 2, SHIPPED: 2, RESOLVED: 3, CLOSED: 2
+    // Urgencies: URGENT x5, CRITICAL x2
     const services = [
-      makeTicket("NEW", "NORMAL"),
-      makeTicket("NEW", "URGENT"),
-      makeTicket("ANALYZING", "NORMAL"),
-      makeTicket("INFO_REQUIRED", "NORMAL"),
-      makeTicket("QUOTE_PENDING", "NORMAL"),
-      makeTicket("PAYMENT_PENDING", "CRITICAL"),
-      makeTicket("PAYMENT_CONFIRMED", "NORMAL"),
-      makeTicket("PARTS_ORDERED", "NORMAL"),
-      makeTicket("SHIPPED", "NORMAL"),
-      makeTicket("RESOLVED", "NORMAL"),
-      makeTicket("CLOSED", "URGENT"),
+      makeTicket("NEW", "URGENT"),       // SAV-0001 partner1
+      makeTicket("ANALYZING", "CRITICAL"), // SAV-0002 partner1
+      makeTicket("INFO_REQUIRED"),        // SAV-0003 partner1
+      makeTicket("QUOTE_PENDING"),        // SAV-0004 partner1
+      makeTicket("QUOTE_PENDING"),        // SAV-0005 partner2
+      makeTicket("QUOTE_PENDING"),        // SAV-0006 partner2
+      makeTicket("PAYMENT_CONFIRMED", "URGENT"), // SAV-0007 partner2
+      makeTicket("WAITING_PARTS"),        // SAV-0008 partner2
+      makeTicket("SHIPPED"),              // SAV-0009 partner3
+      makeTicket("SHIPPED", "URGENT"),    // SAV-0010 partner3
+      makeTicket("RESOLVED"),             // SAV-0011 partner3
+      makeTicket("RESOLVED", "CRITICAL"), // SAV-0012 partner3
+      makeTicket("CLOSED"),              // SAV-0013 partner4
+      makeTicket("CLOSED"),              // SAV-0014 partner4
+      makeTicket("NEW"),                 // SAV-0015 partner4
+      makeTicket("QUOTE_PENDING"),        // SAV-0016 partner2
+      makeTicket("WAITING_PARTS", "URGENT"), // SAV-0017 partner3
+      makeTicket("PAYMENT_CONFIRMED"),    // SAV-0018 partner1
+      makeTicket("ANALYZING", "URGENT"),  // SAV-0019 partner4
+      makeTicket("RESOLVED"),             // SAV-0020 partner2
     ];
     const stats = computeSavStats(services);
-    expect(stats.total).toBe(11);
-    expect(stats.open).toBe(3);           // NEW x2 + ANALYZING
-    expect(stats.actionRequired).toBe(2); // INFO_REQUIRED + QUOTE_PENDING
-    expect(stats.paymentPending).toBe(1); // PAYMENT_PENDING
-    expect(stats.inProgress).toBe(2);     // PAYMENT_CONFIRMED + PARTS_ORDERED
-    expect(stats.shipped).toBe(1);        // SHIPPED
-    expect(stats.resolved).toBe(2);       // RESOLVED + CLOSED
-    expect(stats.urgentOrCritical).toBe(3); // URGENT + CRITICAL + URGENT
+    expect(stats.total).toBe(20);
+    expect(stats.open).toBe(4);           // NEW x2 + ANALYZING x2
+    expect(stats.actionRequired).toBe(1); // INFO_REQUIRED x1
+    expect(stats.quotePending).toBe(4);   // QUOTE_PENDING x4
+    expect(stats.inProgress).toBe(4);     // PAYMENT_CONFIRMED x2 + WAITING_PARTS x2
+    expect(stats.shipped).toBe(2);        // SHIPPED x2
+    expect(stats.resolved).toBe(5);       // RESOLVED x3 + CLOSED x2
+    expect(stats.urgentOrCritical).toBe(7); // URGENT: SAV-0001, SAV-0007, SAV-0010, SAV-0017, SAV-0019 = 5 + CRITICAL: SAV-0002, SAV-0012 = 2 => total 7
   });
 
-  it("should handle all statuses summing up to total (no ticket missed)", () => {
+  it("should handle all DB statuses summing up to total (no ticket missed)", () => {
     const services = [
       makeTicket("NEW"),
       makeTicket("ANALYZING"),
       makeTicket("INFO_REQUIRED"),
       makeTicket("QUOTE_PENDING"),
-      makeTicket("PAYMENT_PENDING"),
       makeTicket("PAYMENT_CONFIRMED"),
-      makeTicket("PARTS_ORDERED"),
+      makeTicket("PREPARING"),
+      makeTicket("WAITING_PARTS"),
+      makeTicket("IN_PROGRESS"),
       makeTicket("SHIPPED"),
       makeTicket("RESOLVED"),
       makeTicket("CLOSED"),
     ];
     const stats = computeSavStats(services);
-    const categorized = stats.open + stats.actionRequired + stats.paymentPending + stats.inProgress + stats.shipped + stats.resolved;
+    const categorized = stats.open + stats.actionRequired + stats.quotePending + stats.inProgress + stats.shipped + stats.resolved;
     expect(categorized).toBe(stats.total);
   });
 });
