@@ -159,7 +159,7 @@ export default function AdminSpareParts() {
     onError: (err) => toast.error(err.message || "Erreur lors de la suppression"),
   });
 
-  // ===parts = partsQuery.data || [];
+  const parts = partsQuery.data || [];
   const lowStockParts = parts.filter(
     (p: any) => p.isActive && p.stockQuantity !== null && p.lowStockThreshold !== null && p.stockQuantity <= p.lowStockThreshold
   );
