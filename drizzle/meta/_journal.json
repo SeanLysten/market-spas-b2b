@@ -176,6 +176,13 @@
       "when": 1771236085157,
       "tag": "0024_special_caretaker",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1771252885013,
+      "tag": "0025_romantic_firestar",
+      "breakpoints": true
     }
   ]
 }

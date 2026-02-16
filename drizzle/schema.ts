@@ -2042,14 +2042,43 @@ export type AfterSalesNote = typeof afterSalesNotes.$inferSelect;
 export type InsertAfterSalesNote = typeof afterSalesNotes.$inferInsert;
 
 
+// Separate enums for status history columns (must use correct column names)
+const savPreviousStatusEnum = mysqlEnum("previousStatus", [
+  "NEW",
+  "ANALYZING",
+  "INFO_REQUIRED",
+  "QUOTE_PENDING",
+  "PAYMENT_CONFIRMED",
+  "PREPARING",
+  "SHIPPED",
+  "RESOLVED",
+  "CLOSED",
+  "IN_PROGRESS",
+  "WAITING_PARTS",
+]);
+
+const savNewStatusEnum = mysqlEnum("newStatus", [
+  "NEW",
+  "ANALYZING",
+  "INFO_REQUIRED",
+  "QUOTE_PENDING",
+  "PAYMENT_CONFIRMED",
+  "PREPARING",
+  "SHIPPED",
+  "RESOLVED",
+  "CLOSED",
+  "IN_PROGRESS",
+  "WAITING_PARTS",
+]);
+
 // After-sales status history (track all status changes)
 export const afterSalesStatusHistory = mysqlTable(
   "after_sales_status_history",
   {
     id: int("id").autoincrement().primaryKey(),
     serviceId: int("serviceId").notNull(),
-    previousStatus: savStatusEnum,
-    newStatus: savStatusEnum.notNull(),
+    previousStatus: savPreviousStatusEnum,
+    newStatus: savNewStatusEnum.notNull(),
     changedBy: int("changedBy").notNull(),
     reason: text("reason"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),

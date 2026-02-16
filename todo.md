@@ -1766,3 +1766,4 @@
 - [x] Add simplified SAV dashboard at top of partner after-sales page (counters: open, payment pending, resolved, etc.)
 - [x] Delete all existing SAV tickets from database
 - [x] Create new realistic test SAV tickets with varied statuses, urgencies, and warranty states
+- [x] Fix missing after_sales_status_history table + fix savStatusEnum column name mismatch for previousStatus/newStatus
