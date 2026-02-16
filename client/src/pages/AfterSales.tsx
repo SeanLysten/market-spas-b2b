@@ -100,6 +100,12 @@ const initialFormData: SavFormData = {
   installationDate: "",
 };
 
+const ADMIN_ROLES = ["SUPER_ADMIN", "ADMIN", "SALES_MANAGER"];
+
+function isAdminUser(user: any): boolean {
+  return user && ADMIN_ROLES.includes(user.role);
+}
+
 function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -254,7 +260,8 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
               Identification du produit
             </h3>
 
-            {!user?.partnerId && partners && (
+            {/* Sélection partenaire uniquement pour les admins */}
+            {isAdminUser(user) && !user?.partnerId && partners && partners.length > 0 && (
               <div className="space-y-2">
                 <Label>Partenaire *</Label>
                 <Select value={selectedPartnerId?.toString() || ""} onValueChange={(v) => setSelectedPartnerId(parseInt(v))}>
@@ -618,7 +625,9 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
 // ===== MAIN PAGE =====
 export default function AfterSales() {
   const { data: user } = trpc.auth.me.useQuery();
-  const { data: partners } = trpc.partners.list.useQuery({});
+  // Only load partners list for admins (partners don't need to select a partner)
+  const isAdmin = isAdminUser(user);
+  const { data: partners } = trpc.partners.list.useQuery({}, { enabled: isAdmin });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -786,9 +795,12 @@ export default function AfterSales() {
             </div>
 
             <div className="flex gap-4 items-center">
+              {isAdmin && (
               <div className="flex-1">
                 <Input type="text" placeholder="Nom du client..." value={customerNameFilter} onChange={(e) => setCustomerNameFilter(e.target.value)} />
               </div>
+              )}
+              {!isAdmin && <div className="flex-1" />}
               <div className="w-48">
                 <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
               </div>

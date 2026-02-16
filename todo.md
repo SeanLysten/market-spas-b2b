@@ -1761,3 +1761,5 @@
 - [x] Ajouter la route /spare-parts dans le menu utilisateur
 - [x] Tests et vérification (407 tests passent, 0 régressions)
 - [x] Fix SQL query error on spare_parts table in /admin/after-sales page (sparePartCategoryEnum column name mismatch)
+- [x] Fix SAV user form: remove partner selection dropdown, auto-assign logged-in partner
+- [x] Fix SAV user ticket list: partners should only see their own tickets
