@@ -23,6 +23,11 @@ export async function setupVite(app: Express, server: Server) {
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
+    
+    // Skip static HTML pages for Google OAuth validation
+    if (url === "/privacy" || url === "/terms") {
+      return next();
+    }
 
     try {
       const clientTemplate = path.resolve(
@@ -62,6 +67,10 @@ export function serveStatic(app: Express) {
 
   // fall through to index.html if the file doesn't exist
   app.use("*", (_req, res) => {
+    // Skip static HTML pages for Google OAuth validation
+    if (_req.originalUrl === "/privacy" || _req.originalUrl === "/terms") {
+      return;
+    }
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }

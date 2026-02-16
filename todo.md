@@ -1679,3 +1679,22 @@
 - [x] Corriger le problème identifié (route callback créée dans server/_core/index.ts)
 - [x] Mettre à jour le frontend pour gérer le callback Google Ads (useEffect modifié dans AdminLeads)
 - [x] Tester la connexion Google Ads complète (4 tests de route callback passés)
+
+
+## Validation Google OAuth
+- [x] Créer la page /privacy (règles de confidentialité)
+- [x] Créer la page /terms (conditions d'utilisation)
+- [x] Créer un nouveau projet Google Cloud "Market Spas"
+- [x] Activer l'API Google Ads
+- [x] Configurer l'écran de consentement OAuth avec branding complet
+- [x] Ajouter les scopes Google Ads (adwords)
+- [x] Créer le client OAuth Web
+- [x] Configurer les identifiants OAuth dans Market Spas B2B
+- [ ] Soumettre l'application pour validation Google (optionnel - mode Test actif)
+
+## Correction problèmes validation OAuth
+- [x] Rendre la page /privacy accessible publiquement (HTML statique côté serveur)
+- [x] Rendre la page /terms accessible publiquement (HTML statique côté serveur)
+- [x] Ajouter liens privacy/terms dans le footer de la page d'accueil
+- [x] Vérifier que la page d'accueil / est accessible publiquement
+- [ ] Publier les modifications et revérifier le branding dans Google Cloud Console

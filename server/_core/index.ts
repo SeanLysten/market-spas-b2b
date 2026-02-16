@@ -2,6 +2,8 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import path from "path";
+import fs from "fs";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
@@ -11,6 +13,7 @@ import { verifyMetaWebhook, processMetaWebhook } from "../meta-leads";
 import { handleStripeWebhook } from "../stripe-webhook";
 import { initializeWebSocket } from "./websocket";
 import { webhooksRouter } from "../webhooks";
+import { getPrivacyHTML, getTermsHTML } from "../static-pages";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -157,6 +160,17 @@ async function startServer() {
       createContext,
     })
   );
+
+  // Serve static HTML pages for Google OAuth validation (MUST be before Vite/React routes)
+  // These pages are served as pure HTML without requiring authentication
+  app.get("/privacy", (_req, res) => {
+    res.status(200).set({ "Content-Type": "text/html" }).send(getPrivacyHTML());
+  });
+  
+  app.get("/terms", (_req, res) => {
+    res.status(200).set({ "Content-Type": "text/html" }).send(getTermsHTML());
+  });
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
