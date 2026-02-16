@@ -14,6 +14,8 @@ import { sendInvitationEmail } from "./email";
 import * as metaOAuth from "./meta-oauth";
 import * as candidatesDb from "./candidates-db";
 import { reclassifyExistingPartnerLeads } from "./meta-leads";
+import * as savDb from "./sav-db";
+import { analyzeWarranty, COMPONENTS_BY_BRAND, DEFECT_TYPES_BY_COMPONENT, PRODUCT_LINES_BY_BRAND, COMPONENT_TO_SPARE_CATEGORY, generateTrackingUrl, type WarrantyInput, type SavBrand, type UsageType } from "./warranty-engine";
 
 export const appRouter = router({
   system: systemRouter,
@@ -2557,54 +2559,95 @@ export const appRouter = router({
   }),
 
   // ============================================
-  // AFTER-SALES SERVICE (SAV)
+  // AFTER-SALES SERVICE (SAV) - SYSTÈME INTELLIGENT
   // ============================================
   afterSales: router({
-    // Create a new SAV request
+    // ===== REFERENCE DATA (public for authenticated users) =====
+    getComponentsByBrand: protectedProcedure
+      .input(z.object({ brand: z.string() }))
+      .query(({ input }) => {
+        return COMPONENTS_BY_BRAND[input.brand as SavBrand] || [];
+      }),
+
+    getDefectTypesByComponent: protectedProcedure
+      .input(z.object({ component: z.string() }))
+      .query(({ input }) => {
+        return DEFECT_TYPES_BY_COMPONENT[input.component] || ["Autre"];
+      }),
+
+    getProductLinesByBrand: protectedProcedure
+      .input(z.object({ brand: z.string() }))
+      .query(({ input }) => {
+        return PRODUCT_LINES_BY_BRAND[input.brand as SavBrand] || [];
+      }),
+
+    // ===== WARRANTY ANALYSIS =====
+    analyzeWarranty: protectedProcedure
+      .input(z.object({
+        brand: z.string(),
+        productLine: z.string().optional(),
+        component: z.string(),
+        defectType: z.string(),
+        purchaseDate: z.string(),
+        deliveryDate: z.string(),
+        usageType: z.enum(["PRIVATE", "COMMERCIAL", "HOLIDAY_LET"]).default("PRIVATE"),
+        isOriginalBuyer: z.boolean().default(true),
+        isModified: z.boolean().default(false),
+        isMaintenanceConform: z.boolean().default(true),
+        isChemistryConform: z.boolean().default(true),
+        usesHydrogenPeroxide: z.boolean().default(false),
+      }))
+      .query(({ input }) => {
+        return analyzeWarranty(input as WarrantyInput);
+      }),
+
+    // ===== CREATE TICKET =====
     create: protectedProcedure
-      .input(
-        z.object({
-          productId: z.number().optional(),
-          serialNumber: z.string().min(1),
-          issueType: z.enum(["TECHNICAL", "LEAK", "ELECTRICAL", "HEATING", "JETS", "CONTROL_PANEL", "OTHER"]),
-          description: z.string().min(10),
-          urgency: z.enum(["NORMAL", "URGENT", "CRITICAL"]).default("NORMAL"),
-          customerName: z.string().optional(),
-          customerPhone: z.string().optional(),
-          customerEmail: z.string().optional(),
-          customerAddress: z.string().optional(),
-          installationDate: z.string().optional(),
-          partnerId: z.number().optional(),
-          media: z.array(
-            z.object({
-              base64: z.string(),
-              mimeType: z.string(),
-              type: z.enum(["IMAGE", "VIDEO"]),
-              description: z.string().optional(),
-            })
-          ).optional(),
-        })
-      )
+      .input(z.object({
+        productId: z.number().optional(),
+        serialNumber: z.string().min(1),
+        issueType: z.string(),
+        description: z.string().min(10),
+        urgency: z.enum(["NORMAL", "URGENT", "CRITICAL"]).default("NORMAL"),
+        brand: z.string().optional(),
+        productLine: z.string().optional(),
+        modelName: z.string().optional(),
+        component: z.string().optional(),
+        defectType: z.string().optional(),
+        purchaseDate: z.string().optional(),
+        deliveryDate: z.string().optional(),
+        usageType: z.enum(["PRIVATE", "COMMERCIAL", "HOLIDAY_LET"]).default("PRIVATE"),
+        isOriginalBuyer: z.boolean().default(true),
+        isModified: z.boolean().default(false),
+        isMaintenanceConform: z.boolean().default(true),
+        isChemistryConform: z.boolean().default(true),
+        usesHydrogenPeroxide: z.boolean().default(false),
+        customerName: z.string().optional(),
+        customerPhone: z.string().optional(),
+        customerEmail: z.string().optional(),
+        customerAddress: z.string().optional(),
+        installationDate: z.string().optional(),
+        partnerId: z.number().optional(),
+        media: z.array(z.object({
+          base64: z.string(),
+          mimeType: z.string(),
+          type: z.enum(["IMAGE", "VIDEO"]),
+          description: z.string().optional(),
+        })).optional(),
+      }))
       .mutation(async ({ ctx, input }) => {
-        // Determine which partner to use
         let partnerId = input.partnerId || ctx.user.partnerId;
-        
-        // Only admins can specify a different partner
         if (input.partnerId && ctx.user.partnerId && input.partnerId !== ctx.user.partnerId && ctx.user.role !== "ADMIN" && ctx.user.role !== "SUPER_ADMIN") {
-          throw new TRPCError({ code: "FORBIDDEN", message: "You can only create SAV requests for your own partner" });
+          throw new TRPCError({ code: "FORBIDDEN", message: "Vous ne pouvez créer des tickets SAV que pour votre propre partenaire." });
         }
-        
-        // If no partnerId is provided and user is not an admin, reject
         if (!partnerId && ctx.user.role !== "ADMIN" && ctx.user.role !== "SUPER_ADMIN") {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Partner ID required. Please select a partner or contact support to be associated with a partner." });
+          throw new TRPCError({ code: "FORBIDDEN", message: "ID partenaire requis." });
         }
-        
-        // If admin without partnerId, require partnerId in input
         if (!partnerId) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Please select a partner for this SAV request" });
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Veuillez sélectionner un partenaire." });
         }
 
-        // Upload media to S3 if provided
+        // Upload media to S3
         const uploadedMedia: Array<{ url: string; key: string; type: "IMAGE" | "VIDEO"; description?: string }> = [];
         if (input.media && input.media.length > 0) {
           for (const item of input.media) {
@@ -2612,197 +2655,388 @@ export const appRouter = router({
             const ext = item.type === "VIDEO" ? "mp4" : "jpg";
             const fileKey = `sav/${partnerId}/${Date.now()}-${nanoid()}.${ext}`;
             const { url } = await storagePut(fileKey, buffer, item.mimeType);
-            uploadedMedia.push({
-              url,
-              key: fileKey,
-              type: item.type,
-              description: item.description,
-            });
+            uploadedMedia.push({ url, key: fileKey, type: item.type, description: item.description });
           }
         }
 
-        const result = await db.createAfterSalesService({
-          partnerId: partnerId,
+        // Run warranty analysis if enough data
+        let warrantyResult = null;
+        if (input.brand && input.component && input.defectType && input.purchaseDate && input.deliveryDate) {
+          try {
+            warrantyResult = analyzeWarranty({
+              brand: input.brand as SavBrand,
+              productLine: input.productLine,
+              component: input.component,
+              defectType: input.defectType,
+              purchaseDate: input.purchaseDate,
+              deliveryDate: input.deliveryDate,
+              usageType: input.usageType as UsageType,
+              isOriginalBuyer: input.isOriginalBuyer,
+              isModified: input.isModified,
+              isMaintenanceConform: input.isMaintenanceConform,
+              isChemistryConform: input.isChemistryConform,
+              usesHydrogenPeroxide: input.usesHydrogenPeroxide,
+            });
+          } catch (err) {
+            console.error("Warranty analysis failed:", err);
+          }
+        }
+
+        const result = await savDb.createSavTicket({
+          partnerId,
           productId: input.productId,
           serialNumber: input.serialNumber,
           issueType: input.issueType,
           description: input.description,
           urgency: input.urgency,
+          brand: input.brand,
+          productLine: input.productLine,
+          modelName: input.modelName,
+          component: input.component,
+          defectType: input.defectType,
+          purchaseDate: input.purchaseDate,
+          deliveryDate: input.deliveryDate,
+          usageType: input.usageType,
+          isOriginalBuyer: input.isOriginalBuyer,
+          isModified: input.isModified,
+          isMaintenanceConform: input.isMaintenanceConform,
+          isChemistryConform: input.isChemistryConform,
+          usesHydrogenPeroxide: input.usesHydrogenPeroxide,
           customerName: input.customerName,
           customerPhone: input.customerPhone,
           customerEmail: input.customerEmail,
           customerAddress: input.customerAddress,
           installationDate: input.installationDate,
           media: uploadedMedia,
+          warrantyStatus: warrantyResult?.status,
+          warrantyPercentage: warrantyResult?.percentage,
+          warrantyExpiryDate: warrantyResult?.expiryDate || undefined,
+          warrantyAnalysisDetails: warrantyResult ? JSON.stringify(warrantyResult) : undefined,
         });
 
-        // Send notification to admin for urgent/critical tickets
-        if (input.urgency === "URGENT" || input.urgency === "CRITICAL") {
-          const urgencyLabel = input.urgency === "CRITICAL" ? "CRITIQUE" : "URGENT";
-          const issueTypeLabels: Record<string, string> = {
-            TECHNICAL: "Technique",
-            LEAK: "Fuite",
-            ELECTRICAL: "Électrique",
-            HEATING: "Chauffage",
-            JETS: "Jets",
-            CONTROL_PANEL: "Panneau de contrôle",
-            OTHER: "Autre",
-          };
-          await notifyOwner({
-            title: `Nouveau ticket SAV ${urgencyLabel}`,
-            content: `Un nouveau ticket SAV ${urgencyLabel} a été créé.\n\nNuméro de ticket: ${result.ticketNumber}\nNuméro de série: ${input.serialNumber}\nType de problème: ${issueTypeLabels[input.issueType] || input.issueType}\nDescription: ${input.description.substring(0, 200)}${input.description.length > 200 ? '...' : ''}`,
-          }).catch(err => console.error("Failed to send SAV notification:", err));
-        }
+        // Notify admin
+        const urgencyLabel = input.urgency === "CRITICAL" ? "CRITIQUE" : input.urgency === "URGENT" ? "URGENT" : "";
+        await notifyOwner({
+          title: `Nouveau ticket SAV ${urgencyLabel} - ${result.ticketNumber}`,
+          content: `Ticket: ${result.ticketNumber}\nMarque: ${input.brand || "N/A"}\nModèle: ${input.modelName || "N/A"}\nComposant: ${input.component || "N/A"}\nGarantie: ${warrantyResult?.status || "À analyser"}\nDescription: ${input.description.substring(0, 200)}`,
+        }).catch(err => console.error("Failed to send SAV notification:", err));
 
-        return result;
+        return { ...result, warrantyAnalysis: warrantyResult };
       }),
 
-    // List SAV requests
+    // ===== LIST TICKETS =====
     list: protectedProcedure
-      .input(
-        z.object({
-          status: z.string().optional(),
-          urgency: z.string().optional(),
-          dateFrom: z.string().optional(),
-          dateTo: z.string().optional(),
-          customerName: z.string().optional(),
-          orderBy: z.string().optional(),
-          orderDirection: z.enum(["asc", "desc"]).optional(),
-        }).optional()
-      )
+      .input(z.object({
+        status: z.string().optional(),
+        urgency: z.string().optional(),
+        brand: z.string().optional(),
+        warrantyStatus: z.string().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+        customerName: z.string().optional(),
+        search: z.string().optional(),
+        orderBy: z.string().optional(),
+        orderDirection: z.enum(["asc", "desc"]).optional(),
+      }).optional())
       .query(async ({ ctx, input }) => {
         const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
-
         if (isAdmin) {
-          return await db.getAfterSalesServices(input);
+          return await savDb.getSavTickets(input || undefined);
         } else if (ctx.user.partnerId) {
-          return await db.getAfterSalesServices({
-            partnerId: ctx.user.partnerId,
-            ...input,
-          });
+          return await savDb.getSavTickets({ partnerId: ctx.user.partnerId, ...input });
         }
-
         return [];
       }),
 
-    // Get SAV by ID
+    // ===== GET TICKET BY ID =====
     getById: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ ctx, input }) => {
-        const serviceData = await db.getAfterSalesServiceById(input.id);
-
+        const serviceData = await savDb.getSavTicketById(input.id);
         if (!serviceData) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Service not found" });
+          throw new TRPCError({ code: "NOT_FOUND", message: "Ticket SAV non trouvé." });
         }
-
         const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
-
-        // Check access
         if (!isAdmin && serviceData.service.partnerId !== ctx.user.partnerId) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Unauthorized" });
+          throw new TRPCError({ code: "FORBIDDEN", message: "Accès non autorisé." });
         }
-
         return serviceData;
       }),
 
-    // Update SAV status (admin only)
+    // ===== UPDATE STATUS (admin) =====
     updateStatus: adminProcedure
-      .input(
-        z.object({
-          id: z.number(),
-          status: z.enum(["NEW", "IN_PROGRESS", "WAITING_PARTS", "RESOLVED", "CLOSED"]),
-          assignedTechnicianId: z.number().optional(),
-          resolutionNotes: z.string().optional(),
-        })
-      )
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(["NEW", "ANALYZING", "INFO_REQUIRED", "QUOTE_PENDING", "PAYMENT_PENDING", "PAYMENT_CONFIRMED", "PARTS_ORDERED", "SHIPPED", "RESOLVED", "CLOSED"]),
+        resolutionNotes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const service = await savDb.getSavTicketById(input.id);
+        if (!service) throw new TRPCError({ code: "NOT_FOUND", message: "Ticket non trouvé." });
+
+        const previousStatus = service.service.status;
+        await savDb.updateSavTicket(input.id, {
+          status: input.status as any,
+          resolutionNotes: input.resolutionNotes,
+        });
+
+        // Record status history
+        await savDb.addSavStatusHistory(input.id, previousStatus, input.status, ctx.user.id, input.resolutionNotes);
+
+        // Notify partner
+        const statusLabels: Record<string, string> = {
+          NEW: "Nouveau", ANALYZING: "En cours d'analyse", INFO_REQUIRED: "Informations requises",
+          QUOTE_PENDING: "Devis en attente", PAYMENT_PENDING: "Paiement en attente",
+          PAYMENT_CONFIRMED: "Paiement confirmé", PARTS_ORDERED: "Pièces commandées",
+          SHIPPED: "Expédié", RESOLVED: "Résolu", CLOSED: "Fermé",
+        };
+        await notifyOwner({
+          title: `Ticket SAV ${service.service.ticketNumber} - ${statusLabels[input.status] || input.status}`,
+          content: `Le statut du ticket a été mis à jour : ${statusLabels[input.status]}${input.resolutionNotes ? `\nNotes: ${input.resolutionNotes}` : ""}`,
+        }).catch(err => console.error("Failed to send status notification:", err));
+
+        try {
+          notifyPartner(service.service.partnerId, "sav:status_changed", {
+            savId: input.id,
+            ticketNumber: service.service.ticketNumber,
+            oldStatus: previousStatus,
+            newStatus: input.status,
+          });
+        } catch (err) {
+          console.error("Failed to send WebSocket notification:", err);
+        }
+
+        return { success: true };
+      }),
+
+    // ===== WARRANTY DECISION (admin) =====
+    updateWarrantyDecision: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        warrantyStatus: z.enum(["COVERED", "PARTIAL", "EXPIRED", "EXCLUDED", "REVIEW_NEEDED"]),
+        warrantyPercentage: z.number().min(0).max(100),
+        adminNotes: z.string(),
+        adminOverride: z.boolean().default(false),
+      }))
       .mutation(async ({ input }) => {
-        await db.updateAfterSalesServiceStatus(
+        await savDb.updateSavWarrantyDecision(
           input.id,
-          input.status,
-          {
-            assignedTechnicianId: input.assignedTechnicianId,
-            resolutionNotes: input.resolutionNotes,
-          }
+          input.warrantyStatus,
+          input.warrantyPercentage,
+          input.adminNotes,
+          input.adminOverride
         );
 
-        // Get service details for notification
-        const service = await db.getAfterSalesServiceById(input.id);
-        if (service) {
-          // Send notification to owner about status change
-          const statusLabels: Record<string, string> = {
-            NEW: "Nouveau",
-            IN_PROGRESS: "En cours",
-            WAITING_PARTS: "En attente de pièces",
-            RESOLVED: "Résolu",
-            CLOSED: "Fermé",
-          };
-          await notifyOwner({
-            title: `Ticket SAV ${service.service.ticketNumber} - Statut mis à jour`,
-            content: `Le statut du ticket SAV a été mis à jour : ${statusLabels[input.status] || input.status}${input.resolutionNotes ? `\n\nNotes: ${input.resolutionNotes}` : ''}`,
-          }).catch(err => console.error("Failed to send status update notification:", err));
+        // If not covered or partial, set status to QUOTE_PENDING
+        if (input.warrantyStatus === "EXPIRED" || input.warrantyStatus === "EXCLUDED") {
+          await savDb.updateSavTicket(input.id, { status: "QUOTE_PENDING" as any });
+        } else if (input.warrantyStatus === "PARTIAL") {
+          await savDb.updateSavTicket(input.id, { status: "QUOTE_PENDING" as any });
+        } else if (input.warrantyStatus === "COVERED") {
+          await savDb.updateSavTicket(input.id, { status: "PARTS_ORDERED" as any });
+        }
 
-          // Send real-time WebSocket notification to partner
+        return { success: true };
+      }),
+
+    // ===== LINK SPARE PARTS TO TICKET (admin) =====
+    linkSparePart: adminProcedure
+      .input(z.object({
+        serviceId: z.number(),
+        sparePartId: z.number(),
+        quantity: z.number().min(1).default(1),
+        unitPrice: z.string(),
+        isCoveredByWarranty: z.boolean().default(false),
+        coveragePercentage: z.number().min(0).max(100).default(0),
+      }))
+      .mutation(async ({ input }) => {
+        return await savDb.linkSparePartToSav(input);
+      }),
+
+    unlinkSparePart: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await savDb.unlinkSparePartFromSav(input.id);
+      }),
+
+    getSavSpareParts: protectedProcedure
+      .input(z.object({ serviceId: z.number() }))
+      .query(async ({ input }) => {
+        return await savDb.getSavSpareParts(input.serviceId);
+      }),
+
+    // ===== CALCULATE TOTAL (for payment) =====
+    calculateTotal: protectedProcedure
+      .input(z.object({ serviceId: z.number() }))
+      .query(async ({ input }) => {
+        return await savDb.calculateSavTotal(input.serviceId);
+      }),
+
+    // ===== SET SHIPPING COST (admin) =====
+    setShippingCost: adminProcedure
+      .input(z.object({
+        serviceId: z.number(),
+        shippingCost: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        await savDb.updateSavTicket(input.serviceId, { shippingCost: input.shippingCost });
+        // Recalculate total
+        const total = await savDb.calculateSavTotal(input.serviceId);
+        if (total) {
+          await savDb.updateSavTicket(input.serviceId, { totalAmount: total.totalTTC.toFixed(2) });
+        }
+        return { success: true, total };
+      }),
+
+    // ===== CREATE PAYMENT (Stripe) =====
+    createPayment: protectedProcedure
+      .input(z.object({ serviceId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const service = await savDb.getSavTicketById(input.serviceId);
+        if (!service) throw new TRPCError({ code: "NOT_FOUND", message: "Ticket non trouvé." });
+
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        if (!isAdmin && service.service.partnerId !== ctx.user.partnerId) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Accès non autorisé." });
+        }
+
+        const total = await savDb.calculateSavTotal(input.serviceId);
+        if (!total || total.totalTTC <= 0) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Aucun montant à payer." });
+        }
+
+        // Create Stripe Checkout Session
+        const stripe = (await import("stripe")).default;
+        const stripeClient = new stripe(process.env.STRIPE_SECRET_KEY!);
+
+        const lineItems = total.parts.map(p => ({
+          price_data: {
+            currency: "eur",
+            product_data: {
+              name: `${p.name} (${p.reference})`,
+              description: p.coveragePercentage > 0 ? `Couverture garantie: ${p.coveragePercentage}%` : undefined,
+            },
+            unit_amount: Math.round(p.customerPrice * 100 / p.quantity), // cents
+          },
+          quantity: p.quantity,
+        }));
+
+        if (total.shippingCost > 0) {
+          lineItems.push({
+            price_data: {
+              currency: "eur",
+              product_data: {
+                name: "Frais de livraison",
+                description: undefined,
+              },
+              unit_amount: Math.round(total.shippingCost * 100),
+            },
+            quantity: 1,
+          });
+        }
+
+        const origin = ctx.req?.headers?.origin || process.env.SITE_URL || "";
+        const session = await stripeClient.checkout.sessions.create({
+          payment_method_types: ["card"],
+          line_items: lineItems,
+          mode: "payment",
+          success_url: `${origin}/after-sales/${input.serviceId}?payment=success`,
+          cancel_url: `${origin}/after-sales/${input.serviceId}?payment=cancelled`,
+          customer_email: ctx.user.email || undefined,
+          client_reference_id: ctx.user.id.toString(),
+          metadata: {
+            sav_id: input.serviceId.toString(),
+            ticket_number: service.service.ticketNumber,
+            user_id: ctx.user.id.toString(),
+          },
+          allow_promotion_codes: true,
+        });
+
+        // Update ticket with payment intent
+        await savDb.updateSavPayment(input.serviceId, {
+          totalAmount: total.totalTTC.toFixed(2),
+          stripePaymentIntentId: session.payment_intent as string || session.id,
+        });
+        await savDb.updateSavTicket(input.serviceId, { status: "PAYMENT_PENDING" as any });
+
+        return { checkoutUrl: session.url };
+      }),
+
+    // ===== ADD TRACKING (admin) =====
+    addTracking: adminProcedure
+      .input(z.object({
+        serviceId: z.number(),
+        trackingNumber: z.string().min(1),
+        trackingCarrier: z.enum(["BPOST", "DHL", "UPS", "GLS", "MONDIAL_RELAY", "OTHER"]).default("BPOST"),
+      }))
+      .mutation(async ({ input }) => {
+        const trackingUrl = generateTrackingUrl(input.trackingCarrier, input.trackingNumber);
+        await savDb.updateSavTracking(input.serviceId, {
+          trackingNumber: input.trackingNumber,
+          trackingCarrier: input.trackingCarrier,
+          trackingUrl,
+        });
+
+        // Notify partner
+        const service = await savDb.getSavTicketById(input.serviceId);
+        if (service) {
           try {
-            notifyPartner(service.service.partnerId, "sav:status_changed", {
-              savId: input.id,
+            notifyPartner(service.service.partnerId, "sav:shipped", {
+              savId: input.serviceId,
               ticketNumber: service.service.ticketNumber,
-              oldStatus: service.service.status,
-              newStatus: input.status,
+              trackingNumber: input.trackingNumber,
+              trackingUrl,
             });
           } catch (err) {
-            console.error("Failed to send WebSocket notification:", err);
+            console.error("Failed to send shipping notification:", err);
           }
         }
 
-        return { success: true };
+        return { success: true, trackingUrl };
       }),
 
-    // Add note to SAV
+    // ===== ADD NOTE =====
     addNote: protectedProcedure
-      .input(
-        z.object({
-          id: z.number(),
-          note: z.string(),
-          isInternal: z.boolean().default(false),
-        })
-      )
+      .input(z.object({
+        id: z.number(),
+        note: z.string(),
+        isInternal: z.boolean().default(false),
+      }))
       .mutation(async ({ ctx, input }) => {
-        const serviceData = await db.getAfterSalesServiceById(input.id);
-
-        if (!serviceData) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Service not found" });
-        }
+        const serviceData = await savDb.getSavTicketById(input.id);
+        if (!serviceData) throw new TRPCError({ code: "NOT_FOUND", message: "Ticket non trouvé." });
 
         const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
-
-        // Check access
         if (!isAdmin && serviceData.service.partnerId !== ctx.user.partnerId) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Unauthorized" });
+          throw new TRPCError({ code: "FORBIDDEN", message: "Accès non autorisé." });
         }
-
-        // Only admins can add internal notes
         const noteIsInternal = isAdmin && input.isInternal;
-
-        await db.addAfterSalesNote(input.id, ctx.user.id, input.note, noteIsInternal);
+        await savDb.addSavNote(input.id, ctx.user.id, input.note, noteIsInternal);
         return { success: true };
       }),
 
+    // ===== COMPATIBLE PARTS =====
+    getCompatibleParts: protectedProcedure
+      .input(z.object({
+        brand: z.string(),
+        modelName: z.string().optional(),
+        component: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await savDb.getCompatibleParts(input.brand, input.modelName, input.component);
+      }),
+
+    // ===== STATS =====
     stats: adminProcedure
       .input(z.object({ period: z.string().optional().default("8weeks") }))
       .query(async ({ input }) => {
-        return await db.getAfterSalesStats(input.period);
-      }),
-
-    statsByPartner: adminProcedure
-      .input(z.object({ partnerId: z.number() }))
-      .query(async ({ input }) => {
-        return await db.getAfterSalesStatsByPartner(input.partnerId);
+        return await savDb.getSavStats(input.period);
       }),
 
     weeklyStats: adminProcedure
       .input(z.object({ period: z.string().optional().default("8weeks") }))
       .query(async ({ input }) => {
-        return await db.getAfterSalesWeeklyStats(input.period);
+        return await savDb.getSavWeeklyStats(input.period);
       }),
 
     statusHistory: protectedProcedure
@@ -2811,15 +3045,131 @@ export const appRouter = router({
         return await db.getAfterSalesStatusHistory(input.serviceId);
       }),
 
-    assignmentHistory: protectedProcedure
-      .input(z.object({ serviceId: z.number() }))
-      .query(async ({ input }) => {
-        return await db.getAfterSalesAssignmentHistory(input.serviceId);
-      }),
-
     responseTemplates: adminProcedure
       .query(async () => {
         return await db.getResponseTemplates();
+      }),
+  }),
+
+  // ============================================
+  // SPARE PARTS (Pièces détachées)
+  // ============================================
+  spareParts: router({
+    list: protectedProcedure
+      .input(z.object({
+        category: z.string().optional(),
+        brand: z.string().optional(),
+        modelName: z.string().optional(),
+        component: z.string().optional(),
+        search: z.string().optional(),
+        isActive: z.boolean().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await savDb.getSparePartsList(input || undefined);
+      }),
+
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const part = await savDb.getSparePartById(input.id);
+        if (!part) throw new TRPCError({ code: "NOT_FOUND", message: "Pièce non trouvée." });
+        return part;
+      }),
+
+    create: adminProcedure
+      .input(z.object({
+        reference: z.string().min(1),
+        name: z.string().min(1),
+        description: z.string().optional(),
+        category: z.string(),
+        priceHT: z.string(),
+        vatRate: z.string().optional(),
+        stockQuantity: z.number().optional(),
+        lowStockThreshold: z.number().optional(),
+        imageUrl: z.string().optional(),
+        weight: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await savDb.createSparePart(input);
+      }),
+
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        data: z.record(z.any()),
+      }))
+      .mutation(async ({ input }) => {
+        return await savDb.updateSparePart(input.id, input.data);
+      }),
+
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await savDb.deleteSparePart(input.id);
+      }),
+
+    addCompatibility: adminProcedure
+      .input(z.object({
+        sparePartId: z.number(),
+        brand: z.string(),
+        productLine: z.string().optional(),
+        modelName: z.string().optional(),
+        component: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        return await savDb.addSparePartCompatibility(input);
+      }),
+
+    removeCompatibility: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await savDb.removeSparePartCompatibility(input.id);
+      }),
+  }),
+
+  // ============================================
+  // WARRANTY RULES (admin)
+  // ============================================
+  warrantyRules: router({
+    list: adminProcedure
+      .input(z.object({
+        brand: z.string().optional(),
+        component: z.string().optional(),
+        isActive: z.boolean().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await savDb.getWarrantyRulesList(input || undefined);
+      }),
+
+    create: adminProcedure
+      .input(z.object({
+        brand: z.string(),
+        productLine: z.string().optional(),
+        component: z.string(),
+        warrantyMonths: z.number(),
+        coveragePercentage: z.number().default(100),
+        coverageRules: z.string().optional(),
+        exclusions: z.string().optional(),
+        warrantyStartType: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await savDb.createWarrantyRule(input);
+      }),
+
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        data: z.record(z.any()),
+      }))
+      .mutation(async ({ input }) => {
+        return await savDb.updateWarrantyRule(input.id, input.data);
+      }),
+
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await savDb.deleteWarrantyRule(input.id);
       }),
   }),
 

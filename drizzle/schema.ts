@@ -1825,11 +1825,15 @@ export type InsertReturnPhoto = typeof returnPhotos.$inferInsert;
 // AFTER-SALES SERVICE (SAV)
 // ============================================
 
-// SAV status enum
+// SAV status enum (9 statuts)
 export const savStatusEnum = mysqlEnum("status", [
   "NEW",
-  "IN_PROGRESS",
-  "WAITING_PARTS",
+  "ANALYZING",
+  "INFO_REQUIRED",
+  "QUOTE_PENDING",
+  "PAYMENT_CONFIRMED",
+  "PREPARING",
+  "SHIPPED",
   "RESOLVED",
   "CLOSED",
 ]);
@@ -1841,18 +1845,79 @@ export const savUrgencyEnum = mysqlEnum("urgency", [
   "CRITICAL",
 ]);
 
-// SAV issue type enum
+// SAV issue type enum (types de défaut)
 export const savIssueTypeEnum = mysqlEnum("issueType", [
-  "TECHNICAL",
   "LEAK",
-  "ELECTRICAL",
-  "HEATING",
-  "JETS",
-  "CONTROL_PANEL",
+  "CRACK_BLISTER_DELAMINATION",
+  "ELECTRICAL_FAILURE",
+  "MALFUNCTION",
+  "ABNORMAL_NOISE",
+  "BREAKAGE",
+  "DISCOLORATION_WEAR",
+  "HEATING_ISSUE",
+  "PEELING_SHRINKAGE",
   "OTHER",
 ]);
 
-// After-sales services table
+// SAV brand enum
+export const savBrandEnum = mysqlEnum("brand", [
+  "MARKET_SPAS",
+  "WELLIS_CLASSIC",
+  "WELLIS_LIFE",
+  "WELLIS_WIBES",
+  "PASSION_SPAS",
+  "PLATINUM_SPAS",
+]);
+
+// SAV usage type enum
+export const savUsageTypeEnum = mysqlEnum("usageType", [
+  "PRIVATE",
+  "COMMERCIAL",
+  "HOLIDAY_LET",
+]);
+
+// SAV warranty status enum
+export const savWarrantyStatusEnum = mysqlEnum("warrantyStatus", [
+  "COVERED",
+  "PARTIAL",
+  "EXPIRED",
+  "EXCLUDED",
+  "REVIEW_NEEDED",
+]);
+
+// SAV tracking carrier enum
+export const savTrackingCarrierEnum = mysqlEnum("trackingCarrier", [
+  "BPOST",
+  "DHL",
+  "UPS",
+  "GLS",
+  "MONDIAL_RELAY",
+  "OTHER",
+]);
+
+// Spare part category enum
+export const sparePartCategoryEnum = mysqlEnum("sparePartCategory", [
+  "PUMPS",
+  "ELECTRONICS",
+  "JETS",
+  "SCREENS",
+  "HEATING",
+  "PLUMBING",
+  "COVERS",
+  "CABINETS",
+  "LIGHTING",
+  "AUDIO",
+  "OZONE_UVC",
+  "OTHER",
+]);
+
+// Warranty start type enum
+export const warrantyStartTypeEnum = mysqlEnum("warrantyStartType", [
+  "PURCHASE_DATE",
+  "DELIVERY_DATE",
+]);
+
+// After-sales services table (refonte SAV intelligent)
 export const afterSalesServices = mysqlTable(
   "after_sales_services",
   {
@@ -1865,23 +1930,62 @@ export const afterSalesServices = mysqlTable(
     description: text("description").notNull(),
     urgency: savUrgencyEnum.notNull().default("NORMAL"),
     status: savStatusEnum.notNull().default("NEW"),
-    
+
+    // Product identification
+    brand: savBrandEnum,
+    productLine: varchar("productLine", { length: 100 }),
+    modelName: varchar("modelName", { length: 255 }),
+    component: varchar("component", { length: 255 }),
+    defectType: varchar("defectType", { length: 255 }),
+
+    // Dates for warranty calculation
+    purchaseDate: date("purchaseDate"),
+    deliveryDate: date("deliveryDate"),
+
+    // Usage and conditions
+    usageType: savUsageTypeEnum.default("PRIVATE"),
+    isOriginalBuyer: boolean("isOriginalBuyer").default(true),
+    isModified: boolean("isModified").default(false),
+    isMaintenanceConform: boolean("isMaintenanceConform").default(true),
+    isChemistryConform: boolean("isChemistryConform").default(true),
+    usesHydrogenPeroxide: boolean("usesHydrogenPeroxide").default(false),
+
+    // Warranty analysis
+    warrantyStatus: savWarrantyStatusEnum.default("REVIEW_NEEDED"),
+    warrantyPercentage: int("warrantyPercentage").default(0),
+    warrantyExpiryDate: date("warrantyExpiryDate"),
+    warrantyAnalysisDetails: text("warrantyAnalysisDetails"), // JSON string
+    adminWarrantyOverride: boolean("adminWarrantyOverride").default(false),
+    adminWarrantyNotes: text("adminWarrantyNotes"),
+
     // Customer information
     customerName: varchar("customerName", { length: 255 }),
     customerPhone: varchar("customerPhone", { length: 50 }),
     customerEmail: varchar("customerEmail", { length: 255 }),
     customerAddress: text("customerAddress"),
     installationDate: date("installationDate"),
-    
+
     // Assignment
     assignedTechnicianId: int("assignedTechnicianId"),
     assignedAt: timestamp("assignedAt"),
-    
+
+    // Payment (hors garantie)
+    shippingCost: decimal("shippingCost", { precision: 10, scale: 2 }),
+    totalAmount: decimal("totalAmount", { precision: 10, scale: 2 }),
+    stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
+    paidAt: timestamp("paidAt"),
+
+    // Shipping / tracking
+    trackingNumber: varchar("trackingNumber", { length: 255 }),
+    trackingCarrier: savTrackingCarrierEnum,
+    trackingUrl: varchar("trackingUrl", { length: 512 }),
+    shippedAt: timestamp("shippedAt"),
+
     // Resolution
     resolutionNotes: text("resolutionNotes"),
     resolvedAt: timestamp("resolvedAt"),
     closedAt: timestamp("closedAt"),
-    
+
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
@@ -1890,6 +1994,8 @@ export const afterSalesServices = mysqlTable(
     statusIdx: index("status_idx").on(table.status),
     urgencyIdx: index("urgency_idx").on(table.urgency),
     ticketNumberIdx: index("ticketNumber_idx").on(table.ticketNumber),
+    brandIdx: index("brand_idx").on(table.brand),
+    warrantyStatusIdx: index("warrantyStatus_idx").on(table.warrantyStatus),
   })
 );
 
@@ -1992,6 +2098,112 @@ export type InsertAfterSalesAssignmentHistory = typeof afterSalesAssignmentHisto
 
 export type ResponseTemplate = typeof responseTemplates.$inferSelect;
 export type InsertResponseTemplate = typeof responseTemplates.$inferInsert;
+
+// ============================================
+// WARRANTY RULES (Matrice de garantie)
+// ============================================
+
+export const warrantyRules = mysqlTable(
+  "warranty_rules",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    brand: savBrandEnum.notNull(),
+    productLine: varchar("productLine", { length: 100 }),
+    component: varchar("component", { length: 255 }).notNull(),
+    warrantyMonths: int("warrantyMonths").notNull(), // 999 = à vie
+    coveragePercentage: int("coveragePercentage").notNull().default(100),
+    coverageRules: text("coverageRules"), // JSON: {"12": 100, "24": 80, "36": 60}
+    exclusions: text("exclusions"),
+    warrantyStartType: warrantyStartTypeEnum.notNull().default("PURCHASE_DATE"),
+    notes: text("notes"),
+    isActive: boolean("isActive").default(true),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    brandIdx: index("wr_brand_idx").on(table.brand),
+    componentIdx: index("wr_component_idx").on(table.component),
+    brandComponentIdx: index("wr_brand_component_idx").on(table.brand, table.component),
+  })
+);
+
+export type WarrantyRule = typeof warrantyRules.$inferSelect;
+export type InsertWarrantyRule = typeof warrantyRules.$inferInsert;
+
+// ============================================
+// SPARE PARTS (Pièces détachées)
+// ============================================
+
+export const spareParts = mysqlTable(
+  "spare_parts",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    reference: varchar("reference", { length: 100 }).notNull().unique(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    category: sparePartCategoryEnum.notNull(),
+    priceHT: decimal("priceHT", { precision: 10, scale: 2 }).notNull(),
+    vatRate: decimal("vatRate", { precision: 5, scale: 2 }).default("21"),
+    stockQuantity: int("stockQuantity").default(0),
+    lowStockThreshold: int("lowStockThreshold").default(3),
+    imageUrl: varchar("imageUrl", { length: 512 }),
+    weight: decimal("weight", { precision: 10, scale: 3 }),
+    isActive: boolean("isActive").default(true),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    referenceIdx: index("sp_reference_idx").on(table.reference),
+    categoryIdx: index("sp_category_idx").on(table.category),
+  })
+);
+
+export type SparePart = typeof spareParts.$inferSelect;
+export type InsertSparePart = typeof spareParts.$inferInsert;
+
+// Spare parts compatibility (which parts fit which models)
+export const sparePartsCompatibility = mysqlTable(
+  "spare_parts_compatibility",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    sparePartId: int("sparePartId").notNull(),
+    brand: savBrandEnum.notNull(),
+    productLine: varchar("productLine", { length: 100 }),
+    modelName: varchar("modelName", { length: 255 }),
+    component: varchar("component", { length: 255 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    sparePartIdIdx: index("spc_sparePartId_idx").on(table.sparePartId),
+    brandIdx: index("spc_brand_idx").on(table.brand),
+    componentIdx: index("spc_component_idx").on(table.component),
+  })
+);
+
+export type SparePartCompatibility = typeof sparePartsCompatibility.$inferSelect;
+export type InsertSparePartCompatibility = typeof sparePartsCompatibility.$inferInsert;
+
+// SAV spare parts (pièces liées à un ticket SAV)
+export const savSpareParts = mysqlTable(
+  "sav_spare_parts",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    serviceId: int("serviceId").notNull(),
+    sparePartId: int("sparePartId").notNull(),
+    quantity: int("quantity").notNull().default(1),
+    unitPrice: decimal("unitPrice", { precision: 10, scale: 2 }).notNull(),
+    isCoveredByWarranty: boolean("isCoveredByWarranty").default(false),
+    coveragePercentage: int("coveragePercentage").default(0),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    serviceIdIdx: index("ssp_serviceId_idx").on(table.serviceId),
+    sparePartIdIdx: index("ssp_sparePartId_idx").on(table.sparePartId),
+  })
+);
+
+export type SavSparePart = typeof savSpareParts.$inferSelect;
+export type InsertSavSparePart = typeof savSpareParts.$inferInsert;
 
 // ============================================
 // NOTIFICATION PREFERENCES

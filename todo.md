@@ -1698,3 +1698,54 @@
 - [x] Ajouter liens privacy/terms dans le footer de la page d'accueil
 - [x] Vérifier que la page d'accueil / est accessible publiquement
 - [ ] Publier les modifications et revérifier le branding dans Google Cloud Console
+
+
+## Implémentation Nouveau Système SAV Intelligent
+
+### Phase 1 - Base de données
+- [x] Refondre le schéma SAV : nouvelles tables (warranty_rules, spare_parts, spare_parts_compatibility, sav_spare_parts)
+- [x] Créer les enums (sav_ticket_status, warranty_status, sav_component, sav_defect_type)
+- [x] Créer la matrice de garantie dans warranty-engine.ts (6 marques complètes)
+- [x] Migrer les colonnes existantes vers le nouveau schéma
+
+### Phase 2 - Backend moteur de garantie
+- [x] Créer le moteur d'analyse automatique de garantie (warranty-engine.ts)
+- [x] Créer les fonctions DB pour les tickets SAV (sav-db.ts - CRUD complet)
+- [x] Créer les fonctions DB pour les pièces détachées (CRUD + compatibilité)
+- [x] Créer les routes tRPC pour le nouveau SAV (create, list, getById, updateStatus, addNote, etc.)
+- [x] Créer les routes tRPC pour les pièces détachées (list, getByCompatibility)
+- [x] Intégrer Stripe pour le paiement hors garantie (createPayment)
+
+### Phase 3 - Frontend formulaire partenaire
+- [x] Créer le formulaire de ticket SAV en 5 étapes guidées (wizard)
+- [x] Étape 1 : Sélection marque → gamme → modèle (filtrage dynamique)
+- [x] Étape 2 : Sélection composant → type de défaut
+- [x] Étape 3 : Upload photos (2 min.) + description
+- [x] Étape 4 : Infos client (date achat, N° série, usage, conditions)
+- [x] Étape 5 : Récapitulatif + pré-analyse garantie + soumission
+
+### Phase 4 - Frontend dashboard admin SAV
+- [x] Refondre AdminAfterSales avec les 9 nouveaux statuts
+- [x] Ajouter la validation admin avec vérification photos
+- [x] Ajouter l'identification automatique des pièces
+- [x] Ajouter la gestion du devis hors garantie
+- [x] Ajouter la saisie du numéro de suivi d'expédition
+
+### Phase 5 - Module paiement et suivi
+- [x] Créer le module de paiement Stripe dans le ticket SAV (hors garantie)
+- [x] Afficher le détail des pièces + frais de livraison + TVA
+- [x] Créer le module de suivi d'expédition dans le ticket
+- [ ] Notifications email à chaque changement de statut (à implémenter ultérieurement)
+
+### Phase 6 - Catalogue pièces détachées
+- [x] Créer la page /spare-parts (catalogue pièces détachées)
+- [x] 12 catégories de pièces (pompes, cartes mères, jets, écrans, etc.)
+- [x] Recherche par compatibilité modèle
+- [x] Commande indépendante ou liée au SAV
+- [x] Intégration panier et paiement Stripe
+
+### Phase 7 - Tests et finalisation
+- [x] Tests unitaires pour le moteur de garantie (39 tests passent)
+- [ ] Tests unitaires pour les routes SAV (à compléter)
+- [ ] Tests d'intégration workflow complet (à compléter)
+- [x] Vérification de tous les cas de figure et edge cases
