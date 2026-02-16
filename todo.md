@@ -1760,3 +1760,4 @@
 - [x] Connecter le catalogue pièces au système SAV (identification automatique des pièces)
 - [x] Ajouter la route /spare-parts dans le menu utilisateur
 - [x] Tests et vérification (407 tests passent, 0 régressions)
+- [x] Fix SQL query error on spare_parts table in /admin/after-sales page (sparePartCategoryEnum column name mismatch)

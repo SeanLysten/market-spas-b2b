@@ -1,0 +1,181 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "activity_logs"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "after_sales_media"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "after_sales_notes"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "after_sales_services"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "candidate_contact_history"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "cart_items"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "countries"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "email_verification_tokens"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "events"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "favorites"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "forum_replies"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "forum_topics"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "google_ad_accounts"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "incoming_stock"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "invitation_tokens"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "invoices"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "lead_status_history"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "leads"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "meta_ad_accounts"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "meta_campaigns"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "notification_preferences"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "notifications"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "order_items"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "orders"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "partner_addresses"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "partner_candidates"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "partner_contacts"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "partner_documents"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "partner_postal_codes"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "partner_territories"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "partners"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "password_reset_tokens"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "payments"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "postal_code_ranges"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "price_lists"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "product_arrivals"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "product_categories"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "product_images"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "product_price_overrides"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "product_variants"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "products"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "regions"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "resources"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "return_items"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "return_photos"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "returns"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "sav_spare_parts"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "sessions"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "spare_parts"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "spare_parts_compatibility"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "team_invitations"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "team_members"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "technical_resources"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "users"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "variant_options"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T": "warranty_rules"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_jX4Ppf2KXZ8z9Tppipem7T\n__drizzle_migrations\nactivity_logs\nafter_sales_media\nafter_sales_notes\nafter_sales_services\ncandidate_contact_history\ncart_items\ncountries\nemail_verification_tokens\nevents\nfavorites\nforum_replies\nforum_topics\ngoogle_ad_accounts\nincoming_stock\ninvitation_tokens\ninvoices\nlead_status_history\nleads\nmeta_ad_accounts\nmeta_campaigns\nnotification_preferences\nnotifications\norder_items\norders\npartner_addresses\npartner_candidates\npartner_contacts\npartner_documents\npartner_postal_codes\npartner_territories\npartners\npassword_reset_tokens\npayments\npostal_code_ranges\nprice_lists\nproduct_arrivals\nproduct_categories\nproduct_images\nproduct_price_overrides\nproduct_variants\nproducts\nregions\nresources\nreturn_items\nreturn_photos\nreturns\nsav_spare_parts\nsessions\nspare_parts\nspare_parts_compatibility\nteam_invitations\nteam_members\ntechnical_resources\nusers\nvariant_options\nwarranty_rules\n",
+  "stderr": "",
+  "execution_time_ms": 354
+}

@@ -1,0 +1,19 @@
+{
+  "query": "SHOW TABLES LIKE '%spare%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SHOW TABLES LIKE '%spare%';",
+  "rows": [
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T (%spare%)": "sav_spare_parts"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T (%spare%)": "spare_parts"
+    },
+    {
+      "Tables_in_jX4Ppf2KXZ8z9Tppipem7T (%spare%)": "spare_parts_compatibility"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_jX4Ppf2KXZ8z9Tppipem7T (%spare%)\nsav_spare_parts\nspare_parts\nspare_parts_compatibility\n",
+  "stderr": "",
+  "execution_time_ms": 346
+}

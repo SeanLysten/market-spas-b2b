@@ -1896,7 +1896,7 @@ export const savTrackingCarrierEnum = mysqlEnum("trackingCarrier", [
 ]);
 
 // Spare part category enum
-export const sparePartCategoryEnum = mysqlEnum("sparePartCategory", [
+export const sparePartCategoryEnum = mysqlEnum("category", [
   "PUMPS",
   "ELECTRONICS",
   "JETS",
