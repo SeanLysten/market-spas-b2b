@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertCircle, Clock, CheckCircle, XCircle, Package, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Shield, ShieldAlert, ShieldCheck, ShieldX, Truck, CreditCard, Info, ChevronRight, ChevronLeft, Upload, Wrench, Eye } from "lucide-react";
+import { Plus, Search, AlertCircle, Clock, CheckCircle, XCircle, Package, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Shield, ShieldAlert, ShieldCheck, ShieldX, Truck, CreditCard, Info, ChevronRight, ChevronLeft, Upload, Wrench, Eye, BarChart3, Timer, CircleDot } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -104,6 +104,152 @@ const ADMIN_ROLES = ["SUPER_ADMIN", "ADMIN", "SALES_MANAGER"];
 
 function isAdminUser(user: any): boolean {
   return user && ADMIN_ROLES.includes(user.role);
+}
+
+// ===== SAV DASHBOARD SUMMARY =====
+interface SavStats {
+  total: number;
+  open: number;
+  actionRequired: number;
+  paymentPending: number;
+  inProgress: number;
+  shipped: number;
+  resolved: number;
+  urgentOrCritical: number;
+}
+
+function computeSavStats(services: any[]): SavStats {
+  const stats: SavStats = {
+    total: 0,
+    open: 0,
+    actionRequired: 0,
+    paymentPending: 0,
+    inProgress: 0,
+    shipped: 0,
+    resolved: 0,
+    urgentOrCritical: 0,
+  };
+  if (!services) return stats;
+  stats.total = services.length;
+  for (const item of services) {
+    const s = item.service;
+    const status = s.status;
+    if (status === "NEW" || status === "ANALYZING") stats.open++;
+    if (status === "INFO_REQUIRED" || status === "QUOTE_PENDING") stats.actionRequired++;
+    if (status === "PAYMENT_PENDING") stats.paymentPending++;
+    if (status === "PAYMENT_CONFIRMED" || status === "PARTS_ORDERED") stats.inProgress++;
+    if (status === "SHIPPED") stats.shipped++;
+    if (status === "RESOLVED" || status === "CLOSED") stats.resolved++;
+    if (s.urgency === "URGENT" || s.urgency === "CRITICAL") stats.urgentOrCritical++;
+  }
+  return stats;
+}
+
+function SavDashboard({ services, isLoading, onFilterClick }: {
+  services: any[];
+  isLoading: boolean;
+  onFilterClick: (status: string) => void;
+}) {
+  const stats = computeSavStats(services);
+
+  const cards = [
+    {
+      label: "Total tickets",
+      value: stats.total,
+      icon: BarChart3,
+      color: "text-slate-700",
+      bg: "bg-slate-50 border-slate-200",
+      filterValue: "all",
+    },
+    {
+      label: "Ouverts",
+      value: stats.open,
+      icon: CircleDot,
+      color: "text-blue-600",
+      bg: "bg-blue-50 border-blue-200",
+      filterValue: "NEW",
+    },
+    {
+      label: "Action requise",
+      value: stats.actionRequired,
+      icon: AlertCircle,
+      color: "text-yellow-600",
+      bg: "bg-yellow-50 border-yellow-200",
+      filterValue: "INFO_REQUIRED",
+    },
+    {
+      label: "Paiement en attente",
+      value: stats.paymentPending,
+      icon: CreditCard,
+      color: "text-red-600",
+      bg: "bg-red-50 border-red-200",
+      filterValue: "PAYMENT_PENDING",
+    },
+    {
+      label: "En cours",
+      value: stats.inProgress,
+      icon: Timer,
+      color: "text-purple-600",
+      bg: "bg-purple-50 border-purple-200",
+      filterValue: "PARTS_ORDERED",
+    },
+    {
+      label: "Expédiés",
+      value: stats.shipped,
+      icon: Truck,
+      color: "text-indigo-600",
+      bg: "bg-indigo-50 border-indigo-200",
+      filterValue: "SHIPPED",
+    },
+    {
+      label: "Résolus",
+      value: stats.resolved,
+      icon: CheckCircle,
+      color: "text-green-600",
+      bg: "bg-green-50 border-green-200",
+      filterValue: "RESOLVED",
+    },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 mb-6">
+        {cards.map((_, i) => (
+          <div key={i} className="h-24 rounded-lg border bg-muted/30 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 mb-6">
+      {cards.map((card) => {
+        const Icon = card.icon;
+        return (
+          <button
+            key={card.label}
+            onClick={() => onFilterClick(card.filterValue)}
+            className={`relative flex flex-col items-center justify-center p-3 rounded-lg border transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98] ${card.bg}`}
+          >
+            <Icon className={`h-5 w-5 mb-1 ${card.color}`} />
+            <span className={`text-2xl font-bold ${card.color}`}>{card.value}</span>
+            <span className="text-xs text-muted-foreground text-center leading-tight mt-0.5">{card.label}</span>
+            {card.filterValue !== "all" && card.value > 0 && (
+              <span className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ${card.color.replace("text-", "bg-")} opacity-60`} />
+            )}
+          </button>
+        );
+      })}
+      {stats.urgentOrCritical > 0 && (
+        <div className="col-span-full">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <span><strong>{stats.urgentOrCritical}</strong> ticket{stats.urgentOrCritical > 1 ? "s" : ""} urgent{stats.urgentOrCritical > 1 ? "s" : ""} ou critique{stats.urgentOrCritical > 1 ? "s" : ""}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
@@ -662,6 +808,9 @@ export default function AfterSales() {
     setOrderDirection("desc");
   };
 
+  // Unfiltered query for dashboard stats (always shows total counts)
+  const { data: allServices, isLoading: isLoadingAll } = trpc.afterSales.list.useQuery({});
+
   const { data: services, isLoading, refetch } = trpc.afterSales.list.useQuery({
     status: statusFilter !== "all" ? statusFilter : undefined,
     urgency: urgencyFilter !== "all" ? urgencyFilter : undefined,
@@ -744,6 +893,19 @@ export default function AfterSales() {
         onSuccess={refetch}
         user={user}
         partners={partners || []}
+      />
+
+      {/* SAV Dashboard Summary */}
+      <SavDashboard
+        services={allServices || []}
+        isLoading={isLoadingAll}
+        onFilterClick={(filterValue) => {
+          if (filterValue === "all") {
+            setStatusFilter("all");
+          } else {
+            setStatusFilter(filterValue);
+          }
+        }}
       />
 
       {/* Filters */}

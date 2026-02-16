@@ -1763,3 +1763,4 @@
 - [x] Fix SQL query error on spare_parts table in /admin/after-sales page (sparePartCategoryEnum column name mismatch)
 - [x] Fix SAV user form: remove partner selection dropdown, auto-assign logged-in partner
 - [x] Fix SAV user ticket list: partners should only see their own tickets
+- [x] Add simplified SAV dashboard at top of partner after-sales page (counters: open, payment pending, resolved, etc.)
