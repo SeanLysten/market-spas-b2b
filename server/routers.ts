@@ -3421,7 +3421,7 @@ export const appRouter = router({
         return { url };
       }),
 
-    // Handle OAuth callback - exchange code for token
+    // Handle OAuth callback - exchange code for token and save connection
     handleCallback: adminProcedure
       .input(z.object({
         code: z.string(),
@@ -3429,17 +3429,36 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const googleAdsOAuth = await import("./google-ads-oauth");
         
+        console.log(`[Google Ads OAuth] Exchanging code for tokens for user ${ctx.user.id}`);
+        
         // Exchange code for tokens
         const tokens = await googleAdsOAuth.exchangeCodeForTokens(input.code);
         
         // Get user info
         const userInfo = await googleAdsOAuth.getGoogleUserInfo(tokens.accessToken);
         
-        return {
+        console.log(`[Google Ads OAuth] Token exchange successful for ${userInfo.googleUserEmail}`);
+        
+        // Automatically save the connection to database
+        // Use a default customer ID (the user can update it later if they have multiple accounts)
+        const result = await db.connectGoogleAdAccount({
+          googleUserId: userInfo.googleUserId,
+          googleUserEmail: userInfo.googleUserEmail,
+          customerId: "PENDING", // Placeholder - will be updated when fetching campaigns
+          customerName: userInfo.googleUserName || userInfo.googleUserEmail || "Compte Google Ads",
+          currency: "EUR",
+          timezone: undefined,
           accessToken: tokens.accessToken,
           refreshToken: tokens.refreshToken,
-          expiresAt: tokens.expiresAt,
-          googleUserId: userInfo.googleUserId,
+          tokenExpiresAt: tokens.expiresAt,
+          connectedBy: ctx.user.id,
+        });
+        
+        console.log(`[Google Ads OAuth] Account saved to database with ID ${result.id}`);
+        
+        return {
+          success: true,
+          accountId: result.id,
           googleUserEmail: userInfo.googleUserEmail,
         };
       }),

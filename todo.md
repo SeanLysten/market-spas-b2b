@@ -1767,3 +1767,6 @@
 - [x] Delete all existing SAV tickets from database
 - [x] Create new realistic test SAV tickets with varied statuses, urgencies, and warranty states
 - [x] Fix missing after_sales_status_history table + fix savStatusEnum column name mismatch for previousStatus/newStatus
+- [x] Fix Google Ads OAuth redirect_uri_mismatch error (Error 400: redirect_uri_mismatch)
+- [x] Fix Google Ads OAuth callback - removed googleAccountsQuery reference error
+- [ ] Fix Google Ads OAuth callback - production server doesn't serve /api/google-ads/callback route (needs republish)

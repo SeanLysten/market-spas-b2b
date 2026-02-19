@@ -341,6 +341,7 @@ export default function AdminLeads() {
   const [googleCallbackData, setGoogleCallbackData] = useState<any>(null);
   
   const { data: googleOAuthUrl } = trpc.googleAds.getOAuthUrl.useQuery(undefined, { retry: false });
+  const { data: googleConnectedAccounts, refetch: refetchGoogleAccounts } = trpc.googleAds.getConnectedAccounts.useQuery();
   const googleCallbackMutation = trpc.googleAds.handleCallback.useMutation();
   const connectGoogleAccountMutation = trpc.googleAds.connectAdAccount.useMutation({
     onSuccess: () => {
@@ -394,10 +395,12 @@ export default function AdminLeads() {
       googleCallbackMutation.mutateAsync({ code }).then((data) => {
         console.log("[Google Ads OAuth] Token exchange successful:", data);
         setGoogleCallbackData(data);
-        toast.success("Compte Google Ads connecté avec succès !");
+        toast.success(`Compte Google Ads connecté : ${data.googleUserEmail}`);
         setGoogleConnecting(false);
-        // Refresh Google Ads accounts list
-        googleAccountsQuery.refetch();
+        // Refresh connected accounts list
+        refetchGoogleAccounts();
+        // Switch to Google Ads tab to show the connection
+        setAdsTab('google');
       }).catch((err) => {
         console.error("[Google Ads OAuth] Token exchange error:", err);
         alert(`Erreur lors de la connexion Google Ads: ${err.message}`);
@@ -1370,6 +1373,41 @@ export default function AdminLeads() {
                       </div>
                     </CardContent>
                   </Card>
+                ) : googleConnectedAccounts && googleConnectedAccounts.length > 0 ? (
+                  <div className="space-y-4">
+                    <Card className="border-green-200 bg-green-50">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-green-900">Compte Google Ads connecté</h3>
+                            <p className="text-sm text-green-700">{googleConnectedAccounts[0].googleUserEmail}</p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (confirm('Êtes-vous sûr de vouloir déconnecter ce compte Google Ads ?')) {
+                                disconnectGoogleMutation.mutate({ accountId: googleConnectedAccounts[0].id });
+                              }
+                            }}
+                            className="text-red-600 border-red-200 hover:bg-red-50"
+                          >
+                            Déconnecter
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-8 text-center">
+                        <p className="text-gray-500">Récupération des campagnes Google Ads à venir...</p>
+                      </CardContent>
+                    </Card>
+                  </div>
                 ) : (
                   <Card>
                     <CardContent className="p-8 text-center">
