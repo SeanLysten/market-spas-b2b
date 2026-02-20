@@ -1,0 +1,31 @@
+Google Cloud Console OAuth Client Configuration:
+- Name: Market Spas B2B Web Client
+- Client ID: 50693144180-g0ojv0ote3qvrck0s8l52g3jqhaekthf.apps.googleusercontent.com
+- Client Secret: ****hS3t
+
+URI de redirection autorisés:
+- URI 1: https://marketspas.pro/api/auth/callback/google
+- URI 2: http://localhost:3000/api/auth/callback/google
+- URI 3: https://market-spas-b2b.manus.space/api/auth/callback/google
+- URI 4: https://marketspas.pro/api/google-ads/callback
+
+Application code uses: https://marketspas.pro/api/google-ads/callback (URI 4)
+
+IMPORTANT: URI 4 is correct and matches the code.
+The problem is NOT the redirect URI configuration.
+
+But wait - the user said they see google_ads=true and state in the URL but NO code.
+The server callback route adds google_ads=true only when it receives a code.
+If there's no code, it adds google_error=no_code.
+
+The user URL: https://marketspas.pro/admin/leads?google_ads=true&state=eyJ1c2VySWQiOjF9
+This has google_ads=true but NO code and NO google_error.
+
+This is IMPOSSIBLE from the server callback route. The only way to get google_ads=true without code is if:
+1. The server callback route is NOT being called
+2. Something else is generating this URL
+
+WAIT - could it be that Google is sending an error response (like access_denied) and the server 
+is redirecting with the error, but the user didn't notice the google_error parameter?
+
+Or could it be that the user's browser is caching an old redirect?

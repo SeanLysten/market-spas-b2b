@@ -4911,3 +4911,26 @@ export async function updateGoogleAdAccountSyncError(id: number, error: string):
     .set({ syncError: error })
     .where(eq(googleAdAccounts.id, id));
 }
+
+export async function updateGoogleAdAccountCustomer(
+  id: number,
+  data: {
+    customerId: string;
+    customerName: string;
+    currency: string;
+    timezone: string;
+  }
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(googleAdAccounts)
+    .set({
+      customerId: data.customerId,
+      customerName: data.customerName,
+      currency: data.currency,
+      timezone: data.timezone,
+    })
+    .where(eq(googleAdAccounts.id, id));
+}

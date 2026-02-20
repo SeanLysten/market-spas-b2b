@@ -1770,3 +1770,7 @@
 - [x] Fix Google Ads OAuth redirect_uri_mismatch error (Error 400: redirect_uri_mismatch)
 - [x] Fix Google Ads OAuth callback - removed googleAccountsQuery reference error
 - [ ] Fix Google Ads OAuth callback - production server doesn't serve /api/google-ads/callback route (needs republish)
+- [ ] Fix Google Ads OAuth callback - route /api/google-ads/callback intercepted by SPA even after republish, needs deep investigation
+- [x] Fix Google Ads OAuth callback - frontend now shows connected account status
+- [ ] Implement Google Ads campaigns display in admin leads page (campaigns list, budgets, impressions, clicks, conversions, spend)
+- [ ] Build Google Ads performance metrics dashboard (KPIs, charts)

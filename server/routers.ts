@@ -3456,6 +3456,30 @@ export const appRouter = router({
         
         console.log(`[Google Ads OAuth] Account saved to database with ID ${result.id}`);
         
+        // Try to fetch accessible customer IDs and update the account
+        try {
+          const googleAdsApi = await import('./google-ads-api');
+          const customerIds = await googleAdsApi.listAccessibleCustomers(tokens.accessToken);
+          console.log(`[Google Ads OAuth] Accessible customers: ${customerIds.join(', ')}`);
+          
+          if (customerIds.length > 0) {
+            // Get details of the first customer
+            const details = await googleAdsApi.getCustomerDetails(tokens.accessToken, customerIds[0]);
+            if (details) {
+              // Update the account with real customer ID and name
+              await db.updateGoogleAdAccountCustomer(result.id, {
+                customerId: details.id,
+                customerName: details.name,
+                currency: details.currency,
+                timezone: details.timezone,
+              });
+              console.log(`[Google Ads OAuth] Updated account with customer: ${details.name} (${details.id})`);
+            }
+          }
+        } catch (custError: any) {
+          console.warn(`[Google Ads OAuth] Could not fetch customer details: ${custError.message}`);
+        }
+        
         return {
           success: true,
           accountId: result.id,
@@ -3510,6 +3534,57 @@ export const appRouter = router({
     getConnectedAccounts: adminProcedure
       .query(async () => {
         return db.getConnectedGoogleAdAccounts();
+      }),
+
+    // Manually fetch and update customer ID
+    fetchCustomerId: adminProcedure
+      .input(z.object({ accountId: z.number() }))
+      .mutation(async ({ input }) => {
+        const accounts = await db.getConnectedGoogleAdAccounts();
+        const account = accounts.find(a => a.id === input.accountId);
+        if (!account) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Compte Google Ads introuvable' });
+        }
+
+        try {
+          const googleAdsApi = await import('./google-ads-api');
+          const customerIds = await googleAdsApi.listAccessibleCustomers(account.accessToken);
+          console.log(`[Google Ads] Accessible customers for account ${input.accountId}:`, customerIds);
+          
+          if (customerIds.length === 0) {
+            throw new Error('Aucun compte Google Ads accessible. Vérifiez que le compte Google connecté a accès à un compte Google Ads.');
+          }
+
+          // Get details of the first customer
+          const details = await googleAdsApi.getCustomerDetails(account.accessToken, customerIds[0]);
+          if (!details) {
+            throw new Error('Impossible de récupérer les détails du compte Google Ads');
+          }
+
+          // Update the account with real customer ID and name
+          await db.updateGoogleAdAccountCustomer(input.accountId, {
+            customerId: details.id,
+            customerName: details.name,
+            currency: details.currency,
+            timezone: details.timezone,
+          });
+
+          console.log(`[Google Ads] Updated account ${input.accountId} with customer: ${details.name} (${details.id})`);
+
+          return {
+            success: true,
+            customerId: details.id,
+            customerName: details.name,
+            allCustomerIds: customerIds,
+          };
+        } catch (error: any) {
+          console.error('[Google Ads] Error fetching customer ID:', error);
+          await db.updateGoogleAdAccountSyncError(input.accountId, error.message);
+          throw new TRPCError({ 
+            code: 'INTERNAL_SERVER_ERROR', 
+            message: `Erreur lors de la récupération du Customer ID: ${error.message}` 
+          });
+        }
       }),
 
     // Fetch campaigns from connected Google Ads account

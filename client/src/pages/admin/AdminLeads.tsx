@@ -340,9 +340,26 @@ export default function AdminLeads() {
   const [showGoogleAccountSelector, setShowGoogleAccountSelector] = useState(false);
   const [googleCallbackData, setGoogleCallbackData] = useState<any>(null);
   
+  const [googleDatePreset, setGoogleDatePreset] = useState('last_30d');
   const { data: googleOAuthUrl } = trpc.googleAds.getOAuthUrl.useQuery(undefined, { retry: false });
   const { data: googleConnectedAccounts, refetch: refetchGoogleAccounts } = trpc.googleAds.getConnectedAccounts.useQuery();
   const googleCallbackMutation = trpc.googleAds.handleCallback.useMutation();
+  const { data: googleCampaignsData, isLoading: googleCampaignsLoading, refetch: refetchGoogleCampaigns } = trpc.googleAds.getCampaigns.useQuery(
+    { datePreset: googleDatePreset },
+    { enabled: !!googleConnectedAccounts && googleConnectedAccounts.length > 0, retry: false }
+  );
+  const fetchCustomerIdMutation = trpc.googleAds.fetchCustomerId.useMutation({
+    onSuccess: () => {
+      console.log('[Google Ads] Customer ID fetched successfully');
+      toast.success('Customer ID récupéré avec succès !');
+      refetchGoogleAccounts();
+      refetchGoogleCampaigns();
+    },
+    onError: (error) => {
+      console.error('[Google Ads] Error fetching customer ID:', error);
+      toast.error(`Erreur: ${error.message}`);
+    },
+  });
   const connectGoogleAccountMutation = trpc.googleAds.connectAdAccount.useMutation({
     onSuccess: () => {
       console.log("[Google Ads] Account connected successfully");
@@ -359,7 +376,7 @@ export default function AdminLeads() {
   const disconnectGoogleMutation = trpc.googleAds.disconnectAdAccount.useMutation({
     onSuccess: () => {
       toast.success("Compte Google Ads déconnecté");
-      // TODO: refetch Google campaigns when implemented
+      refetchGoogleAccounts();
     },
   });
 
@@ -392,20 +409,24 @@ export default function AdminLeads() {
       setGoogleConnecting(true);
       // Clean URL immediately to prevent re-processing on re-render
       window.history.replaceState({}, "", window.location.pathname);
-      googleCallbackMutation.mutateAsync({ code }).then((data) => {
-        console.log("[Google Ads OAuth] Token exchange successful:", data);
-        setGoogleCallbackData(data);
-        toast.success(`Compte Google Ads connecté : ${data.googleUserEmail}`);
-        setGoogleConnecting(false);
-        // Refresh connected accounts list
-        refetchGoogleAccounts();
-        // Switch to Google Ads tab to show the connection
-        setAdsTab('google');
-      }).catch((err) => {
-        console.error("[Google Ads OAuth] Token exchange error:", err);
-        alert(`Erreur lors de la connexion Google Ads: ${err.message}`);
-        setGoogleConnecting(false);
-      });
+      (async () => {
+        try {
+          const data = await googleCallbackMutation.mutateAsync({ code });
+          console.log("[Google Ads OAuth] Token exchange successful:", JSON.stringify(data));
+          setGoogleCallbackData(data);
+          toast.success(`Compte Google Ads connecté : ${data.googleUserEmail}`);
+          // Refresh connected accounts list and wait for it
+          const refetchResult = await refetchGoogleAccounts();
+          console.log("[Google Ads OAuth] Refetch result:", JSON.stringify(refetchResult.data));
+          // Switch to Google Ads tab to show the connection
+          setAdsTab('google');
+        } catch (err: any) {
+          console.error("[Google Ads OAuth] Token exchange error:", err);
+          toast.error(`Erreur lors de la connexion Google Ads: ${err.message}`);
+        } finally {
+          setGoogleConnecting(false);
+        }
+      })();
       return;
     }
     
@@ -1386,27 +1407,209 @@ export default function AdminLeads() {
                           <div className="flex-1">
                             <h3 className="font-semibold text-green-900">Compte Google Ads connecté</h3>
                             <p className="text-sm text-green-700">{googleConnectedAccounts[0].googleUserEmail}</p>
+                            {googleConnectedAccounts[0].customerId === 'PENDING' && (
+                              <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" />
+                                Customer ID non récupéré - Cliquez sur "Récupérer Customer ID"
+                              </p>
+                            )}
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              if (confirm('Êtes-vous sûr de vouloir déconnecter ce compte Google Ads ?')) {
-                                disconnectGoogleMutation.mutate({ accountId: googleConnectedAccounts[0].id });
-                              }
-                            }}
-                            className="text-red-600 border-red-200 hover:bg-red-50"
-                          >
-                            Déconnecter
-                          </Button>
+                          <div className="flex gap-2">
+                            {googleConnectedAccounts[0].customerId === 'PENDING' && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => fetchCustomerIdMutation.mutate({ accountId: googleConnectedAccounts[0].id })}
+                                disabled={fetchCustomerIdMutation.isPending}
+                              >
+                                {fetchCustomerIdMutation.isPending ? 'Récupération...' : 'Récupérer Customer ID'}
+                              </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                if (confirm('Êtes-vous sûr de vouloir déconnecter ce compte Google Ads ?')) {
+                                  disconnectGoogleMutation.mutate({ accountId: googleConnectedAccounts[0].id });
+                                }
+                              }}
+                              className="text-red-600 border-red-200 hover:bg-red-50"
+                            >
+                              Déconnecter
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
-                    <Card>
-                      <CardContent className="p-8 text-center">
-                        <p className="text-gray-500">Récupération des campagnes Google Ads à venir...</p>
-                      </CardContent>
-                    </Card>
+                    {/* Google Ads KPI Summary */}
+                    {googleCampaignsLoading ? (
+                      <Card>
+                        <CardContent className="p-8 text-center">
+                          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-500" />
+                          <p className="text-gray-500">Chargement des campagnes Google Ads...</p>
+                        </CardContent>
+                      </Card>
+                    ) : googleCampaignsData?.error ? (
+                      <Card className="border-amber-200 bg-amber-50">
+                        <CardContent className="p-6">
+                          <div className="flex items-start gap-3">
+                            <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
+                            <div>
+                              <h3 className="font-semibold text-amber-900">Erreur de récupération des campagnes</h3>
+                              <p className="text-sm text-amber-700 mt-1">{googleCampaignsData.error}</p>
+                              <Button variant="outline" size="sm" className="mt-3" onClick={() => refetchGoogleCampaigns()}>
+                                <RefreshCw className="w-4 h-4 mr-2" /> Réessayer
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <>
+                        {/* Date Preset Selector */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-gray-500" />
+                            <Select value={googleDatePreset} onValueChange={setGoogleDatePreset}>
+                              <SelectTrigger className="w-[180px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="today">Aujourd'hui</SelectItem>
+                                <SelectItem value="yesterday">Hier</SelectItem>
+                                <SelectItem value="last_7d">7 derniers jours</SelectItem>
+                                <SelectItem value="last_30d">30 derniers jours</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button variant="outline" size="sm" onClick={() => refetchGoogleCampaigns()}>
+                            <RefreshCw className="w-4 h-4 mr-2" /> Actualiser
+                          </Button>
+                        </div>
+
+                        {/* KPI Cards */}
+                        {(() => {
+                          const campaigns = googleCampaignsData?.campaigns || [];
+                          const totalSpend = campaigns.reduce((sum: number, c: any) => sum + (c.insights?.spend || 0), 0);
+                          const totalClicks = campaigns.reduce((sum: number, c: any) => sum + (c.insights?.clicks || 0), 0);
+                          const totalImpressions = campaigns.reduce((sum: number, c: any) => sum + (c.insights?.impressions || 0), 0);
+                          const totalConversions = campaigns.reduce((sum: number, c: any) => sum + (c.insights?.conversions || 0), 0);
+                          const avgCtr = totalImpressions > 0 ? (totalClicks / totalImpressions * 100) : 0;
+                          const avgCpc = totalClicks > 0 ? (totalSpend / totalClicks) : 0;
+                          const currency = googleCampaignsData?.currentAccount?.currency || 'EUR';
+                          const formatMoney = (v: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(v);
+
+                          return (
+                            <>
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                                <Card>
+                                  <CardContent className="p-4">
+                                    <p className="text-xs text-gray-500 mb-1">Dépenses</p>
+                                    <p className="text-lg font-bold text-gray-900">{formatMoney(totalSpend)}</p>
+                                  </CardContent>
+                                </Card>
+                                <Card>
+                                  <CardContent className="p-4">
+                                    <p className="text-xs text-gray-500 mb-1">Impressions</p>
+                                    <p className="text-lg font-bold text-gray-900">{totalImpressions.toLocaleString('fr-FR')}</p>
+                                  </CardContent>
+                                </Card>
+                                <Card>
+                                  <CardContent className="p-4">
+                                    <p className="text-xs text-gray-500 mb-1">Clics</p>
+                                    <p className="text-lg font-bold text-gray-900">{totalClicks.toLocaleString('fr-FR')}</p>
+                                  </CardContent>
+                                </Card>
+                                <Card>
+                                  <CardContent className="p-4">
+                                    <p className="text-xs text-gray-500 mb-1">CTR</p>
+                                    <p className="text-lg font-bold text-gray-900">{avgCtr.toFixed(2)}%</p>
+                                  </CardContent>
+                                </Card>
+                                <Card>
+                                  <CardContent className="p-4">
+                                    <p className="text-xs text-gray-500 mb-1">CPC moyen</p>
+                                    <p className="text-lg font-bold text-gray-900">{formatMoney(avgCpc)}</p>
+                                  </CardContent>
+                                </Card>
+                                <Card>
+                                  <CardContent className="p-4">
+                                    <p className="text-xs text-gray-500 mb-1">Conversions</p>
+                                    <p className="text-lg font-bold text-gray-900">{totalConversions.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}</p>
+                                  </CardContent>
+                                </Card>
+                              </div>
+
+                              {/* Campaigns Table */}
+                              {campaigns.length === 0 ? (
+                                <Card>
+                                  <CardContent className="p-8 text-center">
+                                    <BarChart3 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                                    <p className="text-gray-500">Aucune campagne trouvée pour cette période</p>
+                                  </CardContent>
+                                </Card>
+                              ) : (
+                                <Card>
+                                  <CardHeader className="pb-3">
+                                    <CardTitle className="text-base">Campagnes ({campaigns.length})</CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="p-0">
+                                    <div className="overflow-x-auto">
+                                      <table className="w-full text-sm">
+                                        <thead>
+                                          <tr className="border-b bg-gray-50">
+                                            <th className="text-left p-3 font-medium text-gray-600">Campagne</th>
+                                            <th className="text-left p-3 font-medium text-gray-600">Type</th>
+                                            <th className="text-left p-3 font-medium text-gray-600">Statut</th>
+                                            <th className="text-right p-3 font-medium text-gray-600">Budget/j</th>
+                                            <th className="text-right p-3 font-medium text-gray-600">Dépenses</th>
+                                            <th className="text-right p-3 font-medium text-gray-600">Impressions</th>
+                                            <th className="text-right p-3 font-medium text-gray-600">Clics</th>
+                                            <th className="text-right p-3 font-medium text-gray-600">CTR</th>
+                                            <th className="text-right p-3 font-medium text-gray-600">CPC</th>
+                                            <th className="text-right p-3 font-medium text-gray-600">Conv.</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {campaigns.map((campaign: any) => {
+                                            const ins = campaign.insights || {};
+                                            const ctr = ins.impressions > 0 ? (ins.clicks / ins.impressions * 100) : 0;
+                                            const cpc = ins.clicks > 0 ? (ins.spend / ins.clicks) : 0;
+                                            const dailyBudget = campaign.budget_micros / 1_000_000;
+                                            return (
+                                              <tr key={campaign.id} className="border-b hover:bg-gray-50">
+                                                <td className="p-3">
+                                                  <div className="font-medium text-gray-900 max-w-[200px] truncate" title={campaign.name}>{campaign.name}</div>
+                                                </td>
+                                                <td className="p-3">
+                                                  <Badge variant="outline" className="text-xs">{campaign.channel_type}</Badge>
+                                                </td>
+                                                <td className="p-3">
+                                                  <Badge className={campaign.status === 'Active' ? 'bg-green-100 text-green-800' : campaign.status === 'En pause' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}>
+                                                    {campaign.status}
+                                                  </Badge>
+                                                </td>
+                                                <td className="p-3 text-right text-gray-600">{formatMoney(dailyBudget)}</td>
+                                                <td className="p-3 text-right font-medium">{formatMoney(ins.spend || 0)}</td>
+                                                <td className="p-3 text-right text-gray-600">{(ins.impressions || 0).toLocaleString('fr-FR')}</td>
+                                                <td className="p-3 text-right text-gray-600">{(ins.clicks || 0).toLocaleString('fr-FR')}</td>
+                                                <td className="p-3 text-right text-gray-600">{ctr.toFixed(2)}%</td>
+                                                <td className="p-3 text-right text-gray-600">{formatMoney(cpc)}</td>
+                                                <td className="p-3 text-right font-medium">{(ins.conversions || 0).toLocaleString('fr-FR', { maximumFractionDigits: 1 })}</td>
+                                              </tr>
+                                            );
+                                          })}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </>
+                    )}
                   </div>
                 ) : (
                   <Card>

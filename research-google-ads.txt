@@ -1,0 +1,19 @@
+Google Ads API Research:
+- Developer token is ALWAYS required for Google Ads API (both REST and client library)
+- The "no developer token" option is a pilot program requiring Google Cloud organization
+- There is NO alternative to bypass the developer token requirement
+- The REST API also requires the developer token in the header
+
+Alternative approach: 
+- Use Google Ads API with a TEST developer token (available immediately for test accounts)
+- Or use Google Ads Scripts / Google Sheets integration
+- Or implement a simulated/mock data display until the developer token is obtained
+
+Best approach for the user:
+1. Get a developer token from Google Ads Manager Account (Admin > API Center)
+2. A test account developer token can be used immediately
+3. For production, need to apply for Basic or Standard access
+
+For now: Implement the UI with proper error handling that shows a clear message
+when developer token is missing, and works fully when it's configured.
+Also: need to get the Customer ID from the user's Google Ads account.
