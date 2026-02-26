@@ -1830,3 +1830,5 @@
 - [x] Vérifier et corriger le mode dark sur toutes les pages du dashboard admin
 
 - [x] Ajouter le bouton ThemeToggle dans le header principal du dashboard utilisateur (visible desktop et mobile)
+
+- [x] Corriger les incohérences du mode dark sur la page Calendar

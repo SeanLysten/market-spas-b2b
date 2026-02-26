@@ -161,7 +161,7 @@ export default function Calendar() {
   return (
     <div className="min-h-screen bg-muted/50 dark:bg-muted/30">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10">
+      <header className="bg-card dark:bg-card border-b sticky top-0 z-10">
         <div className="container py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -172,7 +172,7 @@ export default function Calendar() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl text-display text-display font-bold text-gray-900">Calendrier</h1>
+                <h1 className="text-2xl text-display text-display font-bold text-foreground dark:text-foreground">Calendrier</h1>
                 <p className="text-sm text-muted-foreground dark:text-muted-foreground">Événements, promotions et formations</p>
               </div>
             </div>
@@ -242,7 +242,7 @@ export default function Calendar() {
                           <div
                             key={index}
                             className={`min-h-[100px] p-1 border rounded-lg ${
-                              isCurrentMonth ? "bg-white" : "bg-muted/50 dark:bg-muted/30"
+                              isCurrentMonth ? "bg-card dark:bg-card" : "bg-muted/50 dark:bg-muted/30"
                             } ${isToday ? "ring-2 ring-primary" : ""}`}
                           >
                             {day.date && (
