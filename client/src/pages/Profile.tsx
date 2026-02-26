@@ -140,7 +140,7 @@ export default function Profile() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl text-display text-display font-bold">Mon profil</h1>
+              <h1 className="text-xl md:text-2xl text-display font-bold">Mon profil</h1>
               <p className="text-muted-foreground">
                 Gérez vos informations personnelles et préférences
               </p>
@@ -178,7 +178,7 @@ export default function Profile() {
           <TabsContent value="personal">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
                     <CardTitle>Informations personnelles</CardTitle>
                     <CardDescription>
@@ -201,7 +201,7 @@ export default function Profile() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-4 md:p-6">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">Prénom</Label>
                     <Input
@@ -338,7 +338,7 @@ export default function Profile() {
                         </Button>
                       )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-4 md:p-6">
                       <div className="space-y-2">
                         <Label>Nom de l'entreprise</Label>
                         <Input
@@ -453,7 +453,7 @@ export default function Profile() {
                     <p className="text-muted-foreground">
                       Vous n'êtes pas encore associé à une entreprise partenaire.
                     </p>
-                    <p className="text-sm text-muted-foreground mt-2">
+                    <p className="text-xs md:text-sm text-muted-foreground mt-2">
                       Contactez-nous pour devenir partenaire.
                     </p>
                   </div>
@@ -472,12 +472,12 @@ export default function Profile() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="rounded-lg border border-border bg-muted/50 p-6 space-y-4">
+                <div className="rounded-lg border border-border bg-muted/50 p-4 md:p-6 space-y-4">
                   <div className="flex items-center gap-3">
                     <Bell className="h-5 w-5 text-primary" />
                     <div className="flex-1">
                       <h3 className="font-medium">Gérer vos préférences de notification</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-xs md:text-sm text-muted-foreground mt-1">
                         Choisissez de recevoir des notifications toast (dans l'application) et/ou par email pour chaque type d'événement : commandes, SAV, leads, alertes système, etc.
                       </p>
                     </div>
@@ -504,10 +504,10 @@ export default function Profile() {
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   <div className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div>
                         <h4 className="font-medium">Authentification</h4>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                           Vous êtes connecté via Manus OAuth
                         </p>
                       </div>
@@ -518,10 +518,10 @@ export default function Profile() {
                   </div>
 
                   <div className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div>
                         <h4 className="font-medium">Dernière connexion</h4>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                           {new Date().toLocaleDateString("fr-FR", {
                             day: "numeric",
                             month: "long",
@@ -535,10 +535,10 @@ export default function Profile() {
                   </div>
 
                   <div className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div>
                         <h4 className="font-medium">Sessions actives</h4>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                           1 session active sur cet appareil
                         </p>
                       </div>
@@ -641,7 +641,7 @@ function TeamManagementTab() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <CardTitle>Gestion de l'équipe</CardTitle>
               <CardDescription>
@@ -675,7 +675,7 @@ function TeamManagementTab() {
                       </div>
                       <div>
                         <p className="font-medium">{member.user?.name || member.user?.email}</p>
-                        <p className="text-sm text-muted-foreground">{member.user?.email}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">{member.user?.email}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -727,7 +727,7 @@ function TeamManagementTab() {
                       </div>
                       <div>
                         <p className="font-medium">{invitation.email}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                           Invité le{" "}
                           {new Date(invitation.createdAt).toLocaleDateString("fr-FR")}
                         </p>
@@ -795,7 +795,7 @@ function TeamManagementTab() {
                   <option value="ACCOUNTANT">Comptable</option>
                   <option value="FULL_MANAGER">Gestionnaire Complet</option>
                 </select>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {getRoleDescription(inviteRole)}
                 </p>
               </div>
@@ -803,7 +803,7 @@ function TeamManagementTab() {
               <div className="flex gap-2 pt-4">
                 <Button
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 w-full sm:w-auto"
                   onClick={() => {
                     setShowInviteDialog(false);
                     setInviteEmail("");

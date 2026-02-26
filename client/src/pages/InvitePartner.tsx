@@ -70,7 +70,7 @@ export default function InvitePartner() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-1 md:grid-cols-2">
+      <div className="grid gap-4 md:p-6 md:grid-cols-1 md:grid-cols-2">
         {/* Formulaire d'invitation */}
         <Card>
           <CardHeader>

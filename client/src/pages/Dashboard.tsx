@@ -42,14 +42,15 @@ export default function Dashboard() {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container py-4">
-          <div className="flex items-center justify-between">
+          <div className="space-y-3">
             <div>
-              <h1 className="text-2xl text-display text-display font-bold">Tableau de bord</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="text-xl md:text-2xl text-display font-bold">Tableau de bord</h1>
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Bienvenue, {user?.firstName || user?.name || "Partenaire"}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            {/* Boutons empilés sur mobile */}
+            <div className="flex flex-wrap items-center gap-2">
               <ThemeToggle />
               <Button variant="outline" size="sm" className="relative">
                 <Bell className="w-4 h-4" />
@@ -63,13 +64,10 @@ export default function Dashboard() {
                 <Link href="/admin">
                   <Button variant="outline" size="sm" className="gap-2">
                     <Users className="w-4 h-4" />
-                    Admin
+                    <span className="hidden sm:inline">Admin</span>
                   </Button>
                 </Link>
               )}
-              <Link href="/">
-                <Button variant="ghost" size="sm">Accueil</Button>
-              </Link>
             </div>
           </div>
         </div>
@@ -77,7 +75,7 @@ export default function Dashboard() {
 
       <div className="container py-8 space-y-8">
         {/* Accès rapides principaux */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <Link href="/catalog">
             <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
               <CardContent className="pt-6 text-center">
@@ -169,7 +167,7 @@ export default function Dashboard() {
           </Card>
         </Link>
 
-        <div className="grid gap-6 lg:grid-cols-1 md:grid-cols-2">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2">
           {/* Événements à venir */}
           <Card>
             <CardHeader>
@@ -310,7 +308,7 @@ export default function Dashboard() {
             <CardDescription>Gérez vos commandes et favoris</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <Link href="/orders">
                 <Button variant="outline" className="w-full h-auto py-6 flex-col gap-2">
                   <ShoppingCart className="w-8 h-8 text-primary" />
@@ -350,20 +348,20 @@ export default function Dashboard() {
         {isAdmin && (
           <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
             <CardContent className="py-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                     <Users className="w-6 h-6 text-primary" />
                   </div>
                   <div>
                     <h3 className="font-semibold">Accès Administration</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs md:text-sm text-muted-foreground">
                       Gérer les produits, partenaires, leads et statistiques
                     </p>
                   </div>
                 </div>
-                <Link href="/admin">
-                  <Button>
+                <Link href="/admin" className="w-full sm:w-auto">
+                  <Button className="w-full sm:w-auto">
                     Ouvrir l'admin
                     <ArrowUpRight className="w-4 h-4 ml-2" />
                   </Button>

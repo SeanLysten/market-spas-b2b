@@ -198,7 +198,7 @@ export default function AdminReports() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Rapports & Exports</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Rapports & Exports</h1>
           <p className="text-muted-foreground mt-1">
             Générez et exportez des rapports détaillés
           </p>
@@ -227,7 +227,7 @@ export default function AdminReports() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">{type.description}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">{type.description}</p>
                 </CardContent>
               </Card>
             );

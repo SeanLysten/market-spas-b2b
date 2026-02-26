@@ -241,7 +241,7 @@ export default function Leads() {
       {/* Header */}
       <header className="bg-card border-b sticky top-0 z-10">
         <div className="container py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-4">
               <Link href="/dashboard">
                 <Button variant="ghost" size="sm">
@@ -251,7 +251,7 @@ export default function Leads() {
               </Link>
               <div>
                 <h1 className="text-2xl text-display text-display font-bold text-gray-900">Mes Leads</h1>
-                <p className="text-sm text-muted-foreground dark:text-muted-foreground">Gérez vos prospects et suivez vos conversions</p>
+                <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">Gérez vos prospects et suivez vos conversions</p>
               </div>
             </div>
             <ExportButton
@@ -270,9 +270,9 @@ export default function Leads() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardContent className="pt-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">Total leads</p>
+                  <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">Total leads</p>
                   <p className="text-2xl text-display text-display font-bold">{stats?.total || 0}</p>
                 </div>
                 <Target className="w-8 h-8 text-blue-500" />
@@ -281,9 +281,9 @@ export default function Leads() {
           </Card>
           <Card>
             <CardContent className="pt-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">Nouveaux</p>
+                  <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">Nouveaux</p>
                   <p className="text-2xl text-display text-display font-bold text-info dark:text-info-dark">{(stats as any)?.new || 0}</p>
                 </div>
                 <AlertCircle className="w-8 h-8 text-blue-500" />
@@ -292,9 +292,9 @@ export default function Leads() {
           </Card>
           <Card>
             <CardContent className="pt-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">En cours</p>
+                  <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">En cours</p>
                   <p className="text-2xl text-display text-display font-bold text-yellow-600">{(stats as any)?.inProgress || 0}</p>
                 </div>
                 <Phone className="w-8 h-8 text-yellow-500" />
@@ -303,9 +303,9 @@ export default function Leads() {
           </Card>
           <Card>
             <CardContent className="pt-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">Convertis</p>
+                  <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">Convertis</p>
                   <p className="text-2xl text-display text-display font-bold text-emerald-600 dark:text-emerald-400">{(stats as any)?.converted || 0}</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-green-500" />
@@ -407,7 +407,7 @@ export default function Leads() {
                             )}
                           </div>
                           {lead.productInterest && (
-                            <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-2">
+                            <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground mt-2">
                               <strong>Intérêt :</strong> {lead.productInterest}
                               {lead.budget && ` • Budget : ${lead.budget}`}
                             </p>
@@ -493,12 +493,12 @@ export default function Leads() {
                     <div className="space-y-3">
                       <h4 className="font-medium text-gray-900">Projet</h4>
                       {selectedLead.productInterest && (
-                        <p className="text-sm text-muted-foreground dark:text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">
                           <strong>Produit :</strong> {selectedLead.productInterest}
                         </p>
                       )}
                       {selectedLead.budget && (
-                        <p className="text-sm text-muted-foreground dark:text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">
                           <strong>Budget :</strong> {selectedLead.budget}
                         </p>
                       )}
@@ -509,7 +509,7 @@ export default function Leads() {
                   {selectedLead.message && (
                     <div className="bg-muted/50 rounded-lg p-4">
                       <h4 className="font-medium text-foreground mb-2">Message du prospect</h4>
-                      <p className="text-sm text-muted-foreground">{selectedLead.message}</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">{selectedLead.message}</p>
                     </div>
                   )}
 
@@ -599,7 +599,7 @@ export default function Leads() {
                         <p className="text-sm text-foreground">{selectedLead.notes}</p>
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground dark:text-muted-foreground text-center py-4">
+                      <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground text-center py-4">
                         Aucune note pour ce lead
                       </p>
                     )}

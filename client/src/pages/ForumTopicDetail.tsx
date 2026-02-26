@@ -216,7 +216,7 @@ export default function ForumTopicDetail() {
                   size="sm"
                   onClick={handleMarkResolved}
                   disabled={markResolvedMutation.isPending}
-                  className="gap-2"
+                  className="gap-2 w-full sm:w-auto"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   Marquer comme résolu

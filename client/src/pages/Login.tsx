@@ -77,7 +77,7 @@ export default function Login() {
               />
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <Label htmlFor="password">Mot de passe</Label>
                 <Link href="/forgot-password" className="text-sm text-info dark:text-info-dark hover:text-info dark:text-info-dark hover:underline">
                   Mot de passe oublié ?

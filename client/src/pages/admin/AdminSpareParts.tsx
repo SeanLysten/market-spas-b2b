@@ -170,7 +170,7 @@ export default function AdminSpareParts() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl text-display text-display font-bold">Pièces Détachées</h1>
+            <h1 className="text-xl md:text-2xl text-display font-bold">Pièces Détachées</h1>
             <p className="text-muted-foreground">
               Gérez le catalogue de pièces détachées et leurs compatibilités
             </p>
@@ -190,7 +190,7 @@ export default function AdminSpareParts() {
                   <Package className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total pièces</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Total pièces</p>
                   <p className="text-2xl text-display text-display font-bold">{parts.filter((p: any) => p.isActive).length}</p>
                 </div>
               </div>
@@ -203,7 +203,7 @@ export default function AdminSpareParts() {
                   <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Stock bas</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Stock bas</p>
                   <p className="text-2xl text-display text-display font-bold text-orange-600 dark:text-orange-400">{lowStockParts.length}</p>
                 </div>
               </div>
@@ -216,7 +216,7 @@ export default function AdminSpareParts() {
                   <Cog className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Catégories</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Catégories</p>
                   <p className="text-2xl text-display text-display font-bold">
                     {new Set(parts.filter((p: any) => p.isActive).map((p: any) => p.category)).size}
                   </p>
@@ -231,7 +231,7 @@ export default function AdminSpareParts() {
                   <Link2 className="h-5 w-5 text-info dark:text-info-dark" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Inactives</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Inactives</p>
                   <p className="text-2xl text-display text-display font-bold">{parts.filter((p: any) => !p.isActive).length}</p>
                 </div>
               </div>
@@ -703,7 +703,7 @@ function CompatibilityDialog({
             Compatibilités existantes ({compatList.length})
           </h3>
           {compatList.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
+            <p className="text-xs md:text-sm text-muted-foreground py-4 text-center">
               Aucune compatibilité définie. Ajoutez-en ci-dessous.
             </p>
           ) : (

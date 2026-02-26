@@ -131,9 +131,9 @@ export default function AdminOrders() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold">Gestion des commandes</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">Gestion des commandes</h1>
             <p className="text-muted-foreground mt-1">
               Suivez et gérez toutes les commandes partenaires
             </p>
@@ -143,7 +143,7 @@ export default function AdminOrders() {
               <RefreshCw className="w-4 h-4" />
               Actualiser
             </Button>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 w-full sm:w-auto">
               <Download className="w-4 h-4" />
               Exporter
             </Button>
@@ -324,7 +324,7 @@ export default function AdminOrders() {
               {/* Status */}
               <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                 <div>
-                  <p className="text-sm text-muted-foreground">Statut actuel</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Statut actuel</p>
                   <Badge className={`mt-1 ${getStatusConfig(selectedOrder.status).color}`}>
                     {getStatusConfig(selectedOrder.status).label}
                   </Badge>
@@ -345,19 +345,19 @@ export default function AdminOrders() {
                 </h4>
                 <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
                   <div>
-                    <p className="text-sm text-muted-foreground">Entreprise</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Entreprise</p>
                     <p className="font-medium">{selectedOrder.partner?.companyName || "N/A"}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Contact</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Contact</p>
                     <p className="font-medium">{selectedOrder.partner?.primaryContactName || "N/A"}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Email</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Email</p>
                     <p className="font-medium">{selectedOrder.partner?.primaryContactEmail || "N/A"}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Téléphone</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Téléphone</p>
                     <p className="font-medium">{selectedOrder.partner?.primaryContactPhone || "N/A"}</p>
                   </div>
                 </div>
@@ -401,13 +401,13 @@ export default function AdminOrders() {
                         <div>
                           <p className="font-medium">{item.product?.name || "Produit"}</p>
                           {item.variant && (
-                            <p className="text-sm text-muted-foreground">{item.variant.name}</p>
+                            <p className="text-xs md:text-sm text-muted-foreground">{item.variant.name}</p>
                           )}
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="font-medium">{formatPrice(item.totalHT)}</p>
-                        <p className="text-sm text-muted-foreground">Qté: {item.quantity}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">Qté: {item.quantity}</p>
                       </div>
                     </div>
                   ))}

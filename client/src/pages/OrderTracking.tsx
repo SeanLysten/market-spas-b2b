@@ -146,7 +146,7 @@ export default function OrderTracking() {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-4">
               <Link href="/orders">
                 <Button variant="ghost" size="icon">
@@ -160,13 +160,13 @@ export default function OrderTracking() {
                     {STATUS_STEPS.find(s => s.status === order.status)?.label || order.status}
                   </Badge>
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Passée le {formatDate(order.createdAt)}
                 </p>
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2 w-full sm:w-auto">
                 <FileText className="w-4 h-4" />
                 Télécharger le devis
               </Button>
@@ -176,7 +176,7 @@ export default function OrderTracking() {
       </header>
 
       <div className="container py-8">
-        <div className="grid lg:grid-cols-3 gap-4 md:gap-8">
+        <div className="grid lg:grid-cols-3 gap-4 md:gap-4 md:p-8">
           {/* Left Column - Tracking */}
           <div className="lg:col-span-2 space-y-6">
             {/* Status Timeline */}
@@ -192,7 +192,7 @@ export default function OrderTracking() {
               </CardHeader>
               <CardContent>
                 {isCancelled ? (
-                  <div className="flex items-center gap-4 p-6 bg-destructive/10 dark:bg-destructive/20 border border-destructive/20 dark:border-destructive/30 rounded-lg">
+                  <div className="flex items-center gap-4 p-4 md:p-6 bg-destructive/10 dark:bg-destructive/20 border border-destructive/20 dark:border-destructive/30 rounded-lg">
                     <XCircle className="w-12 h-12 text-red-500" />
                     <div>
                       <h3 className="text-lg font-semibold text-destructive dark:text-destructive">Commande annulée</h3>
@@ -240,7 +240,7 @@ export default function OrderTracking() {
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-sm text-muted-foreground mt-1">
+                            <p className="text-xs md:text-sm text-muted-foreground mt-1">
                               {step.description}
                             </p>
                           </div>
@@ -278,15 +278,15 @@ export default function OrderTracking() {
                       <div className="flex-1">
                         <h4 className="font-semibold">{item.product?.name || "Produit"}</h4>
                         {item.variant && (
-                          <p className="text-sm text-muted-foreground">{item.variant.name}</p>
+                          <p className="text-xs md:text-sm text-muted-foreground">{item.variant.name}</p>
                         )}
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                           SKU: {item.product?.sku || "N/A"}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold">{formatPrice(item.totalHT)}</p>
-                        <p className="text-sm text-muted-foreground">Qté: {item.quantity}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">Qté: {item.quantity}</p>
                       </div>
                     </div>
                   ))}
@@ -347,15 +347,15 @@ export default function OrderTracking() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <p className="font-medium">{(order as any).shippingContactName || "N/A"}</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {(order as any).shippingStreet || "Adresse non renseignée"}
                   {(order as any).shippingStreet2 && <br />}
                   {(order as any).shippingStreet2}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {(order as any).shippingPostalCode} {(order as any).shippingCity}
                 </p>
-                <p className="text-sm text-muted-foreground">{(order as any).shippingCountry || "Belgique"}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">{(order as any).shippingCountry || "Belgique"}</p>
                 
                 {(order as any).shippingContactPhone && (
                   <div className="flex items-center gap-2 pt-2 text-sm">
@@ -372,7 +372,7 @@ export default function OrderTracking() {
                 <CardTitle>Besoin d'aide ?</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Notre équipe est disponible pour répondre à vos questions.
                 </p>
                 <div className="space-y-2">

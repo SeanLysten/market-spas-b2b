@@ -102,11 +102,11 @@ export default function NotificationPreferences() {
         </div>
         <div className="flex-1 space-y-1">
           <h3 className="font-medium">{title}</h3>
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className="text-xs md:text-sm text-muted-foreground">{description}</p>
         </div>
       </div>
       <div className="ml-9 space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Bell className="h-4 w-4 text-muted-foreground" />
             <Label htmlFor={toastKey} className="text-sm cursor-pointer">
@@ -119,7 +119,7 @@ export default function NotificationPreferences() {
             onCheckedChange={(checked) => handleToggle(toastKey, checked)}
           />
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-muted-foreground" />
             <Label htmlFor={emailKey} className="text-sm cursor-pointer">

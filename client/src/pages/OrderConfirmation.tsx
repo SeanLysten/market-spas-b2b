@@ -110,7 +110,7 @@ export default function OrderConfirmation() {
 
       <main className="container mx-auto px-4 py-8">
         {/* Success Banner */}
-        <div className="bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30 rounded-xl p-6 mb-8 flex items-center gap-4">
+        <div className="bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30 rounded-xl p-4 md:p-6 mb-8 flex items-center gap-4">
           <div className="w-16 h-16 bg-emerald-500/15 dark:bg-emerald-500/25 rounded-full flex items-center justify-center flex-shrink-0">
             <CheckCircle className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
           </div>
@@ -125,13 +125,13 @@ export default function OrderConfirmation() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-4 md:p-8">
           {/* Order Details */}
           <div className="lg:col-span-2 space-y-6">
             {/* Order Summary Card */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
                     <CardTitle className="text-xl text-display text-display">Commande {order.orderNumber}</CardTitle>
                     <CardDescription>
@@ -163,7 +163,7 @@ export default function OrderConfirmation() {
                         <TableCell>
                           <div>
                             <p className="font-medium">{item.name}</p>
-                            <p className="text-sm text-muted-foreground dark:text-muted-foreground">SKU: {item.sku}</p>
+                            <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">SKU: {item.sku}</p>
                           </div>
                         </TableCell>
                         <TableCell className="text-center">{item.quantity}</TableCell>
@@ -237,7 +237,7 @@ export default function OrderConfirmation() {
                   )}
                   {order.deliveryInstructions && (
                     <div className="mt-3 pt-3 border-t border-border dark:border-border">
-                      <p className="text-sm text-muted-foreground dark:text-muted-foreground">Instructions de livraison:</p>
+                      <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">Instructions de livraison:</p>
                       <p className="text-foreground dark:text-foreground">{order.deliveryInstructions}</p>
                     </div>
                   )}
@@ -257,7 +257,7 @@ export default function OrderConfirmation() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">Mode de paiement</p>
+                  <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">Mode de paiement</p>
                   <p className="font-medium">
                     {paymentMethodLabels[order.paymentMethod || ""] || order.paymentMethod || "Non spécifié"}
                   </p>
@@ -266,14 +266,14 @@ export default function OrderConfirmation() {
                 <Separator />
 
                 <div>
-                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">Acompte à verser (30%)</p>
+                  <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">Acompte à verser (30%)</p>
                   <p className="text-2xl text-display text-display font-bold text-info dark:text-info-dark">
                     {parseFloat(order.depositAmount || "0").toFixed(2)} €
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">Solde restant</p>
+                  <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">Solde restant</p>
                   <p className="text-lg font-medium">
                     {parseFloat(order.balanceAmount || "0").toFixed(2)} €
                   </p>
@@ -301,7 +301,7 @@ export default function OrderConfirmation() {
 
                 {order.paymentMethod === "payment_on_delivery" && (
                   <div className="bg-white rounded-lg p-4 border border-info/20 dark:border-info/30">
-                    <p className="text-sm text-muted-foreground dark:text-muted-foreground">
+                    <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">
                       Le paiement sera effectué à la livraison. Veuillez prévoir le montant exact.
                     </p>
                   </div>

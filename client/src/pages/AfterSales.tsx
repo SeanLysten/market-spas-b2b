@@ -628,9 +628,9 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
               Photos et preuves
             </h3>
 
-            <div className="border-2 border-dashed rounded-lg p-6 text-center bg-muted/30">
+            <div className="border-2 border-dashed rounded-lg p-4 md:p-6 text-center bg-muted/30">
               <Upload className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground mb-2">
+              <p className="text-xs md:text-sm text-muted-foreground mb-2">
                 Ajoutez au minimum <strong>2 photos</strong> du problème
               </p>
               <p className="text-xs text-muted-foreground mb-4">
@@ -652,7 +652,7 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
                       type="button"
                       variant="destructive"
                       size="sm"
-                      className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity w-full sm:w-auto"
                       onClick={() => setMediaFiles(mediaFiles.filter((_, i) => i !== index))}
                     >
                       ×
@@ -875,7 +875,7 @@ export default function AfterSales() {
             <Button variant="outline" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold">Service Après-Vente</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">Service Après-Vente</h1>
             <p className="text-muted-foreground">Gérez vos demandes de SAV avec analyse de garantie automatique</p>
           </div>
         </div>
@@ -969,7 +969,7 @@ export default function AfterSales() {
               <div className="w-48">
                 <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
               </div>
-              <Button variant="outline" onClick={handleResetFilters} className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleResetFilters} className="flex items-center gap-2 w-full sm:w-auto">
                 <RotateCcw className="h-4 w-4" /> Réinitialiser
               </Button>
             </div>
@@ -981,7 +981,7 @@ export default function AfterSales() {
       {!isLoading && filteredServices.length > 0 && (
         <Card className="mb-4">
           <CardContent className="pt-4 pb-4">
-            <div className="flex gap-6 items-center text-sm font-medium">
+            <div className="flex gap-4 md:p-6 items-center text-sm font-medium">
               {[
                 { key: "createdAt", label: "Date" },
                 { key: "status", label: "Statut" },
@@ -1047,7 +1047,7 @@ export default function AfterSales() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{service.description}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">{service.description}</p>
                   <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                     {service.customerName && <span>Client: {service.customerName}</span>}
                     {service.defectType && <span>Défaut: {service.defectType}</span>}

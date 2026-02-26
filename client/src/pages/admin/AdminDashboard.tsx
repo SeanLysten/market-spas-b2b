@@ -114,22 +114,23 @@ export default function AdminDashboard() {
     <AdminLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="space-y-4">
           <div>
-            <h1 className="text-3xl font-bold">Dashboard Administration</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="text-2xl md:text-3xl font-bold">Dashboard Administration</h1>
+            <p className="text-muted-foreground mt-2 text-sm md:text-base">
               Vue d'ensemble de la plateforme Market Spas
             </p>
           </div>
-          <div className="flex gap-2">
-            <Link href="/dashboard">
-              <Button variant="outline" className="gap-2">
+          {/* Boutons empilés sur mobile, côte à côte sur desktop */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Link href="/dashboard" className="flex-1 sm:flex-none">
+              <Button variant="outline" className="gap-2 w-full sm:w-auto">
                 <Activity className="w-4 h-4" />
                 Dashboard Utilisateur
               </Button>
             </Link>
-            <Link href="/admin/reports">
-              <Button variant="outline" className="gap-2">
+            <Link href="/admin/reports" className="flex-1 sm:flex-none">
+              <Button variant="outline" className="gap-2 w-full sm:w-auto">
                 <BarChart3 className="w-4 h-4" />
                 Rapports
               </Button>
@@ -139,7 +140,7 @@ export default function AdminDashboard() {
 
         {/* Stats Grid */}
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:p-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
               <Card key={i}>
                 <CardHeader className="pb-3">
@@ -150,7 +151,7 @@ export default function AdminDashboard() {
             ))}
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:p-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
             {statsCards.map((stat) => {
               const Icon = stat.icon;
               return (
@@ -186,7 +187,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Main Content Grid */}
-        <div className="grid gap-6 lg:grid-cols-1 md:grid-cols-2">
+        <div className="grid gap-4 md:p-6 lg:grid-cols-1 md:grid-cols-2">
           {/* Recent Orders */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -198,7 +199,7 @@ export default function AdminDashboard() {
                 <CardDescription>Les 5 dernières commandes</CardDescription>
               </div>
               <Link href="/admin/orders">
-                <Button variant="ghost" size="sm" className="gap-1">
+                <Button variant="ghost" size="sm" className="gap-1 w-full sm:w-auto">
                   Voir tout <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
@@ -244,7 +245,7 @@ export default function AdminDashboard() {
                 <CardDescription>Produits avec stock bas (&le; 5 unités)</CardDescription>
               </div>
               <Link href="/admin/products">
-                <Button variant="ghost" size="sm" className="gap-1">
+                <Button variant="ghost" size="sm" className="gap-1 w-full sm:w-auto">
                   Gérer <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
@@ -285,7 +286,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Analytics Charts */}
-        <div className="grid gap-6 lg:grid-cols-1 md:grid-cols-2">
+        <div className="grid gap-4 md:p-6 lg:grid-cols-1 md:grid-cols-2">
           {/* Sales Chart */}
           <Card>
             <CardHeader>
@@ -326,7 +327,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:p-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
           <Card className="card-hover cursor-pointer group" onClick={() => window.location.href = "/admin/products"}>
             <CardHeader>
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">

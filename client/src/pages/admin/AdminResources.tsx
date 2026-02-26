@@ -143,9 +143,9 @@ export default function AdminResources() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold">Gestion des ressources média</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">Gestion des ressources média</h1>
             <p className="text-muted-foreground mt-2">
               Gérez les catalogues, vidéos, images marketing et supports PLV
             </p>
@@ -170,7 +170,7 @@ export default function AdminResources() {
                   <div className="space-y-2">
                     <Label htmlFor="file">Fichier *</Label>
                     <div 
-                      className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer"
+                      className="border-2 border-dashed rounded-lg p-4 md:p-6 text-center hover:border-primary transition-colors cursor-pointer"
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={(e) => {
                         e.preventDefault();
@@ -197,7 +197,7 @@ export default function AdminResources() {
                         <div className="space-y-2">
                           <Upload className="w-8 h-8 mx-auto text-green-500" />
                           <p className="font-medium">{selectedFile.name}</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs md:text-sm text-muted-foreground">
                             {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                           </p>
                           {selectedFile.type.includes('image') && (
@@ -211,7 +211,7 @@ export default function AdminResources() {
                       ) : (
                         <div className="space-y-2">
                           <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs md:text-sm text-muted-foreground">
                             Glissez-déposez un fichier ou cliquez pour sélectionner
                           </p>
                           <p className="text-xs text-muted-foreground">
@@ -329,7 +329,7 @@ export default function AdminResources() {
 
         {/* Resources Grid */}
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:p-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <Card key={i}>
                 <CardHeader>
@@ -340,7 +340,7 @@ export default function AdminResources() {
             ))}
           </div>
         ) : resources && resources.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:p-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {resources.map((resource) => {
               const Icon = getCategoryIcon(resource.category);
               return (

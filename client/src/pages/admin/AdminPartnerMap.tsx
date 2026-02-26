@@ -319,7 +319,7 @@ function CSVImport({ onSuccess }: { onSuccess: () => void }) {
           <DialogTitle>Importer des candidats (CSV)</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs md:text-sm text-muted-foreground">
             Le fichier CSV doit contenir les colonnes : <strong>companyName, fullName, city, phoneNumber, email</strong>.
             Colonnes optionnelles : showroom, vendSpa, autreMarque, domaineSimilaire, notes.
           </p>
@@ -488,7 +488,7 @@ function CandidatesTable({ candidates, onRefresh }: { candidates: any[]; onRefre
         </Select>
       </div>
 
-      <p className="text-sm text-muted-foreground">{filtered.length} candidat{filtered.length !== 1 ? 's' : ''} trouvé{filtered.length !== 1 ? 's' : ''}</p>
+      <p className="text-xs md:text-sm text-muted-foreground">{filtered.length} candidat{filtered.length !== 1 ? 's' : ''} trouvé{filtered.length !== 1 ? 's' : ''}</p>
 
       {/* Table */}
       <div className="border rounded-lg overflow-x-auto">
@@ -611,7 +611,7 @@ function CandidatesTable({ candidates, onRefresh }: { candidates: any[]; onRefre
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 px-2 text-xs"
+                        className="h-7 px-2 text-xs w-full sm:w-auto"
                         onClick={() => incrementPhoneMutation.mutate({ candidateId: candidate.id })}
                         title="Incrémenter appels"
                       >
@@ -621,7 +621,7 @@ function CandidatesTable({ candidates, onRefresh }: { candidates: any[]; onRefre
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 px-2 text-xs"
+                        className="h-7 px-2 text-xs w-full sm:w-auto"
                         onClick={() => incrementEmailMutation.mutate({ candidateId: candidate.id })}
                         title="Incrémenter emails"
                       >
@@ -652,29 +652,29 @@ function CandidatesTable({ candidates, onRefresh }: { candidates: any[]; onRefre
                           <Button size="sm" className="h-7 text-xs" onClick={saveEdit} disabled={updateMutation.isPending}>
                             {updateMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Sauver'}
                           </Button>
-                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setEditingId(null); setEditForm(null); }}>
+                          <Button size="sm" variant="outline" className="h-7 text-xs w-full sm:w-auto" onClick={() => { setEditingId(null); setEditForm(null); }}>
                             Annuler
                           </Button>
                         </>
                       ) : (
                         <>
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => startEdit(candidate)} title="Modifier">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 w-full sm:w-auto" onClick={() => startEdit(candidate)} title="Modifier">
                             <Edit className="w-3.5 h-3.5" />
                           </Button>
                           <a href={`tel:${candidate.phoneNumber}`} title="Appeler">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-info dark:text-info-dark">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-info dark:text-info-dark w-full sm:w-auto">
                               <Phone className="w-3.5 h-3.5" />
                             </Button>
                           </a>
                           <a href={`mailto:${candidate.email}`} title="Email">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-info dark:text-info-dark">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-info dark:text-info-dark w-full sm:w-auto">
                               <Mail className="w-3.5 h-3.5" />
                             </Button>
                           </a>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 w-7 p-0 text-destructive dark:text-destructive hover:text-destructive dark:text-destructive"
+                            className="h-7 w-7 p-0 text-destructive dark:text-destructive hover:text-destructive dark:text-destructive w-full sm:w-auto"
                             onClick={() => {
                               if (confirm('Supprimer ce candidat ?')) {
                                 deleteMutation.mutate({ id: candidate.id });
@@ -738,25 +738,25 @@ function StatsTab({ candidates }: { candidates: any[] }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Total candidats</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Total candidats</p>
             <p className="text-3xl font-bold">{total}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Taux de conversion</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Taux de conversion</p>
             <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{conversionRate}%</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Score moyen</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Score moyen</p>
             <p className="text-3xl font-bold text-amber-600">{avgScore}/8</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Haute priorité (6+)</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Haute priorité (6+)</p>
             <p className="text-3xl font-bold text-destructive dark:text-destructive">{highPriority}</p>
           </CardContent>
         </Card>
@@ -776,7 +776,7 @@ function StatsTab({ candidates }: { candidates: any[] }) {
                 <div key={status} className="text-center p-4 rounded-lg border">
                   <Icon className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
                   <p className="text-2xl text-display text-display font-bold">{count}</p>
-                  <p className="text-sm text-muted-foreground">{STATUS_LABELS[status]}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">{STATUS_LABELS[status]}</p>
                   <p className="text-xs text-muted-foreground mt-1">{pct}%</p>
                 </div>
               );
@@ -786,7 +786,7 @@ function StatsTab({ candidates }: { candidates: any[] }) {
       </Card>
 
       {/* Activity & Priority */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-4 md:p-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Activité commerciale</CardTitle>
@@ -878,7 +878,7 @@ export default function AdminPartnerMap() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl text-display text-display font-bold">Carte du Réseau</h1>
+            <h1 className="text-xl md:text-2xl text-display font-bold">Carte du Réseau</h1>
             <p className="text-muted-foreground mt-1">
               Gérez vos candidats partenaires et développez votre réseau de magasins
             </p>
@@ -898,7 +898,7 @@ export default function AdminPartnerMap() {
                   <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total candidats</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Total candidats</p>
                   <p className="text-2xl text-display text-display font-bold">{totalCandidates}</p>
                 </div>
               </div>
@@ -911,7 +911,7 @@ export default function AdminPartnerMap() {
                   <AlertCircle className="w-5 h-5 text-muted-foreground dark:text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Non contactés</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Non contactés</p>
                   <p className="text-2xl text-display text-display font-bold">{nonContactes}</p>
                 </div>
               </div>
@@ -924,7 +924,7 @@ export default function AdminPartnerMap() {
                   <Clock className="w-5 h-5 text-info dark:text-info-dark" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">En cours</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">En cours</p>
                   <p className="text-2xl text-display text-display font-bold">{enCours}</p>
                 </div>
               </div>
@@ -937,7 +937,7 @@ export default function AdminPartnerMap() {
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Validés</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Validés</p>
                   <p className="text-2xl text-display text-display font-bold">{valides}</p>
                 </div>
               </div>
@@ -950,7 +950,7 @@ export default function AdminPartnerMap() {
                   <Star className="w-5 h-5 text-destructive dark:text-destructive" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Haute priorité (6+)</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Haute priorité (6+)</p>
                   <p className="text-2xl text-display text-display font-bold">{highPriorityCandidates}</p>
                 </div>
               </div>
@@ -1027,7 +1027,7 @@ export default function AdminPartnerMap() {
                 <CardTitle className="text-base">Légende</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-4 md:p-6">
                   {/* Priority scores */}
                   <div>
                     <h4 className="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Score de priorité</h4>

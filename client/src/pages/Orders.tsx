@@ -105,7 +105,7 @@ export default function Orders() {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-4">
               <Link href="/dashboard">
                 <Button variant="ghost" size="sm">
@@ -114,8 +114,8 @@ export default function Orders() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl text-display text-display font-bold">Mes commandes</h1>
-                <p className="text-sm text-muted-foreground">
+                <h1 className="text-xl md:text-2xl text-display font-bold">Mes commandes</h1>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {orders?.length || 0} commandes
                 </p>
               </div>
@@ -167,7 +167,7 @@ export default function Orders() {
         {/* Orders List */}
         {isLoading ? (
           <Card>
-            <CardContent className="p-4 md:p-6">
+            <CardContent className="p-4 md:p-4 md:p-6">
               <div className="space-y-4">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div key={i} className="skeleton h-20 w-full" />

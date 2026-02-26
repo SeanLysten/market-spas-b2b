@@ -74,7 +74,7 @@ export default function TechnicalResources() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       <div className="container mx-auto py-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-4">
             <Link href="/dashboard">
               <Button variant="ghost" size="sm">
@@ -184,7 +184,7 @@ export default function TechnicalResources() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {resource.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
+                        <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
                           {resource.description}
                         </p>
                       )}
@@ -231,7 +231,7 @@ export default function TechnicalResources() {
 
           {/* Onglet Forum */}
           <TabsContent value="forum" className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <p className="text-muted-foreground">
                 Posez vos questions et partagez vos solutions avec la communauté
               </p>
@@ -266,7 +266,7 @@ export default function TechnicalResources() {
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <h3 className="font-semibold text-lg mb-1">{topic.title}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                            <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 mb-2">
                               {topic.description}
                             </p>
                             <div className="flex items-center gap-3 text-xs text-muted-foreground">

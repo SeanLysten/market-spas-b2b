@@ -143,7 +143,7 @@ export default function ProductDetail() {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-4">
               <Link href="/catalog">
                 <Button variant="ghost" size="sm">
@@ -163,7 +163,7 @@ export default function ProductDetail() {
       </header>
 
       <main className="container py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-4 md:p-8">
           {/* Product Image */}
           <div className="space-y-4">
             <div className="aspect-square bg-white rounded-xl border overflow-hidden">
@@ -239,7 +239,7 @@ export default function ProductDetail() {
                   <Badge variant="secondary">Rupture de stock</Badge>
                 )}
               </div>
-              <h1 className="text-3xl font-bold">{product.name}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
               {selectedVariant && (
                 <p className="text-lg text-muted-foreground mt-1">
                   Variante: {selectedVariant.name}
@@ -248,14 +248,14 @@ export default function ProductDetail() {
             </div>
 
             {/* Price */}
-            <div className="bg-info/10 dark:bg-info-light rounded-xl p-4 md:p-6">
+            <div className="bg-info/10 dark:bg-info-light rounded-xl p-4 md:p-4 md:p-6">
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-info dark:text-info-dark">
                   {formatPrice(price)} €
                 </span>
                 <span className="text-lg text-muted-foreground dark:text-muted-foreground">HT</span>
               </div>
-              <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
+              <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground mt-1">
                 Prix TTC: {formatPrice(price * 1.21)} € (TVA 21%)
               </p>
             </div>

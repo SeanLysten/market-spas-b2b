@@ -71,10 +71,10 @@ export default function Cart() {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
-              <h1 className="text-2xl text-display text-display font-bold">Mon panier</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="text-xl md:text-2xl text-display font-bold">Mon panier</h1>
+              <p className="text-xs md:text-sm text-muted-foreground">
                 {isEmpty ? "Votre panier est vide" : `${cart.items.length} article(s)`}
               </p>
             </div>
@@ -108,7 +108,7 @@ export default function Cart() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-4 md:gap-8">
+          <div className="grid lg:grid-cols-3 gap-4 md:gap-4 md:p-8">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-6">
               {/* In Stock Items */}
@@ -145,7 +145,7 @@ export default function Cart() {
                         {/* Product Info */}
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold line-clamp-1">{item.product?.name}</h3>
-                          <p className="text-sm text-muted-foreground">SKU: {item.product?.sku}</p>
+                          <p className="text-xs md:text-sm text-muted-foreground">SKU: {item.product?.sku}</p>
                           <div className="mt-2 flex items-center gap-2">
                             <span className="text-base font-semibold text-display text-primary">
                               {formatPrice(item.unitPriceHT)} €
@@ -235,7 +235,7 @@ export default function Cart() {
                               Arrivage prévu
                             </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground">SKU: {item.product?.sku}</p>
+                          <p className="text-xs md:text-sm text-muted-foreground">SKU: {item.product?.sku}</p>
                           <div className="mt-2 flex items-center gap-2">
                             <span className="text-base font-semibold text-display text-primary">
                               {formatPrice(item.unitPriceHT)} €

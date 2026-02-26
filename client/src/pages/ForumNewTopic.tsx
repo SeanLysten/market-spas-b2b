@@ -115,7 +115,7 @@ export default function ForumNewTopic() {
                 </p>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-1 md:grid-cols-2">
+              <div className="grid gap-4 md:p-6 md:grid-cols-1 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="category">Catégorie *</Label>
                   <Select value={category} onValueChange={setCategory}>

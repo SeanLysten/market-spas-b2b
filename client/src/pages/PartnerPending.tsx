@@ -22,7 +22,7 @@ export default function PartnerPending() {
               <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5" />
               <div>
                 <p className="font-medium">Demande reçue</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Nous avons bien reçu votre demande de partenariat.
                 </p>
               </div>
@@ -31,7 +31,7 @@ export default function PartnerPending() {
               <Clock className="w-5 h-5 text-amber-600 mt-0.5" />
               <div>
                 <p className="font-medium">En cours de vérification</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Notre équipe examine actuellement votre dossier. Ce processus prend généralement 24 à 48 heures ouvrées.
                 </p>
               </div>
@@ -40,7 +40,7 @@ export default function PartnerPending() {
               <Mail className="w-5 h-5 text-info dark:text-info-dark mt-0.5" />
               <div>
                 <p className="font-medium">Notification par email</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Vous recevrez un email dès que votre compte sera activé.
                 </p>
               </div>

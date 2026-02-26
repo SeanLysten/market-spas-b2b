@@ -38,7 +38,7 @@ export default function Home() {
         {/* Header */}
         <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
           <div className="container py-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
                   <Package className="w-6 h-6 text-primary-foreground" />
@@ -57,7 +57,7 @@ export default function Home() {
                 <LanguageSwitcher />
                 {user.role === 'SUPER_ADMIN' && (
                   <Link href="/admin">
-                    <Button variant="outline" className="gap-2">
+                    <Button variant="outline" className="gap-2 w-full sm:w-auto">
                       <Users className="w-4 h-4" />
                       {t('nav.admin')}
                     </Button>
@@ -96,7 +96,7 @@ export default function Home() {
                   </Button>
                 </Link>
                 <Link href="/catalog">
-                  <Button size="lg" variant="outline" className="gap-2">
+                  <Button size="lg" variant="outline" className="gap-2 w-full sm:w-auto">
                     <Package className="w-5 h-5" />
                     Catalogue produits
                   </Button>
@@ -109,7 +109,7 @@ export default function Home() {
         {/* Features Grid */}
         <section className="py-16 bg-card/30">
           <div className="container">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-4 md:p-6">
               <Card className="card-hover border-2">
                 <CardHeader>
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
@@ -197,10 +197,10 @@ export default function Home() {
         <footer className="border-t bg-card/50 py-8">
           <div className="container">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs md:text-sm text-muted-foreground">
                 © 2026 Market Spas. Tous droits réservés.
               </p>
-              <div className="flex items-center gap-4 md:gap-6">
+              <div className="flex items-center gap-4 md:gap-4 md:p-6">
                 <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Politique de confidentialité
                 </Link>
@@ -221,7 +221,7 @@ export default function Home() {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
                 <Package className="w-6 h-6 text-primary-foreground" />
@@ -280,7 +280,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-4 md:p-8">
             {[
               {
                 icon: ShoppingCart,
@@ -359,7 +359,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t bg-card/50 py-12">
         <div className="container">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-4 md:p-6">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <Package className="w-5 h-5 text-primary-foreground" />
@@ -369,7 +369,7 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground">Portail B2B</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 md:gap-6">
+            <div className="flex items-center gap-4 md:gap-4 md:p-6">
               <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Politique de confidentialité
               </Link>
@@ -377,7 +377,7 @@ export default function Home() {
                 Conditions d'utilisation
               </Link>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground">
               © 2026 Market Spas. Tous droits réservés.
             </p>
           </div>

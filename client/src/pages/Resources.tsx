@@ -121,7 +121,7 @@ export default function Resources() {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-4">
               <Link href="/dashboard">
                 <Button variant="ghost" size="sm">
@@ -130,8 +130,8 @@ export default function Resources() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl text-display text-display font-bold">Bibliothèque de ressources</h1>
-                <p className="text-sm text-muted-foreground">
+                <h1 className="text-xl md:text-2xl text-display font-bold">Bibliothèque de ressources</h1>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {filteredResources?.length || 0} ressources disponibles
                 </p>
               </div>
@@ -186,7 +186,7 @@ export default function Resources() {
 
         {/* Resources Grid */}
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:p-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <Card key={i}>
                 <CardHeader>
@@ -200,7 +200,7 @@ export default function Resources() {
             ))}
           </div>
         ) : filteredResources && filteredResources.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:p-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {filteredResources.map((resource) => {
               const Icon = getCategoryIcon(resource.category);
               return (
@@ -237,7 +237,7 @@ export default function Resources() {
                     <div className="flex gap-2 pt-2">
                       <Button 
                         variant="outline" 
-                        className="flex-1" 
+                        className="flex-1 w-full sm:w-auto" 
                         size="sm"
                         onClick={() => handleView(resource)}
                       >

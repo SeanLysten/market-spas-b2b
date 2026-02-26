@@ -622,7 +622,7 @@ export default function AdminAfterSales() {
     <AdminLayout>
       <div className="container mx-auto py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Gestion SAV</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Gestion SAV</h1>
           <p className="text-muted-foreground">Gérez toutes les demandes avec analyse de garantie, pièces et expédition</p>
         </div>
 
@@ -691,7 +691,7 @@ export default function AdminAfterSales() {
             {!isLoading && filteredServices.length > 0 && (
               <Card className="mb-4">
                 <CardContent className="pt-4 pb-4">
-                  <div className="flex gap-6 items-center text-sm font-medium">
+                  <div className="flex gap-4 md:p-6 items-center text-sm font-medium">
                     {[{ key: "createdAt", label: "Date" }, { key: "status", label: "Statut" }, { key: "urgency", label: "Urgence" }, { key: "brand", label: "Marque" }, { key: "warrantyStatus", label: "Garantie" }].map(({ key, label }) => (
                       <button key={key} onClick={() => handleSort(key)} className="flex items-center gap-1 hover:text-primary transition-colors">
                         {label}
@@ -736,7 +736,7 @@ export default function AdminAfterSales() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{svc.description}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 mb-3">{svc.description}</p>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
                           {svc.customerName && <span>Client: {svc.customerName}</span>}
                           {svc.defectType && <span>Défaut: {svc.defectType}</span>}
@@ -780,7 +780,7 @@ export default function AdminAfterSales() {
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Taux Résolution</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{resolutionRate}%</div></CardContent></Card>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-2 gap-4 md:p-6 mb-8">
               <Card><CardHeader><CardTitle>Par Partenaire</CardTitle></CardHeader><CardContent>{partnerStatsData ? <Bar data={partnerStatsData} options={{ responsive: true, plugins: { legend: { position: "top" as const } }, scales: { y: { beginAtZero: true } } }} /> : <div className="text-center py-8 text-muted-foreground">Chargement...</div>}</CardContent></Card>
               <Card><CardHeader><CardTitle>Par Statut</CardTitle></CardHeader><CardContent>{statusData ? <Pie data={statusData} options={{ responsive: true, plugins: { legend: { position: "top" as const } } }} /> : <div className="text-center py-8 text-muted-foreground">Chargement...</div>}</CardContent></Card>
               <Card className="col-span-2"><CardHeader><CardTitle>Évolution Hebdomadaire</CardTitle></CardHeader><CardContent>{weeklyChartData ? <Line data={weeklyChartData} options={{ responsive: true, plugins: { legend: { position: "top" as const } }, scales: { y: { beginAtZero: true } } }} /> : <div className="text-center py-8 text-muted-foreground">Chargement...</div>}</CardContent></Card>

@@ -187,7 +187,7 @@ export default function AdminUsers() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-3xl font-bold text-display">Gestion des utilisateurs</h1>
             <p className="text-muted-foreground mt-2">
@@ -486,7 +486,7 @@ export default function AdminUsers() {
                   <div className="text-center py-12">
                     <Mail className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
                     <p className="text-muted-foreground">Aucune invitation envoyée</p>
-                    <p className="text-sm text-muted-foreground mt-2">
+                    <p className="text-xs md:text-sm text-muted-foreground mt-2">
                       Cliquez sur "Inviter un utilisateur" pour commencer
                     </p>
                   </div>

@@ -163,7 +163,7 @@ export default function Calendar() {
       {/* Header */}
       <header className="bg-card dark:bg-card border-b sticky top-0 z-10">
         <div className="container py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-4">
               <Link href="/dashboard">
                 <Button variant="ghost" size="sm">
@@ -173,7 +173,7 @@ export default function Calendar() {
               </Link>
               <div>
                 <h1 className="text-2xl text-display text-display font-bold text-foreground dark:text-foreground">Calendrier</h1>
-                <p className="text-sm text-muted-foreground dark:text-muted-foreground">Événements, promotions et formations</p>
+                <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">Événements, promotions et formations</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -198,12 +198,12 @@ export default function Calendar() {
       </header>
 
       <main className="container py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-4 md:p-6">
           {/* Calendrier principal */}
           <div className="lg:col-span-3">
             <Card>
               <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-4">
                     <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
                       <ChevronLeft className="w-4 h-4" />
@@ -311,12 +311,12 @@ export default function Calendar() {
                                         {typeConfig.label}
                                       </Badge>
                                     </div>
-                                    <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-2">
+                                    <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground mb-2">
                                       {formatDate(event.startDate)}
                                       {event.endDate && ` - ${formatDate(event.endDate)}`}
                                     </p>
                                     {event.description && (
-                                      <p className="text-sm text-muted-foreground dark:text-muted-foreground line-clamp-2">
+                                      <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground line-clamp-2">
                                         {event.description}
                                       </p>
                                     )}
@@ -370,7 +370,7 @@ export default function Calendar() {
               </CardHeader>
               <CardContent>
                 {upcomingEvents.length === 0 ? (
-                  <p className="text-sm text-muted-foreground dark:text-muted-foreground text-center py-4">
+                  <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground text-center py-4">
                     Aucun événement à venir
                   </p>
                 ) : (

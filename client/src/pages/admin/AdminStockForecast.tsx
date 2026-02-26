@@ -92,7 +92,7 @@ export default function AdminStockForecast() {
 
   if (summaryLoading || forecastsLoading) {
     return (
-      <div className="p-4 md:p-8">
+      <div className="p-4 md:p-4 md:p-8">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-muted rounded w-1/3"></div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -107,29 +107,32 @@ export default function AdminStockForecast() {
 
   return (
     <AdminLayout>
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="space-y-4">
         <div>
-          <h1 className="text-3xl font-bold">Prévisions de stock</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold">Prévisions de stock</h1>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">
             Visualisez l'évolution des stocks sur les {weeks} prochaines semaines
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Label htmlFor="weeks" className="text-sm">Horizon :</Label>
-          <Select value={weeks.toString()} onValueChange={(v) => setWeeks(parseInt(v))}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="4">4 semaines</SelectItem>
-              <SelectItem value="8">8 semaines</SelectItem>
-              <SelectItem value="12">12 semaines</SelectItem>
-              <SelectItem value="16">16 semaines</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={handleExport}>
+        {/* Contrôles empilés sur mobile */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex items-center gap-2 flex-1">
+            <Label htmlFor="weeks" className="text-sm whitespace-nowrap">Horizon :</Label>
+            <Select value={weeks.toString()} onValueChange={(v) => setWeeks(parseInt(v))}>
+              <SelectTrigger className="w-full sm:w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="4">4 semaines</SelectItem>
+                <SelectItem value="8">8 semaines</SelectItem>
+                <SelectItem value="12">12 semaines</SelectItem>
+                <SelectItem value="16">16 semaines</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button variant="outline" onClick={handleExport} className="w-full sm:w-auto">
             <Download className="mr-2 h-4 w-4" />
             Exporter CSV
           </Button>
@@ -212,7 +215,7 @@ export default function AdminStockForecast() {
       {/* Product Forecast Table */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <CardTitle>Prévisions par produit</CardTitle>
               <CardDescription>
@@ -303,7 +306,7 @@ export default function AdminStockForecast() {
       {selectedProductId && productForecast && (
         <Card className="border-2 border-primary">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
                 <CardTitle>{productForecast.product.name}</CardTitle>
                 <CardDescription>SKU: {productForecast.product.sku}</CardDescription>

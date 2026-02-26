@@ -224,33 +224,34 @@ export default function Catalog() {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
               <Link href="/dashboard">
                 <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Retour
+                  <ArrowLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-2">Retour</span>
                 </Button>
               </Link>
-              <div>
-                <h1 className="text-2xl text-display text-display font-bold">Catalogue produits</h1>
-                <p className="text-sm text-muted-foreground">
-                  {products?.length || 0} produits disponibles
+              <div className="flex-1">
+                <h1 className="text-lg md:text-2xl text-display font-bold">Catalogue produits</h1>
+                <p className="text-xs md:text-sm text-muted-foreground">
+                  {products?.length || 0} produits
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            {/* Boutons empilés sur mobile */}
+            <div className="flex flex-wrap items-center gap-2">
               <CSVImportDialog />
-              <Link href="/favorites">
-                <Button variant="outline" className="gap-2">
+              <Link href="/favorites" className="flex-1 sm:flex-none">
+                <Button variant="outline" className="gap-2 w-full sm:w-auto">
                   <Heart className="w-4 h-4 text-red-500" />
-                  Favoris
+                  <span className="hidden sm:inline">Favoris</span>
                 </Button>
               </Link>
-              <Link href="/cart">
-                <Button className="gap-2">
+              <Link href="/cart" className="flex-1 sm:flex-none">
+                <Button className="gap-2 w-full sm:w-auto">
                   <ShoppingCart className="w-4 h-4" />
-                  Panier
+                  <span className="hidden sm:inline">Panier</span>
                 </Button>
               </Link>
             </div>

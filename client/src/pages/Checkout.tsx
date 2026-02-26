@@ -97,7 +97,7 @@ export default function Checkout() {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-4">
               <Link href="/cart">
                 <Button variant="ghost" size="sm">
@@ -106,8 +106,8 @@ export default function Checkout() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl text-display text-display font-bold">Finaliser la commande</h1>
-                <p className="text-sm text-muted-foreground">
+                <h1 className="text-xl md:text-2xl text-display font-bold">Finaliser la commande</h1>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Vérifiez vos informations et validez votre commande
                 </p>
               </div>
@@ -117,7 +117,7 @@ export default function Checkout() {
       </header>
 
       <div className="container py-8">
-        <div className="grid lg:grid-cols-3 gap-4 md:gap-8">
+        <div className="grid lg:grid-cols-3 gap-4 md:gap-4 md:p-8">
           {/* Left Column - Forms */}
           <div className="lg:col-span-2 space-y-6">
             {/* Delivery Address */}

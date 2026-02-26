@@ -157,7 +157,7 @@ export default function AdminAfterSalesStats() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold">Statistiques SAV</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">Statistiques SAV</h1>
             <p className="text-muted-foreground">Analyse des tickets de service après-vente</p>
           </div>
         </div>
@@ -210,7 +210,7 @@ export default function AdminAfterSalesStats() {
         </div>
 
         {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:p-6 mb-8">
           {/* Tickets by Partner */}
           <Card>
             <CardHeader>

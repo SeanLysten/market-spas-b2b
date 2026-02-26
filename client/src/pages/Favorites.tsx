@@ -47,7 +47,7 @@ export default function Favorites() {
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-40">
         <div className="container py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-4">
               <Link href="/catalog">
                 <Button variant="ghost" size="sm">
@@ -101,7 +101,7 @@ export default function Favorites() {
               {filteredFavorites.length} produit{filteredFavorites.length > 1 ? "s" : ""} dans vos favoris
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-4 md:p-6">
               {filteredFavorites.map((fav) => (
                 <Card key={fav.id} className="group hover:shadow-lg transition-shadow">
                   <CardContent className="p-0">
@@ -135,7 +135,7 @@ export default function Favorites() {
                         <span className="text-xs text-muted-foreground dark:text-muted-foreground">HT</span>
                       </div>
                       
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <span className={`text-sm ${
                           (fav.product.stockQuantity || 0) > 0 
                             ? "text-emerald-600 dark:text-emerald-400" 

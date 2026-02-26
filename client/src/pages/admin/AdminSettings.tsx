@@ -78,9 +78,9 @@ export default function AdminSettings() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold">Paramètres</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">Paramètres</h1>
             <p className="text-muted-foreground mt-1">
               Configuration générale de la plateforme
             </p>
@@ -359,7 +359,7 @@ export default function AdminSettings() {
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
                       <p className="font-medium">Nouvelle commande</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         Recevoir un email à chaque nouvelle commande
                       </p>
                     </div>
@@ -372,7 +372,7 @@ export default function AdminSettings() {
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
                       <p className="font-medium">Changement de statut</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         Notifier les partenaires des changements de statut
                       </p>
                     </div>
@@ -385,7 +385,7 @@ export default function AdminSettings() {
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
                       <p className="font-medium">Alerte stock bas</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         Recevoir une alerte quand le stock est bas
                       </p>
                     </div>
@@ -398,7 +398,7 @@ export default function AdminSettings() {
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
                       <p className="font-medium">Nouveau partenaire</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         Recevoir un email pour chaque nouvelle inscription
                       </p>
                     </div>
@@ -448,7 +448,7 @@ export default function AdminSettings() {
                       Configurer
                     </Button>
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     Les paiements sont actuellement en mode test. Aucun paiement réel ne sera traité.
                   </p>
                 </CardContent>
@@ -474,7 +474,7 @@ export default function AdminSettings() {
                       Configurer
                     </Button>
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     Connectez un service SMTP (SendGrid, Mailgun, etc.) pour activer les emails automatiques.
                   </p>
                 </CardContent>
@@ -500,7 +500,7 @@ export default function AdminSettings() {
                       Connecter
                     </Button>
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     Connectez votre instance Odoo pour synchroniser les factures et contacts.
                   </p>
                 </CardContent>

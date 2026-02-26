@@ -445,9 +445,9 @@ export default function AdminPartners() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold">Gestion des partenaires</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">Gestion des partenaires</h1>
             <p className="text-muted-foreground">
               Gérez vos partenaires revendeurs et leurs conditions commerciales
             </p>
@@ -589,7 +589,7 @@ export default function AdminPartners() {
                       <TableCell>
                         <div>
                           <p className="font-medium">{partner.companyName}</p>
-                          <p className="text-sm text-muted-foreground">{partner.vatNumber}</p>
+                          <p className="text-xs md:text-sm text-muted-foreground">{partner.vatNumber}</p>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -628,7 +628,7 @@ export default function AdminPartners() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-emerald-600 dark:text-emerald-400"
+                              className="text-emerald-600 dark:text-emerald-400 w-full sm:w-auto"
                               onClick={() => handleApprovePartner(partner.id)}
                             >
                               <CheckCircle className="w-4 h-4" />
@@ -644,7 +644,7 @@ export default function AdminPartners() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-destructive dark:text-destructive"
+                            className="text-destructive dark:text-destructive w-full sm:w-auto"
                             onClick={() => handleDeletePartner(partner.id)}
                           >
                             <Trash2 className="w-4 h-4" />

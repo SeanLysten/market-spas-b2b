@@ -177,7 +177,7 @@ export default function AdminProducts() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Gestion des produits</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Gestion des produits</h1>
           <p className="text-muted-foreground mt-1">
             Gérez vos produits, variantes et arrivages programmés. Cliquez sur un produit pour voir et modifier le stock de chaque variante.
           </p>
@@ -190,7 +190,7 @@ export default function AdminProducts() {
           </TabsList>
 
           <TabsContent value="products" className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex gap-2">
                 <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
                   <DialogTrigger asChild>
@@ -648,10 +648,10 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
                           if (e.key === "Escape") handleCancelEdit();
                         }}
                       />
-                      <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={() => handleSaveStock(variant.id)}>
+                      <Button size="sm" variant="ghost" className="h-7 px-1.5 w-full sm:w-auto" onClick={() => handleSaveStock(variant.id)}>
                         <CheckCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                       </Button>
-                      <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={handleCancelEdit}>
+                      <Button size="sm" variant="ghost" className="h-7 px-1.5 w-full sm:w-auto" onClick={handleCancelEdit}>
                         <span className="text-xs">&times;</span>
                       </Button>
                     </div>
@@ -688,7 +688,7 @@ function ProductVariantsManager({ product, onBack }: { product: any; onBack: () 
         </Button>
         <div>
           <h2 className="text-2xl text-display text-display font-bold">{product.name}</h2>
-          <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+          <p className="text-xs md:text-sm text-muted-foreground">SKU: {product.sku}</p>
         </div>
       </div>
 
@@ -809,7 +809,7 @@ function VariantsTab({ productId }: { productId: number }) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <CardTitle>Variantes du produit</CardTitle>
             <CardDescription>
@@ -954,10 +954,10 @@ function VariantsTab({ productId }: { productId: number }) {
                             if (e.key === "Escape") handleCancelEditStock();
                           }}
                         />
-                        <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => handleSaveStock(variant.id)}>
+                        <Button size="sm" variant="ghost" className="h-8 px-2 w-full sm:w-auto" onClick={() => handleSaveStock(variant.id)}>
                           <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                         </Button>
-                        <Button size="sm" variant="ghost" className="h-8 px-2" onClick={handleCancelEditStock}>
+                        <Button size="sm" variant="ghost" className="h-8 px-2 w-full sm:w-auto" onClick={handleCancelEditStock}>
                           ✕
                         </Button>
                       </div>
@@ -1050,7 +1050,7 @@ function IncomingStockTab({ productId }: { productId: number }) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <CardTitle>Arrivages programmés</CardTitle>
             <CardDescription>
@@ -1341,7 +1341,7 @@ function GlobalIncomingStockView() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <CardTitle>Arrivages programmés</CardTitle>
             <CardDescription>
@@ -1724,7 +1724,7 @@ function ColorsManagementDialog({ open, onOpenChange }: { open: boolean; onOpenC
                     />
                     <div className="flex-1">
                       <p className="font-medium">{color.name}</p>
-                      <p className="text-sm text-muted-foreground">{color.hex}</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">{color.hex}</p>
                     </div>
                     <Button size="sm" variant="ghost" onClick={() => setEditingIndex(index)}>
                       <Pencil className="h-4 w-4" />

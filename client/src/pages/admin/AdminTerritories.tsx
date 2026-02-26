@@ -147,7 +147,7 @@ export default function AdminTerritories() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:gap-6">
+        <div className="grid gap-4 md:gap-4 md:p-6">
           {/* Sélection du partenaire */}
           <Card>
             <CardHeader>
@@ -250,7 +250,7 @@ export default function AdminTerritories() {
                               >
                                 {region.name}
                               </Label>
-                              <p className="text-sm text-muted-foreground">{region.code}</p>
+                              <p className="text-xs md:text-sm text-muted-foreground">{region.code}</p>
                               {isOwnedByOther && (
                                 <Badge variant="secondary" className="mt-2">
                                   Attribué à {assigned.partnerName}
@@ -269,7 +269,7 @@ export default function AdminTerritories() {
                     </div>
 
                     <div className="flex items-center justify-between pt-6 border-t">
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         {selectedRegionIds.size} territoire(s) sélectionné(s)
                       </p>
                       <Button onClick={handleSave} disabled={isSaving}>

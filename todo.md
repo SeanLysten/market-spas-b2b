@@ -1856,3 +1856,17 @@
 - [ ] Optimiser tous les formulaires pour mobile
 - [ ] Optimiser tous les dialogues/modals pour mobile
 - [ ] Tester chaque page en mode mobile et corriger les bugs
+
+## Refonte mobile complète - Expérience optimale
+
+- [ ] Corriger AdminDashboard : boutons Dashboard utilisateur et Rapports au-dessus des cartes sur mobile
+- [ ] Adapter tous les graphiques pour mobile (prévisions stock, évolution hebdomadaire, etc.)
+- [ ] Créer vue mobile simplifiée pour AdminProducts avec modal d'édition rapide
+- [ ] Créer vue mobile simplifiée pour AdminLeads avec modal d'édition rapide
+- [ ] Créer vue mobile simplifiée pour AdminOrders avec modal de détails
+- [ ] Créer vue mobile simplifiée pour AdminPartners avec modal d'édition
+- [ ] Créer vue mobile simplifiée pour AdminUsers avec modal d'édition
+- [ ] Vérifier placement des boutons sur toutes les pages (empilage vertical sur mobile)
+- [ ] Optimiser les interactions tactiles (tap pour ouvrir modals au lieu de scroll horizontal)
+- [ ] Adapter les formulaires pour mobile (champs pleine largeur, labels au-dessus)
+- [ ] Tester chaque page en viewport 375px et corriger les problèmes

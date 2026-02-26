@@ -331,7 +331,7 @@ export default function SpareParts() {
 
         {/* Results Count */}
         <div className="flex justify-between items-center mb-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs md:text-sm text-muted-foreground">
             {parts.length} pièce{parts.length > 1 ? "s" : ""} trouvée{parts.length > 1 ? "s" : ""}
             {modelFilter && ` pour le modèle "${modelFilter}"`}
             {brandFilter !== "all" && ` (${BRAND_LABELS[brandFilter]})`}
@@ -400,7 +400,7 @@ export default function SpareParts() {
                     {part.description && (
                       <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{part.description}</p>
                     )}
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <span className="text-base font-semibold text-display">
                         {parseFloat(part.priceHT).toFixed(2)} €{" "}
                         <span className="text-xs font-normal text-muted-foreground">HT</span>
