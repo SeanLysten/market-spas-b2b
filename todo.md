@@ -1820,3 +1820,5 @@
 - [x] Implémenter rafraîchissement automatique toutes les 30 secondes
 - [ ] Ajouter notification WebSocket temps réel quand invitation acceptée
 - [x] Tester le flux complet d'invitation utilisateur
+
+- [x] Appliquer la charte graphique dark mode officielle Market Spas v2.1 (pasted_content_2.txt)
