@@ -1774,3 +1774,4 @@
 - [x] Fix Google Ads OAuth callback - frontend now shows connected account status
 - [ ] Implement Google Ads campaigns display in admin leads page (campaigns list, budgets, impressions, clicks, conversions, spend)
 - [ ] Build Google Ads performance metrics dashboard (KPIs, charts)
+- [x] Résoudre erreur "Aucun compte Google Ads accessible" lors de la récupération du Customer ID
