@@ -90,11 +90,11 @@ function SparePartDetailDialog({ partId, open, onOpenChange }: {
               <Label className="text-muted-foreground">Disponibilité</Label>
               <p className="font-medium">
                 {(part as any).stockQuantity > 0 ? (
-                  <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+                  <Badge variant="outline" className="text-emerald-600 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-500/20">
                     En stock ({(part as any).stockQuantity})
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="text-red-600 border-red-200 bg-red-50">
+                  <Badge variant="outline" className="text-destructive dark:text-destructive border-destructive/20 dark:border-destructive/30 bg-destructive/10 dark:bg-destructive/20">
                     Rupture de stock
                   </Badge>
                 )}
@@ -406,11 +406,11 @@ export default function SpareParts() {
                         <span className="text-xs font-normal text-muted-foreground">HT</span>
                       </span>
                       {part.stockQuantity > 0 ? (
-                        <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 text-xs">
+                        <Badge variant="outline" className="text-emerald-600 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-500/20 text-xs">
                           En stock
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-red-600 border-red-200 bg-red-50 text-xs">
+                        <Badge variant="outline" className="text-destructive dark:text-destructive border-destructive/20 dark:border-destructive/30 bg-destructive/10 dark:bg-destructive/20 text-xs">
                           Indisponible
                         </Badge>
                       )}
@@ -428,13 +428,13 @@ export default function SpareParts() {
         )}
 
         {/* Info Banner */}
-        <Card className="mt-8 bg-blue-50 border-blue-200">
+        <Card className="mt-8 bg-info/10 dark:bg-info-light border-info/20 dark:border-info/30">
           <CardContent className="py-4">
             <div className="flex items-start gap-3">
-              <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+              <Info className="h-5 w-5 text-info dark:text-info-dark mt-0.5 shrink-0" />
               <div>
                 <h4 className="font-medium text-blue-900">Comment commander des pièces ?</h4>
-                <p className="text-sm text-blue-700 mt-1">
+                <p className="text-sm text-info dark:text-info-dark mt-1">
                   Pour commander des pièces détachées, créez un <strong>ticket SAV</strong> en précisant le modèle de spa et le composant concerné.
                   Le système identifiera automatiquement les pièces compatibles. Si le remplacement est couvert par la garantie,
                   les pièces seront envoyées gratuitement. Sinon, un devis vous sera proposé avec paiement en ligne.

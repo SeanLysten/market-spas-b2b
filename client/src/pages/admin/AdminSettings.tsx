@@ -439,10 +439,10 @@ export default function AdminSettings() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center justify-between p-4 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-green-500 rounded-full" />
-                      <span className="font-medium text-green-800">Connecté (Mode test)</span>
+                      <div className="w-3 h-3 bg-emerald-500 dark:bg-emerald-400 rounded-full" />
+                      <span className="font-medium text-emerald-800 dark:text-emerald-400">Connecté (Mode test)</span>
                     </div>
                     <Button variant="outline" size="sm">
                       Configurer
@@ -465,10 +465,10 @@ export default function AdminSettings() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-center justify-between p-4 bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/20 dark:border-amber-500/30 rounded-lg">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-                      <span className="font-medium text-yellow-800">Non configuré</span>
+                      <div className="w-3 h-3 bg-amber-500 dark:bg-amber-400 rounded-full" />
+                      <span className="font-medium text-amber-800 dark:text-amber-400">Non configuré</span>
                     </div>
                     <Button variant="outline" size="sm">
                       Configurer
@@ -491,10 +491,10 @@ export default function AdminSettings() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted/30 border border-border dark:border-border rounded-lg">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 bg-gray-400 rounded-full" />
-                      <span className="font-medium text-gray-600">Non connecté</span>
+                      <span className="font-medium text-muted-foreground dark:text-muted-foreground">Non connecté</span>
                     </div>
                     <Button variant="outline" size="sm">
                       Connecter

@@ -179,7 +179,7 @@ export default function AdminAfterSalesStats() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Critiques</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-red-600">
+              <div className="text-3xl font-bold text-destructive dark:text-destructive">
                 {stats?.byUrgency?.find(u => u.urgency === "CRITICAL")?.count || 0}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Tickets critiques</p>
@@ -191,7 +191,7 @@ export default function AdminAfterSalesStats() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Urgents</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-orange-600">
+              <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
                 {stats?.byUrgency?.find(u => u.urgency === "URGENT")?.count || 0}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Tickets urgents</p>
@@ -203,7 +203,7 @@ export default function AdminAfterSalesStats() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Taux de Résolution</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">{resolutionRate}%</div>
+              <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{resolutionRate}%</div>
               <p className="text-xs text-muted-foreground mt-1">Tickets résolus/fermés</p>
             </CardContent>
           </Card>

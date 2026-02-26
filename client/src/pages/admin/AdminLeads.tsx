@@ -108,17 +108,17 @@ interface CampaignStats {
 }
 
 const LEAD_STATUSES = {
-  NEW: { label: "Nouveau", color: "bg-blue-100 text-blue-800" },
-  ASSIGNED: { label: "Assigné", color: "bg-indigo-100 text-indigo-800" },
-  CONTACTED: { label: "Contacté", color: "bg-yellow-100 text-yellow-800" },
-  NO_RESPONSE: { label: "Sans réponse", color: "bg-orange-100 text-orange-800" },
-  QUALIFIED: { label: "Qualifié", color: "bg-green-100 text-green-800" },
-  NOT_QUALIFIED: { label: "Non qualifié", color: "bg-gray-100 text-gray-800" },
-  MEETING_SCHEDULED: { label: "RDV planifié", color: "bg-purple-100 text-purple-800" },
-  QUOTE_SENT: { label: "Devis envoyé", color: "bg-cyan-100 text-cyan-800" },
-  NEGOTIATION: { label: "Négociation", color: "bg-amber-100 text-amber-800" },
-  CONVERTED: { label: "Converti", color: "bg-emerald-100 text-emerald-800" },
-  LOST: { label: "Perdu", color: "bg-red-100 text-red-800" },
+  NEW: { label: "Nouveau", color: "bg-info/15 dark:bg-info-light text-info dark:text-info-dark" },
+  ASSIGNED: { label: "Assigné", color: "bg-indigo-500/15 dark:bg-indigo-500/25 text-indigo-800" },
+  CONTACTED: { label: "Contacté", color: "bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400" },
+  NO_RESPONSE: { label: "Sans réponse", color: "bg-orange-500/15 dark:bg-orange-500/25 text-orange-800 dark:text-orange-400" },
+  QUALIFIED: { label: "Qualifié", color: "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400" },
+  NOT_QUALIFIED: { label: "Non qualifié", color: "bg-muted dark:bg-muted/50 text-gray-800" },
+  MEETING_SCHEDULED: { label: "RDV planifié", color: "bg-purple-500/15 dark:bg-purple-500/25 text-purple-800 dark:text-purple-400" },
+  QUOTE_SENT: { label: "Devis envoyé", color: "bg-cyan-500/15 dark:bg-cyan-500/25 text-cyan-800" },
+  NEGOTIATION: { label: "Négociation", color: "bg-amber-500/15 dark:bg-amber-500/25 text-amber-800" },
+  CONVERTED: { label: "Converti", color: "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800" },
+  LOST: { label: "Perdu", color: "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive" },
 };
 
 export default function AdminLeads() {
@@ -585,7 +585,7 @@ export default function AdminLeads() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl text-display text-display font-bold text-gray-900">Gestion des Leads</h1>
-            <p className="text-gray-500">Statistiques des campagnes Meta et suivi des prospects</p>
+            <p className="text-muted-foreground dark:text-muted-foreground">Statistiques des campagnes Meta et suivi des prospects</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
@@ -676,30 +676,30 @@ export default function AdminLeads() {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Leads clients</p>
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">Leads clients</p>
                   <p className="text-2xl text-display text-display font-bold">{customerLeads.length}</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
                     {stats.newLeads} nouveau{stats.newLeads > 1 ? 'x' : ''}
                   </p>
                 </div>
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <ShoppingBag className="w-6 h-6 text-blue-600" />
+                <div className="p-3 bg-info/15 dark:bg-info-light rounded-full">
+                  <ShoppingBag className="w-6 h-6 text-info dark:text-info-dark" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="border-orange-200 bg-orange-50/30">
+          <Card className="border-orange-500/20 dark:border-orange-500/30 bg-orange-500/10 dark:bg-orange-500/20/30">
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-orange-600">Candidats partenaires</p>
-                  <p className="text-2xl text-display text-display font-bold text-orange-700">{partnerCandidateLeads.length}</p>
+                  <p className="text-sm text-orange-600 dark:text-orange-400">Candidats partenaires</p>
+                  <p className="text-2xl text-display text-display font-bold text-orange-700 dark:text-orange-400">{partnerCandidateLeads.length}</p>
                   <p className="text-xs text-orange-500 mt-1">
                     Devenir Partenaire
                   </p>
                 </div>
-                <div className="p-3 bg-orange-100 rounded-full">
-                  <Handshake className="w-6 h-6 text-orange-600" />
+                <div className="p-3 bg-orange-500/15 dark:bg-orange-500/25 rounded-full">
+                  <Handshake className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                 </div>
               </div>
             </CardContent>
@@ -708,14 +708,14 @@ export default function AdminLeads() {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Taux de conversion</p>
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">Taux de conversion</p>
                   <p className="text-2xl text-display text-display font-bold">{stats.conversionRate}%</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
                     {stats.convertedLeads} converti{stats.convertedLeads > 1 ? 's' : ''}
                   </p>
                 </div>
-                <div className="p-3 bg-green-100 rounded-full">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
+                <div className="p-3 bg-emerald-500/15 dark:bg-emerald-500/25 rounded-full">
+                  <TrendingUp className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                 </div>
               </div>
             </CardContent>
@@ -724,13 +724,13 @@ export default function AdminLeads() {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Budget dépensé</p>
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">Budget dépensé</p>
                   <p className="text-2xl text-display text-display font-bold">{stats.totalSpend.toFixed(2)} €</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
                     CPL moyen: {stats.avgCPL > 0 ? stats.avgCPL.toFixed(2) + ' €' : '-'}
                   </p>
                 </div>
-                <div className="p-3 bg-yellow-100 rounded-full">
+                <div className="p-3 bg-amber-500/15 dark:bg-amber-500/25 rounded-full">
                   <DollarSign className="w-6 h-6 text-yellow-600" />
                 </div>
               </div>
@@ -740,14 +740,14 @@ export default function AdminLeads() {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Impressions</p>
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">Impressions</p>
                   <p className="text-2xl text-display text-display font-bold">{stats.totalImpressions > 1000 ? (stats.totalImpressions / 1000).toFixed(1) + 'K' : stats.totalImpressions}</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
                     Portée: {stats.totalReach > 1000 ? (stats.totalReach / 1000).toFixed(1) + 'K' : stats.totalReach}
                   </p>
                 </div>
-                <div className="p-3 bg-purple-100 rounded-full">
-                  <Eye className="w-6 h-6 text-purple-600" />
+                <div className="p-3 bg-purple-500/15 dark:bg-purple-500/25 rounded-full">
+                  <Eye className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                 </div>
               </div>
             </CardContent>
@@ -837,15 +837,15 @@ export default function AdminLeads() {
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50 border-b">
+                    <thead className="bg-muted/50 dark:bg-muted/30 border-b">
                       <tr>
-                        <th className="text-left p-4 font-medium text-gray-600">Lead</th>
-                        <th className="text-left p-4 font-medium text-gray-600">Type</th>
-                        <th className="text-left p-4 font-medium text-gray-600">Contact</th>
-                        <th className="text-left p-4 font-medium text-gray-600">Partenaire</th>
-                        <th className="text-left p-4 font-medium text-gray-600">Statut</th>
-                        <th className="text-left p-4 font-medium text-gray-600">Suivi</th>
-                        <th className="text-left p-4 font-medium text-gray-600">Date</th>
+                        <th className="text-left p-4 font-medium text-muted-foreground dark:text-muted-foreground">Lead</th>
+                        <th className="text-left p-4 font-medium text-muted-foreground dark:text-muted-foreground">Type</th>
+                        <th className="text-left p-4 font-medium text-muted-foreground dark:text-muted-foreground">Contact</th>
+                        <th className="text-left p-4 font-medium text-muted-foreground dark:text-muted-foreground">Partenaire</th>
+                        <th className="text-left p-4 font-medium text-muted-foreground dark:text-muted-foreground">Statut</th>
+                        <th className="text-left p-4 font-medium text-muted-foreground dark:text-muted-foreground">Suivi</th>
+                        <th className="text-left p-4 font-medium text-muted-foreground dark:text-muted-foreground">Date</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -854,7 +854,7 @@ export default function AdminLeads() {
                         return (
                           <tr 
                             key={lead.id} 
-                            className="hover:bg-gray-50 cursor-pointer"
+                            className="hover:bg-muted/50 dark:bg-muted/30 cursor-pointer"
                             onClick={() => setSelectedLead(lead)}
                           >
                             <td className="p-4">
@@ -862,17 +862,17 @@ export default function AdminLeads() {
                                 <p className="font-medium text-gray-900">
                                   {lead.firstName} {lead.lastName}
                                 </p>
-                                <p className="text-sm text-gray-500">{lead.productInterest}</p>
+                                <p className="text-sm text-muted-foreground dark:text-muted-foreground">{lead.productInterest}</p>
                               </div>
                             </td>
                             <td className="p-4">
                               {isPartnerCandidate(lead) ? (
-                                <Badge className="bg-orange-100 text-orange-800 text-xs">
+                                <Badge className="bg-orange-500/15 dark:bg-orange-500/25 text-orange-800 dark:text-orange-400 text-xs">
                                   <Handshake className="w-3 h-3 mr-1" />
                                   Partenaire
                                 </Badge>
                               ) : (
-                                <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                <Badge className="bg-info/15 dark:bg-info-light text-info dark:text-info-dark text-xs">
                                   <ShoppingBag className="w-3 h-3 mr-1" />
                                   Client
                                 </Badge>
@@ -881,13 +881,13 @@ export default function AdminLeads() {
                             <td className="p-4">
                               <div className="space-y-1">
                                 {lead.email && (
-                                  <p className="text-sm text-gray-600 flex items-center gap-1">
+                                  <p className="text-sm text-muted-foreground dark:text-muted-foreground flex items-center gap-1">
                                     <Mail className="w-3 h-3" />
                                     {lead.email}
                                   </p>
                                 )}
                                 {lead.phone && (
-                                  <p className="text-sm text-gray-600 flex items-center gap-1">
+                                  <p className="text-sm text-muted-foreground dark:text-muted-foreground flex items-center gap-1">
                                     <Phone className="w-3 h-3" />
                                     {lead.phone}
                                   </p>
@@ -896,7 +896,7 @@ export default function AdminLeads() {
                             </td>
                             <td className="p-4">
                               <p className="text-sm text-gray-900">{lead.partnerName || "Non assigné"}</p>
-                              <p className="text-xs text-gray-500">{lead.postalCode} {lead.city}</p>
+                              <p className="text-xs text-muted-foreground dark:text-muted-foreground">{lead.postalCode} {lead.city}</p>
                             </td>
                             <td className="p-4">
                               <Badge className={statusConfig?.color}>
@@ -905,18 +905,18 @@ export default function AdminLeads() {
                             </td>
                             <td className="p-4">
                               {lead.firstContactAt ? (
-                                <div className="flex items-center gap-1 text-green-600">
+                                <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                                   <CheckCircle className="w-4 h-4" />
                                   <span className="text-sm">Contacté</span>
                                 </div>
                               ) : (
-                                <div className="flex items-center gap-1 text-orange-600">
+                                <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
                                   <Clock className="w-4 h-4" />
                                   <span className="text-sm">En attente</span>
                                 </div>
                               )}
                             </td>
-                            <td className="p-4 text-sm text-gray-500">
+                            <td className="p-4 text-sm text-muted-foreground dark:text-muted-foreground">
                               {formatDate(lead.receivedAt)}
                             </td>
                           </tr>
@@ -950,11 +950,11 @@ export default function AdminLeads() {
             {!metaCampaignsData?.connected && (
               <Card>
                 <CardContent className="p-8 text-center">
-                  <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                    <BarChart3 className="w-8 h-8 text-blue-600" />
+                  <div className="mx-auto w-16 h-16 bg-info/15 dark:bg-info-light rounded-full flex items-center justify-center mb-4">
+                    <BarChart3 className="w-8 h-8 text-info dark:text-info-dark" />
                   </div>
                   <h3 className="text-lg font-semibold mb-2">Connecter votre compte Meta Ads</h3>
-                  <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                  <p className="text-muted-foreground dark:text-muted-foreground mb-6 max-w-md mx-auto">
                     Connectez votre compte publicitaire Meta pour voir vos campagnes, dépenses, impressions et leads en temps réel.
                   </p>
                   <Button
@@ -978,16 +978,16 @@ export default function AdminLeads() {
 
             {/* Sélecteur de compte après OAuth */}
             {showAccountSelector && metaCallbackData && (
-              <Card className="border-blue-200 bg-blue-50">
+              <Card className="border-info/20 dark:border-info/30 bg-info/10 dark:bg-info-light">
                 <CardContent className="p-6">
                   <h3 className="font-semibold mb-4">Sélectionnez un compte publicitaire</h3>
-                  <p className="text-sm text-gray-600 mb-4">Connecté en tant que <strong>{metaCallbackData.metaUserName}</strong></p>
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-4">Connecté en tant que <strong>{metaCallbackData.metaUserName}</strong></p>
                   <div className="grid gap-3">
                     {metaCallbackData.adAccounts?.map((acc: any) => (
                       <div key={acc.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
                         <div>
                           <p className="font-medium">{acc.name}</p>
-                          <p className="text-sm text-gray-500">ID: {acc.accountId} | {acc.currency} | {acc.timezone}</p>
+                          <p className="text-sm text-muted-foreground dark:text-muted-foreground">ID: {acc.accountId} | {acc.currency} | {acc.timezone}</p>
                         </div>
                         <Button
                           size="sm"
@@ -1020,12 +1020,12 @@ export default function AdminLeads() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <svg className="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                      <div className="w-10 h-10 bg-info/15 dark:bg-info-light rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-info dark:text-info-dark" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                       </div>
                       <div>
                         <p className="font-semibold">{metaCampaignsData.currentAccount.adAccountName}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                           {metaCampaignsData.currentAccount.currency} | 
                           Dernière sync: {metaCampaignsData.currentAccount.lastSyncedAt 
                             ? new Date(metaCampaignsData.currentAccount.lastSyncedAt).toLocaleString("fr-FR")
@@ -1040,7 +1040,7 @@ export default function AdminLeads() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-red-600 hover:text-red-700"
+                        className="text-destructive dark:text-destructive hover:text-destructive dark:text-destructive"
                         onClick={() => {
                           if (confirm("Déconnecter ce compte publicitaire ?")) {
                             disconnectMutation.mutate({ id: metaCampaignsData.currentAccount!.id });
@@ -1052,7 +1052,7 @@ export default function AdminLeads() {
                     </div>
                   </div>
                   {(metaCampaignsData as any)?.error && (
-                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                    <div className="mt-3 p-3 bg-destructive/10 dark:bg-destructive/20 border border-destructive/20 dark:border-destructive/30 rounded-lg text-sm text-destructive dark:text-destructive">
                       Erreur: {(metaCampaignsData as any).error}
                     </div>
                   )}
@@ -1062,7 +1062,7 @@ export default function AdminLeads() {
 
             {/* Loading */}
             {metaLoading && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground dark:text-muted-foreground">
                 <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
                 Chargement des campagnes...
               </div>
@@ -1075,31 +1075,31 @@ export default function AdminLeads() {
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <p className="text-xs text-gray-500">Dépenses totales</p>
-                      <p className="text-xl text-display text-display font-bold text-blue-600">{filteredCampaigns.reduce((s, c) => s + c.spend, 0).toFixed(2)}€</p>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground">Dépenses totales</p>
+                      <p className="text-xl text-display text-display font-bold text-info dark:text-info-dark">{filteredCampaigns.reduce((s, c) => s + c.spend, 0).toFixed(2)}€</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <p className="text-xs text-gray-500">Impressions</p>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground">Impressions</p>
                       <p className="text-xl text-display text-display font-bold">{filteredCampaigns.reduce((s, c) => s + c.impressions, 0) > 1000 ? (filteredCampaigns.reduce((s, c) => s + c.impressions, 0) / 1000).toFixed(1) + 'K' : filteredCampaigns.reduce((s, c) => s + c.impressions, 0)}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <p className="text-xs text-gray-500">Clics totaux</p>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground">Clics totaux</p>
                       <p className="text-xl text-display text-display font-bold">{filteredCampaigns.reduce((s, c) => s + c.clicks, 0)}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <p className="text-xs text-gray-500">Leads totaux</p>
-                      <p className="text-xl text-display text-display font-bold text-green-600">{filteredCampaigns.reduce((s, c) => s + c.leads, 0)}</p>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground">Leads totaux</p>
+                      <p className="text-xl text-display text-display font-bold text-emerald-600 dark:text-emerald-400">{filteredCampaigns.reduce((s, c) => s + c.leads, 0)}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <p className="text-xs text-gray-500">Coût/Lead moyen</p>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground">Coût/Lead moyen</p>
                       <p className="text-xl text-display text-display font-bold">
                         {filteredCampaigns.reduce((s, c) => s + c.leads, 0) > 0
                           ? (filteredCampaigns.reduce((s, c) => s + c.spend, 0) / filteredCampaigns.reduce((s, c) => s + c.leads, 0)).toFixed(2)
@@ -1189,13 +1189,13 @@ export default function AdminLeads() {
                           </AreaChart>
                         </ResponsiveContainer>
                       </div>
-                      <div className="flex items-center justify-center gap-6 mt-2 text-xs text-gray-500">
+                      <div className="flex items-center justify-center gap-6 mt-2 text-xs text-muted-foreground dark:text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <span className="w-3 h-3 rounded-full bg-blue-500 inline-block"></span>
                           Dépenses (€)
                         </span>
                         <span className="flex items-center gap-1">
-                          <span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+                          <span className="w-3 h-3 rounded-full bg-emerald-500 dark:bg-emerald-400 inline-block"></span>
                           Leads (nombre)
                         </span>
                       </div>
@@ -1207,7 +1207,7 @@ export default function AdminLeads() {
                 <div className="flex flex-wrap items-center gap-4 mb-4">
                   {/* Filtre par statut */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500 mr-1">Statut :</span>
+                    <span className="text-sm text-muted-foreground dark:text-muted-foreground mr-1">Statut :</span>
                     {[
                       { value: "all", label: "Toutes", count: campaignCounts.all },
                       { value: "ACTIVE", label: "Actives", count: campaignCounts.ACTIVE },
@@ -1226,7 +1226,7 @@ export default function AdminLeads() {
                           <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${
                             campaignStatusFilter === filter.value 
                               ? 'bg-white/20 text-white' 
-                              : 'bg-gray-100 text-gray-600'
+                              : 'bg-muted dark:bg-muted/50 text-muted-foreground dark:text-muted-foreground'
                           }`}>
                             {filter.count}
                           </span>
@@ -1239,7 +1239,7 @@ export default function AdminLeads() {
 
                   {/* Filtre par priorité / type */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500 mr-1">Type :</span>
+                    <span className="text-sm text-muted-foreground dark:text-muted-foreground mr-1">Type :</span>
                     {[
                       { value: "all", label: "Toutes" },
                       { value: "priority", label: "Prioritaires" },
@@ -1256,7 +1256,7 @@ export default function AdminLeads() {
                         <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${
                           campaignPriorityFilter === filter.value 
                             ? 'bg-white/20 text-white' 
-                            : 'bg-gray-100 text-gray-600'
+                            : 'bg-muted dark:bg-muted/50 text-muted-foreground dark:text-muted-foreground'
                         }`}>
                           {filter.value === "all" ? campaigns.length : filter.value === "priority" ? campaigns.filter(c => c.isPriority).length : campaigns.filter(c => !c.isPriority).length}
                         </span>
@@ -1269,30 +1269,30 @@ export default function AdminLeads() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b bg-gray-50">
-                        <th className="text-left p-3 font-medium text-gray-600">Campagne</th>
-                        <th className="text-right p-3 font-medium text-gray-600">Statut</th>
-                        <th className="text-right p-3 font-medium text-gray-600">Dépenses</th>
-                        <th className="text-right p-3 font-medium text-gray-600">Portée</th>
-                        <th className="text-right p-3 font-medium text-gray-600">Impressions</th>
-                        <th className="text-right p-3 font-medium text-gray-600">Fréquence</th>
-                        <th className="text-right p-3 font-medium text-gray-600">Clics</th>
-                        <th className="text-right p-3 font-medium text-gray-600">CTR</th>
-                        <th className="text-right p-3 font-medium text-gray-600">CPC</th>
-                        <th className="text-right p-3 font-medium text-gray-600">CPM</th>
-                        <th className="text-right p-3 font-medium text-gray-600">Leads</th>
-                        <th className="text-right p-3 font-medium text-gray-600">CPL</th>
+                      <tr className="border-b bg-muted/50 dark:bg-muted/30">
+                        <th className="text-left p-3 font-medium text-muted-foreground dark:text-muted-foreground">Campagne</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">Statut</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">Dépenses</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">Portée</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">Impressions</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">Fréquence</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">Clics</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">CTR</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">CPC</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">CPM</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">Leads</th>
+                        <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">CPL</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredCampaigns.map(campaign => (
-                        <tr key={campaign.id} className="border-b hover:bg-gray-50 transition-colors">
+                        <tr key={campaign.id} className="border-b hover:bg-muted/50 dark:bg-muted/30 transition-colors">
                           <td className="p-3">
                             <div className="flex flex-col">
                               <div className="flex items-center gap-2">
                                 <span className="font-medium text-gray-900">{campaign.name}</span>
                                 {campaign.isPriority && (
-                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">Prioritaire</span>
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-info/15 dark:bg-info-light text-info dark:text-info-dark">Prioritaire</span>
                                 )}
                               </div>
                               {campaign.objectiveLabel && (
@@ -1314,7 +1314,7 @@ export default function AdminLeads() {
                           <td className="p-3 text-right">{campaign.cpc.toFixed(2)} €</td>
                           <td className="p-3 text-right">{campaign.cpm.toFixed(2)} €</td>
                           <td className="p-3 text-right">
-                            <span className={campaign.leads > 0 ? "font-semibold text-green-600" : "text-gray-400"}>
+                            <span className={campaign.leads > 0 ? "font-semibold text-emerald-600 dark:text-emerald-400" : "text-gray-400"}>
                               {campaign.leads}
                             </span>
                           </td>
@@ -1328,7 +1328,7 @@ export default function AdminLeads() {
                     </tbody>
                     {/* Ligne de totaux */}
                     <tfoot>
-                      <tr className="border-t-2 bg-gray-50 font-semibold">
+                      <tr className="border-t-2 bg-muted/50 dark:bg-muted/30 font-semibold">
                         <td className="p-3">Total ({filteredCampaigns.length} campagnes)</td>
                         <td className="p-3"></td>
                         <td className="p-3 text-right">{filteredCampaigns.reduce((s, c) => s + c.spend, 0).toFixed(2)} €</td>
@@ -1339,7 +1339,7 @@ export default function AdminLeads() {
                         <td className="p-3 text-right">{(() => { const totalClicks = filteredCampaigns.reduce((s, c) => s + c.clicks, 0); const totalImpressions = filteredCampaigns.reduce((s, c) => s + c.impressions, 0); return totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) + '%' : '-'; })()}</td>
                         <td className="p-3 text-right">{(() => { const totalSpend = filteredCampaigns.reduce((s, c) => s + c.spend, 0); const totalClicks = filteredCampaigns.reduce((s, c) => s + c.clicks, 0); return totalClicks > 0 ? (totalSpend / totalClicks).toFixed(2) + ' €' : '-'; })()}</td>
                         <td className="p-3"></td>
-                        <td className="p-3 text-right text-green-600">{filteredCampaigns.reduce((s, c) => s + c.leads, 0)}</td>
+                        <td className="p-3 text-right text-emerald-600 dark:text-emerald-400">{filteredCampaigns.reduce((s, c) => s + c.leads, 0)}</td>
                         <td className="p-3 text-right">{(() => { const totalSpend = filteredCampaigns.reduce((s, c) => s + c.spend, 0); const totalLeads = filteredCampaigns.reduce((s, c) => s + c.leads, 0); return totalLeads > 0 ? (totalSpend / totalLeads).toFixed(2) + ' €' : '-'; })()}</td>
                       </tr>
                     </tfoot>
@@ -1352,7 +1352,7 @@ export default function AdminLeads() {
             {metaCampaignsData?.connected && !metaLoading && campaigns.length === 0 && !metaCampaignsData?.error && (
               <Card>
                 <CardContent className="p-8 text-center">
-                  <p className="text-gray-500">Aucune campagne trouvée pour cette période.</p>
+                  <p className="text-muted-foreground dark:text-muted-foreground">Aucune campagne trouvée pour cette période.</p>
                   <p className="text-sm text-gray-400 mt-2">Essayez de changer la période ou vérifiez votre compte Meta Ads Manager.</p>
                 </CardContent>
               </Card>
@@ -1362,10 +1362,10 @@ export default function AdminLeads() {
               {/* Onglet Google Ads */}
               <TabsContent value="google" className="space-y-4">
                 {!googleOAuthUrl?.url ? (
-                  <Card className="border-amber-200 bg-amber-50">
+                  <Card className="border-amber-200 bg-amber-500/10 dark:bg-amber-500/20">
                     <CardContent className="p-8">
                       <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="w-12 h-12 bg-amber-500/15 dark:bg-amber-500/25 rounded-full flex items-center justify-center flex-shrink-0">
                           <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
@@ -1377,12 +1377,12 @@ export default function AdminLeads() {
                           </p>
                           <div className="bg-white rounded-lg p-4 mb-4">
                             <h4 className="font-semibold text-sm text-gray-900 mb-2">Étapes de configuration :</h4>
-                            <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
-                              <li>Aller sur <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google Cloud Console</a></li>
+                            <ol className="list-decimal list-inside space-y-1 text-sm text-foreground dark:text-foreground">
+                              <li>Aller sur <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-info dark:text-info-dark hover:underline">Google Cloud Console</a></li>
                               <li>Créer un projet ou sélectionner un projet existant</li>
                               <li>Activer l'API Google Ads</li>
                               <li>Créer des identifiants OAuth 2.0 (Application Web)</li>
-                              <li>Ajouter l'URL de redirection : <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">{window.location.origin}/api/google-ads/callback</code></li>
+                              <li>Ajouter l'URL de redirection : <code className="bg-muted dark:bg-muted/50 px-1 py-0.5 rounded text-xs">{window.location.origin}/api/google-ads/callback</code></li>
                               <li>Copier le Client ID et Client Secret</li>
                               <li>Contacter l'administrateur pour ajouter ces identifiants aux variables d'environnement</li>
                             </ol>
@@ -1396,17 +1396,17 @@ export default function AdminLeads() {
                   </Card>
                 ) : googleConnectedAccounts && googleConnectedAccounts.length > 0 ? (
                   <div className="space-y-4">
-                    <Card className="border-green-200 bg-green-50">
+                    <Card className="border-emerald-500/20 dark:border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-500/20">
                       <CardContent className="p-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                            <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <div className="w-10 h-10 bg-emerald-500/15 dark:bg-emerald-500/25 rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                           </div>
                           <div className="flex-1">
                             <h3 className="font-semibold text-green-900">Compte Google Ads connecté</h3>
-                            <p className="text-sm text-green-700">{googleConnectedAccounts[0].googleUserEmail}</p>
+                            <p className="text-sm text-emerald-700 dark:text-emerald-400">{googleConnectedAccounts[0].googleUserEmail}</p>
                             {googleConnectedAccounts[0].customerId === 'PENDING' && (
                               <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
                                 <AlertCircle className="w-3 h-3" />
@@ -1433,7 +1433,7 @@ export default function AdminLeads() {
                                   disconnectGoogleMutation.mutate({ accountId: googleConnectedAccounts[0].id });
                                 }
                               }}
-                              className="text-red-600 border-red-200 hover:bg-red-50"
+                              className="text-destructive dark:text-destructive border-destructive/20 dark:border-destructive/30 hover:bg-destructive/10 dark:bg-destructive/20"
                             >
                               Déconnecter
                             </Button>
@@ -1446,11 +1446,11 @@ export default function AdminLeads() {
                       <Card>
                         <CardContent className="p-8 text-center">
                           <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-500" />
-                          <p className="text-gray-500">Chargement des campagnes Google Ads...</p>
+                          <p className="text-muted-foreground dark:text-muted-foreground">Chargement des campagnes Google Ads...</p>
                         </CardContent>
                       </Card>
                     ) : googleCampaignsData?.error ? (
-                      <Card className="border-amber-200 bg-amber-50">
+                      <Card className="border-amber-200 bg-amber-500/10 dark:bg-amber-500/20">
                         <CardContent className="p-6">
                           <div className="flex items-start gap-3">
                             <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
@@ -1469,7 +1469,7 @@ export default function AdminLeads() {
                         {/* Date Preset Selector */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-gray-500" />
+                            <Calendar className="w-4 h-4 text-muted-foreground dark:text-muted-foreground" />
                             <Select value={googleDatePreset} onValueChange={setGoogleDatePreset}>
                               <SelectTrigger className="w-[180px]">
                                 <SelectValue />
@@ -1504,37 +1504,37 @@ export default function AdminLeads() {
                               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                                 <Card>
                                   <CardContent className="p-4">
-                                    <p className="text-xs text-gray-500 mb-1">Dépenses</p>
+                                    <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">Dépenses</p>
                                     <p className="text-base font-semibold text-display text-gray-900">{formatMoney(totalSpend)}</p>
                                   </CardContent>
                                 </Card>
                                 <Card>
                                   <CardContent className="p-4">
-                                    <p className="text-xs text-gray-500 mb-1">Impressions</p>
+                                    <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">Impressions</p>
                                     <p className="text-base font-semibold text-display text-gray-900">{totalImpressions.toLocaleString('fr-FR')}</p>
                                   </CardContent>
                                 </Card>
                                 <Card>
                                   <CardContent className="p-4">
-                                    <p className="text-xs text-gray-500 mb-1">Clics</p>
+                                    <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">Clics</p>
                                     <p className="text-base font-semibold text-display text-gray-900">{totalClicks.toLocaleString('fr-FR')}</p>
                                   </CardContent>
                                 </Card>
                                 <Card>
                                   <CardContent className="p-4">
-                                    <p className="text-xs text-gray-500 mb-1">CTR</p>
+                                    <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">CTR</p>
                                     <p className="text-base font-semibold text-display text-gray-900">{avgCtr.toFixed(2)}%</p>
                                   </CardContent>
                                 </Card>
                                 <Card>
                                   <CardContent className="p-4">
-                                    <p className="text-xs text-gray-500 mb-1">CPC moyen</p>
+                                    <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">CPC moyen</p>
                                     <p className="text-base font-semibold text-display text-gray-900">{formatMoney(avgCpc)}</p>
                                   </CardContent>
                                 </Card>
                                 <Card>
                                   <CardContent className="p-4">
-                                    <p className="text-xs text-gray-500 mb-1">Conversions</p>
+                                    <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">Conversions</p>
                                     <p className="text-base font-semibold text-display text-gray-900">{totalConversions.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}</p>
                                   </CardContent>
                                 </Card>
@@ -1545,7 +1545,7 @@ export default function AdminLeads() {
                                 <Card>
                                   <CardContent className="p-8 text-center">
                                     <BarChart3 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                                    <p className="text-gray-500">Aucune campagne trouvée pour cette période</p>
+                                    <p className="text-muted-foreground dark:text-muted-foreground">Aucune campagne trouvée pour cette période</p>
                                   </CardContent>
                                 </Card>
                               ) : (
@@ -1557,17 +1557,17 @@ export default function AdminLeads() {
                                     <div className="overflow-x-auto">
                                       <table className="w-full text-sm">
                                         <thead>
-                                          <tr className="border-b bg-gray-50">
-                                            <th className="text-left p-3 font-medium text-gray-600">Campagne</th>
-                                            <th className="text-left p-3 font-medium text-gray-600">Type</th>
-                                            <th className="text-left p-3 font-medium text-gray-600">Statut</th>
-                                            <th className="text-right p-3 font-medium text-gray-600">Budget/j</th>
-                                            <th className="text-right p-3 font-medium text-gray-600">Dépenses</th>
-                                            <th className="text-right p-3 font-medium text-gray-600">Impressions</th>
-                                            <th className="text-right p-3 font-medium text-gray-600">Clics</th>
-                                            <th className="text-right p-3 font-medium text-gray-600">CTR</th>
-                                            <th className="text-right p-3 font-medium text-gray-600">CPC</th>
-                                            <th className="text-right p-3 font-medium text-gray-600">Conv.</th>
+                                          <tr className="border-b bg-muted/50 dark:bg-muted/30">
+                                            <th className="text-left p-3 font-medium text-muted-foreground dark:text-muted-foreground">Campagne</th>
+                                            <th className="text-left p-3 font-medium text-muted-foreground dark:text-muted-foreground">Type</th>
+                                            <th className="text-left p-3 font-medium text-muted-foreground dark:text-muted-foreground">Statut</th>
+                                            <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">Budget/j</th>
+                                            <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">Dépenses</th>
+                                            <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">Impressions</th>
+                                            <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">Clics</th>
+                                            <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">CTR</th>
+                                            <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">CPC</th>
+                                            <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">Conv.</th>
                                           </tr>
                                         </thead>
                                         <tbody>
@@ -1577,7 +1577,7 @@ export default function AdminLeads() {
                                             const cpc = ins.clicks > 0 ? (ins.spend / ins.clicks) : 0;
                                             const dailyBudget = campaign.budget_micros / 1_000_000;
                                             return (
-                                              <tr key={campaign.id} className="border-b hover:bg-gray-50">
+                                              <tr key={campaign.id} className="border-b hover:bg-muted/50 dark:bg-muted/30">
                                                 <td className="p-3">
                                                   <div className="font-medium text-gray-900 max-w-[200px] truncate" title={campaign.name}>{campaign.name}</div>
                                                 </td>
@@ -1585,16 +1585,16 @@ export default function AdminLeads() {
                                                   <Badge variant="outline" className="text-xs">{campaign.channel_type}</Badge>
                                                 </td>
                                                 <td className="p-3">
-                                                  <Badge className={campaign.status === 'Active' ? 'bg-green-100 text-green-800' : campaign.status === 'En pause' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}>
+                                                  <Badge className={campaign.status === 'Active' ? 'bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400' : campaign.status === 'En pause' ? 'bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400' : 'bg-muted dark:bg-muted/50 text-gray-800'}>
                                                     {campaign.status}
                                                   </Badge>
                                                 </td>
-                                                <td className="p-3 text-right text-gray-600">{formatMoney(dailyBudget)}</td>
+                                                <td className="p-3 text-right text-muted-foreground dark:text-muted-foreground">{formatMoney(dailyBudget)}</td>
                                                 <td className="p-3 text-right font-medium">{formatMoney(ins.spend || 0)}</td>
-                                                <td className="p-3 text-right text-gray-600">{(ins.impressions || 0).toLocaleString('fr-FR')}</td>
-                                                <td className="p-3 text-right text-gray-600">{(ins.clicks || 0).toLocaleString('fr-FR')}</td>
-                                                <td className="p-3 text-right text-gray-600">{ctr.toFixed(2)}%</td>
-                                                <td className="p-3 text-right text-gray-600">{formatMoney(cpc)}</td>
+                                                <td className="p-3 text-right text-muted-foreground dark:text-muted-foreground">{(ins.impressions || 0).toLocaleString('fr-FR')}</td>
+                                                <td className="p-3 text-right text-muted-foreground dark:text-muted-foreground">{(ins.clicks || 0).toLocaleString('fr-FR')}</td>
+                                                <td className="p-3 text-right text-muted-foreground dark:text-muted-foreground">{ctr.toFixed(2)}%</td>
+                                                <td className="p-3 text-right text-muted-foreground dark:text-muted-foreground">{formatMoney(cpc)}</td>
                                                 <td className="p-3 text-right font-medium">{(ins.conversions || 0).toLocaleString('fr-FR', { maximumFractionDigits: 1 })}</td>
                                               </tr>
                                             );
@@ -1618,7 +1618,7 @@ export default function AdminLeads() {
                         <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                       </div>
                       <h3 className="text-lg font-semibold mb-2">Connecter votre compte Google Ads</h3>
-                      <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                      <p className="text-muted-foreground dark:text-muted-foreground mb-6 max-w-md mx-auto">
                         Connectez votre compte Google Ads pour voir vos campagnes, dépenses, impressions et conversions en temps réel.
                       </p>
                       <Button
@@ -1656,33 +1656,33 @@ export default function AdminLeads() {
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h3 className="font-semibold text-gray-900">{name}</h3>
-                          <p className="text-sm text-gray-500">{stats.total} leads assignés</p>
+                          <p className="text-sm text-muted-foreground dark:text-muted-foreground">{stats.total} leads assignés</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl text-display text-display font-bold text-green-600">{conversionRate}%</p>
-                          <p className="text-xs text-gray-500">Taux de conversion</p>
+                          <p className="text-2xl text-display text-display font-bold text-emerald-600 dark:text-emerald-400">{conversionRate}%</p>
+                          <p className="text-xs text-muted-foreground dark:text-muted-foreground">Taux de conversion</p>
                         </div>
                       </div>
                       <div className="space-y-3">
                         <div>
                           <div className="flex justify-between text-sm mb-1">
-                            <span className="text-gray-600">Taux de contact</span>
+                            <span className="text-muted-foreground dark:text-muted-foreground">Taux de contact</span>
                             <span className="font-medium">{contactRate}%</span>
                           </div>
                           <Progress value={contactRate} className="h-2" />
                         </div>
                         <div className="grid grid-cols-3 gap-4 pt-2">
                           <div className="text-center">
-                            <p className="text-lg font-semibold text-blue-600">{stats.total - stats.contacted}</p>
-                            <p className="text-xs text-gray-500">Non contactés</p>
+                            <p className="text-lg font-semibold text-info dark:text-info-dark">{stats.total - stats.contacted}</p>
+                            <p className="text-xs text-muted-foreground dark:text-muted-foreground">Non contactés</p>
                           </div>
                           <div className="text-center">
                             <p className="text-lg font-semibold text-yellow-600">{stats.contacted - stats.converted}</p>
-                            <p className="text-xs text-gray-500">En cours</p>
+                            <p className="text-xs text-muted-foreground dark:text-muted-foreground">En cours</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-lg font-semibold text-green-600">{stats.converted}</p>
-                            <p className="text-xs text-gray-500">Convertis</p>
+                            <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">{stats.converted}</p>
+                            <p className="text-xs text-muted-foreground dark:text-muted-foreground">Convertis</p>
                           </div>
                         </div>
                       </div>
@@ -1700,7 +1700,7 @@ export default function AdminLeads() {
                 <CardContent className="p-8 text-center">
                   <GitCompareArrows className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">Comparaison de périodes</h3>
-                  <p className="text-gray-500">Connectez d'abord votre compte Meta Ads dans l'onglet Campagnes pour accéder à la comparaison.</p>
+                  <p className="text-muted-foreground dark:text-muted-foreground">Connectez d'abord votre compte Meta Ads dans l'onglet Campagnes pour accéder à la comparaison.</p>
                 </CardContent>
               </Card>
             ) : (
@@ -1758,7 +1758,7 @@ export default function AdminLeads() {
 
                 {/* Loading */}
                 {comparisonLoading && (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground dark:text-muted-foreground">
                     <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
                     Chargement de la comparaison...
                   </div>
@@ -1803,7 +1803,7 @@ export default function AdminLeads() {
                           return (
                             <Card key={metric.key} className="relative overflow-hidden">
                               <CardContent className="p-4">
-                                <p className="text-xs text-gray-500 mb-1">{metric.label}</p>
+                                <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">{metric.label}</p>
                                 <p className="text-base font-semibold text-display">{metric.format(currVal)}</p>
                                 <div className="flex items-center gap-1 mt-1">
                                   {change !== 0 ? (
@@ -1813,7 +1813,7 @@ export default function AdminLeads() {
                                       ) : (
                                         <ArrowDownRight className={`w-3.5 h-3.5 ${isPositive ? 'text-green-500' : 'text-red-500'}`} />
                                       )}
-                                      <span className={`text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                                      <span className={`text-xs font-medium ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive dark:text-destructive'}`}>
                                         {change > 0 ? '+' : ''}{change.toFixed(1)}%
                                       </span>
                                     </>
@@ -1890,17 +1890,17 @@ export default function AdminLeads() {
                           <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                               <thead>
-                                <tr className="border-b bg-gray-50">
-                                  <th className="text-left p-3 font-medium text-gray-600">Métrique</th>
-                                  <th className="text-right p-3 font-medium text-gray-600">
+                                <tr className="border-b bg-muted/50 dark:bg-muted/30">
+                                  <th className="text-left p-3 font-medium text-muted-foreground dark:text-muted-foreground">Métrique</th>
+                                  <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">
                                     Période actuelle
                                     <span className="block text-xs font-normal text-gray-400">{comparisonPeriods.currentPeriod.since} → {comparisonPeriods.currentPeriod.until}</span>
                                   </th>
-                                  <th className="text-right p-3 font-medium text-gray-600">
+                                  <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">
                                     Période précédente
                                     <span className="block text-xs font-normal text-gray-400">{comparisonPeriods.previousPeriod.since} → {comparisonPeriods.previousPeriod.until}</span>
                                   </th>
-                                  <th className="text-right p-3 font-medium text-gray-600">Évolution</th>
+                                  <th className="text-right p-3 font-medium text-muted-foreground dark:text-muted-foreground">Évolution</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -1911,10 +1911,10 @@ export default function AdminLeads() {
                                   const isPositive = metric.invertColor ? change <= 0 : change >= 0;
                                   
                                   return (
-                                    <tr key={metric.key} className="border-b hover:bg-gray-50 transition-colors">
+                                    <tr key={metric.key} className="border-b hover:bg-muted/50 dark:bg-muted/30 transition-colors">
                                       <td className="p-3 font-medium text-gray-900">{metric.label}</td>
                                       <td className="p-3 text-right font-semibold">{metric.format(currVal)}</td>
-                                      <td className="p-3 text-right text-gray-500">{metric.format(prevVal)}</td>
+                                      <td className="p-3 text-right text-muted-foreground dark:text-muted-foreground">{metric.format(prevVal)}</td>
                                       <td className="p-3 text-right">
                                         <div className="flex items-center justify-end gap-1">
                                           {change !== 0 ? (
@@ -1924,7 +1924,7 @@ export default function AdminLeads() {
                                               ) : (
                                                 <ArrowDownRight className={`w-4 h-4 ${isPositive ? 'text-green-500' : 'text-red-500'}`} />
                                               )}
-                                              <span className={`font-semibold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                                              <span className={`font-semibold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive dark:text-destructive'}`}>
                                                 {change > 0 ? '+' : ''}{change.toFixed(1)}%
                                               </span>
                                             </>
@@ -1949,7 +1949,7 @@ export default function AdminLeads() {
                 {comparisonData && !comparisonData.current && !comparisonLoading && (
                   <Card>
                     <CardContent className="p-8 text-center">
-                      <p className="text-gray-500">Aucune donnée disponible pour cette comparaison.</p>
+                      <p className="text-muted-foreground dark:text-muted-foreground">Aucune donnée disponible pour cette comparaison.</p>
                       {(comparisonData as any)?.error && (
                         <p className="text-sm text-red-500 mt-2">{(comparisonData as any).error}</p>
                       )}
@@ -2014,9 +2014,9 @@ export default function AdminLeads() {
               <DialogHeader>
                 <DialogTitle className="text-xl text-display text-display flex items-center gap-2">
                   {selectedLead.firstName} {selectedLead.lastName}
-                  {companyName && <span className="text-base font-normal text-gray-500">({companyName})</span>}
+                  {companyName && <span className="text-base font-normal text-muted-foreground dark:text-muted-foreground">({companyName})</span>}
                   {isPartnerCandidate(selectedLead) && (
-                    <Badge className="bg-orange-100 text-orange-800 text-xs ml-2">
+                    <Badge className="bg-orange-500/15 dark:bg-orange-500/25 text-orange-800 dark:text-orange-400 text-xs ml-2">
                       <Handshake className="w-3 h-3 mr-1" />
                       Candidat Partenaire
                     </Badge>
@@ -2029,15 +2029,15 @@ export default function AdminLeads() {
 
               {/* Bandeau candidat partenaire */}
               {isPartnerCandidate(selectedLead) && (
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex items-center justify-between">
+                <div className="bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/20 dark:border-orange-500/30 rounded-lg p-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Handshake className="w-5 h-5 text-orange-600" />
+                    <Handshake className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                     <div>
-                      <p className="text-sm font-medium text-orange-800">Ce lead est un candidat partenaire</p>
-                      <p className="text-xs text-orange-600">Redirigé automatiquement vers la Carte du Réseau</p>
+                      <p className="text-sm font-medium text-orange-800 dark:text-orange-400">Ce lead est un candidat partenaire</p>
+                      <p className="text-xs text-orange-600 dark:text-orange-400">Redirigé automatiquement vers la Carte du Réseau</p>
                     </div>
                   </div>
-                  <a href="/admin/partner-map" className="text-sm text-orange-700 hover:text-orange-900 font-medium flex items-center gap-1">
+                  <a href="/admin/partner-map" className="text-sm text-orange-700 dark:text-orange-400 hover:text-orange-900 font-medium flex items-center gap-1">
                     <Map className="w-4 h-4" />
                     Voir sur la carte
                   </a>
@@ -2047,21 +2047,21 @@ export default function AdminLeads() {
               <div className="space-y-5 py-4">
                 {/* Section: Coordonnées */}
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-foreground dark:text-foreground mb-3 flex items-center gap-2">
                     <User className="w-4 h-4" /> Coordonnées
                   </h4>
-                  <div className="grid grid-cols-2 gap-3 bg-gray-50 rounded-lg p-4">
+                  <div className="grid grid-cols-2 gap-3 bg-muted/50 dark:bg-muted/30 rounded-lg p-4">
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">Email</p>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Email</p>
                       <p className="font-medium text-sm">{selectedLead.email || "-"}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">Téléphone</p>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Téléphone</p>
                       <p className="font-medium text-sm">{selectedLead.phone || "-"}</p>
                     </div>
                     {companyName && (
                       <div className="col-span-2">
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Entreprise</p>
+                        <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Entreprise</p>
                         <p className="font-medium text-sm">{companyName}</p>
                       </div>
                     )}
@@ -2071,26 +2071,26 @@ export default function AdminLeads() {
                 {/* Section: Localisation */}
                 {(displayAddress || displayCity || displayPostalCode || displayCountry) && (
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <h4 className="text-sm font-semibold text-foreground dark:text-foreground mb-3 flex items-center gap-2">
                       <MapPin className="w-4 h-4" /> Localisation
                     </h4>
-                    <div className="grid grid-cols-2 gap-3 bg-gray-50 rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-3 bg-muted/50 dark:bg-muted/30 rounded-lg p-4">
                       {displayAddress && (
                         <div className="col-span-2">
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Adresse</p>
+                          <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Adresse</p>
                           <p className="font-medium text-sm">{displayAddress}</p>
                         </div>
                       )}
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Ville</p>
+                        <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Ville</p>
                         <p className="font-medium text-sm">{displayCity || "-"}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Code postal</p>
+                        <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Code postal</p>
                         <p className="font-medium text-sm">{displayPostalCode || "-"}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Pays</p>
+                        <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Pays</p>
                         <p className="font-medium text-sm">{displayCountry || "-"}</p>
                       </div>
                     </div>
@@ -2099,41 +2099,41 @@ export default function AdminLeads() {
 
                 {/* Section: Détails du lead */}
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-foreground dark:text-foreground mb-3 flex items-center gap-2">
                     <Target className="w-4 h-4" /> Détails du lead
                   </h4>
-                  <div className="grid grid-cols-2 gap-3 bg-gray-50 rounded-lg p-4">
+                  <div className="grid grid-cols-2 gap-3 bg-muted/50 dark:bg-muted/30 rounded-lg p-4">
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">Statut</p>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Statut</p>
                       <Badge className={LEAD_STATUSES[selectedLead.status as keyof typeof LEAD_STATUSES]?.color + " mt-1"}>
                         {LEAD_STATUSES[selectedLead.status as keyof typeof LEAD_STATUSES]?.label}
                       </Badge>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">Partenaire assigné</p>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Partenaire assigné</p>
                       <p className="font-medium text-sm">{selectedLead.partnerName || "Non assigné"}</p>
                     </div>
                     {selectedLead.productInterest && (
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Produit d'intérêt</p>
+                        <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Produit d'intérêt</p>
                         <p className="font-medium text-sm">{selectedLead.productInterest}</p>
                       </div>
                     )}
                     {selectedLead.budget && (
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Budget</p>
+                        <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Budget</p>
                         <p className="font-medium text-sm">{selectedLead.budget}</p>
                       </div>
                     )}
                     {selectedLead.timeline && (
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Délai</p>
+                        <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Délai</p>
                         <p className="font-medium text-sm">{selectedLead.timeline}</p>
                       </div>
                     )}
                     {selectedLead.estimatedValue && (
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Valeur estimée</p>
+                        <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Valeur estimée</p>
                         <p className="font-medium text-sm">{parseFloat(selectedLead.estimatedValue).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</p>
                       </div>
                     )}
@@ -2143,13 +2143,13 @@ export default function AdminLeads() {
                 {/* Section: Questions-Réponses du formulaire Meta */}
                 {qaFields.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <h4 className="text-sm font-semibold text-foreground dark:text-foreground mb-3 flex items-center gap-2">
                       <FileText className="w-4 h-4" /> Réponses au formulaire
                     </h4>
-                    <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+                    <div className="bg-info/10 dark:bg-info-light rounded-lg p-4 space-y-3">
                       {qaFields.map(([key, value]) => (
                         <div key={key} className="border-b border-blue-100 last:border-0 pb-2 last:pb-0">
-                          <p className="text-xs text-blue-600 font-medium uppercase tracking-wide">{formatFieldLabel(key)}</p>
+                          <p className="text-xs text-info dark:text-info-dark font-medium uppercase tracking-wide">{formatFieldLabel(key)}</p>
                           <p className="font-medium text-sm text-gray-800 mt-0.5">{formatFieldValue(String(value))}</p>
                         </div>
                       ))}
@@ -2160,19 +2160,19 @@ export default function AdminLeads() {
                 {/* Section: Message / Notes */}
                 {(selectedLead.message || selectedLead.notes) && (
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <h4 className="text-sm font-semibold text-foreground dark:text-foreground mb-3 flex items-center gap-2">
                       <FileText className="w-4 h-4" /> Notes
                     </h4>
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div className="bg-muted/50 dark:bg-muted/30 rounded-lg p-4 space-y-2">
                       {selectedLead.message && (
                         <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Message</p>
+                          <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Message</p>
                           <p className="text-sm mt-1">{selectedLead.message}</p>
                         </div>
                       )}
                       {selectedLead.notes && (
                         <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Notes internes</p>
+                          <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Notes internes</p>
                           <p className="text-sm mt-1">{selectedLead.notes}</p>
                         </div>
                       )}
@@ -2182,23 +2182,23 @@ export default function AdminLeads() {
 
                 {/* Section: Suivi */}
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-foreground dark:text-foreground mb-3 flex items-center gap-2">
                     <Clock className="w-4 h-4" /> Suivi
                   </h4>
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-muted/50 dark:bg-muted/30 rounded-lg p-4">
                     {selectedLead.firstContactAt ? (
-                      <div className="flex items-center gap-2 text-green-600">
+                      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                         <CheckCircle className="w-4 h-4" />
                         <span className="text-sm">Premier contact: {formatDate(selectedLead.firstContactAt)}</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-orange-600">
+                      <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
                         <AlertCircle className="w-4 h-4" />
                         <span className="text-sm">Pas encore contacté ({selectedLead.contactAttempts} tentatives)</span>
                       </div>
                     )}
                     {selectedLead.assignedAt && (
-                      <p className="text-xs text-gray-500 mt-2">Assigné le {formatDate(selectedLead.assignedAt)}</p>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-2">Assigné le {formatDate(selectedLead.assignedAt)}</p>
                     )}
                   </div>
                 </div>

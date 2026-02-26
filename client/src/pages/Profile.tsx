@@ -363,12 +363,12 @@ export default function Profile() {
                           <span
                             className={`px-3 py-1 rounded-full text-sm font-medium ${
                               partner.level === "PLATINUM" || partner.level === "VIP"
-                                ? "bg-purple-100 text-purple-700"
+                                ? "bg-purple-500/15 dark:bg-purple-500/25 text-purple-700 dark:text-purple-400"
                                 : partner.level === "GOLD"
-                                ? "bg-yellow-100 text-yellow-700"
+                                ? "bg-amber-500/15 dark:bg-amber-500/25 text-amber-700 dark:text-amber-400"
                                 : partner.level === "SILVER"
-                                ? "bg-gray-100 text-gray-700"
-                                : "bg-orange-100 text-orange-700"
+                                ? "bg-muted dark:bg-muted/50 text-foreground dark:text-foreground"
+                                : "bg-orange-500/15 dark:bg-orange-500/25 text-orange-700 dark:text-orange-400"
                             }`}
                           >
                             {partner.level}
@@ -383,10 +383,10 @@ export default function Profile() {
                         <span
                           className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
                             partner.status === "APPROVED"
-                              ? "bg-green-100 text-green-700"
+                              ? "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400"
                               : partner.status === "PENDING"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"
+                              ? "bg-amber-500/15 dark:bg-amber-500/25 text-amber-700 dark:text-amber-400"
+                              : "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive"
                           }`}
                         >
                           {partner.status === "APPROVED"
@@ -511,7 +511,7 @@ export default function Profile() {
                           Vous êtes connecté via Manus OAuth
                         </p>
                       </div>
-                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                      <span className="px-3 py-1 bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 rounded-full text-sm">
                         Sécurisé
                       </span>
                     </div>
@@ -722,8 +722,8 @@ function TeamManagementTab() {
                     className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                        <Clock className="w-5 h-5 text-orange-600" />
+                      <div className="w-10 h-10 rounded-full bg-orange-500/15 dark:bg-orange-500/25 flex items-center justify-center">
+                        <Clock className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                       </div>
                       <div>
                         <p className="font-medium">{invitation.email}</p>

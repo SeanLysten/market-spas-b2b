@@ -152,7 +152,7 @@ export default function Terms() {
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
             L'utilisation de vos données personnelles est régie par notre{" "}
-            <a href="/privacy" className="text-blue-600 hover:underline">
+            <a href="/privacy" className="text-info dark:text-info-dark hover:underline">
               Politique de Confidentialité
             </a>. En utilisant le Portail, vous acceptez également cette politique.
           </p>
@@ -198,8 +198,8 @@ export default function Terms() {
           </p>
           <div className="bg-slate-50 p-4 rounded-lg">
             <p className="text-slate-700"><strong>Market Spas</strong></p>
-            <p className="text-slate-700">Email : <a href="mailto:support@marketspas.pro" className="text-blue-600 hover:underline">support@marketspas.pro</a></p>
-            <p className="text-slate-700">Site web : <a href="https://marketspas.pro" className="text-blue-600 hover:underline">https://marketspas.pro</a></p>
+            <p className="text-slate-700">Email : <a href="mailto:support@marketspas.pro" className="text-info dark:text-info-dark hover:underline">support@marketspas.pro</a></p>
+            <p className="text-slate-700">Site web : <a href="https://marketspas.pro" className="text-info dark:text-info-dark hover:underline">https://marketspas.pro</a></p>
           </div>
         </section>
       </div>

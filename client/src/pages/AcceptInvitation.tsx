@@ -50,13 +50,13 @@ export default function AcceptInvitation() {
               </div>
             )}
             {status === "success" && (
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-green-600" />
+              <div className="w-16 h-16 rounded-full bg-emerald-500/15 dark:bg-emerald-500/25 flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
               </div>
             )}
             {status === "error" && (
-              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
-                <XCircle className="w-8 h-8 text-red-600" />
+              <div className="w-16 h-16 rounded-full bg-destructive/15 dark:bg-destructive/25 flex items-center justify-center">
+                <XCircle className="w-8 h-8 text-destructive dark:text-destructive" />
               </div>
             )}
           </div>

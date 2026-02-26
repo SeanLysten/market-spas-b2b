@@ -78,7 +78,7 @@ export default function Privacy() {
               href="https://developers.google.com/terms" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
+              className="text-info dark:text-info-dark hover:underline"
             >
               Conditions d'utilisation des API Google
             </a>.
@@ -134,7 +134,7 @@ export default function Privacy() {
             <li>Droit de retirer votre consentement à tout moment</li>
           </ul>
           <p className="text-slate-700 leading-relaxed mt-4">
-            Pour exercer ces droits, contactez-nous à : <a href="mailto:privacy@marketspas.pro" className="text-blue-600 hover:underline">privacy@marketspas.pro</a>
+            Pour exercer ces droits, contactez-nous à : <a href="mailto:privacy@marketspas.pro" className="text-info dark:text-info-dark hover:underline">privacy@marketspas.pro</a>
           </p>
         </section>
 
@@ -177,8 +177,8 @@ export default function Privacy() {
           </p>
           <div className="bg-slate-50 p-4 rounded-lg">
             <p className="text-slate-700"><strong>Market Spas</strong></p>
-            <p className="text-slate-700">Email : <a href="mailto:privacy@marketspas.pro" className="text-blue-600 hover:underline">privacy@marketspas.pro</a></p>
-            <p className="text-slate-700">Site web : <a href="https://marketspas.pro" className="text-blue-600 hover:underline">https://marketspas.pro</a></p>
+            <p className="text-slate-700">Email : <a href="mailto:privacy@marketspas.pro" className="text-info dark:text-info-dark hover:underline">privacy@marketspas.pro</a></p>
+            <p className="text-slate-700">Site web : <a href="https://marketspas.pro" className="text-info dark:text-info-dark hover:underline">https://marketspas.pro</a></p>
           </div>
         </section>
       </div>

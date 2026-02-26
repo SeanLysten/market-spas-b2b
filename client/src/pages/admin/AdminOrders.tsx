@@ -31,15 +31,15 @@ import { toast } from "sonner";
 type OrderStatus = "PENDING_APPROVAL" | "PENDING_DEPOSIT" | "DEPOSIT_PAID" | "IN_PRODUCTION" | "READY_TO_SHIP" | "SHIPPED" | "DELIVERED" | "COMPLETED" | "CANCELLED";
 
 const ORDER_STATUSES: { value: OrderStatus; label: string; color: string; icon: any }[] = [
-  { value: "PENDING_APPROVAL", label: "En attente d'approbation", color: "bg-yellow-100 text-yellow-800", icon: Clock },
-  { value: "PENDING_DEPOSIT", label: "Acompte requis", color: "bg-orange-100 text-orange-800", icon: Euro },
-  { value: "DEPOSIT_PAID", label: "Acompte payé", color: "bg-blue-100 text-blue-800", icon: CheckCircle2 },
-  { value: "IN_PRODUCTION", label: "En production", color: "bg-purple-100 text-purple-800", icon: Package },
-  { value: "READY_TO_SHIP", label: "Prêt à expédier", color: "bg-indigo-100 text-indigo-800", icon: Package },
-  { value: "SHIPPED", label: "Expédié", color: "bg-cyan-100 text-cyan-800", icon: Truck },
-  { value: "DELIVERED", label: "Livré", color: "bg-green-100 text-green-800", icon: CheckCircle2 },
-  { value: "COMPLETED", label: "Terminé", color: "bg-green-100 text-green-800", icon: CheckCircle2 },
-  { value: "CANCELLED", label: "Annulé", color: "bg-red-100 text-red-800", icon: XCircle },
+  { value: "PENDING_APPROVAL", label: "En attente d'approbation", color: "bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400", icon: Clock },
+  { value: "PENDING_DEPOSIT", label: "Acompte requis", color: "bg-orange-500/15 dark:bg-orange-500/25 text-orange-800 dark:text-orange-400", icon: Euro },
+  { value: "DEPOSIT_PAID", label: "Acompte payé", color: "bg-info/15 dark:bg-info-light text-info dark:text-info-dark", icon: CheckCircle2 },
+  { value: "IN_PRODUCTION", label: "En production", color: "bg-purple-500/15 dark:bg-purple-500/25 text-purple-800 dark:text-purple-400", icon: Package },
+  { value: "READY_TO_SHIP", label: "Prêt à expédier", color: "bg-indigo-500/15 dark:bg-indigo-500/25 text-indigo-800", icon: Package },
+  { value: "SHIPPED", label: "Expédié", color: "bg-cyan-500/15 dark:bg-cyan-500/25 text-cyan-800", icon: Truck },
+  { value: "DELIVERED", label: "Livré", color: "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400", icon: CheckCircle2 },
+  { value: "COMPLETED", label: "Terminé", color: "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400", icon: CheckCircle2 },
+  { value: "CANCELLED", label: "Annulé", color: "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive", icon: XCircle },
 ];
 
 export default function AdminOrders() {
@@ -160,7 +160,7 @@ export default function AdminOrders() {
               <div className="text-2xl text-display text-display font-bold">{stats.total}</div>
             </CardContent>
           </Card>
-          <Card className="border-yellow-200">
+          <Card className="border-amber-500/20 dark:border-amber-500/30">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-yellow-600">En attente</CardTitle>
             </CardHeader>
@@ -168,20 +168,20 @@ export default function AdminOrders() {
               <div className="text-2xl text-display text-display font-bold text-yellow-600">{stats.pending}</div>
             </CardContent>
           </Card>
-          <Card className="border-blue-200">
+          <Card className="border-info/20 dark:border-info/30">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-blue-600">En cours</CardTitle>
+              <CardTitle className="text-sm font-medium text-info dark:text-info-dark">En cours</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl text-display text-display font-bold text-blue-600">{stats.inProgress}</div>
+              <div className="text-2xl text-display text-display font-bold text-info dark:text-info-dark">{stats.inProgress}</div>
             </CardContent>
           </Card>
-          <Card className="border-green-200">
+          <Card className="border-emerald-500/20 dark:border-emerald-500/30">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-green-600">Expédiées</CardTitle>
+              <CardTitle className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Expédiées</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl text-display text-display font-bold text-green-600">{stats.shipped}</div>
+              <div className="text-2xl text-display text-display font-bold text-emerald-600 dark:text-emerald-400">{stats.shipped}</div>
             </CardContent>
           </Card>
         </div>

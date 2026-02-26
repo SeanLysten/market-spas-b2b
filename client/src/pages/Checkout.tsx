@@ -233,7 +233,7 @@ export default function Checkout() {
                     <Label htmlFor="card-full" className="flex-1 cursor-pointer">
                       <div className="font-medium flex items-center gap-2">
                         Paiement par carte (100%)
-                        <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">Recommandé</span>
+                        <span className="text-xs bg-emerald-600 dark:bg-emerald-500 text-white px-2 py-0.5 rounded">Recommandé</span>
                       </div>
                       <div className="text-sm text-muted-foreground">
                         Payez la totalité de votre commande maintenant par carte bancaire
@@ -287,7 +287,7 @@ export default function Checkout() {
                         <div className="text-xs text-muted-foreground">
                           Quantité: {item.quantity}
                           {(item as any).isPreorder && (
-                            <span className="ml-2 text-orange-600">• Pré-commande</span>
+                            <span className="ml-2 text-orange-600 dark:text-orange-400">• Pré-commande</span>
                           )}
                         </div>
                       </div>
@@ -307,7 +307,7 @@ export default function Checkout() {
                     <span>{formatPrice(subtotalHT)} €</span>
                   </div>
                   {discountPercent > 0 && (
-                    <div className="flex justify-between text-sm text-green-600">
+                    <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
                       <span>Remise partenaire ({discountPercent}%)</span>
                       <span>-{formatPrice(discountAmount)} €</span>
                     </div>
@@ -326,12 +326,12 @@ export default function Checkout() {
                 <Separator />
 
                 {/* Info Box */}
-                <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <div className="bg-info/10 dark:bg-info-light dark:bg-blue-950/20 border border-info/20 dark:border-info/30 dark:border-blue-800 rounded-lg p-4">
                   <div className="flex gap-2">
-                    <Calendar className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <Calendar className="w-5 h-5 text-info dark:text-info-dark flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-blue-900 dark:text-blue-100">
                       <div className="font-medium mb-1">Après validation</div>
-                      <div className="text-blue-700 dark:text-blue-300">
+                      <div className="text-info dark:text-info-dark dark:text-blue-300">
                         Vous recevrez un devis détaillé par email. La commande sera traitée après confirmation du paiement.
                       </div>
                     </div>

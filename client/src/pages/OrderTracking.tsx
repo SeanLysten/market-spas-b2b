@@ -44,20 +44,20 @@ const getStatusColor = (status: string): string => {
   switch (status) {
     case "PENDING_APPROVAL":
     case "PENDING_DEPOSIT":
-      return "bg-yellow-100 text-yellow-800 border-yellow-300";
+      return "bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400 border-yellow-300";
     case "DEPOSIT_PAID":
     case "IN_PRODUCTION":
     case "READY_TO_SHIP":
-      return "bg-blue-100 text-blue-800 border-blue-300";
+      return "bg-info/15 dark:bg-info-light text-info dark:text-info-dark border-blue-300";
     case "SHIPPED":
-      return "bg-cyan-100 text-cyan-800 border-cyan-300";
+      return "bg-cyan-500/15 dark:bg-cyan-500/25 text-cyan-800 border-cyan-300";
     case "DELIVERED":
     case "COMPLETED":
-      return "bg-green-100 text-green-800 border-green-300";
+      return "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400 border-green-300";
     case "CANCELLED":
-      return "bg-red-100 text-red-800 border-red-300";
+      return "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive border-red-300";
     default:
-      return "bg-gray-100 text-gray-800 border-gray-300";
+      return "bg-muted dark:bg-muted/50 text-gray-800 border-gray-300";
   }
 };
 
@@ -192,11 +192,11 @@ export default function OrderTracking() {
               </CardHeader>
               <CardContent>
                 {isCancelled ? (
-                  <div className="flex items-center gap-4 p-6 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center gap-4 p-6 bg-destructive/10 dark:bg-destructive/20 border border-destructive/20 dark:border-destructive/30 rounded-lg">
                     <XCircle className="w-12 h-12 text-red-500" />
                     <div>
-                      <h3 className="text-lg font-semibold text-red-800">Commande annulée</h3>
-                      <p className="text-red-600">Cette commande a été annulée.</p>
+                      <h3 className="text-lg font-semibold text-destructive dark:text-destructive">Commande annulée</h3>
+                      <p className="text-destructive dark:text-destructive">Cette commande a été annulée.</p>
                     </div>
                   </div>
                 ) : (
@@ -325,7 +325,7 @@ export default function OrderTracking() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Acompte versé</span>
-                        <span className="text-green-600">{formatPrice(order.depositAmount)}</span>
+                        <span className="text-emerald-600 dark:text-emerald-400">{formatPrice(order.depositAmount)}</span>
                       </div>
                       <div className="flex justify-between text-sm font-medium">
                         <span>Reste à payer</span>

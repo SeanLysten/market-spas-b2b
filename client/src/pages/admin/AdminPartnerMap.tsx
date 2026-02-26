@@ -70,10 +70,10 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  non_contacte: 'bg-gray-100 text-gray-800',
-  en_cours: 'bg-blue-100 text-blue-800',
-  valide: 'bg-green-100 text-green-800',
-  archive: 'bg-red-100 text-red-800',
+  non_contacte: 'bg-muted dark:bg-muted/50 text-gray-800',
+  en_cours: 'bg-info/15 dark:bg-info-light text-info dark:text-info-dark',
+  valide: 'bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400',
+  archive: 'bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive',
 };
 
 const STATUS_ICONS: Record<string, any> = {
@@ -84,15 +84,15 @@ const STATUS_ICONS: Record<string, any> = {
 };
 
 const PRIORITY_COLORS: Record<number, string> = {
-  8: 'bg-red-600 text-white',
+  8: 'bg-destructive dark:bg-destructive text-white',
   7: 'bg-red-500 text-white',
   6: 'bg-orange-500 text-white',
   5: 'bg-orange-400 text-white',
-  4: 'bg-yellow-500 text-white',
+  4: 'bg-amber-500 dark:bg-amber-400 text-white',
   3: 'bg-yellow-400 text-gray-900',
   2: 'bg-green-400 text-white',
-  1: 'bg-green-500 text-white',
-  0: 'bg-gray-300 text-gray-700',
+  1: 'bg-emerald-500 dark:bg-emerald-400 text-white',
+  0: 'bg-gray-300 text-foreground dark:text-foreground',
 };
 
 
@@ -184,7 +184,7 @@ function AddCandidateForm({ onSuccess }: { onSuccess: () => void }) {
             <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
           </div>
 
-          <div className="border rounded-lg p-4 space-y-3 bg-gray-50">
+          <div className="border rounded-lg p-4 space-y-3 bg-muted/50 dark:bg-muted/30">
             <h4 className="font-semibold text-sm flex items-center gap-2">
               <Star className="w-4 h-4 text-amber-500" />
               Score de priorité : <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold ${PRIORITY_COLORS[priorityScore] || 'bg-gray-300'}`}>{priorityScore}</span>
@@ -511,7 +511,7 @@ function CandidatesTable({ candidates, onRefresh }: { candidates: any[]; onRefre
               const isEditing = editingId === candidate.id;
 
               return (
-                <TableRow key={candidate.id} className={`${candidate.visited ? 'bg-green-50/50' : ''} ${isEditing ? 'bg-blue-50/50' : ''}`}>
+                <TableRow key={candidate.id} className={`${candidate.visited ? 'bg-emerald-500/10 dark:bg-emerald-500/20/50' : ''} ${isEditing ? 'bg-info/10 dark:bg-info-light/50' : ''}`}>
                   {/* Priority Score */}
                   <TableCell>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${PRIORITY_COLORS[candidate.priorityScore] || 'bg-gray-300'}`}>
@@ -570,7 +570,7 @@ function CandidatesTable({ candidates, onRefresh }: { candidates: any[]; onRefre
                         </SelectContent>
                       </Select>
                     ) : (
-                      <Badge className={STATUS_COLORS[candidate.status] || 'bg-gray-100'}>
+                      <Badge className={STATUS_COLORS[candidate.status] || 'bg-muted dark:bg-muted/50'}>
                         {STATUS_LABELS[candidate.status] || candidate.status}
                       </Badge>
                     )}
@@ -636,7 +636,7 @@ function CandidatesTable({ candidates, onRefresh }: { candidates: any[]; onRefre
                     <Button
                       variant={candidate.visited ? "default" : "outline"}
                       size="sm"
-                      className={`h-7 text-xs ${candidate.visited ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                      className={`h-7 text-xs ${candidate.visited ? 'bg-emerald-600 dark:bg-emerald-500 hover:bg-green-700' : ''}`}
                       onClick={() => toggleVisitedMutation.mutate({ candidateId: candidate.id, visited: !candidate.visited })}
                     >
                       {candidate.visited ? <Eye className="w-3 h-3 mr-1" /> : <EyeOff className="w-3 h-3 mr-1" />}
@@ -662,19 +662,19 @@ function CandidatesTable({ candidates, onRefresh }: { candidates: any[]; onRefre
                             <Edit className="w-3.5 h-3.5" />
                           </Button>
                           <a href={`tel:${candidate.phoneNumber}`} title="Appeler">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-blue-600">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-info dark:text-info-dark">
                               <Phone className="w-3.5 h-3.5" />
                             </Button>
                           </a>
                           <a href={`mailto:${candidate.email}`} title="Email">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-blue-600">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-info dark:text-info-dark">
                               <Mail className="w-3.5 h-3.5" />
                             </Button>
                           </a>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                            className="h-7 w-7 p-0 text-destructive dark:text-destructive hover:text-destructive dark:text-destructive"
                             onClick={() => {
                               if (confirm('Supprimer ce candidat ?')) {
                                 deleteMutation.mutate({ id: candidate.id });
@@ -745,7 +745,7 @@ function StatsTab({ candidates }: { candidates: any[] }) {
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">Taux de conversion</p>
-            <p className="text-3xl font-bold text-green-600">{conversionRate}%</p>
+            <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{conversionRate}%</p>
           </CardContent>
         </Card>
         <Card>
@@ -757,7 +757,7 @@ function StatsTab({ candidates }: { candidates: any[] }) {
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">Haute priorité (6+)</p>
-            <p className="text-3xl font-bold text-red-600">{highPriority}</p>
+            <p className="text-3xl font-bold text-destructive dark:text-destructive">{highPriority}</p>
           </CardContent>
         </Card>
       </div>
@@ -792,23 +792,23 @@ function StatsTab({ candidates }: { candidates: any[] }) {
             <CardTitle className="text-base">Activité commerciale</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-muted/50 dark:bg-muted/30 rounded-lg">
               <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-blue-600" />
+                <Phone className="w-4 h-4 text-info dark:text-info-dark" />
                 <span className="text-sm">Appels passés</span>
               </div>
               <span className="font-bold">{totalCalls}</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-muted/50 dark:bg-muted/30 rounded-lg">
               <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-blue-600" />
+                <Mail className="w-4 h-4 text-info dark:text-info-dark" />
                 <span className="text-sm">Emails envoyés</span>
               </div>
               <span className="font-bold">{totalEmails}</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-muted/50 dark:bg-muted/30 rounded-lg">
               <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-green-600" />
+                <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 <span className="text-sm">Visites effectuées</span>
               </div>
               <span className="font-bold">{visited} / {total}</span>
@@ -831,7 +831,7 @@ function StatsTab({ candidates }: { candidates: any[] }) {
                       {d.score}
                     </div>
                     <div className="flex-1">
-                      <div className="h-6 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-6 bg-muted dark:bg-muted/50 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full ${d.score >= 6 ? 'bg-red-400' : d.score >= 4 ? 'bg-amber-400' : 'bg-green-400'}`}
                           style={{ width: `${pct}%` }}
@@ -894,8 +894,8 @@ export default function AdminPartnerMap() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Users className="w-5 h-5 text-purple-600" />
+                <div className="p-2 bg-purple-500/15 dark:bg-purple-500/25 rounded-lg">
+                  <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total candidats</p>
@@ -907,8 +907,8 @@ export default function AdminPartnerMap() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gray-100 rounded-lg">
-                  <AlertCircle className="w-5 h-5 text-gray-600" />
+                <div className="p-2 bg-muted dark:bg-muted/50 rounded-lg">
+                  <AlertCircle className="w-5 h-5 text-muted-foreground dark:text-muted-foreground" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Non contactés</p>
@@ -920,8 +920,8 @@ export default function AdminPartnerMap() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Clock className="w-5 h-5 text-blue-600" />
+                <div className="p-2 bg-info/15 dark:bg-info-light rounded-lg">
+                  <Clock className="w-5 h-5 text-info dark:text-info-dark" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">En cours</p>
@@ -933,8 +933,8 @@ export default function AdminPartnerMap() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <div className="p-2 bg-emerald-500/15 dark:bg-emerald-500/25 rounded-lg">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Validés</p>
@@ -946,8 +946,8 @@ export default function AdminPartnerMap() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <Star className="w-5 h-5 text-red-600" />
+                <div className="p-2 bg-destructive/15 dark:bg-destructive/25 rounded-lg">
+                  <Star className="w-5 h-5 text-destructive dark:text-destructive" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Haute priorité (6+)</p>

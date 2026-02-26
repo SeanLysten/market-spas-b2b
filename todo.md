@@ -1822,3 +1822,9 @@
 - [x] Tester le flux complet d'invitation utilisateur
 
 - [x] Appliquer la charte graphique dark mode officielle Market Spas v2.1 (pasted_content_2.txt)
+
+- [x] Ajouter le bouton ThemeToggle dans le header du dashboard utilisateur
+- [x] Corriger le mode dark de la page Leads utilisateur
+- [x] Corriger le mode dark des alertes stock sur le dashboard admin
+- [x] Vérifier et corriger le mode dark sur toutes les pages du dashboard utilisateur (774 changements dans 40 fichiers)
+- [x] Vérifier et corriger le mode dark sur toutes les pages du dashboard admin

@@ -93,14 +93,14 @@ export default function Resources() {
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      TECHNICAL_DOC: "bg-blue-100 text-blue-800",
-      VIDEO_TUTORIAL: "bg-purple-100 text-purple-800",
+      TECHNICAL_DOC: "bg-info/15 dark:bg-info-light text-info dark:text-info-dark",
+      VIDEO_TUTORIAL: "bg-purple-500/15 dark:bg-purple-500/25 text-purple-800 dark:text-purple-400",
       MARKETING_IMAGE: "bg-pink-100 text-pink-800",
-      CATALOG: "bg-green-100 text-green-800",
-      SALES_GUIDE: "bg-yellow-100 text-yellow-800",
-      INSTALLATION: "bg-orange-100 text-orange-800",
+      CATALOG: "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400",
+      SALES_GUIDE: "bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400",
+      INSTALLATION: "bg-orange-500/15 dark:bg-orange-500/25 text-orange-800 dark:text-orange-400",
     };
-    return colors[category] || "bg-gray-100 text-gray-800";
+    return colors[category] || "bg-muted dark:bg-muted/50 text-gray-800";
   };
 
   const formatFileSize = (bytes: number) => {

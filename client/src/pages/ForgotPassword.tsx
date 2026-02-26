@@ -41,7 +41,7 @@ export default function ForgotPassword() {
         <Card className="w-full max-w-md shadow-xl">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center">
-              <div className="h-16 w-16 rounded-full bg-green-600 flex items-center justify-center">
+              <div className="h-16 w-16 rounded-full bg-emerald-600 dark:bg-emerald-500 flex items-center justify-center">
                 <CheckCircle2 className="h-8 w-8 text-white" />
               </div>
             </div>
@@ -72,7 +72,7 @@ export default function ForgotPassword() {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center">
-            <div className="h-16 w-16 rounded-full bg-blue-600 flex items-center justify-center">
+            <div className="h-16 w-16 rounded-full bg-info dark:bg-info-dark flex items-center justify-center">
               <Package className="h-8 w-8 text-white" />
             </div>
           </div>
@@ -109,7 +109,7 @@ export default function ForgotPassword() {
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-info dark:bg-info-dark hover:bg-info hover:bg-info/90 dark:bg-info-dark dark:hover:bg-info-dark/90"
               disabled={isLoading}
             >
               {isLoading ? (

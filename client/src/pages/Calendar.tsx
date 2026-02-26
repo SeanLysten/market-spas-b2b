@@ -37,10 +37,10 @@ interface Event {
 }
 
 const EVENT_TYPES = {
-  PROMOTION: { label: "Promotion", icon: Gift, color: "bg-green-100 text-green-800 border-green-200" },
-  EVENT: { label: "Événement", icon: Star, color: "bg-blue-100 text-blue-800 border-blue-200" },
-  ANNOUNCEMENT: { label: "Annonce", icon: Megaphone, color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
-  TRAINING: { label: "Formation", icon: GraduationCap, color: "bg-purple-100 text-purple-800 border-purple-200" },
+  PROMOTION: { label: "Promotion", icon: Gift, color: "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30" },
+  EVENT: { label: "Événement", icon: Star, color: "bg-info/15 dark:bg-info-light text-info dark:text-info-dark border-info/20 dark:border-info/30" },
+  ANNOUNCEMENT: { label: "Annonce", icon: Megaphone, color: "bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400 border-amber-500/20 dark:border-amber-500/30" },
+  TRAINING: { label: "Formation", icon: GraduationCap, color: "bg-purple-500/15 dark:bg-purple-500/25 text-purple-800 dark:text-purple-400 border-purple-500/20 dark:border-purple-500/30" },
   WEBINAR: { label: "Webinaire", icon: Video, color: "bg-pink-100 text-pink-800 border-pink-200" },
 };
 
@@ -152,14 +152,14 @@ export default function Calendar() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-muted/50 dark:bg-muted/30 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/50 dark:bg-muted/30">
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="container py-4">
@@ -173,7 +173,7 @@ export default function Calendar() {
               </Link>
               <div>
                 <h1 className="text-2xl text-display text-display font-bold text-gray-900">Calendrier</h1>
-                <p className="text-sm text-gray-500">Événements, promotions et formations</p>
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground">Événements, promotions et formations</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -226,7 +226,7 @@ export default function Calendar() {
                     {/* En-têtes des jours */}
                     <div className="grid grid-cols-7 gap-1 mb-2">
                       {DAYS.map(day => (
-                        <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+                        <div key={day} className="text-center text-sm font-medium text-muted-foreground dark:text-muted-foreground py-2">
                           {day}
                         </div>
                       ))}
@@ -242,13 +242,13 @@ export default function Calendar() {
                           <div
                             key={index}
                             className={`min-h-[100px] p-1 border rounded-lg ${
-                              isCurrentMonth ? "bg-white" : "bg-gray-50"
+                              isCurrentMonth ? "bg-white" : "bg-muted/50 dark:bg-muted/30"
                             } ${isToday ? "ring-2 ring-primary" : ""}`}
                           >
                             {day.date && (
                               <>
                                 <div className={`text-sm font-medium mb-1 ${
-                                  isToday ? "text-primary" : "text-gray-700"
+                                  isToday ? "text-primary" : "text-foreground dark:text-foreground"
                                 }`}>
                                   {day.date.getDate()}
                                 </div>
@@ -266,7 +266,7 @@ export default function Calendar() {
                                     );
                                   })}
                                   {day.events.length > 3 && (
-                                    <div className="text-xs text-gray-500 px-1">
+                                    <div className="text-xs text-muted-foreground dark:text-muted-foreground px-1">
                                       +{day.events.length - 3} autres
                                     </div>
                                   )}
@@ -282,7 +282,7 @@ export default function Calendar() {
                   /* Vue liste */
                   <div className="space-y-4">
                     {events.length === 0 ? (
-                      <div className="text-center py-12 text-gray-500">
+                      <div className="text-center py-12 text-muted-foreground dark:text-muted-foreground">
                         <CalendarIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
                         <p>Aucun événement prévu</p>
                       </div>
@@ -311,17 +311,17 @@ export default function Calendar() {
                                         {typeConfig.label}
                                       </Badge>
                                     </div>
-                                    <p className="text-sm text-gray-500 mb-2">
+                                    <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-2">
                                       {formatDate(event.startDate)}
                                       {event.endDate && ` - ${formatDate(event.endDate)}`}
                                     </p>
                                     {event.description && (
-                                      <p className="text-sm text-gray-600 line-clamp-2">
+                                      <p className="text-sm text-muted-foreground dark:text-muted-foreground line-clamp-2">
                                         {event.description}
                                       </p>
                                     )}
                                     {event.promoCode && (
-                                      <div className="mt-2 inline-flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm">
+                                      <div className="mt-2 inline-flex items-center gap-2 bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-full text-sm">
                                         <Gift className="w-4 h-4" />
                                         Code: <span className="font-mono font-bold">{event.promoCode}</span>
                                         {event.discountPercent && ` (-${event.discountPercent}%)`}
@@ -370,7 +370,7 @@ export default function Calendar() {
               </CardHeader>
               <CardContent>
                 {upcomingEvents.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-4">
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground text-center py-4">
                     Aucun événement à venir
                   </p>
                 ) : (
@@ -381,13 +381,13 @@ export default function Calendar() {
                         <button
                           key={event.id}
                           onClick={() => setSelectedEvent(event)}
-                          className="w-full text-left p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                          className="w-full text-left p-2 rounded-lg hover:bg-muted/50 dark:bg-muted/30 transition-colors"
                         >
                           <div className="flex items-center gap-2 mb-1">
                             <div className={`w-2 h-2 rounded-full ${typeConfig.color.split(' ')[0]}`} />
                             <span className="text-sm font-medium truncate">{event.title}</span>
                           </div>
-                          <p className="text-xs text-gray-500 pl-4">
+                          <p className="text-xs text-muted-foreground dark:text-muted-foreground pl-4">
                             {formatDate(event.startDate)}
                           </p>
                         </button>
@@ -428,7 +428,7 @@ export default function Calendar() {
               
               <div className="space-y-4">
                 {/* Dates */}
-                <div className="flex items-center gap-2 text-gray-600">
+                <div className="flex items-center gap-2 text-muted-foreground dark:text-muted-foreground">
                   <Clock className="w-4 h-4" />
                   <span>
                     {formatDate(selectedEvent.startDate)}
@@ -445,25 +445,25 @@ export default function Calendar() {
 
                 {/* Description */}
                 {selectedEvent.description && (
-                  <p className="text-gray-700">{selectedEvent.description}</p>
+                  <p className="text-foreground dark:text-foreground">{selectedEvent.description}</p>
                 )}
 
                 {/* Code promo */}
                 {selectedEvent.promoCode && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Gift className="w-5 h-5 text-green-600" />
-                      <span className="font-semibold text-green-800">Offre promotionnelle</span>
+                      <Gift className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="font-semibold text-emerald-800 dark:text-emerald-400">Offre promotionnelle</span>
                     </div>
                     <div className="flex items-center gap-4">
                       <div>
-                        <p className="text-sm text-green-700">Code promo:</p>
+                        <p className="text-sm text-emerald-700 dark:text-emerald-400">Code promo:</p>
                         <p className="font-mono font-bold text-lg text-green-900">
                           {selectedEvent.promoCode}
                         </p>
                       </div>
                       {selectedEvent.discountPercent && (
-                        <div className="bg-green-600 text-white px-3 py-1 rounded-full font-bold">
+                        <div className="bg-emerald-600 dark:bg-emerald-500 text-white px-3 py-1 rounded-full font-bold">
                           -{selectedEvent.discountPercent}%
                         </div>
                       )}

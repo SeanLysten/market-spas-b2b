@@ -33,10 +33,10 @@ const BRAND_LABELS: Record<string, string> = {
 const STATUS_CONFIG: Record<string, { label: string; icon: any; variant: "default" | "secondary" | "destructive" | "outline"; color?: string }> = {
   NEW: { label: "Nouveau", icon: AlertCircle, variant: "default" },
   ANALYZING: { label: "En analyse", icon: Eye, variant: "default", color: "bg-blue-500" },
-  INFO_REQUIRED: { label: "Infos requises", icon: Info, variant: "secondary", color: "bg-yellow-500" },
+  INFO_REQUIRED: { label: "Infos requises", icon: Info, variant: "secondary", color: "bg-amber-500 dark:bg-amber-400" },
   QUOTE_PENDING: { label: "Devis en attente", icon: CreditCard, variant: "secondary" },
   PAYMENT_PENDING: { label: "Paiement en attente", icon: CreditCard, variant: "destructive" },
-  PAYMENT_CONFIRMED: { label: "Paiement confirmé", icon: CheckCircle, variant: "default", color: "bg-green-500" },
+  PAYMENT_CONFIRMED: { label: "Paiement confirmé", icon: CheckCircle, variant: "default", color: "bg-emerald-500 dark:bg-emerald-400" },
   PARTS_ORDERED: { label: "Pièces commandées", icon: Package, variant: "secondary" },
   SHIPPED: { label: "Expédié", icon: Truck, variant: "default", color: "bg-indigo-500" },
   RESOLVED: { label: "Résolu", icon: CheckCircle, variant: "outline" },
@@ -44,11 +44,11 @@ const STATUS_CONFIG: Record<string, { label: string; icon: any; variant: "defaul
 };
 
 const WARRANTY_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
-  COVERED: { label: "Sous garantie", icon: ShieldCheck, color: "text-green-600 bg-green-50 border-green-200" },
-  PARTIAL: { label: "Garantie partielle", icon: Shield, color: "text-yellow-600 bg-yellow-50 border-yellow-200" },
-  EXPIRED: { label: "Garantie expirée", icon: ShieldX, color: "text-red-600 bg-red-50 border-red-200" },
-  EXCLUDED: { label: "Hors garantie", icon: ShieldAlert, color: "text-red-600 bg-red-50 border-red-200" },
-  REVIEW_NEEDED: { label: "Analyse requise", icon: Info, color: "text-blue-600 bg-blue-50 border-blue-200" },
+  COVERED: { label: "Sous garantie", icon: ShieldCheck, color: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20 dark:border-emerald-500/30" },
+  PARTIAL: { label: "Garantie partielle", icon: Shield, color: "text-yellow-600 bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20 dark:border-amber-500/30" },
+  EXPIRED: { label: "Garantie expirée", icon: ShieldX, color: "text-destructive dark:text-destructive bg-destructive/10 dark:bg-destructive/20 border-destructive/20 dark:border-destructive/30" },
+  EXCLUDED: { label: "Hors garantie", icon: ShieldAlert, color: "text-destructive dark:text-destructive bg-destructive/10 dark:bg-destructive/20 border-destructive/20 dark:border-destructive/30" },
+  REVIEW_NEEDED: { label: "Analyse requise", icon: Info, color: "text-info dark:text-info-dark bg-info/10 dark:bg-info-light border-info/20 dark:border-info/30" },
 };
 
 // ===== ADMIN MANAGE DIALOG =====
@@ -361,10 +361,10 @@ function AdminManageDialog({ serviceId, open, onOpenChange, onSuccess }: {
                       <Input type="number" min={0} step={0.01} value={shippingCost} onChange={(e) => setShippingCost(parseFloat(e.target.value) || 0)} />
                     </div>
 
-                    <div className="bg-orange-50 border border-orange-200 p-4 rounded">
+                    <div className="bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/20 dark:border-orange-500/30 p-4 rounded">
                       <p className="text-base font-semibold text-display">Total TTC : {((totalPartsAmount + shippingCost * 100) / 100).toFixed(2)} €</p>
                       {service.warrantyStatus === "PARTIAL" && service.warrantyPercentage > 0 && (
-                        <p className="text-sm text-orange-700">
+                        <p className="text-sm text-orange-700 dark:text-orange-400">
                           Couverture garantie : {service.warrantyPercentage}% → Le partenaire paiera {100 - service.warrantyPercentage}% soit {(((totalPartsAmount + shippingCost * 100) * (100 - service.warrantyPercentage) / 100) / 100).toFixed(2)} €
                         </p>
                       )}
@@ -376,7 +376,7 @@ function AdminManageDialog({ serviceId, open, onOpenChange, onSuccess }: {
                       shippingCost: shippingCost.toString(),
                     })}
                     disabled={setShippingCostMutation.isPending || existingParts.length === 0}
-                      className="bg-orange-600 hover:bg-orange-700"
+                      className="bg-orange-600 dark:bg-orange-500 hover:bg-orange-700"
                     >
                       <CreditCard className="mr-2 h-4 w-4" />
                       {setShippingCostMutation.isPending ? "Envoi..." : "Envoyer le devis au partenaire"}
@@ -385,12 +385,12 @@ function AdminManageDialog({ serviceId, open, onOpenChange, onSuccess }: {
                 )}
 
                 {service.warrantyStatus === "COVERED" && (
-                  <div className="bg-green-50 border border-green-200 p-4 rounded">
-                    <div className="flex items-center gap-2 text-green-700">
+                  <div className="bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30 p-4 rounded">
+                    <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
                       <ShieldCheck className="h-5 w-5" />
                       <strong>Prise en charge sous garantie</strong>
                     </div>
-                    <p className="text-sm text-green-600 mt-1">Les pièces seront envoyées gratuitement. Passez directement à l'onglet "Expédition".</p>
+                    <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-1">Les pièces seront envoyées gratuitement. Passez directement à l'onglet "Expédition".</p>
                   </div>
                 )}
               </CardContent>
@@ -407,7 +407,7 @@ function AdminManageDialog({ serviceId, open, onOpenChange, onSuccess }: {
               </CardHeader>
               <CardContent className="space-y-4">
                 {service.trackingNumber && (
-                  <div className="bg-indigo-50 border border-indigo-200 p-3 rounded text-sm">
+                  <div className="bg-indigo-500/10 dark:bg-indigo-500/20 border border-indigo-200 p-3 rounded text-sm">
                     <p><strong>Suivi actuel :</strong> {service.trackingNumber}</p>
                     {service.shippingCarrier && <p><strong>Transporteur :</strong> {service.shippingCarrier}</p>}
                     {service.shippedAt && <p><strong>Expédié le :</strong> {new Date(service.shippedAt).toLocaleDateString("fr-FR")}</p>}
@@ -636,9 +636,9 @@ export default function AdminAfterSales() {
             {/* Quick Stats */}
             <div className="grid grid-cols-5 gap-4 mb-6">
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle></CardHeader><CardContent><div className="text-2xl text-display text-display font-bold">{stats.total}</div></CardContent></Card>
-              <Card className="border-blue-200"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-blue-600">Nouveaux</CardTitle></CardHeader><CardContent><div className="text-2xl text-display text-display font-bold text-blue-600">{stats.new}</div></CardContent></Card>
-              <Card className="border-yellow-200"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-yellow-600">En analyse</CardTitle></CardHeader><CardContent><div className="text-2xl text-display text-display font-bold text-yellow-600">{stats.analyzing}</div></CardContent></Card>
-              <Card className="border-red-200"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-red-600">Paiement en attente</CardTitle></CardHeader><CardContent><div className="text-2xl text-display text-display font-bold text-red-600">{stats.paymentPending}</div></CardContent></Card>
+              <Card className="border-info/20 dark:border-info/30"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-info dark:text-info-dark">Nouveaux</CardTitle></CardHeader><CardContent><div className="text-2xl text-display text-display font-bold text-info dark:text-info-dark">{stats.new}</div></CardContent></Card>
+              <Card className="border-amber-500/20 dark:border-amber-500/30"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-yellow-600">En analyse</CardTitle></CardHeader><CardContent><div className="text-2xl text-display text-display font-bold text-yellow-600">{stats.analyzing}</div></CardContent></Card>
+              <Card className="border-destructive/20 dark:border-destructive/30"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-destructive dark:text-destructive">Paiement en attente</CardTitle></CardHeader><CardContent><div className="text-2xl text-display text-display font-bold text-destructive dark:text-destructive">{stats.paymentPending}</div></CardContent></Card>
               <Card className="border-indigo-200"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-indigo-600">Expédiés</CardTitle></CardHeader><CardContent><div className="text-2xl text-display text-display font-bold text-indigo-600">{stats.shipped}</div></CardContent></Card>
             </div>
 
@@ -775,9 +775,9 @@ export default function AdminAfterSales() {
 
             <div className="grid grid-cols-4 gap-4 mb-8">
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Tickets</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{statsData?.totalTickets || 0}</div></CardContent></Card>
-              <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Critiques</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold text-red-600">{statsData?.byUrgency?.find((u: any) => u.urgency === "CRITICAL")?.count || 0}</div></CardContent></Card>
-              <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Urgents</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold text-orange-600">{statsData?.byUrgency?.find((u: any) => u.urgency === "URGENT")?.count || 0}</div></CardContent></Card>
-              <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Taux Résolution</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold text-green-600">{resolutionRate}%</div></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Critiques</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold text-destructive dark:text-destructive">{statsData?.byUrgency?.find((u: any) => u.urgency === "CRITICAL")?.count || 0}</div></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Urgents</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold text-orange-600 dark:text-orange-400">{statsData?.byUrgency?.find((u: any) => u.urgency === "URGENT")?.count || 0}</div></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Taux Résolution</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{resolutionRate}%</div></CardContent></Card>
             </div>
 
             <div className="grid grid-cols-2 gap-6 mb-8">

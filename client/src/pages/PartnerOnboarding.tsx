@@ -147,7 +147,7 @@ export default function PartnerOnboarding() {
                 <div className="flex flex-col items-center">
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
                     isActive ? "bg-primary text-white" :
-                    isCompleted ? "bg-green-500 text-white" :
+                    isCompleted ? "bg-emerald-500 dark:bg-emerald-400 text-white" :
                     "bg-muted text-muted-foreground"
                   }`}>
                     {isCompleted ? (
@@ -162,7 +162,7 @@ export default function PartnerOnboarding() {
                 </div>
                 {index < steps.length - 1 && (
                   <div className={`w-full h-1 mx-4 rounded ${
-                    isCompleted ? "bg-green-500" : "bg-muted"
+                    isCompleted ? "bg-emerald-500 dark:bg-emerald-400" : "bg-muted"
                   }`} style={{ minWidth: "60px" }} />
                 )}
               </div>

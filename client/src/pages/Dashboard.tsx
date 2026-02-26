@@ -196,7 +196,7 @@ export default function Dashboard() {
                       className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
                     >
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        event.type === 'PROMOTION' ? 'bg-green-500/10' :
+                        event.type === 'PROMOTION' ? 'bg-emerald-500 dark:bg-emerald-400/10' :
                         event.type === 'EVENT' ? 'bg-blue-500/10' :
                         'bg-orange-500/10'
                       }`}>
@@ -261,10 +261,10 @@ export default function Dashboard() {
                     >
                       <div className="flex-shrink-0 mt-1">
                         {notification.type === 'ORDER_STATUS_CHANGED' && (
-                          <CheckCircle2 className="w-5 h-5 text-green-600" />
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                         )}
                         {notification.type === 'PAYMENT_RECEIVED' && (
-                          <CheckCircle2 className="w-5 h-5 text-green-600" />
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                         )}
                         {notification.type === 'STOCK_LOW' && (
                           <AlertCircle className="w-5 h-5 text-yellow-600" />

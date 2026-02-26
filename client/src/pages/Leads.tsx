@@ -52,17 +52,17 @@ interface Lead {
 }
 
 const LEAD_STATUSES = {
-  NEW: { label: "Nouveau", color: "bg-blue-100 text-blue-800", icon: Target },
-  ASSIGNED: { label: "Assigné", color: "bg-indigo-100 text-indigo-800", icon: User },
-  CONTACTED: { label: "Contacté", color: "bg-yellow-100 text-yellow-800", icon: Phone },
-  NO_RESPONSE: { label: "Sans réponse", color: "bg-orange-100 text-orange-800", icon: AlertCircle },
-  QUALIFIED: { label: "Qualifié", color: "bg-green-100 text-green-800", icon: CheckCircle },
-  NOT_QUALIFIED: { label: "Non qualifié", color: "bg-gray-100 text-gray-800", icon: XCircle },
-  MEETING_SCHEDULED: { label: "RDV planifié", color: "bg-purple-100 text-purple-800", icon: Calendar },
-  QUOTE_SENT: { label: "Devis envoyé", color: "bg-cyan-100 text-cyan-800", icon: Mail },
-  NEGOTIATION: { label: "Négociation", color: "bg-amber-100 text-amber-800", icon: MessageSquare },
-  CONVERTED: { label: "Converti", color: "bg-emerald-100 text-emerald-800", icon: TrendingUp },
-  LOST: { label: "Perdu", color: "bg-red-100 text-red-800", icon: XCircle },
+  NEW: { label: "Nouveau", color: "bg-info/10 text-info dark:bg-info-light dark:text-info-dark border border-info/20", icon: Target },
+  ASSIGNED: { label: "Assigné", color: "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary border border-primary/20", icon: User },
+  CONTACTED: { label: "Contacté", color: "bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-500/20", icon: Phone },
+  NO_RESPONSE: { label: "Sans réponse", color: "bg-orange-500/10 text-orange-700 dark:text-orange-400 dark:bg-orange-500/20 dark:text-orange-400 border border-orange-500/20", icon: AlertCircle },
+  QUALIFIED: { label: "Qualifié", color: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20", icon: CheckCircle },
+  NOT_QUALIFIED: { label: "Non qualifié", color: "bg-muted text-muted-foreground border border-border", icon: XCircle },
+  MEETING_SCHEDULED: { label: "RDV planifié", color: "bg-purple-500/10 text-purple-700 dark:text-purple-400 dark:bg-purple-500/20 dark:text-purple-400 border border-purple-500/20", icon: Calendar },
+  QUOTE_SENT: { label: "Devis envoyé", color: "bg-cyan-500/10 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-400 border border-cyan-500/20", icon: Mail },
+  NEGOTIATION: { label: "Négociation", color: "bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-500/20", icon: MessageSquare },
+  CONVERTED: { label: "Converti", color: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20", icon: TrendingUp },
+  LOST: { label: "Perdu", color: "bg-destructive/10 text-destructive dark:bg-destructive/20 border border-destructive/20", icon: XCircle },
 };
 
 const LEAD_SOURCES = {
@@ -237,9 +237,9 @@ export default function Leads() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10">
+      <header className="bg-card border-b sticky top-0 z-10">
         <div className="container py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -251,7 +251,7 @@ export default function Leads() {
               </Link>
               <div>
                 <h1 className="text-2xl text-display text-display font-bold text-gray-900">Mes Leads</h1>
-                <p className="text-sm text-gray-500">Gérez vos prospects et suivez vos conversions</p>
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground">Gérez vos prospects et suivez vos conversions</p>
               </div>
             </div>
             <ExportButton
@@ -272,7 +272,7 @@ export default function Leads() {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Total leads</p>
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">Total leads</p>
                   <p className="text-2xl text-display text-display font-bold">{stats?.total || 0}</p>
                 </div>
                 <Target className="w-8 h-8 text-blue-500" />
@@ -283,8 +283,8 @@ export default function Leads() {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Nouveaux</p>
-                  <p className="text-2xl text-display text-display font-bold text-blue-600">{(stats as any)?.new || 0}</p>
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">Nouveaux</p>
+                  <p className="text-2xl text-display text-display font-bold text-info dark:text-info-dark">{(stats as any)?.new || 0}</p>
                 </div>
                 <AlertCircle className="w-8 h-8 text-blue-500" />
               </div>
@@ -294,7 +294,7 @@ export default function Leads() {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">En cours</p>
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">En cours</p>
                   <p className="text-2xl text-display text-display font-bold text-yellow-600">{(stats as any)?.inProgress || 0}</p>
                 </div>
                 <Phone className="w-8 h-8 text-yellow-500" />
@@ -305,8 +305,8 @@ export default function Leads() {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Convertis</p>
-                  <p className="text-2xl text-display text-display font-bold text-green-600">{(stats as any)?.converted || 0}</p>
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">Convertis</p>
+                  <p className="text-2xl text-display text-display font-bold text-emerald-600 dark:text-emerald-400">{(stats as any)?.converted || 0}</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-green-500" />
               </div>
@@ -350,7 +350,7 @@ export default function Leads() {
               <CardContent className="py-12 text-center">
                 <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun lead trouvé</h3>
-                <p className="text-gray-500">
+                <p className="text-muted-foreground dark:text-muted-foreground">
                   {searchQuery || statusFilter !== "all" 
                     ? "Essayez de modifier vos filtres"
                     : "Les leads de vos campagnes apparaîtront ici"}
@@ -386,7 +386,7 @@ export default function Leads() {
                               {LEAD_SOURCES[lead.source as keyof typeof LEAD_SOURCES]}
                             </Badge>
                           </div>
-                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground dark:text-muted-foreground">
                             {lead.email && (
                               <span className="flex items-center gap-1">
                                 <Mail className="w-3 h-3" />
@@ -407,7 +407,7 @@ export default function Leads() {
                             )}
                           </div>
                           {lead.productInterest && (
-                            <p className="text-sm text-gray-600 mt-2">
+                            <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-2">
                               <strong>Intérêt :</strong> {lead.productInterest}
                               {lead.budget && ` • Budget : ${lead.budget}`}
                             </p>
@@ -415,7 +415,7 @@ export default function Leads() {
                         </div>
                       </div>
                       <div className="text-right text-sm">
-                        <p className="text-gray-500">{getTimeSince(lead.receivedAt || lead.createdAt)}</p>
+                        <p className="text-muted-foreground dark:text-muted-foreground">{getTimeSince(lead.receivedAt || lead.createdAt)}</p>
                         {(lead.contactAttempts || 0) > 0 && (
                           <p className="text-xs text-gray-400 mt-1">
                             {lead.contactAttempts} contact{lead.contactAttempts > 1 ? "s" : ""}
@@ -468,7 +468,7 @@ export default function Leads() {
                       {selectedLead.email && (
                         <a 
                           href={`mailto:${selectedLead.email}`}
-                          className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
+                          className="flex items-center gap-2 text-sm text-info dark:text-info-dark hover:underline"
                         >
                           <Mail className="w-4 h-4" />
                           {selectedLead.email}
@@ -477,14 +477,14 @@ export default function Leads() {
                       {selectedLead.phone && (
                         <a 
                           href={`tel:${selectedLead.phone}`}
-                          className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
+                          className="flex items-center gap-2 text-sm text-info dark:text-info-dark hover:underline"
                         >
                           <Phone className="w-4 h-4" />
                           {selectedLead.phone}
                         </a>
                       )}
                       {selectedLead.city && (
-                        <p className="flex items-center gap-2 text-sm text-gray-600">
+                        <p className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
                           <MapPin className="w-4 h-4" />
                           {selectedLead.postalCode} {selectedLead.city}
                         </p>
@@ -493,12 +493,12 @@ export default function Leads() {
                     <div className="space-y-3">
                       <h4 className="font-medium text-gray-900">Projet</h4>
                       {selectedLead.productInterest && (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                           <strong>Produit :</strong> {selectedLead.productInterest}
                         </p>
                       )}
                       {selectedLead.budget && (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                           <strong>Budget :</strong> {selectedLead.budget}
                         </p>
                       )}
@@ -507,9 +507,9 @@ export default function Leads() {
 
                   {/* Message */}
                   {selectedLead.message && (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h4 className="font-medium text-gray-900 mb-2">Message du prospect</h4>
-                      <p className="text-sm text-gray-600">{selectedLead.message}</p>
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <h4 className="font-medium text-foreground mb-2">Message du prospect</h4>
+                      <p className="text-sm text-muted-foreground">{selectedLead.message}</p>
                     </div>
                   )}
 
@@ -565,27 +565,27 @@ export default function Leads() {
                 <TabsContent value="history" className="mt-4">
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 mt-2 rounded-full bg-blue-500" />
+                        <div className="w-2 h-2 mt-2 rounded-full bg-info" />
                       <div>
                         <p className="text-sm font-medium">Lead reçu</p>
-                        <p className="text-xs text-gray-500">{formatDate(selectedLead.receivedAt)}</p>
+                        <p className="text-xs text-muted-foreground dark:text-muted-foreground">{formatDate(selectedLead.receivedAt)}</p>
                       </div>
                     </div>
                     {selectedLead.firstContactAt && (
                       <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 mt-2 rounded-full bg-yellow-500" />
+                        <div className="w-2 h-2 mt-2 rounded-full bg-amber-500" />
                         <div>
                           <p className="text-sm font-medium">Premier contact</p>
-                          <p className="text-xs text-gray-500">{formatDate(selectedLead.firstContactAt)}</p>
+                          <p className="text-xs text-muted-foreground dark:text-muted-foreground">{formatDate(selectedLead.firstContactAt)}</p>
                         </div>
                       </div>
                     )}
                     {selectedLead.lastContactAt && selectedLead.lastContactAt !== selectedLead.firstContactAt && (
                       <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 mt-2 rounded-full bg-green-500" />
+                        <div className="w-2 h-2 mt-2 rounded-full bg-emerald-500" />
                         <div>
                           <p className="text-sm font-medium">Dernier contact</p>
-                          <p className="text-xs text-gray-500">{formatDate(selectedLead.lastContactAt)}</p>
+                          <p className="text-xs text-muted-foreground dark:text-muted-foreground">{formatDate(selectedLead.lastContactAt)}</p>
                         </div>
                       </div>
                     )}
@@ -595,11 +595,11 @@ export default function Leads() {
                 <TabsContent value="notes" className="mt-4">
                   <div className="space-y-4">
                     {selectedLead.notes ? (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <p className="text-sm text-gray-700">{selectedLead.notes}</p>
+                      <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+                        <p className="text-sm text-foreground">{selectedLead.notes}</p>
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500 text-center py-4">
+                      <p className="text-sm text-muted-foreground dark:text-muted-foreground text-center py-4">
                         Aucune note pour ce lead
                       </p>
                     )}

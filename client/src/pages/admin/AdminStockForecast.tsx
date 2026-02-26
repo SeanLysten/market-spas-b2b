@@ -152,7 +152,7 @@ export default function AdminStockForecast() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Arrivages prévus</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
+            <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl text-display text-display font-bold">{summary?.totalIncomingQuantity || 0}</div>
@@ -163,7 +163,7 @@ export default function AdminStockForecast() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Produits avec alertes</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl text-display text-display font-bold">{summary?.productsWithAlerts || 0}</div>
@@ -176,7 +176,7 @@ export default function AdminStockForecast() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Stock bas</CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-600" />
+            <TrendingDown className="h-4 w-4 text-destructive dark:text-destructive" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl text-display text-display font-bold">{summary?.productsWithLowStock || 0}</div>
@@ -265,9 +265,9 @@ export default function AdminStockForecast() {
                           key={week.weekLabel}
                           className={`p-2 text-center ${
                             week.alerts.includes("RUPTURE")
-                              ? "text-red-600 font-bold"
+                              ? "text-destructive dark:text-destructive font-bold"
                               : week.alerts.includes("STOCK_CRITIQUE")
-                              ? "text-orange-600 font-semibold"
+                              ? "text-orange-600 dark:text-orange-400 font-semibold"
                               : week.alerts.includes("STOCK_BAS")
                               ? "text-yellow-600"
                               : ""
@@ -275,7 +275,7 @@ export default function AdminStockForecast() {
                         >
                           {week.projectedStock}
                           {week.incomingQuantity > 0 && (
-                            <span className="text-green-600 text-xs ml-1">
+                            <span className="text-emerald-600 dark:text-emerald-400 text-xs ml-1">
                               (+{week.incomingQuantity})
                             </span>
                           )}
@@ -357,7 +357,7 @@ export default function AdminStockForecast() {
                     </div>
                     <div className="flex items-center gap-4">
                       {week.incomingQuantity > 0 && (
-                        <Badge variant="outline" className="bg-green-50">
+                        <Badge variant="outline" className="bg-emerald-500/10 dark:bg-emerald-500/20">
                           <TrendingUp className="mr-1 h-3 w-3" />
                           +{week.incomingQuantity} arrivage
                         </Badge>
@@ -365,12 +365,12 @@ export default function AdminStockForecast() {
                       <span
                         className={`font-semibold ${
                           week.alerts.includes("RUPTURE")
-                            ? "text-red-600"
+                            ? "text-destructive dark:text-destructive"
                             : week.alerts.includes("STOCK_CRITIQUE")
-                            ? "text-orange-600"
+                            ? "text-orange-600 dark:text-orange-400"
                             : week.alerts.includes("STOCK_BAS")
                             ? "text-yellow-600"
-                            : "text-green-600"
+                            : "text-emerald-600 dark:text-emerald-400"
                         }`}
                       >
                         {week.projectedStock} unités

@@ -323,7 +323,7 @@ export default function ForumTopicDetail() {
         {isResolved && (
           <Card className="bg-muted/50">
             <CardContent className="py-4 text-center text-sm text-muted-foreground">
-              <CheckCircle2 className="w-5 h-5 mx-auto mb-2 text-green-600" />
+              <CheckCircle2 className="w-5 h-5 mx-auto mb-2 text-emerald-600 dark:text-emerald-400" />
               Ce sujet est marqué comme résolu. Les nouvelles réponses sont désactivées.
             </CardContent>
           </Card>

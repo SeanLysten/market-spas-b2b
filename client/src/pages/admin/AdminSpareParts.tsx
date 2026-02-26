@@ -199,12 +199,12 @@ export default function AdminSpareParts() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <AlertTriangle className="h-5 w-5 text-orange-600" />
+                <div className="p-2 bg-orange-500/15 dark:bg-orange-500/25 rounded-lg">
+                  <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Stock bas</p>
-                  <p className="text-2xl text-display text-display font-bold text-orange-600">{lowStockParts.length}</p>
+                  <p className="text-2xl text-display text-display font-bold text-orange-600 dark:text-orange-400">{lowStockParts.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -212,8 +212,8 @@ export default function AdminSpareParts() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Cog className="h-5 w-5 text-green-600" />
+                <div className="p-2 bg-emerald-500/15 dark:bg-emerald-500/25 rounded-lg">
+                  <Cog className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Catégories</p>
@@ -227,8 +227,8 @@ export default function AdminSpareParts() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Link2 className="h-5 w-5 text-blue-600" />
+                <div className="p-2 bg-info/15 dark:bg-info-light rounded-lg">
+                  <Link2 className="h-5 w-5 text-info dark:text-info-dark" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Inactives</p>
@@ -241,13 +241,13 @@ export default function AdminSpareParts() {
 
         {/* Alerts */}
         {lowStockParts.length > 0 && (
-          <Card className="border-orange-200 bg-orange-50">
+          <Card className="border-orange-500/20 dark:border-orange-500/30 bg-orange-500/10 dark:bg-orange-500/20">
             <CardContent className="pt-4 pb-4">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5" />
+                <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400 mt-0.5" />
                 <div>
-                  <p className="font-medium text-orange-800">Alerte stock bas</p>
-                  <p className="text-sm text-orange-700">
+                  <p className="font-medium text-orange-800 dark:text-orange-400">Alerte stock bas</p>
+                  <p className="text-sm text-orange-700 dark:text-orange-400">
                     {lowStockParts.length} pièce(s) en stock bas :{" "}
                     {lowStockParts.map((p: any) => `${p.name} (${p.stockQuantity})`).join(", ")}
                   </p>

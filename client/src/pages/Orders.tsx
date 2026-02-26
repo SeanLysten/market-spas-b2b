@@ -56,16 +56,16 @@ export default function Orders() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      DRAFT: "bg-gray-100 text-gray-800 border-gray-200",
-      PENDING_DEPOSIT: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      DEPOSIT_PAID: "bg-blue-100 text-blue-800 border-blue-200",
-      IN_PRODUCTION: "bg-purple-100 text-purple-800 border-purple-200",
-      SHIPPED: "bg-green-100 text-green-800 border-green-200",
+      DRAFT: "bg-muted dark:bg-muted/50 text-gray-800 border-border dark:border-border",
+      PENDING_DEPOSIT: "bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400 border-amber-500/20 dark:border-amber-500/30",
+      DEPOSIT_PAID: "bg-info/15 dark:bg-info-light text-info dark:text-info-dark border-info/20 dark:border-info/30",
+      IN_PRODUCTION: "bg-purple-500/15 dark:bg-purple-500/25 text-purple-800 dark:text-purple-400 border-purple-500/20 dark:border-purple-500/30",
+      SHIPPED: "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30",
       DELIVERED: "bg-green-200 text-green-900 border-green-300",
       COMPLETED: "bg-green-300 text-green-950 border-green-400",
-      CANCELLED: "bg-red-100 text-red-800 border-red-200",
+      CANCELLED: "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive border-destructive/20 dark:border-destructive/30",
     };
-    return colors[status] || "bg-gray-100 text-gray-800 border-gray-200";
+    return colors[status] || "bg-muted dark:bg-muted/50 text-gray-800 border-border dark:border-border";
   };
 
   const getStatusLabel = (status: string) => {

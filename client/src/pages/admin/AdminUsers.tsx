@@ -147,10 +147,10 @@ export default function AdminUsers() {
 
   const getRoleBadge = (role: string) => {
     const colors: Record<string, string> = {
-      SUPER_ADMIN: "bg-red-100 text-red-800",
-      ADMIN: "bg-orange-100 text-orange-800",
-      PARTNER: "bg-blue-100 text-blue-800",
-      USER: "bg-gray-100 text-gray-800",
+      SUPER_ADMIN: "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive",
+      ADMIN: "bg-orange-500/15 dark:bg-orange-500/25 text-orange-800 dark:text-orange-400",
+      PARTNER: "bg-info/15 dark:bg-info-light text-info dark:text-info-dark",
+      USER: "bg-muted dark:bg-muted/50 text-gray-800",
     };
     return colors[role] || colors.USER;
   };
@@ -159,21 +159,21 @@ export default function AdminUsers() {
     switch (status) {
       case 'PENDING':
         return (
-          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+          <Badge variant="secondary" className="bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400">
             <Clock className="w-3 h-3 mr-1" />
             En attente
           </Badge>
         );
       case 'ACCEPTED':
         return (
-          <Badge variant="secondary" className="bg-green-100 text-green-800">
+          <Badge variant="secondary" className="bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400">
             <CheckCircle2 className="w-3 h-3 mr-1" />
             Accepté
           </Badge>
         );
       case 'EXPIRED':
         return (
-          <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+          <Badge variant="secondary" className="bg-muted dark:bg-muted/50 text-gray-800">
             <AlertCircle className="w-3 h-3 mr-1" />
             Expiré
           </Badge>
@@ -339,9 +339,9 @@ export default function AdminUsers() {
                           <TableCell>{user.partnerId || "—"}</TableCell>
                           <TableCell>
                             {user.isActive ? (
-                              <Badge className="bg-green-100 text-green-800">Actif</Badge>
+                              <Badge className="bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400">Actif</Badge>
                             ) : (
-                              <Badge className="bg-gray-100 text-gray-800">Inactif</Badge>
+                              <Badge className="bg-muted dark:bg-muted/50 text-gray-800">Inactif</Badge>
                             )}
                           </TableCell>
                           <TableCell>
@@ -360,7 +360,7 @@ export default function AdminUsers() {
                                 }}
                                 title="Modifier le rôle"
                               >
-                                <Edit className="w-4 h-4 text-blue-600" />
+                                <Edit className="w-4 h-4 text-info dark:text-info-dark" />
                               </Button>
                               <Button
                                 variant="ghost"
@@ -369,9 +369,9 @@ export default function AdminUsers() {
                                 disabled={toggleActiveMutation.isPending}
                               >
                                 {user.isActive ? (
-                                  <UserX className="w-4 h-4 text-orange-600" />
+                                  <UserX className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                                 ) : (
-                                  <UserCheck className="w-4 h-4 text-green-600" />
+                                  <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                                 )}
                               </Button>
                             </div>
@@ -453,7 +453,7 @@ export default function AdminUsers() {
                                   disabled={resendInvitationMutation.isPending}
                                   title="Renvoyer l'invitation"
                                 >
-                                  <RotateCw className="w-4 h-4 text-blue-600" />
+                                  <RotateCw className="w-4 h-4 text-info dark:text-info-dark" />
                                 </Button>
                                 <Button
                                   variant="ghost"
@@ -462,7 +462,7 @@ export default function AdminUsers() {
                                   disabled={cancelInvitationMutation.isPending}
                                   title="Annuler l'invitation"
                                 >
-                                  <X className="w-4 h-4 text-red-600" />
+                                  <X className="w-4 h-4 text-destructive dark:text-destructive" />
                                 </Button>
                               </div>
                             )}
@@ -474,7 +474,7 @@ export default function AdminUsers() {
                                 disabled={resendInvitationMutation.isPending}
                                 title="Renvoyer l'invitation"
                               >
-                                <RotateCw className="w-4 h-4 text-blue-600" />
+                                <RotateCw className="w-4 h-4 text-info dark:text-info-dark" />
                               </Button>
                             )}
                           </TableCell>

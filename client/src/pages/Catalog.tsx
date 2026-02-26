@@ -103,7 +103,7 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
         {/* Stock Badge */}
         <div className="absolute top-2 right-2 flex flex-col gap-1">
           {hasStock ? (
-            <Badge variant="default" className="bg-green-600">
+            <Badge variant="default" className="bg-emerald-600 dark:bg-emerald-500">
               En stock ({variantStock})
             </Badge>
           ) : (
@@ -112,7 +112,7 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
             </Badge>
           )}
           {hasIncomingStock && (
-            <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">
+            <Badge className="bg-amber-500 dark:bg-amber-400 hover:bg-yellow-600 text-white">
               <TruckIcon className="mr-1 h-3 w-3" />
               Arrivage
             </Badge>

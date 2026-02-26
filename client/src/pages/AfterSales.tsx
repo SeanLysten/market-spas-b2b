@@ -29,10 +29,10 @@ const BRANDS = Object.keys(BRAND_LABELS);
 const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: any; color?: string }> = {
   NEW: { label: "Nouveau", variant: "default", icon: AlertCircle },
   ANALYZING: { label: "En analyse", variant: "default", icon: Eye, color: "bg-blue-500" },
-  INFO_REQUIRED: { label: "Infos requises", variant: "secondary", icon: Info, color: "bg-yellow-500" },
+  INFO_REQUIRED: { label: "Infos requises", variant: "secondary", icon: Info, color: "bg-amber-500 dark:bg-amber-400" },
   QUOTE_PENDING: { label: "Devis en attente", variant: "secondary", icon: CreditCard },
   PAYMENT_PENDING: { label: "Paiement en attente", variant: "destructive", icon: CreditCard },
-  PAYMENT_CONFIRMED: { label: "Paiement confirmé", variant: "default", icon: CheckCircle, color: "bg-green-500" },
+  PAYMENT_CONFIRMED: { label: "Paiement confirmé", variant: "default", icon: CheckCircle, color: "bg-emerald-500 dark:bg-emerald-400" },
   PARTS_ORDERED: { label: "Pièces commandées", variant: "secondary", icon: Package },
   SHIPPED: { label: "Expédié", variant: "default", icon: Truck, color: "bg-indigo-500" },
   RESOLVED: { label: "Résolu", variant: "outline", icon: CheckCircle },
@@ -40,11 +40,11 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
 };
 
 const WARRANTY_STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
-  COVERED: { label: "Sous garantie", icon: ShieldCheck, color: "text-green-600 bg-green-50 border-green-200" },
-  PARTIAL: { label: "Garantie partielle", icon: Shield, color: "text-yellow-600 bg-yellow-50 border-yellow-200" },
-  EXPIRED: { label: "Garantie expirée", icon: ShieldX, color: "text-red-600 bg-red-50 border-red-200" },
-  EXCLUDED: { label: "Hors garantie", icon: ShieldAlert, color: "text-red-600 bg-red-50 border-red-200" },
-  REVIEW_NEEDED: { label: "Analyse requise", icon: Info, color: "text-blue-600 bg-blue-50 border-blue-200" },
+  COVERED: { label: "Sous garantie", icon: ShieldCheck, color: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20 dark:border-emerald-500/30" },
+  PARTIAL: { label: "Garantie partielle", icon: Shield, color: "text-yellow-600 bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20 dark:border-amber-500/30" },
+  EXPIRED: { label: "Garantie expirée", icon: ShieldX, color: "text-destructive dark:text-destructive bg-destructive/10 dark:bg-destructive/20 border-destructive/20 dark:border-destructive/30" },
+  EXCLUDED: { label: "Hors garantie", icon: ShieldAlert, color: "text-destructive dark:text-destructive bg-destructive/10 dark:bg-destructive/20 border-destructive/20 dark:border-destructive/30" },
+  REVIEW_NEEDED: { label: "Analyse requise", icon: Info, color: "text-info dark:text-info-dark bg-info/10 dark:bg-info-light border-info/20 dark:border-info/30" },
 };
 
 // ===== STEPPER FORM =====
@@ -165,8 +165,8 @@ function SavDashboard({ services, isLoading, onFilterClick }: {
       label: "Ouverts",
       value: stats.open,
       icon: CircleDot,
-      color: "text-blue-600",
-      bg: "bg-blue-50 border-blue-200",
+      color: "text-info dark:text-info-dark",
+      bg: "bg-info/10 dark:bg-info-light border-info/20 dark:border-info/30",
       filterValue: "NEW",
     },
     {
@@ -174,23 +174,23 @@ function SavDashboard({ services, isLoading, onFilterClick }: {
       value: stats.actionRequired,
       icon: AlertCircle,
       color: "text-yellow-600",
-      bg: "bg-yellow-50 border-yellow-200",
+      bg: "bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20 dark:border-amber-500/30",
       filterValue: "INFO_REQUIRED",
     },
     {
       label: "Devis en attente",
       value: stats.quotePending,
       icon: CreditCard,
-      color: "text-orange-600",
-      bg: "bg-orange-50 border-orange-200",
+      color: "text-orange-600 dark:text-orange-400",
+      bg: "bg-orange-500/10 dark:bg-orange-500/20 border-orange-500/20 dark:border-orange-500/30",
       filterValue: "QUOTE_PENDING",
     },
     {
       label: "En cours",
       value: stats.inProgress,
       icon: Timer,
-      color: "text-purple-600",
-      bg: "bg-purple-50 border-purple-200",
+      color: "text-purple-600 dark:text-purple-400",
+      bg: "bg-purple-500/10 dark:bg-purple-500/20 border-purple-500/20 dark:border-purple-500/30",
       filterValue: "PAYMENT_CONFIRMED",
     },
     {
@@ -198,15 +198,15 @@ function SavDashboard({ services, isLoading, onFilterClick }: {
       value: stats.shipped,
       icon: Truck,
       color: "text-indigo-600",
-      bg: "bg-indigo-50 border-indigo-200",
+      bg: "bg-indigo-500/10 dark:bg-indigo-500/20 border-indigo-200",
       filterValue: "SHIPPED",
     },
     {
       label: "Résolus",
       value: stats.resolved,
       icon: CheckCircle,
-      color: "text-green-600",
-      bg: "bg-green-50 border-green-200",
+      color: "text-emerald-600 dark:text-emerald-400",
+      bg: "bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20 dark:border-emerald-500/30",
       filterValue: "RESOLVED",
     },
   ];
@@ -242,7 +242,7 @@ function SavDashboard({ services, isLoading, onFilterClick }: {
       })}
       {stats.urgentOrCritical > 0 && (
         <div className="col-span-full">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-destructive/10 dark:bg-destructive/20 border border-destructive/20 dark:border-destructive/30 text-destructive dark:text-destructive text-sm">
             <AlertCircle className="h-4 w-4 flex-shrink-0" />
             <span><strong>{stats.urgentOrCritical}</strong> ticket{stats.urgentOrCritical > 1 ? "s" : ""} urgent{stats.urgentOrCritical > 1 ? "s" : ""} ou critique{stats.urgentOrCritical > 1 ? "s" : ""}</span>
           </div>
@@ -580,13 +580,13 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
 
               <div className="flex items-center gap-3">
                 <Checkbox id="isModified" checked={formData.isModified} onCheckedChange={(v) => setFormData({ ...formData, isModified: !!v })} />
-                <Label htmlFor="isModified" className="cursor-pointer text-red-600">Le spa a été modifié sans autorisation du fabricant</Label>
+                <Label htmlFor="isModified" className="cursor-pointer text-destructive dark:text-destructive">Le spa a été modifié sans autorisation du fabricant</Label>
               </div>
 
               {formData.brand === "PLATINUM_SPAS" && (
                 <div className="flex items-center gap-3">
                   <Checkbox id="usesHydrogenPeroxide" checked={formData.usesHydrogenPeroxide} onCheckedChange={(v) => setFormData({ ...formData, usesHydrogenPeroxide: !!v })} />
-                  <Label htmlFor="usesHydrogenPeroxide" className="cursor-pointer text-red-600">Le client utilise du peroxyde d'hydrogène</Label>
+                  <Label htmlFor="usesHydrogenPeroxide" className="cursor-pointer text-destructive dark:text-destructive">Le client utilise du peroxyde d'hydrogène</Label>
                 </div>
               )}
             </div>

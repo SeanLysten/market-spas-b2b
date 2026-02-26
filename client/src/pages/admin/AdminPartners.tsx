@@ -53,9 +53,9 @@ import { toast } from "sonner";
 const levelColors: Record<string, string> = {
   BRONZE: "bg-amber-700 text-white",
   SILVER: "bg-gray-400 text-white",
-  GOLD: "bg-yellow-500 text-white",
+  GOLD: "bg-amber-500 dark:bg-amber-400 text-white",
   PLATINUM: "bg-gray-600 text-white",
-  VIP: "bg-purple-600 text-white",
+  VIP: "bg-purple-600 dark:bg-purple-400 text-white",
 };
 
 const levelDiscounts: Record<string, number> = {
@@ -67,10 +67,10 @@ const levelDiscounts: Record<string, number> = {
 };
 
 const statusColors: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  APPROVED: "bg-green-100 text-green-800",
-  SUSPENDED: "bg-red-100 text-red-800",
-  TERMINATED: "bg-gray-100 text-gray-800",
+  PENDING: "bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400",
+  APPROVED: "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400",
+  SUSPENDED: "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive",
+  TERMINATED: "bg-muted dark:bg-muted/50 text-gray-800",
 };
 
 const statusLabels: Record<string, string> = {
@@ -505,7 +505,7 @@ export default function AdminPartners() {
               <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl text-display text-display font-bold text-green-600">{approvedCount}</div>
+              <div className="text-2xl text-display text-display font-bold text-emerald-600 dark:text-emerald-400">{approvedCount}</div>
             </CardContent>
           </Card>
           <Card>
@@ -514,7 +514,7 @@ export default function AdminPartners() {
               <Award className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl text-display text-display font-bold text-purple-600">
+              <div className="text-2xl text-display text-display font-bold text-purple-600 dark:text-purple-400">
                 {partners?.filter((p: any) => p.level === "VIP" || p.level === "PLATINUM").length || 0}
               </div>
             </CardContent>
@@ -602,7 +602,7 @@ export default function AdminPartners() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={levelColors[partner.level] || "bg-gray-100"}>
+                        <Badge className={levelColors[partner.level] || "bg-muted dark:bg-muted/50"}>
                           {partner.level}
                         </Badge>
                       </TableCell>
@@ -610,7 +610,7 @@ export default function AdminPartners() {
                         <span className="font-medium">{partner.discountPercent || 0}%</span>
                       </TableCell>
                       <TableCell>
-                        <Badge className={statusColors[partner.status] || "bg-gray-100"}>
+                        <Badge className={statusColors[partner.status] || "bg-muted dark:bg-muted/50"}>
                           {statusLabels[partner.status] || partner.status}
                         </Badge>
                       </TableCell>
@@ -628,7 +628,7 @@ export default function AdminPartners() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-green-600"
+                              className="text-emerald-600 dark:text-emerald-400"
                               onClick={() => handleApprovePartner(partner.id)}
                             >
                               <CheckCircle className="w-4 h-4" />
@@ -644,7 +644,7 @@ export default function AdminPartners() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-red-600"
+                            className="text-destructive dark:text-destructive"
                             onClick={() => handleDeletePartner(partner.id)}
                           >
                             <Trash2 className="w-4 h-4" />

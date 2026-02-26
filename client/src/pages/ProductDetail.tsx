@@ -128,7 +128,7 @@ export default function ProductDetail() {
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
             <Package className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-600">Produit non trouvé</p>
+            <p className="text-muted-foreground dark:text-muted-foreground">Produit non trouvé</p>
             <Link href="/catalog">
               <Button className="mt-4">Retour au catalogue</Button>
             </Link>
@@ -174,7 +174,7 @@ export default function ProductDetail() {
                   className="w-full h-full object-contain"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                <div className="w-full h-full flex items-center justify-center bg-muted/50 dark:bg-muted/30">
                   <Package className="w-32 h-32 text-gray-300" />
                 </div>
               )}
@@ -186,7 +186,7 @@ export default function ProductDetail() {
                 <button
                   onClick={() => setSelectedVariantId(null)}
                   className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden ${
-                    !selectedVariantId ? "border-blue-600" : "border-gray-200"
+                    !selectedVariantId ? "border-blue-600" : "border-border dark:border-border"
                   }`}
                 >
                   {(product as any).imageUrl ? (
@@ -196,7 +196,7 @@ export default function ProductDetail() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                    <div className="w-full h-full flex items-center justify-center bg-muted/50 dark:bg-muted/30">
                       <Package className="w-8 h-8 text-gray-300" />
                     </div>
                   )}
@@ -208,7 +208,7 @@ export default function ProductDetail() {
                     className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden ${
                       selectedVariantId === variant.id
                         ? "border-blue-600"
-                        : "border-gray-200"
+                        : "border-border dark:border-border"
                     }`}
                   >
                     {variant.imageUrl ? (
@@ -218,8 +218,8 @@ export default function ProductDetail() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-50">
-                        <span className="text-xs text-gray-500">{variant.name}</span>
+                      <div className="w-full h-full flex items-center justify-center bg-muted/50 dark:bg-muted/30">
+                        <span className="text-xs text-muted-foreground dark:text-muted-foreground">{variant.name}</span>
                       </div>
                     )}
                   </button>
@@ -234,7 +234,7 @@ export default function ProductDetail() {
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="outline">{product.sku}</Badge>
                 {hasStock ? (
-                  <Badge className="bg-green-600">En stock ({stock})</Badge>
+                  <Badge className="bg-emerald-600 dark:bg-emerald-500">En stock ({stock})</Badge>
                 ) : (
                   <Badge variant="secondary">Rupture de stock</Badge>
                 )}
@@ -248,14 +248,14 @@ export default function ProductDetail() {
             </div>
 
             {/* Price */}
-            <div className="bg-blue-50 rounded-xl p-6">
+            <div className="bg-info/10 dark:bg-info-light rounded-xl p-6">
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-blue-600">
+                <span className="text-4xl font-bold text-info dark:text-info-dark">
                   {formatPrice(price)} €
                 </span>
-                <span className="text-lg text-gray-500">HT</span>
+                <span className="text-lg text-muted-foreground dark:text-muted-foreground">HT</span>
               </div>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
                 Prix TTC: {formatPrice(price * 1.21)} € (TVA 21%)
               </p>
             </div>
@@ -353,10 +353,10 @@ export default function ProductDetail() {
                   {incomingStock.map((stock: any) => (
                     <div
                       key={stock.id}
-                      className="flex items-center justify-between text-sm bg-blue-50 rounded-lg p-3"
+                      className="flex items-center justify-between text-sm bg-info/10 dark:bg-info-light rounded-lg p-3"
                     >
                       <div className="flex items-center gap-2">
-                        <Truck className="w-4 h-4 text-blue-600" />
+                        <Truck className="w-4 h-4 text-info dark:text-info-dark" />
                         <span>Semaine {stock.expectedWeek}</span>
                       </div>
                       <Badge variant="secondary">{stock.quantity} unités</Badge>
@@ -378,7 +378,7 @@ export default function ProductDetail() {
             <TabsContent value="description" className="mt-4">
               <Card>
                 <CardContent className="pt-6">
-                  <p className="text-gray-600 whitespace-pre-wrap">
+                  <p className="text-muted-foreground dark:text-muted-foreground whitespace-pre-wrap">
                     {product.description || "Aucune description disponible."}
                   </p>
                 </CardContent>
@@ -389,25 +389,25 @@ export default function ProductDetail() {
                 <CardContent className="pt-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-500">SKU</span>
+                      <span className="text-muted-foreground dark:text-muted-foreground">SKU</span>
                       <span className="font-medium">{product.sku}</span>
                     </div>
                     {product.weight && (
                       <div className="flex justify-between py-2 border-b">
-                        <span className="text-gray-500">Poids</span>
+                        <span className="text-muted-foreground dark:text-muted-foreground">Poids</span>
                         <span className="font-medium">{product.weight} kg</span>
                       </div>
                     )}
                     {(product.length || product.width || product.height) && (
                       <div className="flex justify-between py-2 border-b">
-                        <span className="text-gray-500">Dimensions</span>
+                        <span className="text-muted-foreground dark:text-muted-foreground">Dimensions</span>
                         <span className="font-medium">
                           {product.length}x{product.width}x{product.height} cm
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-500">TVA</span>
+                      <span className="text-muted-foreground dark:text-muted-foreground">TVA</span>
                       <span className="font-medium">{product.vatRate}%</span>
                     </div>
                   </div>

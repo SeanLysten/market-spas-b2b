@@ -65,7 +65,7 @@ export default function InvitePartner() {
     <div className="container max-w-4xl py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Inviter un partenaire</h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-muted-foreground dark:text-muted-foreground mt-2">
           Créez une invitation sécurisée pour permettre à un nouveau partenaire de créer son compte
         </p>
       </div>
@@ -92,9 +92,9 @@ export default function InvitePartner() {
               )}
               
               {successMessage && (
-                <Alert className="bg-green-50 border-green-200">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
+                <Alert className="bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20 dark:border-emerald-500/30">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <AlertDescription className="text-emerald-800 dark:text-emerald-400">{successMessage}</AlertDescription>
                 </Alert>
               )}
 
@@ -157,12 +157,12 @@ export default function InvitePartner() {
         </Card>
 
         {/* Résultat de l'invitation */}
-        <Card className={invitationUrl ? "border-green-200 bg-green-50" : ""}>
+        <Card className={invitationUrl ? "border-emerald-500/20 dark:border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-500/20" : ""}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {invitationUrl ? (
                 <>
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                   Invitation générée
                 </>
               ) : (
@@ -257,7 +257,7 @@ export default function InvitePartner() {
             </li>
           </ol>
           
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mt-4 p-4 bg-info/10 dark:bg-info-light border border-info/20 dark:border-info/30 rounded-lg">
             <p className="text-sm text-blue-900 mb-0">
               <strong>🔒 Sécurité :</strong> Le lien est valable 7 jours et ne peut être utilisé qu'une seule fois. 
               Il est lié à l'adresse email spécifiée et ne peut pas être transféré à une autre personne.

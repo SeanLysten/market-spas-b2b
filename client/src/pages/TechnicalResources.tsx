@@ -289,7 +289,7 @@ export default function TechnicalResources() {
                             </div>
                           </div>
                           {topic.status === "RESOLVED" && (
-                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded whitespace-nowrap">
+                            <span className="bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400 text-xs px-2 py-1 rounded whitespace-nowrap">
                               ✓ Résolu
                             </span>
                           )}

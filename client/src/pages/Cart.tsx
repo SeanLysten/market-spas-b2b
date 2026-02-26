@@ -116,9 +116,9 @@ export default function Cart() {
                 <Card>
                   <CardHeader>
                     <div className="flex items-center gap-2">
-                      <Package className="w-5 h-5 text-green-600" />
+                      <Package className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                       <CardTitle>Produits en stock</CardTitle>
-                      <Badge variant="default" className="bg-green-600">
+                      <Badge variant="default" className="bg-emerald-600 dark:bg-emerald-500">
                         {inStockItems.length}
                       </Badge>
                     </div>
@@ -201,9 +201,9 @@ export default function Cart() {
                 <Card>
                   <CardHeader>
                     <div className="flex items-center gap-2">
-                      <TruckIcon className="w-5 h-5 text-orange-600" />
+                      <TruckIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                       <CardTitle>Pré-réservations</CardTitle>
-                      <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                      <Badge variant="secondary" className="bg-orange-500/15 dark:bg-orange-500/25 text-orange-800 dark:text-orange-400">
                         {preorderItems.length}
                       </Badge>
                     </div>
@@ -213,7 +213,7 @@ export default function Cart() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {preorderItems.map((item: any) => (
-                      <div key={`preorder-${item.productId}`} className="flex gap-4 p-4 rounded-lg border border-orange-200 bg-orange-50/50">
+                      <div key={`preorder-${item.productId}`} className="flex gap-4 p-4 rounded-lg border border-orange-500/20 dark:border-orange-500/30 bg-orange-500/10 dark:bg-orange-500/20/50">
                         {/* Product Image */}
                         <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                           {item.product?.imageUrl ? (
@@ -231,7 +231,7 @@ export default function Cart() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start gap-2">
                             <h3 className="font-semibold line-clamp-1 flex-1">{item.product?.name}</h3>
-                            <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs">
+                            <Badge variant="secondary" className="bg-orange-500/15 dark:bg-orange-500/25 text-orange-800 dark:text-orange-400 text-xs">
                               Arrivage prévu
                             </Badge>
                           </div>
@@ -300,7 +300,7 @@ export default function Cart() {
                       <span className="font-medium">{formatPrice(cart.subtotalHT)} €</span>
                     </div>
                     {cart.discountPercent > 0 && (
-                      <div className="flex justify-between text-sm text-green-600">
+                      <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
                         <span>Remise partenaire ({cart.discountPercent}%)</span>
                         <span>-{formatPrice(cart.discountAmount)} €</span>
                       </div>
@@ -317,8 +317,8 @@ export default function Cart() {
                   </div>
 
                   {preorderItems.length > 0 && (
-                    <div className="p-3 rounded-lg bg-orange-50 border border-orange-200">
-                      <p className="text-xs text-orange-800">
+                    <div className="p-3 rounded-lg bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/20 dark:border-orange-500/30">
+                      <p className="text-xs text-orange-800 dark:text-orange-400">
                         <TruckIcon className="w-4 h-4 inline mr-1" />
                         Votre commande contient {preorderItems.length} pré-réservation(s). 
                         L'expédition sera effectuée dès réception du stock.

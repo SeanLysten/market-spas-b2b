@@ -80,7 +80,7 @@ export default function ResetPassword() {
         <Card className="w-full max-w-md shadow-xl">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center">
-              <div className="h-16 w-16 rounded-full bg-green-600 flex items-center justify-center">
+              <div className="h-16 w-16 rounded-full bg-emerald-600 dark:bg-emerald-500 flex items-center justify-center">
                 <CheckCircle2 className="h-8 w-8 text-white" />
               </div>
             </div>
@@ -103,7 +103,7 @@ export default function ResetPassword() {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center">
-            <div className="h-16 w-16 rounded-full bg-blue-600 flex items-center justify-center">
+            <div className="h-16 w-16 rounded-full bg-info dark:bg-info-dark flex items-center justify-center">
               <Package className="h-8 w-8 text-white" />
             </div>
           </div>
@@ -135,7 +135,7 @@ export default function ResetPassword() {
                 disabled={isLoading}
                 autoComplete="new-password"
               />
-              <p className="text-xs text-gray-500">Minimum 8 caractères</p>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground">Minimum 8 caractères</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
@@ -154,7 +154,7 @@ export default function ResetPassword() {
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-info dark:bg-info-dark hover:bg-info hover:bg-info/90 dark:bg-info-dark dark:hover:bg-info-dark/90"
               disabled={isLoading || !token}
             >
               {isLoading ? (
@@ -166,9 +166,9 @@ export default function ResetPassword() {
                 "Réinitialiser le mot de passe"
               )}
             </Button>
-            <div className="text-center text-sm text-gray-600">
+            <div className="text-center text-sm text-muted-foreground dark:text-muted-foreground">
               <Link href="/login">
-                <a className="text-blue-600 hover:text-blue-700 font-medium hover:underline">
+                <a className="text-info dark:text-info-dark hover:text-info dark:text-info-dark font-medium hover:underline">
                   Retour à la connexion
                 </a>
               </Link>

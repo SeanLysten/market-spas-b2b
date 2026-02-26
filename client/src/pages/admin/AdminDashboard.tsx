@@ -48,8 +48,8 @@ export default function AdminDashboard() {
       icon: Users,
       description: "+12% ce mois",
       trend: "up",
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
+      color: "text-info dark:text-info-dark",
+      bgColor: "bg-info/10 dark:bg-info-light",
     },
     {
       title: "Commandes ce mois",
@@ -57,8 +57,8 @@ export default function AdminDashboard() {
       icon: ShoppingBag,
       description: "vs. mois dernier",
       trend: "up",
-      color: "text-green-600",
-      bgColor: "bg-green-50",
+      color: "text-emerald-600 dark:text-emerald-400",
+      bgColor: "bg-emerald-500/10 dark:bg-emerald-500/20",
     },
     {
       title: "Chiffre d'affaires",
@@ -66,8 +66,8 @@ export default function AdminDashboard() {
       icon: Euro,
       description: "+8% ce mois",
       trend: "up",
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
+      color: "text-purple-600 dark:text-purple-400 dark:text-purple-400",
+      bgColor: "bg-purple-500/10 dark:bg-purple-500/20",
     },
     {
       title: "Produits en stock",
@@ -75,8 +75,8 @@ export default function AdminDashboard() {
       icon: Package,
       description: `${lowStock.length} en stock bas`,
       trend: lowStock.length > 0 ? "warning" : "neutral",
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
+      color: "text-orange-600 dark:text-orange-400 dark:text-orange-400",
+      bgColor: "bg-orange-500/10 dark:bg-orange-500/20",
     },
   ];
 
@@ -166,13 +166,13 @@ export default function AdminDashboard() {
                   <CardContent>
                     <div className="text-2xl text-display text-display font-bold">{stat.value}</div>
                     <div className="flex items-center gap-1 mt-1">
-                      {stat.trend === "up" && <TrendingUp className="w-3 h-3 text-green-600" />}
-                      {stat.trend === "down" && <TrendingDown className="w-3 h-3 text-red-600" />}
-                      {stat.trend === "warning" && <AlertTriangle className="w-3 h-3 text-orange-600" />}
+                      {stat.trend === "up" && <TrendingUp className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />}
+                      {stat.trend === "down" && <TrendingDown className="w-3 h-3 text-destructive dark:text-destructive dark:text-red-400" />}
+                      {stat.trend === "warning" && <AlertTriangle className="w-3 h-3 text-orange-600 dark:text-orange-400 dark:text-orange-400" />}
                       <p className={`text-xs ${
-                        stat.trend === "up" ? "text-green-600" : 
-                        stat.trend === "down" ? "text-red-600" : 
-                        stat.trend === "warning" ? "text-orange-600" : 
+                        stat.trend === "up" ? "text-emerald-600 dark:text-emerald-400" : 
+                        stat.trend === "down" ? "text-destructive dark:text-destructive dark:text-red-400" : 
+                        stat.trend === "warning" ? "text-orange-600 dark:text-orange-400 dark:text-orange-400" : 
                         "text-muted-foreground"
                       }`}>
                         {stat.description}
@@ -234,11 +234,11 @@ export default function AdminDashboard() {
           </Card>
 
           {/* Low Stock Alert */}
-          <Card className={lowStock.length > 0 ? "border-orange-200" : ""}>
+          <Card className={lowStock.length > 0 ? "border-orange-500/20 dark:border-orange-500/30" : ""}>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className={`w-5 h-5 ${lowStock.length > 0 ? "text-orange-600" : ""}`} />
+                  <AlertTriangle className={`w-5 h-5 ${lowStock.length > 0 ? "text-orange-600 dark:text-orange-400 dark:text-orange-400" : ""}`} />
                   Alertes de stock
                 </CardTitle>
                 <CardDescription>Produits avec stock bas (&le; 5 unités)</CardDescription>
@@ -253,17 +253,17 @@ export default function AdminDashboard() {
               {lowStock.length > 0 ? (
                 <div className="space-y-3">
                   {lowStock.slice(0, 5).map((product: any) => (
-                    <div key={product.id} className="flex items-center justify-between p-3 rounded-lg bg-orange-50 border border-orange-100">
+                    <div key={product.id} className="flex items-center justify-between p-3 rounded-lg bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/20">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                          <Package className="w-5 h-5 text-orange-600" />
+                        <div className="w-10 h-10 rounded-lg bg-orange-500/20 dark:bg-orange-500/30 flex items-center justify-center">
+                          <Package className="w-5 h-5 text-orange-600 dark:text-orange-400 dark:text-orange-400" />
                         </div>
                         <div>
                           <p className="font-medium text-sm">{product.name}</p>
                           <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
                         </div>
                       </div>
-                      <Badge variant="destructive" className="bg-orange-600">
+                      <Badge variant="destructive" className="bg-orange-600 dark:bg-orange-500 dark:bg-orange-500">
                         {product.stockQuantity || 0} en stock
                       </Badge>
                     </div>
@@ -276,7 +276,7 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-green-500 opacity-70" />
+                  <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-emerald-500 dark:text-emerald-400 opacity-70" />
                   <p>Tous les stocks sont à niveau</p>
                 </div>
               )}
@@ -341,8 +341,8 @@ export default function AdminDashboard() {
 
           <Card className="card-hover cursor-pointer group" onClick={() => window.location.href = "/admin/partners"}>
             <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center mb-4 group-hover:bg-blue-100 transition-colors">
-                <Users className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 rounded-lg bg-info/10 dark:bg-info-light flex items-center justify-center mb-4 group-hover:bg-info/20 dark:group-hover:bg-info-light/80 transition-colors">
+                  <Users className="w-6 h-6 text-info dark:text-info-dark" />
               </div>
               <CardTitle className="text-lg">Partenaires</CardTitle>
               <CardDescription>
@@ -353,8 +353,8 @@ export default function AdminDashboard() {
 
           <Card className="card-hover cursor-pointer group" onClick={() => window.location.href = "/admin/resources"}>
             <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-purple-50 flex items-center justify-center mb-4 group-hover:bg-purple-100 transition-colors">
-                <FileText className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 rounded-lg bg-purple-500/10 dark:bg-purple-500/20 flex items-center justify-center mb-4 group-hover:bg-purple-500/20 dark:group-hover:bg-purple-500/30 transition-colors">
+                  <FileText className="w-6 h-6 text-purple-600 dark:text-purple-400 dark:text-purple-400" />
               </div>
               <CardTitle className="text-lg">Ressources</CardTitle>
               <CardDescription>
@@ -365,8 +365,8 @@ export default function AdminDashboard() {
 
           <Card className="card-hover cursor-pointer group" onClick={() => window.location.href = "/admin/reports"}>
             <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-green-50 flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
-                <BarChart3 className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center mb-4 group-hover:bg-emerald-500/20 dark:group-hover:bg-emerald-500/30 transition-colors">
+                  <BarChart3 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
               <CardTitle className="text-lg">Rapports</CardTitle>
               <CardDescription>

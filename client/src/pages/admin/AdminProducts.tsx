@@ -565,7 +565,7 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
                 <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => handleToggleActive(variant.id, variant.isActive !== false)}
-                    className={`w-8 h-5 rounded-full relative transition-colors duration-200 ${variant.isActive !== false ? 'bg-green-500' : 'bg-gray-300'}`}
+                    className={`w-8 h-5 rounded-full relative transition-colors duration-200 ${variant.isActive !== false ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-gray-300'}`}
                     title={variant.isActive !== false ? 'Désactiver cette couleur' : 'Activer cette couleur'}
                   >
                     <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${variant.isActive !== false ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
@@ -649,7 +649,7 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
                         }}
                       />
                       <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={() => handleSaveStock(variant.id)}>
-                        <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                       </Button>
                       <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={handleCancelEdit}>
                         <span className="text-xs">&times;</span>
@@ -955,7 +955,7 @@ function VariantsTab({ productId }: { productId: number }) {
                           }}
                         />
                         <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => handleSaveStock(variant.id)}>
-                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                         </Button>
                         <Button size="sm" variant="ghost" className="h-8 px-2" onClick={handleCancelEditStock}>
                           ✕
@@ -1712,7 +1712,7 @@ function ColorsManagementDialog({ open, onOpenChange }: { open: boolean; onOpenC
                       placeholder="Nom de la couleur"
                     />
                     <Button size="sm" variant="ghost" onClick={() => setEditingIndex(null)}>
-                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     </Button>
                   </>
                 ) : (
@@ -1755,7 +1755,7 @@ function ColorsManagementDialog({ open, onOpenChange }: { open: boolean; onOpenC
                 autoFocus
               />
               <Button size="sm" onClick={handleAddColor}>
-                <CheckCircle className="h-4 w-4 text-green-600" />
+                <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setIsAdding(false)}>
                 ✕

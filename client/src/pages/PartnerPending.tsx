@@ -8,7 +8,7 @@ export default function PartnerPending() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
       <Card className="max-w-lg w-full">
         <CardHeader className="text-center">
-          <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 rounded-full bg-amber-500/15 dark:bg-amber-500/25 flex items-center justify-center mx-auto mb-4">
             <Clock className="w-10 h-10 text-amber-600" />
           </div>
           <CardTitle className="text-2xl text-display text-display">Demande en cours de traitement</CardTitle>
@@ -19,7 +19,7 @@ export default function PartnerPending() {
         <CardContent className="space-y-6">
           <div className="bg-muted/50 rounded-lg p-4 space-y-4">
             <div className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5" />
               <div>
                 <p className="font-medium">Demande reçue</p>
                 <p className="text-sm text-muted-foreground">
@@ -37,7 +37,7 @@ export default function PartnerPending() {
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Mail className="w-5 h-5 text-blue-600 mt-0.5" />
+              <Mail className="w-5 h-5 text-info dark:text-info-dark mt-0.5" />
               <div>
                 <p className="font-medium">Notification par email</p>
                 <p className="text-sm text-muted-foreground">

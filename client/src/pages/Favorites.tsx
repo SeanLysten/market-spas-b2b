@@ -36,14 +36,14 @@ export default function Favorites() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-muted/50 dark:bg-muted/30 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/50 dark:bg-muted/30">
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-40">
         <div className="container py-4">
@@ -79,10 +79,10 @@ export default function Favorites() {
           <Card>
             <CardContent className="py-16 text-center">
               <Heart className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <h2 className="text-xl text-display text-display font-semibold text-gray-700 mb-2">
+              <h2 className="text-xl text-display text-display font-semibold text-foreground dark:text-foreground mb-2">
                 {searchQuery ? "Aucun favori trouvé" : "Aucun produit favori"}
               </h2>
-              <p className="text-gray-500 mb-6">
+              <p className="text-muted-foreground dark:text-muted-foreground mb-6">
                 {searchQuery
                   ? "Essayez avec d'autres termes de recherche"
                   : "Ajoutez des produits à vos favoris pour les retrouver facilement"}
@@ -97,7 +97,7 @@ export default function Favorites() {
           </Card>
         ) : (
           <>
-            <p className="text-gray-600 mb-6">
+            <p className="text-muted-foreground dark:text-muted-foreground mb-6">
               {filteredFavorites.length} produit{filteredFavorites.length > 1 ? "s" : ""} dans vos favoris
             </p>
             
@@ -113,33 +113,33 @@ export default function Favorites() {
                       {/* Remove favorite button */}
                       <button
                         onClick={() => handleRemoveFavorite(fav.productId)}
-                        className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors"
+                        className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-destructive/10 dark:bg-destructive/20 transition-colors"
                       >
                         <Heart className="h-5 w-5 text-red-500 fill-red-500" />
                       </button>
                     </div>
                     
                     <div className="p-4">
-                      <p className="text-xs text-gray-500 mb-1">{fav.product.sku}</p>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">{fav.product.sku}</p>
                       <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
                         {fav.product.name}
                       </h3>
                       
                       <div className="flex items-baseline gap-2 mb-3">
-                        <span className="text-base font-semibold text-display text-blue-600">
+                        <span className="text-base font-semibold text-display text-info dark:text-info-dark">
                           {Number(fav.product.pricePartnerHT).toLocaleString("fr-FR", {
                             style: "currency",
                             currency: "EUR",
                           })}
                         </span>
-                        <span className="text-xs text-gray-500">HT</span>
+                        <span className="text-xs text-muted-foreground dark:text-muted-foreground">HT</span>
                       </div>
                       
                       <div className="flex items-center justify-between">
                         <span className={`text-sm ${
                           (fav.product.stockQuantity || 0) > 0 
-                            ? "text-green-600" 
-                            : "text-red-600"
+                            ? "text-emerald-600 dark:text-emerald-400" 
+                            : "text-destructive dark:text-destructive"
                         }`}>
                           {(fav.product.stockQuantity || 0) > 0 
                             ? `${fav.product.stockQuantity} en stock` 
