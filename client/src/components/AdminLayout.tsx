@@ -211,15 +211,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 </p>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full gap-2"
-              onClick={handleLogout}
-            >
-              <LogOut className="w-4 h-4" />
-              Déconnexion
-            </Button>
+            <div className="flex gap-2">
+              <ThemeToggle />
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-2"
+                onClick={handleLogout}
+              >
+                <LogOut className="w-4 h-4" />
+                Déconnexion
+              </Button>
+            </div>
           </div>
         </div>
       </aside>
@@ -237,7 +240,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <Menu className="w-5 h-5" />
             </Button>
             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Administration</p>
-            <ThemeToggle />
+            <div className="w-10" /> {/* Spacer for alignment */}
           </div>
         </header>
 

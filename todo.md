@@ -1798,3 +1798,6 @@
 - [x] Extraire les variables CSS dark mode du design system v2.1
 - [x] Créer un composant ThemeToggle pour changer de thème
 - [x] Tester les deux thèmes sur toutes les pages
+- [x] Corriger le mode dark qui s'active automatiquement et détruit le visuel
+- [x] Déplacer le bouton ThemeToggle dans la sidebar (visible et accessible)
+- [x] S'assurer que le mode light est le mode par défaut
