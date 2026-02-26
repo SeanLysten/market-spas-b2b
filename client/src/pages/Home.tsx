@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getLoginUrl } from "@/const";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTranslation } from "react-i18next";
 import { 
   Package, 
@@ -52,6 +53,7 @@ export default function Home() {
                   <p className="text-sm font-medium">{user.name || user.email}</p>
                   <p className="text-xs text-muted-foreground capitalize">{user.role?.toLowerCase().replace('_', ' ')}</p>
                 </div>
+                <ThemeToggle />
                 <LanguageSwitcher />
                 {user.role === 'SUPER_ADMIN' && (
                   <Link href="/admin">

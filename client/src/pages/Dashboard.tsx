@@ -5,6 +5,7 @@ import { trpc } from "@/lib/trpc";
 import { useSafeQuery } from "@/hooks/useSafeQuery";
 import { CardGridSkeleton } from "@/components/CardSkeleton";
 import { ListSkeleton } from "@/components/ListSkeleton";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Package,
   ShoppingCart,
@@ -49,6 +50,7 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <Button variant="outline" size="sm" className="relative">
                 <Bell className="w-4 h-4" />
                 {unreadCount && unreadCount > 0 && (
