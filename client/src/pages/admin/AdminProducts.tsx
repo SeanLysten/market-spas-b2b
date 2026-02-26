@@ -246,7 +246,7 @@ export default function AdminProducts() {
                     id="category"
                     value={productForm.category}
                     onChange={(e) => setProductForm({ ...productForm, category: e.target.value as any })}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     required
                   >
                     <option value="SPAS">Spas</option>
@@ -548,7 +548,7 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Variantes &mdash; Stock total : {totalStock}</p>
       </div>
-      <div className="rounded-md border border-border/50 overflow-hidden">
+      <div className="rounded-lg border border-border/50 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-muted/40">
@@ -687,7 +687,7 @@ function ProductVariantsManager({ product, onBack }: { product: any; onBack: () 
           ← Retour
         </Button>
         <div>
-          <h2 className="text-2xl font-bold">{product.name}</h2>
+          <h2 className="text-2xl text-display text-display font-bold">{product.name}</h2>
           <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
         </div>
       </div>
@@ -1079,7 +1079,7 @@ function IncomingStockTab({ productId }: { productId: number }) {
                       id="variantId"
                       value={form.variantId}
                       onChange={(e) => setForm({ ...form, variantId: e.target.value })}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                     >
                       <option value="">Global (toutes variantes)</option>
                       {variants.map((v: any) => (
@@ -1378,7 +1378,7 @@ function GlobalIncomingStockView() {
                     id="productId"
                     value={form.productId}
                     onChange={(e) => setForm({ ...form, productId: e.target.value, variantId: "" })}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                     required
                   >
                     <option value="">Sélectionnez un produit</option>
@@ -1396,7 +1396,7 @@ function GlobalIncomingStockView() {
                       id="variantId"
                       value={form.variantId}
                       onChange={(e) => setForm({ ...form, variantId: e.target.value })}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                     >
                       <option value="">Toutes les variantes (global)</option>
                       {variantsList.map((v: any) => (
@@ -1611,7 +1611,7 @@ function GlobalIncomingStockView() {
             <div>
               <Label>Statut</Label>
               <select
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                 value={editForm.status}
                 onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
                 required

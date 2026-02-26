@@ -11,7 +11,7 @@ export default function PartnerPending() {
           <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
             <Clock className="w-10 h-10 text-amber-600" />
           </div>
-          <CardTitle className="text-2xl">Demande en cours de traitement</CardTitle>
+          <CardTitle className="text-2xl text-display text-display">Demande en cours de traitement</CardTitle>
           <CardDescription>
             Votre demande de partenariat a été envoyée avec succès
           </CardDescription>

@@ -157,7 +157,7 @@ export default function AdminOrders() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Total commandes</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
+              <div className="text-2xl text-display text-display font-bold">{stats.total}</div>
             </CardContent>
           </Card>
           <Card className="border-yellow-200">
@@ -165,7 +165,7 @@ export default function AdminOrders() {
               <CardTitle className="text-sm font-medium text-yellow-600">En attente</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+              <div className="text-2xl text-display text-display font-bold text-yellow-600">{stats.pending}</div>
             </CardContent>
           </Card>
           <Card className="border-blue-200">
@@ -173,7 +173,7 @@ export default function AdminOrders() {
               <CardTitle className="text-sm font-medium text-blue-600">En cours</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
+              <div className="text-2xl text-display text-display font-bold text-blue-600">{stats.inProgress}</div>
             </CardContent>
           </Card>
           <Card className="border-green-200">
@@ -181,7 +181,7 @@ export default function AdminOrders() {
               <CardTitle className="text-sm font-medium text-green-600">Expédiées</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.shipped}</div>
+              <div className="text-2xl text-display text-display font-bold text-green-600">{stats.shipped}</div>
             </CardContent>
           </Card>
         </div>
@@ -425,7 +425,7 @@ export default function AdminOrders() {
                     <span className="text-muted-foreground">TVA (21%)</span>
                     <span>{formatPrice(Number(selectedOrder.totalTTC) - Number(selectedOrder.totalHT))}</span>
                   </div>
-                  <div className="flex justify-between text-lg font-bold">
+                  <div className="flex justify-between text-base font-semibold text-display">
                     <span>Total TTC</span>
                     <span>{formatPrice(selectedOrder.totalTTC)}</span>
                   </div>

@@ -1785,3 +1785,10 @@
 - [x] Créer 4 nouvelles fonctions d'email (server/email.ts)
 - [x] Remplacer TODOs Stripe par envois d'emails (server/stripe-webhook.ts)
 - [x] Implémenter upsertMetaCampaignStats (server/webhooks.ts et server/db.ts)
+- [x] Refonte du design du portail avec la nouvelle charte graphique (sans modifier les fonctionnalités)
+- [x] Ajuster les tailles de texte et titres pour cohérence (ex: titre "Administration" sidebar)
+- [x] Appliquer le nouveau design sur tous les composants UI
+- [x] Vérifier l'esthétique et la cohérence visuelle globale
+- [x] Appliquer le design system sur tous les composants UI restants (Sidebar, Dialog, Alert, Textarea, Select, etc.)
+- [x] Appliquer le design system sur toutes les pages (Home, Login, Dashboard, Catalog, Orders, Admin, etc.)
+- [x] Créer un guide de style pour les futures créations

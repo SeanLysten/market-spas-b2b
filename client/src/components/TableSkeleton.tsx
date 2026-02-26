@@ -36,7 +36,7 @@ export function TableSkeleton({
   showHeader = true,
 }: TableSkeletonProps) {
   return (
-    <div className="rounded-md border">
+    <div className="rounded-lg border">
       <Table>
         {showHeader && (
           <TableHeader>

@@ -170,7 +170,7 @@ export default function AdminSpareParts() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Pièces Détachées</h1>
+            <h1 className="text-2xl text-display text-display font-bold">Pièces Détachées</h1>
             <p className="text-muted-foreground">
               Gérez le catalogue de pièces détachées et leurs compatibilités
             </p>
@@ -191,7 +191,7 @@ export default function AdminSpareParts() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total pièces</p>
-                  <p className="text-2xl font-bold">{parts.filter((p: any) => p.isActive).length}</p>
+                  <p className="text-2xl text-display text-display font-bold">{parts.filter((p: any) => p.isActive).length}</p>
                 </div>
               </div>
             </CardContent>
@@ -204,7 +204,7 @@ export default function AdminSpareParts() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Stock bas</p>
-                  <p className="text-2xl font-bold text-orange-600">{lowStockParts.length}</p>
+                  <p className="text-2xl text-display text-display font-bold text-orange-600">{lowStockParts.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -217,7 +217,7 @@ export default function AdminSpareParts() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Catégories</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-2xl text-display text-display font-bold">
                     {new Set(parts.filter((p: any) => p.isActive).map((p: any) => p.category)).size}
                   </p>
                 </div>
@@ -232,7 +232,7 @@ export default function AdminSpareParts() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Inactives</p>
-                  <p className="text-2xl font-bold">{parts.filter((p: any) => !p.isActive).length}</p>
+                  <p className="text-2xl text-display text-display font-bold">{parts.filter((p: any) => !p.isActive).length}</p>
                 </div>
               </div>
             </CardContent>

@@ -54,7 +54,7 @@ function SparePartDetailDialog({ partId, open, onOpenChange }: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">{(part as any).name}</DialogTitle>
+          <DialogTitle className="text-xl text-display text-display">{(part as any).name}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           {(part as any).imageUrl && (
@@ -401,7 +401,7 @@ export default function SpareParts() {
                       <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{part.description}</p>
                     )}
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold">
+                      <span className="text-base font-semibold text-display">
                         {parseFloat(part.priceHT).toFixed(2)} €{" "}
                         <span className="text-xs font-normal text-muted-foreground">HT</span>
                       </span>

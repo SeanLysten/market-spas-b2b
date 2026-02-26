@@ -154,7 +154,7 @@ export default function OrderTracking() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl font-bold flex items-center gap-2">
+                <h1 className="text-2xl text-display text-display font-bold flex items-center gap-2">
                   Commande {order.orderNumber}
                   <Badge className={getStatusColor(order.status)}>
                     {STATUS_STEPS.find(s => s.status === order.status)?.label || order.status}
@@ -313,7 +313,7 @@ export default function OrderTracking() {
                     <span>{formatPrice(Number(order.totalTTC) - Number(order.totalHT))}</span>
                   </div>
                   <Separator />
-                  <div className="flex justify-between text-lg font-bold">
+                  <div className="flex justify-between text-base font-semibold text-display">
                     <span>Total TTC</span>
                     <span className="text-primary">{formatPrice(order.totalTTC)}</span>
                   </div>

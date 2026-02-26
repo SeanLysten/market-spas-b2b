@@ -272,7 +272,7 @@ export default function ProductAddToCartDialog({
                 min="1"
                 value={quantity}
                 onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-center"
+                className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-center"
               />
               <Button
                 type="button"
@@ -293,7 +293,7 @@ export default function ProductAddToCartDialog({
                 {product.pricePartnerHT || 0} €
               </span>
             </div>
-            <div className="flex items-center justify-between text-lg font-bold mt-2">
+            <div className="flex items-center justify-between text-base font-semibold text-display mt-2">
               <span>Total HT</span>
               <span>
                 {((product.pricePartnerHT || 0) * quantity).toFixed(2)} €

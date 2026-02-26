@@ -172,7 +172,7 @@ export default function Calendar() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Calendrier</h1>
+                <h1 className="text-2xl text-display text-display font-bold text-gray-900">Calendrier</h1>
                 <p className="text-sm text-gray-500">Événements, promotions et formations</p>
               </div>
             </div>
@@ -208,7 +208,7 @@ export default function Calendar() {
                     <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
-                    <h2 className="text-xl font-semibold">
+                    <h2 className="text-xl text-display text-display font-semibold">
                       {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
                     </h2>
                     <Button variant="outline" size="icon" onClick={goToNextMonth}>

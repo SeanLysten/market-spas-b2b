@@ -487,7 +487,7 @@ export default function AdminPartners() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{partners?.length || 0}</div>
+              <div className="text-2xl text-display text-display font-bold">{partners?.length || 0}</div>
             </CardContent>
           </Card>
           <Card>
@@ -496,7 +496,7 @@ export default function AdminPartners() {
               <XCircle className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{pendingCount}</div>
+              <div className="text-2xl text-display text-display font-bold text-yellow-600">{pendingCount}</div>
             </CardContent>
           </Card>
           <Card>
@@ -505,7 +505,7 @@ export default function AdminPartners() {
               <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{approvedCount}</div>
+              <div className="text-2xl text-display text-display font-bold text-green-600">{approvedCount}</div>
             </CardContent>
           </Card>
           <Card>
@@ -514,7 +514,7 @@ export default function AdminPartners() {
               <Award className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600">
+              <div className="text-2xl text-display text-display font-bold text-purple-600">
                 {partners?.filter((p: any) => p.level === "VIP" || p.level === "PLATINUM").length || 0}
               </div>
             </CardContent>

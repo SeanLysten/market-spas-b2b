@@ -197,7 +197,7 @@ export default function ForumTopicDetail() {
                     </Badge>
                   )}
                 </div>
-                <CardTitle className="text-2xl">{topic.title}</CardTitle>
+                <CardTitle className="text-2xl text-display text-display">{topic.title}</CardTitle>
                 <CardDescription className="flex items-center gap-4 text-sm">
                   <span className="flex items-center gap-1">
                     <User className="w-4 h-4" />

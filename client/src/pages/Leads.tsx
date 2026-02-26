@@ -250,7 +250,7 @@ export default function Leads() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Mes Leads</h1>
+                <h1 className="text-2xl text-display text-display font-bold text-gray-900">Mes Leads</h1>
                 <p className="text-sm text-gray-500">Gérez vos prospects et suivez vos conversions</p>
               </div>
             </div>
@@ -273,7 +273,7 @@ export default function Leads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Total leads</p>
-                  <p className="text-2xl font-bold">{stats?.total || 0}</p>
+                  <p className="text-2xl text-display text-display font-bold">{stats?.total || 0}</p>
                 </div>
                 <Target className="w-8 h-8 text-blue-500" />
               </div>
@@ -284,7 +284,7 @@ export default function Leads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Nouveaux</p>
-                  <p className="text-2xl font-bold text-blue-600">{(stats as any)?.new || 0}</p>
+                  <p className="text-2xl text-display text-display font-bold text-blue-600">{(stats as any)?.new || 0}</p>
                 </div>
                 <AlertCircle className="w-8 h-8 text-blue-500" />
               </div>
@@ -295,7 +295,7 @@ export default function Leads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">En cours</p>
-                  <p className="text-2xl font-bold text-yellow-600">{(stats as any)?.inProgress || 0}</p>
+                  <p className="text-2xl text-display text-display font-bold text-yellow-600">{(stats as any)?.inProgress || 0}</p>
                 </div>
                 <Phone className="w-8 h-8 text-yellow-500" />
               </div>
@@ -306,7 +306,7 @@ export default function Leads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Convertis</p>
-                  <p className="text-2xl font-bold text-green-600">{(stats as any)?.converted || 0}</p>
+                  <p className="text-2xl text-display text-display font-bold text-green-600">{(stats as any)?.converted || 0}</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-green-500" />
               </div>
@@ -445,7 +445,7 @@ export default function Leads() {
                     {LEAD_SOURCES[selectedLead.source as keyof typeof LEAD_SOURCES]}
                   </Badge>
                 </div>
-                <DialogTitle className="text-xl">
+                <DialogTitle className="text-xl text-display text-display">
                   {selectedLead.firstName} {selectedLead.lastName}
                 </DialogTitle>
                 <DialogDescription>

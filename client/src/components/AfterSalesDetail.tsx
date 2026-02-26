@@ -135,7 +135,7 @@ export default function AfterSalesDetail({ serviceId, onClose }: AfterSalesDetai
       {/* Header */}
       <div className="flex justify-between items-start">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
+          <h2 className="text-2xl text-display text-display font-bold flex items-center gap-2">
             {service.ticketNumber}
             <Badge className={`${statusConfig.color} gap-1`}>
               <StatusIcon className="h-3 w-3" />
@@ -209,7 +209,7 @@ export default function AfterSalesDetail({ serviceId, onClose }: AfterSalesDetai
                   {service.shippingCost > 0 && (
                     <p><strong>Frais de livraison :</strong> {(service.shippingCost / 100).toFixed(2)} €</p>
                   )}
-                  <p className="text-lg font-bold mt-2">
+                  <p className="text-base font-semibold text-display mt-2">
                     Total : {(service.totalAmount / 100).toFixed(2)} € TTC
                   </p>
                 </div>

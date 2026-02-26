@@ -73,7 +73,7 @@ export default function Cart() {
         <div className="container py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Mon panier</h1>
+              <h1 className="text-2xl text-display text-display font-bold">Mon panier</h1>
               <p className="text-sm text-muted-foreground">
                 {isEmpty ? "Votre panier est vide" : `${cart.items.length} article(s)`}
               </p>
@@ -95,7 +95,7 @@ export default function Cart() {
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-12 pb-12 text-center">
               <ShoppingCart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2">Votre panier est vide</h2>
+              <h2 className="text-2xl text-display text-display font-bold mb-2">Votre panier est vide</h2>
               <p className="text-muted-foreground mb-6">
                 Découvrez notre catalogue et ajoutez des produits à votre panier
               </p>
@@ -147,7 +147,7 @@ export default function Cart() {
                           <h3 className="font-semibold line-clamp-1">{item.product?.name}</h3>
                           <p className="text-sm text-muted-foreground">SKU: {item.product?.sku}</p>
                           <div className="mt-2 flex items-center gap-2">
-                            <span className="text-lg font-bold text-primary">
+                            <span className="text-base font-semibold text-display text-primary">
                               {formatPrice(item.unitPriceHT)} €
                             </span>
                             <span className="text-sm text-muted-foreground">HT</span>
@@ -237,7 +237,7 @@ export default function Cart() {
                           </div>
                           <p className="text-sm text-muted-foreground">SKU: {item.product?.sku}</p>
                           <div className="mt-2 flex items-center gap-2">
-                            <span className="text-lg font-bold text-primary">
+                            <span className="text-base font-semibold text-display text-primary">
                               {formatPrice(item.unitPriceHT)} €
                             </span>
                             <span className="text-sm text-muted-foreground">HT</span>
@@ -310,7 +310,7 @@ export default function Cart() {
                       <span className="font-medium">{formatPrice(cart.vatAmount)} €</span>
                     </div>
                     <Separator />
-                    <div className="flex justify-between text-lg font-bold">
+                    <div className="flex justify-between text-base font-semibold text-display">
                       <span>Total TTC</span>
                       <span className="text-primary">{formatPrice(cart.totalTTC)} €</span>
                     </div>

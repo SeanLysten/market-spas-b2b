@@ -140,7 +140,7 @@ export default function Profile() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold">Mon profil</h1>
+              <h1 className="text-2xl text-display text-display font-bold">Mon profil</h1>
               <p className="text-muted-foreground">
                 Gérez vos informations personnelles et préférences
               </p>
@@ -786,7 +786,7 @@ function TeamManagementTab() {
                 <Label htmlFor="invite-role">Rôle</Label>
                 <select
                   id="invite-role"
-                  className="w-full p-2 border rounded-md"
+                  className="w-full p-2 border rounded-lg"
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as any)}
                 >

@@ -15,7 +15,7 @@ export default function Terms() {
         </p>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
+          <h2 className="text-2xl text-display text-display font-semibold text-slate-800 mb-4">
             1. Acceptation des Conditions
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
@@ -26,7 +26,7 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
+          <h2 className="text-2xl text-display text-display font-semibold text-slate-800 mb-4">
             2. Description du Service
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
@@ -43,7 +43,7 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
+          <h2 className="text-2xl text-display text-display font-semibold text-slate-800 mb-4">
             3. Inscription et Compte
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
@@ -59,7 +59,7 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
+          <h2 className="text-2xl text-display text-display font-semibold text-slate-800 mb-4">
             4. Commandes et Paiements
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
@@ -76,7 +76,7 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
+          <h2 className="text-2xl text-display text-display font-semibold text-slate-800 mb-4">
             5. Prix et Remises
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
@@ -87,7 +87,7 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
+          <h2 className="text-2xl text-display text-display font-semibold text-slate-800 mb-4">
             6. Intégration Google Ads
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
@@ -103,7 +103,7 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
+          <h2 className="text-2xl text-display text-display font-semibold text-slate-800 mb-4">
             7. Propriété Intellectuelle
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
@@ -114,7 +114,7 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
+          <h2 className="text-2xl text-display text-display font-semibold text-slate-800 mb-4">
             8. Utilisation Acceptable
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
@@ -131,7 +131,7 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
+          <h2 className="text-2xl text-display text-display font-semibold text-slate-800 mb-4">
             9. Limitation de Responsabilité
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
@@ -147,7 +147,7 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
+          <h2 className="text-2xl text-display text-display font-semibold text-slate-800 mb-4">
             10. Confidentialité
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
@@ -159,7 +159,7 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
+          <h2 className="text-2xl text-display text-display font-semibold text-slate-800 mb-4">
             11. Modifications des Conditions
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
@@ -170,7 +170,7 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
+          <h2 className="text-2xl text-display text-display font-semibold text-slate-800 mb-4">
             12. Résiliation
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
@@ -180,7 +180,7 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
+          <h2 className="text-2xl text-display text-display font-semibold text-slate-800 mb-4">
             13. Droit Applicable
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
@@ -190,7 +190,7 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">
+          <h2 className="text-2xl text-display text-display font-semibold text-slate-800 mb-4">
             14. Contact
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">

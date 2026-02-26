@@ -584,7 +584,7 @@ export default function AdminLeads() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gestion des Leads</h1>
+            <h1 className="text-2xl text-display text-display font-bold text-gray-900">Gestion des Leads</h1>
             <p className="text-gray-500">Statistiques des campagnes Meta et suivi des prospects</p>
           </div>
           <div className="flex items-center gap-2">
@@ -621,14 +621,14 @@ export default function AdminLeads() {
                     type="date"
                     value={customDateFrom}
                     onChange={(e) => setCustomDateFrom(e.target.value)}
-                    className="h-9 px-2 text-sm border rounded-md bg-white"
+                    className="h-9 px-2 text-sm border rounded-lg bg-white"
                   />
                   <span className="text-gray-400 text-sm">→</span>
                   <input
                     type="date"
                     value={customDateTo}
                     onChange={(e) => setCustomDateTo(e.target.value)}
-                    className="h-9 px-2 text-sm border rounded-md bg-white"
+                    className="h-9 px-2 text-sm border rounded-lg bg-white"
                   />
                   <Button
                     variant="outline"
@@ -677,7 +677,7 @@ export default function AdminLeads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Leads clients</p>
-                  <p className="text-2xl font-bold">{customerLeads.length}</p>
+                  <p className="text-2xl text-display text-display font-bold">{customerLeads.length}</p>
                   <p className="text-xs text-gray-500 mt-1">
                     {stats.newLeads} nouveau{stats.newLeads > 1 ? 'x' : ''}
                   </p>
@@ -693,7 +693,7 @@ export default function AdminLeads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-orange-600">Candidats partenaires</p>
-                  <p className="text-2xl font-bold text-orange-700">{partnerCandidateLeads.length}</p>
+                  <p className="text-2xl text-display text-display font-bold text-orange-700">{partnerCandidateLeads.length}</p>
                   <p className="text-xs text-orange-500 mt-1">
                     Devenir Partenaire
                   </p>
@@ -709,7 +709,7 @@ export default function AdminLeads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Taux de conversion</p>
-                  <p className="text-2xl font-bold">{stats.conversionRate}%</p>
+                  <p className="text-2xl text-display text-display font-bold">{stats.conversionRate}%</p>
                   <p className="text-xs text-gray-500 mt-1">
                     {stats.convertedLeads} converti{stats.convertedLeads > 1 ? 's' : ''}
                   </p>
@@ -725,7 +725,7 @@ export default function AdminLeads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Budget dépensé</p>
-                  <p className="text-2xl font-bold">{stats.totalSpend.toFixed(2)} €</p>
+                  <p className="text-2xl text-display text-display font-bold">{stats.totalSpend.toFixed(2)} €</p>
                   <p className="text-xs text-gray-500 mt-1">
                     CPL moyen: {stats.avgCPL > 0 ? stats.avgCPL.toFixed(2) + ' €' : '-'}
                   </p>
@@ -741,7 +741,7 @@ export default function AdminLeads() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Impressions</p>
-                  <p className="text-2xl font-bold">{stats.totalImpressions > 1000 ? (stats.totalImpressions / 1000).toFixed(1) + 'K' : stats.totalImpressions}</p>
+                  <p className="text-2xl text-display text-display font-bold">{stats.totalImpressions > 1000 ? (stats.totalImpressions / 1000).toFixed(1) + 'K' : stats.totalImpressions}</p>
                   <p className="text-xs text-gray-500 mt-1">
                     Portée: {stats.totalReach > 1000 ? (stats.totalReach / 1000).toFixed(1) + 'K' : stats.totalReach}
                   </p>
@@ -1076,31 +1076,31 @@ export default function AdminLeads() {
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-xs text-gray-500">Dépenses totales</p>
-                      <p className="text-xl font-bold text-blue-600">{filteredCampaigns.reduce((s, c) => s + c.spend, 0).toFixed(2)}€</p>
+                      <p className="text-xl text-display text-display font-bold text-blue-600">{filteredCampaigns.reduce((s, c) => s + c.spend, 0).toFixed(2)}€</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-xs text-gray-500">Impressions</p>
-                      <p className="text-xl font-bold">{filteredCampaigns.reduce((s, c) => s + c.impressions, 0) > 1000 ? (filteredCampaigns.reduce((s, c) => s + c.impressions, 0) / 1000).toFixed(1) + 'K' : filteredCampaigns.reduce((s, c) => s + c.impressions, 0)}</p>
+                      <p className="text-xl text-display text-display font-bold">{filteredCampaigns.reduce((s, c) => s + c.impressions, 0) > 1000 ? (filteredCampaigns.reduce((s, c) => s + c.impressions, 0) / 1000).toFixed(1) + 'K' : filteredCampaigns.reduce((s, c) => s + c.impressions, 0)}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-xs text-gray-500">Clics totaux</p>
-                      <p className="text-xl font-bold">{filteredCampaigns.reduce((s, c) => s + c.clicks, 0)}</p>
+                      <p className="text-xl text-display text-display font-bold">{filteredCampaigns.reduce((s, c) => s + c.clicks, 0)}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-xs text-gray-500">Leads totaux</p>
-                      <p className="text-xl font-bold text-green-600">{filteredCampaigns.reduce((s, c) => s + c.leads, 0)}</p>
+                      <p className="text-xl text-display text-display font-bold text-green-600">{filteredCampaigns.reduce((s, c) => s + c.leads, 0)}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-xs text-gray-500">Coût/Lead moyen</p>
-                      <p className="text-xl font-bold">
+                      <p className="text-xl text-display text-display font-bold">
                         {filteredCampaigns.reduce((s, c) => s + c.leads, 0) > 0
                           ? (filteredCampaigns.reduce((s, c) => s + c.spend, 0) / filteredCampaigns.reduce((s, c) => s + c.leads, 0)).toFixed(2)
                           : "0.00"}€
@@ -1505,37 +1505,37 @@ export default function AdminLeads() {
                                 <Card>
                                   <CardContent className="p-4">
                                     <p className="text-xs text-gray-500 mb-1">Dépenses</p>
-                                    <p className="text-lg font-bold text-gray-900">{formatMoney(totalSpend)}</p>
+                                    <p className="text-base font-semibold text-display text-gray-900">{formatMoney(totalSpend)}</p>
                                   </CardContent>
                                 </Card>
                                 <Card>
                                   <CardContent className="p-4">
                                     <p className="text-xs text-gray-500 mb-1">Impressions</p>
-                                    <p className="text-lg font-bold text-gray-900">{totalImpressions.toLocaleString('fr-FR')}</p>
+                                    <p className="text-base font-semibold text-display text-gray-900">{totalImpressions.toLocaleString('fr-FR')}</p>
                                   </CardContent>
                                 </Card>
                                 <Card>
                                   <CardContent className="p-4">
                                     <p className="text-xs text-gray-500 mb-1">Clics</p>
-                                    <p className="text-lg font-bold text-gray-900">{totalClicks.toLocaleString('fr-FR')}</p>
+                                    <p className="text-base font-semibold text-display text-gray-900">{totalClicks.toLocaleString('fr-FR')}</p>
                                   </CardContent>
                                 </Card>
                                 <Card>
                                   <CardContent className="p-4">
                                     <p className="text-xs text-gray-500 mb-1">CTR</p>
-                                    <p className="text-lg font-bold text-gray-900">{avgCtr.toFixed(2)}%</p>
+                                    <p className="text-base font-semibold text-display text-gray-900">{avgCtr.toFixed(2)}%</p>
                                   </CardContent>
                                 </Card>
                                 <Card>
                                   <CardContent className="p-4">
                                     <p className="text-xs text-gray-500 mb-1">CPC moyen</p>
-                                    <p className="text-lg font-bold text-gray-900">{formatMoney(avgCpc)}</p>
+                                    <p className="text-base font-semibold text-display text-gray-900">{formatMoney(avgCpc)}</p>
                                   </CardContent>
                                 </Card>
                                 <Card>
                                   <CardContent className="p-4">
                                     <p className="text-xs text-gray-500 mb-1">Conversions</p>
-                                    <p className="text-lg font-bold text-gray-900">{totalConversions.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}</p>
+                                    <p className="text-base font-semibold text-display text-gray-900">{totalConversions.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}</p>
                                   </CardContent>
                                 </Card>
                               </div>
@@ -1659,7 +1659,7 @@ export default function AdminLeads() {
                           <p className="text-sm text-gray-500">{stats.total} leads assignés</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold text-green-600">{conversionRate}%</p>
+                          <p className="text-2xl text-display text-display font-bold text-green-600">{conversionRate}%</p>
                           <p className="text-xs text-gray-500">Taux de conversion</p>
                         </div>
                       </div>
@@ -1804,7 +1804,7 @@ export default function AdminLeads() {
                             <Card key={metric.key} className="relative overflow-hidden">
                               <CardContent className="p-4">
                                 <p className="text-xs text-gray-500 mb-1">{metric.label}</p>
-                                <p className="text-lg font-bold">{metric.format(currVal)}</p>
+                                <p className="text-base font-semibold text-display">{metric.format(currVal)}</p>
                                 <div className="flex items-center gap-1 mt-1">
                                   {change !== 0 ? (
                                     <>
@@ -2012,7 +2012,7 @@ export default function AdminLeads() {
             return (
             <>
               <DialogHeader>
-                <DialogTitle className="text-xl flex items-center gap-2">
+                <DialogTitle className="text-xl text-display text-display flex items-center gap-2">
                   {selectedLead.firstName} {selectedLead.lastName}
                   {companyName && <span className="text-base font-normal text-gray-500">({companyName})</span>}
                   {isPartnerCandidate(selectedLead) && (

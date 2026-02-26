@@ -775,7 +775,7 @@ function StatsTab({ candidates }: { candidates: any[] }) {
               return (
                 <div key={status} className="text-center p-4 rounded-lg border">
                   <Icon className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-2xl font-bold">{count}</p>
+                  <p className="text-2xl text-display text-display font-bold">{count}</p>
                   <p className="text-sm text-muted-foreground">{STATUS_LABELS[status]}</p>
                   <p className="text-xs text-muted-foreground mt-1">{pct}%</p>
                 </div>
@@ -878,7 +878,7 @@ export default function AdminPartnerMap() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Carte du Réseau</h1>
+            <h1 className="text-2xl text-display text-display font-bold">Carte du Réseau</h1>
             <p className="text-muted-foreground mt-1">
               Gérez vos candidats partenaires et développez votre réseau de magasins
             </p>
@@ -899,7 +899,7 @@ export default function AdminPartnerMap() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total candidats</p>
-                  <p className="text-2xl font-bold">{totalCandidates}</p>
+                  <p className="text-2xl text-display text-display font-bold">{totalCandidates}</p>
                 </div>
               </div>
             </CardContent>
@@ -912,7 +912,7 @@ export default function AdminPartnerMap() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Non contactés</p>
-                  <p className="text-2xl font-bold">{nonContactes}</p>
+                  <p className="text-2xl text-display text-display font-bold">{nonContactes}</p>
                 </div>
               </div>
             </CardContent>
@@ -925,7 +925,7 @@ export default function AdminPartnerMap() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">En cours</p>
-                  <p className="text-2xl font-bold">{enCours}</p>
+                  <p className="text-2xl text-display text-display font-bold">{enCours}</p>
                 </div>
               </div>
             </CardContent>
@@ -938,7 +938,7 @@ export default function AdminPartnerMap() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Validés</p>
-                  <p className="text-2xl font-bold">{valides}</p>
+                  <p className="text-2xl text-display text-display font-bold">{valides}</p>
                 </div>
               </div>
             </CardContent>
@@ -951,7 +951,7 @@ export default function AdminPartnerMap() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Haute priorité (6+)</p>
-                  <p className="text-2xl font-bold">{highPriorityCandidates}</p>
+                  <p className="text-2xl text-display text-display font-bold">{highPriorityCandidates}</p>
                 </div>
               </div>
             </CardContent>

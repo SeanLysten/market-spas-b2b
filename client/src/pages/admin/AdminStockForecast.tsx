@@ -144,7 +144,7 @@ export default function AdminStockForecast() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary?.totalProducts || 0}</div>
+            <div className="text-2xl text-display text-display font-bold">{summary?.totalProducts || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">Produits suivis</p>
           </CardContent>
         </Card>
@@ -155,7 +155,7 @@ export default function AdminStockForecast() {
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary?.totalIncomingQuantity || 0}</div>
+            <div className="text-2xl text-display text-display font-bold">{summary?.totalIncomingQuantity || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">Unités attendues</p>
           </CardContent>
         </Card>
@@ -166,7 +166,7 @@ export default function AdminStockForecast() {
             <AlertTriangle className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary?.productsWithAlerts || 0}</div>
+            <div className="text-2xl text-display text-display font-bold">{summary?.productsWithAlerts || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {summary?.productsWithRupture || 0} ruptures prévues
             </p>
@@ -179,7 +179,7 @@ export default function AdminStockForecast() {
             <TrendingDown className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary?.productsWithLowStock || 0}</div>
+            <div className="text-2xl text-display text-display font-bold">{summary?.productsWithLowStock || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">Produits à surveiller</p>
           </CardContent>
         </Card>

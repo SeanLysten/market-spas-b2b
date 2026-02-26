@@ -86,7 +86,7 @@ export default function OrderConfirmation() {
                 <Package className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Market Spas</h1>
+                <h1 className="text-xl text-display text-display font-bold text-gray-900">Market Spas</h1>
                 <p className="text-xs text-gray-500">Portail Partenaires B2B</p>
               </div>
             </div>
@@ -115,7 +115,7 @@ export default function OrderConfirmation() {
             <CheckCircle className="h-10 w-10 text-green-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-green-800">
+            <h2 className="text-2xl text-display text-display font-bold text-green-800">
               Commande confirmée !
             </h2>
             <p className="text-green-700 mt-1">
@@ -133,7 +133,7 @@ export default function OrderConfirmation() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-xl">Commande {order.orderNumber}</CardTitle>
+                    <CardTitle className="text-xl text-display text-display">Commande {order.orderNumber}</CardTitle>
                     <CardDescription>
                       Passée le {new Date(order.createdAt).toLocaleDateString("fr-FR", {
                         day: "numeric",
@@ -201,7 +201,7 @@ export default function OrderConfirmation() {
                     <span>{parseFloat(order.totalVAT || "0").toFixed(2)} €</span>
                   </div>
                   <Separator />
-                  <div className="flex justify-between text-lg font-bold">
+                  <div className="flex justify-between text-base font-semibold text-display">
                     <span>Total TTC</span>
                     <span className="text-blue-600">
                       {parseFloat(order.totalTTC || "0").toFixed(2)} €
@@ -267,7 +267,7 @@ export default function OrderConfirmation() {
 
                 <div>
                   <p className="text-sm text-gray-600">Acompte à verser (30%)</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-2xl text-display text-display font-bold text-blue-600">
                     {parseFloat(order.depositAmount || "0").toFixed(2)} €
                   </p>
                 </div>

@@ -47,7 +47,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">Accès refusé</h1>
+          <h1 className="text-2xl text-display text-display font-bold">Accès refusé</h1>
           <p className="text-muted-foreground">
             Vous n'avez pas les permissions nécessaires pour accéder à cette page.
           </p>
@@ -158,7 +158,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div className="p-6 border-b">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-bold">Administration</h2>
+                <h2 className="text-sm font-semibold text-display">Administration</h2>
                 <p className="text-xs text-muted-foreground">Market Spas</p>
               </div>
               <Button
@@ -235,7 +235,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             >
               <Menu className="w-5 h-5" />
             </Button>
-            <h1 className="text-lg font-bold">Administration</h1>
+            <h1 className="text-sm font-semibold text-display">Administration</h1>
             <div className="w-10" /> {/* Spacer for alignment */}
           </div>
         </header>

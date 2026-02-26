@@ -43,7 +43,7 @@ export default function Home() {
                   <Package className="w-6 h-6 text-primary-foreground" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold">Market Spas</h1>
+                  <h1 className="text-xl text-display text-display font-bold">Market Spas</h1>
                   <p className="text-xs text-muted-foreground">Portail Partenaires B2B</p>
                 </div>
               </div>
@@ -83,7 +83,7 @@ export default function Home() {
               <h2 className="text-5xl font-bold tracking-tight">
                 Bienvenue sur votre portail B2B
               </h2>
-              <p className="text-xl text-muted-foreground">
+              <p className="text-xl text-display text-display text-muted-foreground">
                 Gérez vos commandes, consultez le catalogue et accédez à toutes vos ressources en un seul endroit.
               </p>
               <div className="flex gap-4 justify-center pt-4">
@@ -225,7 +225,7 @@ export default function Home() {
                 <Package className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">Market Spas</h1>
+                <h1 className="text-xl text-display text-display font-bold">Market Spas</h1>
                 <p className="text-xs text-muted-foreground">Portail Partenaires B2B</p>
               </div>
             </div>
@@ -248,7 +248,7 @@ export default function Home() {
               Votre portail partenaire
               <span className="block text-primary mt-2">nouvelle génération</span>
             </h1>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-xl text-display text-display text-muted-foreground">
               Simplifiez vos commandes, gérez votre activité et accédez à toutes vos ressources depuis une plateforme unique et élégante.
             </p>
             <div className="flex gap-4 justify-center pt-4">
@@ -316,7 +316,7 @@ export default function Home() {
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                     <feature.icon className="w-6 h-6 text-primary" />
                   </div>
-                  <CardTitle className="text-xl">{feature.title}</CardTitle>
+                  <CardTitle className="text-xl text-display text-display">{feature.title}</CardTitle>
                   <CardDescription className="text-base">
                     {feature.description}
                   </CardDescription>

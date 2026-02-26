@@ -130,7 +130,7 @@ export default function Register() {
               </div>
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold text-gray-900">
+              <CardTitle className="text-2xl text-display text-display font-bold text-gray-900">
                 Compte créé avec succès !
               </CardTitle>
               <CardDescription className="text-base mt-2">

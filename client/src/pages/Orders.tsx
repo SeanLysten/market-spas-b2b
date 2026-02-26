@@ -114,7 +114,7 @@ export default function Orders() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl font-bold">Mes commandes</h1>
+                <h1 className="text-2xl text-display text-display font-bold">Mes commandes</h1>
                 <p className="text-sm text-muted-foreground">
                   {orders?.length || 0} commandes
                 </p>

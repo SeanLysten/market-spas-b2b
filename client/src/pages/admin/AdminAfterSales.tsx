@@ -134,7 +134,7 @@ function AdminManageDialog({ serviceId, open, onOpenChange, onSuccess }: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl flex items-center gap-2">
+          <DialogTitle className="text-xl text-display text-display flex items-center gap-2">
             Gestion du ticket {service.ticketNumber}
             <Badge variant="outline">{BRAND_LABELS[service.brand] || service.brand}</Badge>
           </DialogTitle>
@@ -362,7 +362,7 @@ function AdminManageDialog({ serviceId, open, onOpenChange, onSuccess }: {
                     </div>
 
                     <div className="bg-orange-50 border border-orange-200 p-4 rounded">
-                      <p className="text-lg font-bold">Total TTC : {((totalPartsAmount + shippingCost * 100) / 100).toFixed(2)} €</p>
+                      <p className="text-base font-semibold text-display">Total TTC : {((totalPartsAmount + shippingCost * 100) / 100).toFixed(2)} €</p>
                       {service.warrantyStatus === "PARTIAL" && service.warrantyPercentage > 0 && (
                         <p className="text-sm text-orange-700">
                           Couverture garantie : {service.warrantyPercentage}% → Le partenaire paiera {100 - service.warrantyPercentage}% soit {(((totalPartsAmount + shippingCost * 100) * (100 - service.warrantyPercentage) / 100) / 100).toFixed(2)} €
@@ -635,11 +635,11 @@ export default function AdminAfterSales() {
           <TabsContent value="tickets">
             {/* Quick Stats */}
             <div className="grid grid-cols-5 gap-4 mb-6">
-              <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{stats.total}</div></CardContent></Card>
-              <Card className="border-blue-200"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-blue-600">Nouveaux</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-blue-600">{stats.new}</div></CardContent></Card>
-              <Card className="border-yellow-200"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-yellow-600">En analyse</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-yellow-600">{stats.analyzing}</div></CardContent></Card>
-              <Card className="border-red-200"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-red-600">Paiement en attente</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-red-600">{stats.paymentPending}</div></CardContent></Card>
-              <Card className="border-indigo-200"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-indigo-600">Expédiés</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-indigo-600">{stats.shipped}</div></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle></CardHeader><CardContent><div className="text-2xl text-display text-display font-bold">{stats.total}</div></CardContent></Card>
+              <Card className="border-blue-200"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-blue-600">Nouveaux</CardTitle></CardHeader><CardContent><div className="text-2xl text-display text-display font-bold text-blue-600">{stats.new}</div></CardContent></Card>
+              <Card className="border-yellow-200"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-yellow-600">En analyse</CardTitle></CardHeader><CardContent><div className="text-2xl text-display text-display font-bold text-yellow-600">{stats.analyzing}</div></CardContent></Card>
+              <Card className="border-red-200"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-red-600">Paiement en attente</CardTitle></CardHeader><CardContent><div className="text-2xl text-display text-display font-bold text-red-600">{stats.paymentPending}</div></CardContent></Card>
+              <Card className="border-indigo-200"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-indigo-600">Expédiés</CardTitle></CardHeader><CardContent><div className="text-2xl text-display text-display font-bold text-indigo-600">{stats.shipped}</div></CardContent></Card>
             </div>
 
             {/* Filters */}

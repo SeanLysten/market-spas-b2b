@@ -164,7 +164,7 @@ export default function AdminDashboard() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stat.value}</div>
+                    <div className="text-2xl text-display text-display font-bold">{stat.value}</div>
                     <div className="flex items-center gap-1 mt-1">
                       {stat.trend === "up" && <TrendingUp className="w-3 h-3 text-green-600" />}
                       {stat.trend === "down" && <TrendingDown className="w-3 h-3 text-red-600" />}

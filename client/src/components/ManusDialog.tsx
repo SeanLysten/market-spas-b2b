@@ -58,14 +58,14 @@ export function ManusDialog({
               <img
                 src={logo}
                 alt="Dialog graphic"
-                className="w-10 h-10 rounded-md"
+                className="w-10 h-10 rounded-lg"
               />
             </div>
           ) : null}
 
           {/* Title and subtitle */}
           {title ? (
-            <DialogTitle className="text-xl font-semibold text-[#34322d] leading-[26px] tracking-[-0.44px]">
+            <DialogTitle className="text-xl text-display text-display font-semibold text-[#34322d] leading-[26px] tracking-[-0.44px]">
               {title}
             </DialogTitle>
           ) : null}

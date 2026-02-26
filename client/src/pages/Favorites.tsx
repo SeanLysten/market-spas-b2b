@@ -57,7 +57,7 @@ export default function Favorites() {
               </Link>
               <div className="flex items-center gap-2">
                 <Heart className="h-6 w-6 text-red-500 fill-red-500" />
-                <h1 className="text-xl font-semibold">Mes favoris</h1>
+                <h1 className="text-xl text-display text-display font-semibold">Mes favoris</h1>
               </div>
             </div>
             <div className="relative w-64">
@@ -79,7 +79,7 @@ export default function Favorites() {
           <Card>
             <CardContent className="py-16 text-center">
               <Heart className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <h2 className="text-xl font-semibold text-gray-700 mb-2">
+              <h2 className="text-xl text-display text-display font-semibold text-gray-700 mb-2">
                 {searchQuery ? "Aucun favori trouvé" : "Aucun produit favori"}
               </h2>
               <p className="text-gray-500 mb-6">
@@ -126,7 +126,7 @@ export default function Favorites() {
                       </h3>
                       
                       <div className="flex items-baseline gap-2 mb-3">
-                        <span className="text-lg font-bold text-blue-600">
+                        <span className="text-base font-semibold text-display text-blue-600">
                           {Number(fav.product.pricePartnerHT).toLocaleString("fr-FR", {
                             style: "currency",
                             currency: "EUR",

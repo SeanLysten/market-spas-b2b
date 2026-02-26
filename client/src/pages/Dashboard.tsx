@@ -43,7 +43,7 @@ export default function Dashboard() {
         <div className="container py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Tableau de bord</h1>
+              <h1 className="text-2xl text-display text-display font-bold">Tableau de bord</h1>
               <p className="text-sm text-muted-foreground">
                 Bienvenue, {user?.firstName || user?.name || "Partenaire"}
               </p>

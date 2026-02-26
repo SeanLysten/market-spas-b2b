@@ -106,7 +106,7 @@ export default function Checkout() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl font-bold">Finaliser la commande</h1>
+                <h1 className="text-2xl text-display text-display font-bold">Finaliser la commande</h1>
                 <p className="text-sm text-muted-foreground">
                   Vérifiez vos informations et validez votre commande
                 </p>
@@ -317,7 +317,7 @@ export default function Checkout() {
                     <span>{formatPrice(vatAmount)} €</span>
                   </div>
                   <Separator />
-                  <div className="flex justify-between text-lg font-bold">
+                  <div className="flex justify-between text-base font-semibold text-display">
                     <span>Total TTC</span>
                     <span className="text-primary">{formatPrice(totalTTC)} €</span>
                   </div>

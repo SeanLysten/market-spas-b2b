@@ -374,7 +374,7 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">Nouvelle demande SAV</DialogTitle>
+          <DialogTitle className="text-xl text-display text-display">Nouvelle demande SAV</DialogTitle>
         </DialogHeader>
 
         {/* Stepper */}

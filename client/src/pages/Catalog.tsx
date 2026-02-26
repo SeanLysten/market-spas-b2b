@@ -178,7 +178,7 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
 
         {/* Price */}
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold text-primary">
+          <span className="text-2xl text-display text-display font-bold text-primary">
             {formatPrice(partnerPrice)} €
           </span>
           <span className="text-sm text-muted-foreground">HT</span>
@@ -233,7 +233,7 @@ export default function Catalog() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl font-bold">Catalogue produits</h1>
+                <h1 className="text-2xl text-display text-display font-bold">Catalogue produits</h1>
                 <p className="text-sm text-muted-foreground">
                   {products?.length || 0} produits disponibles
                 </p>
