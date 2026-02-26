@@ -158,7 +158,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div className="p-6 border-b">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-display">Administration</h2>
+                <h2 className="text-xs font-semibold text-display uppercase tracking-wide">Administration</h2>
                 <p className="text-xs text-muted-foreground">Market Spas</p>
               </div>
               <Button
@@ -235,7 +235,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             >
               <Menu className="w-5 h-5" />
             </Button>
-            <h1 className="text-sm font-semibold text-display">Administration</h1>
+            <h1 className="text-xs font-semibold text-display uppercase tracking-wide">Administration</h1>
             <div className="w-10" /> {/* Spacer for alignment */}
           </div>
         </header>
