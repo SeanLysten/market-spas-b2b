@@ -1793,3 +1793,4 @@
 - [x] Appliquer le design system sur toutes les pages (Home, Login, Dashboard, Catalog, Orders, Admin, etc.)
 - [x] Créer un guide de style pour les futures créations
 - [x] Corriger la taille du titre "Administration" dans la barre latérale (trop grand)
+- [x] Réduire drastiquement la taille du titre "ADMINISTRATION" (encore trop grand malgré text-xs)
