@@ -272,6 +272,9 @@ function DashboardLayoutContent({
                 </div>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+            </div>
           </div>
         )}
         <main className="flex-1 p-4">{children}</main>

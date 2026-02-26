@@ -1828,3 +1828,5 @@
 - [x] Corriger le mode dark des alertes stock sur le dashboard admin
 - [x] Vérifier et corriger le mode dark sur toutes les pages du dashboard utilisateur (774 changements dans 40 fichiers)
 - [x] Vérifier et corriger le mode dark sur toutes les pages du dashboard admin
+
+- [x] Ajouter le bouton ThemeToggle dans le header mobile du dashboard utilisateur
