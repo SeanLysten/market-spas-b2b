@@ -119,7 +119,7 @@ export async function notifyOrderStatusChange(
     try {
       const partnerEmail = partner.primaryContactEmail;
       if (partnerEmail) {
-        const portalUrl = process.env.VITE_APP_URL || 'https://market-spas-b2b.manus.space';
+        const portalUrl = ENV.siteUrl;
         const emailResult = await sendOrderStatusChangeToPartner(partnerEmail, {
           orderNumber: order.orderNumber,
           partnerName: partner.companyName,
@@ -186,7 +186,7 @@ export async function notifyNewOrder(orderId: number) {
     try {
       const adminEmails = await db.getAdminEmails();
       if (adminEmails.length > 0) {
-        const portalUrl = process.env.VITE_APP_URL || 'https://market-spas-b2b.manus.space';
+        const portalUrl = ENV.siteUrl;
         const emailResult = await sendNewOrderNotificationToAdmins(adminEmails, {
           orderNumber: order.orderNumber,
           partnerName: partner.companyName,

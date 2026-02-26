@@ -4934,3 +4934,33 @@ export async function updateGoogleAdAccountCustomer(
     })
     .where(eq(googleAdAccounts.id, id));
 }
+
+/**
+ * Upsert Meta Ads campaign stats
+ * Creates or updates campaign statistics received from Make webhooks
+ */
+export async function upsertMetaCampaignStats(data: {
+  campaignId: string;
+  campaignName: string;
+  impressions: number;
+  clicks: number;
+  spend: number;
+  date: Date;
+}): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  // Use MySQL ON DUPLICATE KEY UPDATE syntax via raw query
+  await db.execute(sql`
+    INSERT INTO meta_campaign_stats 
+      (campaign_id, campaign_name, impressions, clicks, spend, date, updated_at)
+    VALUES 
+      (${data.campaignId}, ${data.campaignName}, ${data.impressions}, ${data.clicks}, ${data.spend}, ${data.date}, NOW())
+    ON DUPLICATE KEY UPDATE
+      campaign_name = VALUES(campaign_name),
+      impressions = impressions + VALUES(impressions),
+      clicks = clicks + VALUES(clicks),
+      spend = spend + VALUES(spend),
+      updated_at = NOW()
+  `);
+}

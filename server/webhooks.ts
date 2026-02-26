@@ -128,8 +128,15 @@ webhooksRouter.post('/meta-ads-stats', async (req, res) => {
     }
 
     // Mettre à jour ou créer les stats de campagne
-    // TODO: Implémenter upsertMetaCampaignStats dans db.ts
-    console.log('Meta Ads stats received:', { campaignId, campaignName, impressions, clicks, spend });
+    await db.upsertMetaCampaignStats({
+      campaignId,
+      campaignName,
+      impressions: impressions || 0,
+      clicks: clicks || 0,
+      spend: spend || 0,
+      date: new Date(),
+    });
+    console.log('Meta Ads stats saved:', { campaignId, campaignName, impressions, clicks, spend });
 
     return res.status(200).json({ 
       success: true 

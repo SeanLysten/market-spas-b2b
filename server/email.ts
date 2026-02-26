@@ -1388,3 +1388,425 @@ Cet email a été envoyé automatiquement, merci de ne pas y répondre.
     };
   }
 }
+
+/**
+ * Send password reset email
+ */
+export async function sendPasswordResetEmail(
+  email: string,
+  resetToken: string,
+  resetUrl: string
+) {
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
+    .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
+    .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
+    .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔒 Market Spas</h1>
+      <p>Réinitialisation de mot de passe</p>
+    </div>
+    <div class="content">
+      <h2>Bonjour,</h2>
+      <p>Vous avez demandé à réinitialiser votre mot de passe pour accéder au portail B2B Market Spas.</p>
+      
+      <p>Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe :</p>
+      <a href="${resetUrl}" class="btn">Réinitialiser mon mot de passe</a>
+      
+      <div class="warning">
+        <p><strong>⚠️ Important :</strong></p>
+        <p>Ce lien est valable pendant 1 heure seulement.</p>
+        <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
+      </div>
+      
+      <p style="margin-top: 20px; font-size: 12px; color: #64748b;">
+        Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :<br>
+        <a href="${resetUrl}" style="color: #2563eb; word-break: break-all;">${resetUrl}</a>
+      </p>
+    </div>
+    <div class="footer">
+      <p>Market Spas - Votre partenaire wellness</p>
+      <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const textContent = `
+RÉINITIALISATION DE MOT DE PASSE
+Market Spas - Portail B2B
+
+Bonjour,
+
+Vous avez demandé à réinitialiser votre mot de passe pour accéder au portail B2B Market Spas.
+
+Cliquez sur ce lien pour créer un nouveau mot de passe :
+${resetUrl}
+
+⚠️ IMPORTANT :
+- Ce lien est valable pendant 1 heure seulement
+- Si vous n'avez pas demandé cette réinitialisation, ignorez cet email
+
+---
+© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
+Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+  `.trim();
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [email],
+      subject: "🔒 Réinitialisation de votre mot de passe - Market Spas",
+      html: htmlContent,
+      text: textContent,
+    });
+
+    if (error) {
+      console.error(`[Email] Error sending password reset to ${email}:`, error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`[Email] Password reset sent to ${email}:`, data?.id);
+    return { success: true, messageId: data?.id };
+  } catch (error) {
+    console.error(`[Email] Exception sending password reset to ${email}:`, error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error) 
+    };
+  }
+}
+
+/**
+ * Send payment confirmation email (Stripe)
+ */
+export async function sendPaymentConfirmationEmail(
+  email: string,
+  orderNumber: string,
+  amount: number,
+  paymentMethod: string
+) {
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
+    .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
+    .success-box { background: #d1fae5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 4px; }
+    .payment-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
+    .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✅ Paiement confirmé</h1>
+      <p>Market Spas</p>
+    </div>
+    <div class="content">
+      <div class="success-box">
+        <p style="margin: 0;"><strong>✅ Votre paiement a été traité avec succès !</strong></p>
+      </div>
+      
+      <h2>Bonjour,</h2>
+      <p>Nous avons bien reçu votre paiement pour la commande <strong>#${orderNumber}</strong>.</p>
+      
+      <div class="payment-details">
+        <h3>Détails du paiement</h3>
+        <div class="detail-row">
+          <span>N° de commande</span>
+          <span><strong>#${orderNumber}</strong></span>
+        </div>
+        <div class="detail-row">
+          <span>Montant payé</span>
+          <span><strong>${formatPrice(amount)} €</strong></span>
+        </div>
+        <div class="detail-row">
+          <span>Méthode de paiement</span>
+          <span>${paymentMethod}</span>
+        </div>
+        <div class="detail-row">
+          <span>Date</span>
+          <span>${formatDate(new Date())}</span>
+        </div>
+      </div>
+      
+      <p>Votre commande est maintenant en cours de traitement. Vous recevrez une notification lorsqu'elle sera expédiée.</p>
+      <a href="${ENV.siteUrl}/orders/${orderNumber}" class="btn">Voir ma commande</a>
+    </div>
+    <div class="footer">
+      <p>Market Spas - Votre partenaire wellness</p>
+      <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const textContent = `
+✅ PAIEMENT CONFIRMÉ
+Market Spas - Portail B2B
+
+Bonjour,
+
+Nous avons bien reçu votre paiement pour la commande #${orderNumber}.
+
+DÉTAILS DU PAIEMENT
+-------------------
+N° de commande : #${orderNumber}
+Montant payé : ${formatPrice(amount)} €
+Méthode de paiement : ${paymentMethod}
+Date : ${formatDate(new Date())}
+
+Votre commande est maintenant en cours de traitement. Vous recevrez une notification lorsqu'elle sera expédiée.
+
+Voir ma commande : ${ENV.siteUrl}/orders/${orderNumber}
+
+---
+© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
+Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+  `.trim();
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [email],
+      subject: `✅ Paiement confirmé - Commande #${orderNumber}`,
+      html: htmlContent,
+      text: textContent,
+    });
+
+    if (error) {
+      console.error(`[Email] Error sending payment confirmation to ${email}:`, error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`[Email] Payment confirmation sent to ${email}:`, data?.id);
+    return { success: true, messageId: data?.id };
+  } catch (error) {
+    console.error(`[Email] Exception sending payment confirmation to ${email}:`, error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error) 
+    };
+  }
+}
+
+/**
+ * Send payment failure email (Stripe)
+ */
+export async function sendPaymentFailureEmail(
+  email: string,
+  orderNumber: string,
+  amount: number,
+  reason: string
+) {
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
+    .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
+    .error-box { background: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; border-radius: 4px; }
+    .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>❌ Échec du paiement</h1>
+      <p>Market Spas</p>
+    </div>
+    <div class="content">
+      <div class="error-box">
+        <p style="margin: 0;"><strong>❌ Votre paiement n'a pas pu être traité</strong></p>
+      </div>
+      
+      <h2>Bonjour,</h2>
+      <p>Malheureusement, nous n'avons pas pu traiter votre paiement pour la commande <strong>#${orderNumber}</strong>.</p>
+      
+      <p><strong>Raison :</strong> ${reason}</p>
+      
+      <p><strong>Montant :</strong> ${formatPrice(amount)} €</p>
+      
+      <p>Nous vous invitons à réessayer avec une autre méthode de paiement ou à contacter votre banque si le problème persiste.</p>
+      
+      <a href="${ENV.siteUrl}/orders/${orderNumber}" class="btn">Réessayer le paiement</a>
+    </div>
+    <div class="footer">
+      <p>Market Spas - Votre partenaire wellness</p>
+      <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const textContent = `
+❌ ÉCHEC DU PAIEMENT
+Market Spas - Portail B2B
+
+Bonjour,
+
+Malheureusement, nous n'avons pas pu traiter votre paiement pour la commande #${orderNumber}.
+
+Raison : ${reason}
+Montant : ${formatPrice(amount)} €
+
+Nous vous invitons à réessayer avec une autre méthode de paiement ou à contacter votre banque si le problème persiste.
+
+Réessayer le paiement : ${ENV.siteUrl}/orders/${orderNumber}
+
+---
+© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
+Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+  `.trim();
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [email],
+      subject: `❌ Échec du paiement - Commande #${orderNumber}`,
+      html: htmlContent,
+      text: textContent,
+    });
+
+    if (error) {
+      console.error(`[Email] Error sending payment failure to ${email}:`, error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`[Email] Payment failure sent to ${email}:`, data?.id);
+    return { success: true, messageId: data?.id };
+  } catch (error) {
+    console.error(`[Email] Exception sending payment failure to ${email}:`, error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error) 
+    };
+  }
+}
+
+/**
+ * Send refund confirmation email (Stripe)
+ */
+export async function sendRefundConfirmationEmail(
+  email: string,
+  orderNumber: string,
+  amount: number
+) {
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
+    .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
+    .info-box { background: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px; }
+    .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>💰 Remboursement effectué</h1>
+      <p>Market Spas</p>
+    </div>
+    <div class="content">
+      <div class="info-box">
+        <p style="margin: 0;"><strong>💰 Votre remboursement a été traité</strong></p>
+      </div>
+      
+      <h2>Bonjour,</h2>
+      <p>Nous avons procédé au remboursement de votre commande <strong>#${orderNumber}</strong>.</p>
+      
+      <p><strong>Montant remboursé :</strong> ${formatPrice(amount)} €</p>
+      
+      <p>Le montant sera crédité sur votre compte bancaire sous 5 à 10 jours ouvrés, selon votre banque.</p>
+      
+      <p>Si vous avez des questions concernant ce remboursement, n'hésitez pas à nous contacter via le portail partenaires.</p>
+      
+      <a href="${ENV.siteUrl}/orders/${orderNumber}" class="btn">Voir ma commande</a>
+    </div>
+    <div class="footer">
+      <p>Market Spas - Votre partenaire wellness</p>
+      <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const textContent = `
+💰 REMBOURSEMENT EFFECTUÉ
+Market Spas - Portail B2B
+
+Bonjour,
+
+Nous avons procédé au remboursement de votre commande #${orderNumber}.
+
+Montant remboursé : ${formatPrice(amount)} €
+
+Le montant sera crédité sur votre compte bancaire sous 5 à 10 jours ouvrés, selon votre banque.
+
+Si vous avez des questions concernant ce remboursement, n'hésitez pas à nous contacter via le portail partenaires.
+
+Voir ma commande : ${ENV.siteUrl}/orders/${orderNumber}
+
+---
+© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
+Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+  `.trim();
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [email],
+      subject: `💰 Remboursement effectué - Commande #${orderNumber}`,
+      html: htmlContent,
+      text: textContent,
+    });
+
+    if (error) {
+      console.error(`[Email] Error sending refund confirmation to ${email}:`, error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`[Email] Refund confirmation sent to ${email}:`, data?.id);
+    return { success: true, messageId: data?.id };
+  } catch (error) {
+    console.error(`[Email] Exception sending refund confirmation to ${email}:`, error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error) 
+    };
+  }
+}

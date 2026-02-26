@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import Stripe from "stripe";
 import { verifyWebhookSignature } from "./stripe";
 import * as db from "./db";
+import { sendPaymentConfirmationEmail, sendPaymentFailureEmail, sendRefundConfirmationEmail } from "./email";
 
 /**
  * Handle Stripe webhook events
@@ -78,7 +79,17 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     status: "COMPLETED",
   });
 
-  // TODO: Send confirmation email to customer
+  // Send confirmation email to customer
+  const order = await db.getOrderById(orderId);
+  if (order && order.partnerEmail) {
+    const paymentMethod = paymentIntent.payment_method_types?.[0] || "Carte bancaire";
+    await sendPaymentConfirmationEmail(
+      order.partnerEmail,
+      order.orderNumber,
+      paymentIntent.amount / 100,
+      paymentMethod
+    );
+  }
   console.log(`[Stripe Webhook] Order ${orderId} marked as PAID`);
 }
 
@@ -105,7 +116,17 @@ async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent) {
     status: "FAILED",
   });
 
-  // TODO: Send payment failure notification to customer
+  // Send payment failure notification to customer
+  const order = await db.getOrderById(orderId);
+  if (order && order.partnerEmail) {
+    const reason = paymentIntent.last_payment_error?.message || "Paiement refusé";
+    await sendPaymentFailureEmail(
+      order.partnerEmail,
+      order.orderNumber,
+      paymentIntent.amount / 100,
+      reason
+    );
+  }
   console.log(`[Stripe Webhook] Payment failure recorded for order ${orderId}`);
 }
 
@@ -150,6 +171,14 @@ async function handleRefund(charge: Stripe.Charge) {
     await db.updateOrderStatus(transaction.orderId, "CANCELLED");
   }
 
-  // TODO: Send refund confirmation email to customer
+  // Send refund confirmation email to customer
+  const order = await db.getOrderById(transaction.orderId);
+  if (order && order.partnerEmail) {
+    await sendRefundConfirmationEmail(
+      order.partnerEmail,
+      order.orderNumber,
+      charge.amount_refunded / 100
+    );
+  }
   console.log(`[Stripe Webhook] Refund recorded for order ${transaction.orderId}`);
 }

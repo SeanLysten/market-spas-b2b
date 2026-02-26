@@ -10,7 +10,7 @@ import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { notifyOwner } from "./_core/notification";
 import { notifyPartner, notifyAdmins } from "./_core/websocket";
-import { sendInvitationEmail } from "./email";
+import { sendInvitationEmail, sendPasswordResetEmail } from "./email";
 import * as metaOAuth from "./meta-oauth";
 import * as candidatesDb from "./candidates-db";
 import { reclassifyExistingPartnerLeads } from "./meta-leads";
@@ -182,9 +182,13 @@ export const appRouter = router({
 
         await db.setPasswordResetToken(user.id, resetToken, resetExpires);
 
-        // TODO: Send email with reset link
-        // For now, log the token (in production, send email)
-        console.log(`Password reset token for ${input.email}: ${resetToken}`);
+        // Send password reset email
+        const resetUrl = `${ENV.siteUrl}/reset-password?token=${resetToken}`;
+        const emailResult = await sendPasswordResetEmail(user.email, resetToken, resetUrl);
+        
+        if (!emailResult.success) {
+          console.error(`[Auth] Failed to send password reset email to ${user.email}:`, emailResult.error);
+        }
 
         return { success: true };
       }),

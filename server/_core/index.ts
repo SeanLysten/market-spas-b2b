@@ -2,6 +2,8 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import path from "path";
 import fs from "fs";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -14,6 +16,7 @@ import { handleStripeWebhook } from "../stripe-webhook";
 import { initializeWebSocket } from "./websocket";
 import { webhooksRouter } from "../webhooks";
 import { getPrivacyHTML, getTermsHTML } from "../static-pages";
+import { validateEnv } from "./env";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -35,8 +38,45 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  // Validate environment variables at startup
+  validateEnv();
+
   const app = express();
   const server = createServer(app);
+
+  // Trust proxy (required for rate limiting behind reverse proxy)
+  app.set("trust proxy", 1);
+
+  // Security headers with Helmet
+  app.use(helmet({
+    contentSecurityPolicy: false, // Disable CSP to allow Vite/React to work
+    crossOriginEmbedderPolicy: false, // Allow embedding for OAuth popups
+  }));
+
+  // Rate limiting for authentication endpoints (20 requests per 15 minutes)
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20, // 20 requests per window
+    message: "Too many authentication attempts, please try again later.",
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // Rate limiting for API endpoints (200 requests per minute)
+  const apiLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 200, // 200 requests per window
+    message: "Too many requests, please try again later.",
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // Apply rate limiting to auth routes
+  app.use("/api/oauth", authLimiter);
+  app.use("/api/auth", authLimiter);
+  
+  // Apply rate limiting to API routes
+  app.use("/api/trpc", apiLimiter);
   
   // Initialize WebSocket
   initializeWebSocket(server);

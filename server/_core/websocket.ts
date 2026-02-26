@@ -1,15 +1,24 @@
 import { Server as HTTPServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
+import { ENV } from "./env";
 
 let io: SocketIOServer | null = null;
 
 export function initializeWebSocket(httpServer: HTTPServer) {
+  // Configure CORS based on environment
+  const allowedOrigins = ENV.isProduction && ENV.allowedOrigins
+    ? ENV.allowedOrigins.split(",").map(o => o.trim())
+    : "*";
+
   io = new SocketIOServer(httpServer, {
     cors: {
-      origin: "*", // En production, spécifier les origines autorisées
+      origin: allowedOrigins,
       methods: ["GET", "POST"],
+      credentials: true,
     },
   });
+
+  console.log(`[WebSocket] CORS configured for origins: ${Array.isArray(allowedOrigins) ? allowedOrigins.join(", ") : allowedOrigins}`);
 
   io.on("connection", (socket) => {
     console.log(`[WebSocket] Client connected: ${socket.id}`);

@@ -30,7 +30,11 @@ async function googleAdsRequest(
     headers['login-customer-id'] = options.loginCustomerId.replace(/-/g, '');
   }
 
-  const response = await fetch(`${GOOGLE_ADS_BASE_URL}${endpoint}`, {
+  const fullUrl = `${GOOGLE_ADS_BASE_URL}${endpoint}`;
+  console.log(`[Google Ads API] Request: ${options.method || 'GET'} ${fullUrl}`);
+  console.log(`[Google Ads API] Headers:`, { ...headers, 'Authorization': 'Bearer ***', 'developer-token': '***' });
+  
+  const response = await fetch(fullUrl, {
     method: options.method || 'GET',
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
@@ -116,6 +120,8 @@ export async function getCampaignsWithInsights(
     }
 
     const cleanId = customerId.replace(/-/g, '');
+    console.log(`[Google Ads API] Fetching campaigns for customer ID: ${cleanId} (original: ${customerId})`);
+    console.log(`[Google Ads API] Date range: ${startDate} to ${endDate}`);
 
     // Query GAQL via searchStream REST endpoint
     const data = await googleAdsRequest(

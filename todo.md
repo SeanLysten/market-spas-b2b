@@ -1775,3 +1775,13 @@
 - [ ] Implement Google Ads campaigns display in admin leads page (campaigns list, budgets, impressions, clicks, conversions, spend)
 - [ ] Build Google Ads performance metrics dashboard (KPIs, charts)
 - [x] Résoudre erreur "Aucun compte Google Ads accessible" lors de la récupération du Customer ID
+- [ ] Corriger l'erreur 404 persistante de l'API Google Ads malgré la mise à jour du Customer ID (vérifier format URL et Customer ID)
+- [x] Créer le document de design PDF pour la demande d'accès Basic à l'API Google Ads
+- [x] Ajouter Helmet et Rate Limiting pour la sécurité (server/_core/index.ts)
+- [x] Centraliser et valider les variables d'environnement (server/_core/env.ts)
+- [x] Restreindre CORS WebSocket en production (server/_core/websocket.ts)
+- [x] Remplacer URL hardcodée par ENV.siteUrl (server/alerts.ts)
+- [x] Implémenter sendPasswordResetEmail et corriger l'URL d'invitation (server/routers.ts)
+- [x] Créer 4 nouvelles fonctions d'email (server/email.ts)
+- [x] Remplacer TODOs Stripe par envois d'emails (server/stripe-webhook.ts)
+- [x] Implémenter upsertMetaCampaignStats (server/webhooks.ts et server/db.ts)
