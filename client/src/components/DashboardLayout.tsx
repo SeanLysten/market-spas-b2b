@@ -26,6 +26,7 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Tableau de bord", path: "/dashboard" },
@@ -267,6 +268,7 @@ function DashboardLayoutContent({
                 </div>
               </div>
             </div>
+            <ThemeToggle />
           </div>
         )}
         <main className="flex-1 p-4">{children}</main>

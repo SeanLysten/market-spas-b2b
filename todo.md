@@ -1794,3 +1794,7 @@
 - [x] Créer un guide de style pour les futures créations
 - [x] Corriger la taille du titre "Administration" dans la barre latérale (trop grand)
 - [x] Réduire drastiquement la taille du titre "ADMINISTRATION" (encore trop grand malgré text-xs)
+- [x] Implémenter le système de basculement entre thème clair et sombre
+- [x] Extraire les variables CSS dark mode du design system v2.1
+- [x] Créer un composant ThemeToggle pour changer de thème
+- [x] Tester les deux thèmes sur toutes les pages

@@ -273,3 +273,59 @@ h4 {
     font-size: clamp(1.4rem, 4vw, 1.8rem);
   }
 }
+
+/* ═══ DARK THEME ═══ */
+/* Activated via data-theme="dark" on <html> */
+
+/* Theme transition */
+html, html * {
+  transition-property: background-color, border-color, color, box-shadow, fill, stroke;
+  transition-duration: 0.35s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-theme="dark"] {
+  /* Neutrals: reversed warm grays */
+  --n-0: #1a1816; --n-25: #1e1c1a; --n-50: #22201e; --n-75: #2a2725;
+  --n-100: #32302d; --n-150: #3b3836; --n-200: #46423f; --n-300: #5c5854;
+  --n-400: #7a756f; --n-500: #9a948e; --n-600: #b5afa9; --n-700: #cec9c3;
+  --n-800: #e5e1dc; --n-900: #f5f2ef;
+
+  /* Primary: Eucalyptus (darkened backgrounds, brightened accents) */
+  --p-25: #1a2422; --p-50: #1d2b28; --p-100: #213530;
+  --p-200: #2a4a42; --p-300: #37655a; --p-400: #4a9383;
+  --p-500: #5ab89f; --p-600: #6ecdb5; --p-700: #8edbc6;
+  --p-800: #aee8d7; --p-900: #d5f3eb;
+
+  /* Secondary: Blush Rose */
+  --s-25: #261c19; --s-50: #2e211d; --s-100: #3d2a24;
+  --s-200: #5c3930; --s-300: #854e3e; --s-400: #c0694e;
+  --s-500: #e08162; --s-600: #ea9c80; --s-700: #f0b9a3;
+  --s-800: #f5d1c2; --s-900: #fae8e0;
+
+  /* Tertiary: Warm Honey */
+  --t-25: #241f14; --t-50: #2c2618; --t-100: #3d3420;
+  --t-200: #5c4e2c; --t-300: #82703a; --t-400: #b8982e;
+  --t-500: #d4b340; --t-600: #e0c45c; --t-700: #e8d47e;
+  --t-800: #f0e2a4; --t-900: #f7efc8;
+
+  /* Semantic (dark-adapted) */
+  --ok: #5cc49a; --ok-light: #1a2e24; --ok-dark: #8ee4bd;
+  --warn: #e4b44a; --warn-light: #2a2318; --warn-dark: #f0d07a;
+  --err: #e06b6b; --err-light: #2e1c1c; --err-dark: #f4a0a0;
+  --info: #6da0d6; --info-light: #1c2530; --info-dark: #a3c8ee;
+
+  /* Shadows (lighter glow on dark) */
+  --sh-xs: 0 1px 2px rgba(0,0,0,0.2);
+  --sh-sm: 0 1px 4px rgba(0,0,0,0.24), 0 1px 2px rgba(0,0,0,0.16);
+  --sh-md: 0 4px 16px rgba(0,0,0,0.28), 0 2px 4px rgba(0,0,0,0.12);
+  --sh-lg: 0 8px 32px rgba(0,0,0,0.32), 0 2px 8px rgba(0,0,0,0.16);
+  --sh-xl: 0 16px 48px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.16);
+  --sh-inner: inset 0 1px 3px rgba(0,0,0,0.2);
+  --sh-glow-p: 0 0 24px rgba(90,184,159,0.15);
+}
+
+/* Body & grain */
+[data-theme="dark"] body { color: var(--n-800); background: var(--n-50); }
+[data-theme="dark"] body::after { opacity: 0.04; }
+[data-theme="dark"] ::selection { background: var(--p-300); color: var(--n-0); }

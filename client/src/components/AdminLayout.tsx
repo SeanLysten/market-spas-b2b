@@ -26,6 +26,7 @@ import {
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -236,7 +237,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <Menu className="w-5 h-5" />
             </Button>
             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Administration</p>
-            <div className="w-10" /> {/* Spacer for alignment */}
+            <ThemeToggle />
           </div>
         </header>
 
