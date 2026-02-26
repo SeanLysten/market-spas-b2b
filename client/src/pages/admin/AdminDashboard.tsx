@@ -139,7 +139,7 @@ export default function AdminDashboard() {
 
         {/* Stats Grid */}
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
               <Card key={i}>
                 <CardHeader className="pb-3">
@@ -150,7 +150,7 @@ export default function AdminDashboard() {
             ))}
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
             {statsCards.map((stat) => {
               const Icon = stat.icon;
               return (
@@ -186,7 +186,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Main Content Grid */}
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-1 md:grid-cols-2">
           {/* Recent Orders */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -285,7 +285,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Analytics Charts */}
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-1 md:grid-cols-2">
           {/* Sales Chart */}
           <Card>
             <CardHeader>
@@ -326,7 +326,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
           <Card className="card-hover cursor-pointer group" onClick={() => window.location.href = "/admin/products"}>
             <CardHeader>
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">

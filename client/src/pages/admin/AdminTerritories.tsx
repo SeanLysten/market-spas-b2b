@@ -147,7 +147,7 @@ export default function AdminTerritories() {
           </p>
         </div>
 
-        <div className="grid gap-6">
+        <div className="grid gap-4 md:gap-6">
           {/* Sélection du partenaire */}
           <Card>
             <CardHeader>

@@ -141,7 +141,7 @@ function AdminManageDialog({ serviceId, open, onOpenChange, onSuccess }: {
         </DialogHeader>
 
         <Tabs defaultValue="warranty" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
             <TabsTrigger value="warranty">Garantie</TabsTrigger>
             <TabsTrigger value="parts">Pièces</TabsTrigger>
             <TabsTrigger value="quote">Devis</TabsTrigger>

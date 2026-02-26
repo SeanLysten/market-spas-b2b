@@ -186,7 +186,7 @@ export default function Resources() {
 
         {/* Resources Grid */}
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <Card key={i}>
                 <CardHeader>
@@ -200,7 +200,7 @@ export default function Resources() {
             ))}
           </div>
         ) : filteredResources && filteredResources.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {filteredResources.map((resource) => {
               const Icon = getCategoryIcon(resource.category);
               return (

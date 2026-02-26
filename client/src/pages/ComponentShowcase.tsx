@@ -248,7 +248,7 @@ export default function ComponentsShowcase() {
             <h3 className="text-2xl text-display text-display font-semibold">Text Colors</h3>
             <Card>
               <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">
@@ -891,7 +891,7 @@ export default function ComponentsShowcase() {
           <section className="space-y-4">
             <h3 className="text-2xl text-display text-display font-semibold">Tabs</h3>
             <Tabs defaultValue="account" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 <TabsTrigger value="account">Account</TabsTrigger>
                 <TabsTrigger value="password">Password</TabsTrigger>
                 <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -1195,7 +1195,7 @@ export default function ComponentsShowcase() {
                       <CarouselItem key={index}>
                         <div className="p-1">
                           <Card>
-                            <CardContent className="flex aspect-square items-center justify-center p-6">
+                            <CardContent className="flex aspect-square items-center justify-center p-4 md:p-6">
                               <span className="text-4xl font-semibold">
                                 {index + 1}
                               </span>
@@ -1295,13 +1295,13 @@ export default function ComponentsShowcase() {
                   className="min-h-[200px] rounded-lg border"
                 >
                   <ResizablePanel defaultSize={50}>
-                    <div className="flex h-full items-center justify-center p-6">
+                    <div className="flex h-full items-center justify-center p-4 md:p-6">
                       <span className="font-semibold">Panel One</span>
                     </div>
                   </ResizablePanel>
                   <ResizableHandle />
                   <ResizablePanel defaultSize={50}>
-                    <div className="flex h-full items-center justify-center p-6">
+                    <div className="flex h-full items-center justify-center p-4 md:p-6">
                       <span className="font-semibold">Panel Two</span>
                     </div>
                   </ResizablePanel>

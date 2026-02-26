@@ -181,7 +181,7 @@ export default function SpareParts() {
 
         {/* View Mode Tabs */}
         <Tabs value={viewMode} onValueChange={(v) => { setViewMode(v as any); handleResetFilters(); }} className="mb-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-md grid-cols-1 md:grid-cols-2">
             <TabsTrigger value="catalog">
               <Package className="h-4 w-4 mr-2" />
               Catalogue complet

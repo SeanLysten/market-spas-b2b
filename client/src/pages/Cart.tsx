@@ -108,7 +108,7 @@ export default function Cart() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-4 md:gap-8">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-6">
               {/* In Stock Items */}

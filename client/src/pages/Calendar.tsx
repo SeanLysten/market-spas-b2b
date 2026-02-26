@@ -198,7 +198,7 @@ export default function Calendar() {
       </header>
 
       <main className="container py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Calendrier principal */}
           <div className="lg:col-span-3">
             <Card>

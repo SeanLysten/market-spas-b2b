@@ -190,7 +190,7 @@ export default function PartnerOnboarding() {
             {/* Step 1: Company Info */}
             {currentStep === 1 && (
               <>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="companyName">Raison sociale *</Label>
                     <Input
@@ -211,7 +211,7 @@ export default function PartnerOnboarding() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="vatNumber">Numéro de TVA *</Label>
                     <Input
@@ -257,7 +257,7 @@ export default function PartnerOnboarding() {
             {/* Step 2: Contact Info */}
             {currentStep === 2 && (
               <>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="contactName">Nom complet *</Label>
                     <div className="relative">
@@ -282,7 +282,7 @@ export default function PartnerOnboarding() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="contactEmail">Email professionnel *</Label>
                     <div className="relative">
@@ -337,7 +337,7 @@ export default function PartnerOnboarding() {
                   />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-2">
                     <Label htmlFor="postalCode">Code postal *</Label>
                     <Input
@@ -389,7 +389,7 @@ export default function PartnerOnboarding() {
                   />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="expectedVolume">Volume de commandes estimé</Label>
                     <Select value={formData.expectedVolume} onValueChange={(v) => updateFormData("expectedVolume", v)}>

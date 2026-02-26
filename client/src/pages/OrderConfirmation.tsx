@@ -125,7 +125,7 @@ export default function OrderConfirmation() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
           {/* Order Details */}
           <div className="lg:col-span-2 space-y-6">
             {/* Order Summary Card */}

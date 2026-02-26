@@ -101,7 +101,7 @@ export default function Favorites() {
               {filteredFavorites.length} produit{filteredFavorites.length > 1 ? "s" : ""} dans vos favoris
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {filteredFavorites.map((fav) => (
                 <Card key={fav.id} className="group hover:shadow-lg transition-shadow">
                   <CardContent className="p-0">

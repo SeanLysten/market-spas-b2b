@@ -786,7 +786,7 @@ function StatsTab({ candidates }: { candidates: any[] }) {
       </Card>
 
       {/* Activity & Priority */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Activité commerciale</CardTitle>
@@ -1027,7 +1027,7 @@ export default function AdminPartnerMap() {
                 <CardTitle className="text-base">Légende</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   {/* Priority scores */}
                   <div>
                     <h4 className="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Score de priorité</h4>

@@ -1832,3 +1832,27 @@
 - [x] Ajouter le bouton ThemeToggle dans le header principal du dashboard utilisateur (visible desktop et mobile)
 
 - [x] Corriger les incohérences du mode dark sur la page Calendar
+
+## Responsive Mobile - Adaptation complète de l'application
+
+- [x] Auditer toutes les pages pour identifier les problèmes de responsive mobile
+- [x] Vérifier la navigation mobile (sidebar, menu hamburger) pour utilisateurs et admins
+- [x] Adapter le catalogue produits en colonne unique sur mobile
+- [x] Adapter la page Leads en colonne unique sur mobile
+- [x] Adapter la page Commandes en cartes empilées sur mobile
+- [ ] Adapter la page Panier pour mobile
+- [ ] Adapter la page Favoris pour mobile
+- [ ] Adapter la page Calendrier pour mobile
+- [ ] Adapter la page SAV pour mobile
+- [ ] Adapter la page Forum pour mobile
+- [ ] Adapter la page Ressources pour mobile
+- [ ] Adapter le dashboard utilisateur pour mobile
+- [ ] Adapter le dashboard admin pour mobile
+- [ ] Adapter la page AdminProducts en cartes sur mobile
+- [ ] Adapter la page AdminLeads en cartes sur mobile
+- [ ] Adapter la page AdminOrders en cartes sur mobile
+- [ ] Adapter la page AdminPartners en cartes sur mobile
+- [ ] Adapter la page AdminUsers en cartes sur mobile
+- [ ] Optimiser tous les formulaires pour mobile
+- [ ] Optimiser tous les dialogues/modals pour mobile
+- [ ] Tester chaque page en mode mobile et corriger les bugs

@@ -329,7 +329,7 @@ export default function Catalog() {
 
         {/* Products Grid */}
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <Card key={i} className="overflow-hidden">
                 <div className="skeleton h-48 w-full bg-muted animate-pulse" />
@@ -341,7 +341,7 @@ export default function Catalog() {
             ))}
           </div>
         ) : products && products.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {products.map((product: any) => (
               <ProductCard
                 key={product.id}

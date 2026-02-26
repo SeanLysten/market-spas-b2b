@@ -77,7 +77,7 @@ export default function Dashboard() {
 
       <div className="container py-8 space-y-8">
         {/* Accès rapides principaux */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
           <Link href="/catalog">
             <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
               <CardContent className="pt-6 text-center">
@@ -153,7 +153,7 @@ export default function Dashboard() {
         <Link href="/leads">
           <Card className="card-hover cursor-pointer hover:border-primary/50 transition-all bg-gradient-to-r from-blue-500/5 to-purple-500/5">
             <CardContent className="py-6">
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-4 md:gap-6">
                 <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
                   <Target className="w-8 h-8 text-blue-500" />
                 </div>
@@ -169,7 +169,7 @@ export default function Dashboard() {
           </Card>
         </Link>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-1 md:grid-cols-2">
           {/* Événements à venir */}
           <Card>
             <CardHeader>
@@ -310,7 +310,7 @@ export default function Dashboard() {
             <CardDescription>Gérez vos commandes et favoris</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
               <Link href="/orders">
                 <Button variant="outline" className="w-full h-auto py-6 flex-col gap-2">
                   <ShoppingCart className="w-8 h-8 text-primary" />

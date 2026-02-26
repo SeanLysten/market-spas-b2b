@@ -109,7 +109,7 @@ export default function Home() {
         {/* Features Grid */}
         <section className="py-16 bg-card/30">
           <div className="container">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               <Card className="card-hover border-2">
                 <CardHeader>
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
@@ -200,7 +200,7 @@ export default function Home() {
               <p className="text-sm text-muted-foreground">
                 © 2026 Market Spas. Tous droits réservés.
               </p>
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-4 md:gap-6">
                 <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Politique de confidentialité
                 </Link>
@@ -280,7 +280,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
             {[
               {
                 icon: ShoppingCart,
@@ -359,7 +359,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t bg-card/50 py-12">
         <div className="container">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <Package className="w-5 h-5 text-primary-foreground" />
@@ -369,7 +369,7 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground">Portail B2B</p>
               </div>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4 md:gap-6">
               <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Politique de confidentialité
               </Link>

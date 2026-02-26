@@ -933,7 +933,7 @@ export default function AdminLeads() {
           <TabsContent value="campaigns" className="space-y-4">
             {/* Sous-onglets Meta Ads / Google Ads */}
             <Tabs value={adsTab} onValueChange={(v) => setAdsTab(v as 'meta' | 'google')} className="space-y-4">
-              <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsList className="grid w-full max-w-md grid-cols-1 md:grid-cols-2">
                 <TabsTrigger value="meta">
                   <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                   Meta Ads
@@ -979,7 +979,7 @@ export default function AdminLeads() {
             {/* Sélecteur de compte après OAuth */}
             {showAccountSelector && metaCallbackData && (
               <Card className="border-info/20 dark:border-info/30 bg-info/10 dark:bg-info-light">
-                <CardContent className="p-6">
+                <CardContent className="p-4 md:p-6">
                   <h3 className="font-semibold mb-4">Sélectionnez un compte publicitaire</h3>
                   <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-4">Connecté en tant que <strong>{metaCallbackData.metaUserName}</strong></p>
                   <div className="grid gap-3">
@@ -1363,7 +1363,7 @@ export default function AdminLeads() {
               <TabsContent value="google" className="space-y-4">
                 {!googleOAuthUrl?.url ? (
                   <Card className="border-amber-200 bg-amber-500/10 dark:bg-amber-500/20">
-                    <CardContent className="p-8">
+                    <CardContent className="p-4 md:p-8">
                       <div className="flex items-start gap-4">
                         <div className="w-12 h-12 bg-amber-500/15 dark:bg-amber-500/25 rounded-full flex items-center justify-center flex-shrink-0">
                           <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1397,7 +1397,7 @@ export default function AdminLeads() {
                 ) : googleConnectedAccounts && googleConnectedAccounts.length > 0 ? (
                   <div className="space-y-4">
                     <Card className="border-emerald-500/20 dark:border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-500/20">
-                      <CardContent className="p-6">
+                      <CardContent className="p-4 md:p-6">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-emerald-500/15 dark:bg-emerald-500/25 rounded-full flex items-center justify-center">
                             <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1451,7 +1451,7 @@ export default function AdminLeads() {
                       </Card>
                     ) : googleCampaignsData?.error ? (
                       <Card className="border-amber-200 bg-amber-500/10 dark:bg-amber-500/20">
-                        <CardContent className="p-6">
+                        <CardContent className="p-4 md:p-6">
                           <div className="flex items-start gap-3">
                             <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
                             <div>

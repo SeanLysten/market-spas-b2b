@@ -454,7 +454,7 @@ export default function Leads() {
               </DialogHeader>
 
               <Tabs defaultValue="info" className="mt-4">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                   <TabsTrigger value="info">Informations</TabsTrigger>
                   <TabsTrigger value="history">Historique</TabsTrigger>
                   <TabsTrigger value="notes">Notes</TabsTrigger>

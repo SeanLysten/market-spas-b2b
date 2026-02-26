@@ -92,7 +92,7 @@ export default function AdminStockForecast() {
 
   if (summaryLoading || forecastsLoading) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-muted rounded w-1/3"></div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

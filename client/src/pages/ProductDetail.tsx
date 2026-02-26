@@ -163,7 +163,7 @@ export default function ProductDetail() {
       </header>
 
       <main className="container py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Product Image */}
           <div className="space-y-4">
             <div className="aspect-square bg-white rounded-xl border overflow-hidden">
@@ -248,7 +248,7 @@ export default function ProductDetail() {
             </div>
 
             {/* Price */}
-            <div className="bg-info/10 dark:bg-info-light rounded-xl p-6">
+            <div className="bg-info/10 dark:bg-info-light rounded-xl p-4 md:p-6">
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-info dark:text-info-dark">
                   {formatPrice(price)} €

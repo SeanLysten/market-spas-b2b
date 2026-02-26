@@ -167,7 +167,7 @@ export default function Orders() {
         {/* Orders List */}
         {isLoading ? (
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="space-y-4">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div key={i} className="skeleton h-20 w-full" />
@@ -176,73 +176,137 @@ export default function Orders() {
             </CardContent>
           </Card>
         ) : orders && orders.length > 0 ? (
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>N° Commande</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Montant HT</TableHead>
-                  <TableHead className="text-right">Montant TTC</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.map((order) => (
-                  <TableRow key={order.id} className="hover:bg-accent/5">
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(order.status)}
-                        {order.orderNumber}
+          <>
+            {/* Vue desktop : Tableau */}
+            <Card className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>N° Commande</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead className="text-right">Montant HT</TableHead>
+                    <TableHead className="text-right">Montant TTC</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((order) => (
+                    <TableRow key={order.id} className="hover:bg-accent/5">
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(order.status)}
+                          {order.orderNumber}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(order.createdAt).toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(order.status)}>
+                          {getStatusLabel(order.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        €{Number(order.totalHT).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-right font-bold">
+                        €{Number(order.totalTTC).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Link href={`/order/${order.id}`}>
+                            <Button variant="ghost" size="sm" title="Voir les détails">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </Link>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            title="Recommander"
+                            onClick={() => handleReorder(order.id)}
+                            disabled={reorderMutation.isPending}
+                          >
+                            <RefreshCw className={`w-4 h-4 ${reorderMutation.isPending ? 'animate-spin' : ''}`} />
+                          </Button>
+                          {order.status !== "DRAFT" && (
+                            <Button variant="ghost" size="sm" title="Facture">
+                              <FileText className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+
+            {/* Vue mobile : Cartes empilées */}
+            <div className="md:hidden space-y-4">
+              {orders.map((order) => (
+                <Card key={order.id} className="overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(order.status)}
+                          <CardTitle className="text-base">{order.orderNumber}</CardTitle>
+                        </div>
+                        <CardDescription>
+                          {new Date(order.createdAt).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                          })}
+                        </CardDescription>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(order.createdAt).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
-                      })}
-                    </TableCell>
-                    <TableCell>
                       <Badge className={getStatusColor(order.status)}>
                         {getStatusLabel(order.status)}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      €{Number(order.totalHT).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
-                    </TableCell>
-                    <TableCell className="text-right font-bold">
-                      €{Number(order.totalTTC).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Link href={`/order/${order.id}`}>
-                          <Button variant="ghost" size="sm" title="Voir les détails">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </Link>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          title="Recommander"
-                          onClick={() => handleReorder(order.id)}
-                          disabled={reorderMutation.isPending}
-                        >
-                          <RefreshCw className={`w-4 h-4 ${reorderMutation.isPending ? 'animate-spin' : ''}`} />
-                        </Button>
-                        {order.status !== "DRAFT" && (
-                          <Button variant="ghost" size="sm" title="Facture">
-                            <FileText className="w-4 h-4" />
-                          </Button>
-                        )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Montant HT</span>
+                        <span className="font-medium">€{Number(order.totalHT).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</span>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Montant TTC</span>
+                        <span className="font-bold">€{Number(order.totalTTC).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link href={`/order/${order.id}`} className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full">
+                          <Eye className="w-4 h-4 mr-2" />
+                          Détails
+                        </Button>
+                      </Link>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleReorder(order.id)}
+                        disabled={reorderMutation.isPending}
+                      >
+                        <RefreshCw className={`w-4 h-4 ${reorderMutation.isPending ? 'animate-spin' : ''}`} />
+                      </Button>
+                      {order.status !== "DRAFT" && (
+                        <Button variant="outline" size="sm">
+                          <FileText className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
         ) : (
           <Card className="p-12">
             <div className="text-center space-y-4">
