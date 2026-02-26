@@ -1801,3 +1801,8 @@
 - [x] Corriger le mode dark qui s'active automatiquement et détruit le visuel
 - [x] Déplacer le bouton ThemeToggle dans la sidebar (visible et accessible)
 - [x] S'assurer que le mode light est le mode par défaut
+- [x] Créer le schéma DB pour les tokens de réinitialisation de mot de passe (table password_reset_tokens)
+- [x] Implémenter les procédures backend (requestPasswordReset, resetPassword, validateResetToken)
+- [x] Créer la page "Mot de passe oublié" (/forgot-password)
+- [x] Créer la page de réinitialisation (/reset-password/:token)
+- [x] Tester le flux complet de réinitialisation de mot de passe

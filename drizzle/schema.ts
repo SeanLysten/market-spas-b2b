@@ -2370,3 +2370,4 @@ export const candidateContactHistory = mysqlTable(
 
 export type CandidateContactHistory = typeof candidateContactHistory.$inferSelect;
 export type InsertCandidateContactHistory = typeof candidateContactHistory.$inferInsert;
+
