@@ -1892,3 +1892,5 @@
 - [x] Forum - Bouton "Marquer comme résolu" décalé hors écran
 - [x] AfterSales (SAV) - Titre écrasé, filtres non adaptés, bouton export PDF buggé
 - [x] Cart, Orders, Favorites, Profile - Optimiser pour mobile
+
+- [x] Fix erreur API tRPC sur /admin/leads - retourne HTML au lieu de JSON (ajout maxURLLength: 2048)
