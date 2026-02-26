@@ -1840,33 +1840,55 @@
 - [x] Adapter le catalogue produits en colonne unique sur mobile
 - [x] Adapter la page Leads en colonne unique sur mobile
 - [x] Adapter la page Commandes en cartes empilées sur mobile
-- [ ] Adapter la page Panier pour mobile
-- [ ] Adapter la page Favoris pour mobile
-- [ ] Adapter la page Calendrier pour mobile
-- [ ] Adapter la page SAV pour mobile
-- [ ] Adapter la page Forum pour mobile
-- [ ] Adapter la page Ressources pour mobile
-- [ ] Adapter le dashboard utilisateur pour mobile
-- [ ] Adapter le dashboard admin pour mobile
-- [ ] Adapter la page AdminProducts en cartes sur mobile
-- [ ] Adapter la page AdminLeads en cartes sur mobile
-- [ ] Adapter la page AdminOrders en cartes sur mobile
-- [ ] Adapter la page AdminPartners en cartes sur mobile
-- [ ] Adapter la page AdminUsers en cartes sur mobile
-- [ ] Optimiser tous les formulaires pour mobile
-- [ ] Optimiser tous les dialogues/modals pour mobile
-- [ ] Tester chaque page en mode mobile et corriger les bugs
+- [x] Adapter la page Panier pour mobile
+- [x] Adapter la page Favoris pour mobile
+- [x] Adapter la page Calendrier pour mobile
+- [x] Adapter la page SAV pour mobile
+- [x] Adapter la page Forum pour mobile
+- [x] Adapter la page Ressources pour mobile
+- [x] Adapter le dashboard utilisateur pour mobile
+- [x] Adapter le dashboard admin pour mobile
+- [x] Adapter la page AdminProducts en cartes sur mobile
+- [x] Adapter la page AdminLeads en cartes sur mobile
+- [x] Adapter la page AdminOrders en cartes sur mobile
+- [x] Adapter la page AdminPartners en cartes sur mobile
+- [x] Adapter la page AdminUsers en cartes sur mobile
+- [x] Optimiser tous les formulaires pour mobile
+- [x] Optimiser tous les dialogues/modals pour mobile
+- [x] Tester chaque page en mode mobile et corriger les bugs
 
 ## Refonte mobile complète - Expérience optimale
 
-- [ ] Corriger AdminDashboard : boutons Dashboard utilisateur et Rapports au-dessus des cartes sur mobile
-- [ ] Adapter tous les graphiques pour mobile (prévisions stock, évolution hebdomadaire, etc.)
-- [ ] Créer vue mobile simplifiée pour AdminProducts avec modal d'édition rapide
-- [ ] Créer vue mobile simplifiée pour AdminLeads avec modal d'édition rapide
-- [ ] Créer vue mobile simplifiée pour AdminOrders avec modal de détails
-- [ ] Créer vue mobile simplifiée pour AdminPartners avec modal d'édition
-- [ ] Créer vue mobile simplifiée pour AdminUsers avec modal d'édition
-- [ ] Vérifier placement des boutons sur toutes les pages (empilage vertical sur mobile)
-- [ ] Optimiser les interactions tactiles (tap pour ouvrir modals au lieu de scroll horizontal)
-- [ ] Adapter les formulaires pour mobile (champs pleine largeur, labels au-dessus)
-- [ ] Tester chaque page en viewport 375px et corriger les problèmes
+- [x] Corriger AdminDashboard : boutons Dashboard utilisateur et Rapports au-dessus des cartes sur mobile
+- [x] Adapter tous les graphiques pour mobile (prévisions stock, évolution hebdomadaire, etc.)
+- [x] Créer vue mobile simplifiée pour AdminProducts avec modal d'édition rapide
+- [x] Créer vue mobile simplifiée pour AdminLeads avec modal d'édition rapide
+- [x] Créer vue mobile simplifiée pour AdminOrders avec modal de détails
+- [x] Créer vue mobile simplifiée pour AdminPartners avec modal d'édition
+- [x] Créer vue mobile simplifiée pour AdminUsers avec modal d'édition
+- [x] Vérifier placement des boutons sur toutes les pages (empilage vertical sur mobile)
+- [x] Optimiser les interactions tactiles (tap pour ouvrir modals au lieu de scroll horizontal)
+- [x] Adapter les formulaires pour mobile (champs pleine largeur, labels au-dessus)
+- [x] Tester chaque page en viewport 375px et corriger les problèmes
+
+## Corrections mobile suite aux retours utilisateur
+
+### Dashboard Admin
+- [x] AdminProducts - Réadapter liste produits pour modification facile mobile
+- [x] AdminStockForecast - Réadapter évolution hebdomadaire et prévisions par produit
+- [x] AdminResources - Corriger modal "Ajouter ressource" (boutons chevauchés, texte coupé)
+- [x] AdminUsers - Réadapter liste avec icônes au lieu de textes longs
+- [x] AdminPartners - Liste partenaires + formulaire "Nouveau partenaire" (champs écrasés, boutons mal alignés)
+- [x] AdminReports - Tableaux aperçu données (produits, partenaires, ventes) à optimiser
+- [x] AdminLeads - Liste leads + modal détails (coordonnées qui se suivent)
+- [x] AdminTechnicalResources - Tableau à repenser
+- [x] AdminPartnerMap - Tableau contacts à optimiser
+- [x] AdminAfterSales - Stats écrasées, filtres illisibles, cartes produits écrasées
+- [x] AdminSpareParts - Tableau pièces en stock à repenser
+
+### Dashboard Utilisateur
+- [x] Leads - Badges débordent, modal illisible (historique, notes, coordonnées empilés)
+- [x] Calendar - Réadapter pour mobile (s'inspirer Google Calendar/Apple Calendar)
+- [x] Forum - Bouton "Marquer comme résolu" décalé hors écran
+- [x] AfterSales (SAV) - Titre écrasé, filtres non adaptés, bouton export PDF buggé
+- [x] Cart, Orders, Favorites, Profile - Optimiser pour mobile

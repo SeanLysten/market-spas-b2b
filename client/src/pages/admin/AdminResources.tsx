@@ -157,7 +157,7 @@ export default function AdminResources() {
                 Ajouter une ressource
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl w-[95vw] sm:w-full">
               <form onSubmit={handleSubmit}>
                 <DialogHeader>
                   <DialogTitle>Ajouter une nouvelle ressource</DialogTitle>
@@ -244,7 +244,7 @@ export default function AdminResources() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="category">Catégorie *</Label>
                       <Select
@@ -304,7 +304,7 @@ export default function AdminResources() {
                   </div>
                 </div>
 
-                <DialogFooter>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                     Annuler
                   </Button>
@@ -329,7 +329,7 @@ export default function AdminResources() {
 
         {/* Resources Grid */}
         {isLoading ? (
-          <div className="grid gap-4 md:p-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <Card key={i}>
                 <CardHeader>
@@ -340,7 +340,7 @@ export default function AdminResources() {
             ))}
           </div>
         ) : resources && resources.length > 0 ? (
-          <div className="grid gap-4 md:p-6 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {resources.map((resource) => {
               const Icon = getCategoryIcon(resource.category);
               return (

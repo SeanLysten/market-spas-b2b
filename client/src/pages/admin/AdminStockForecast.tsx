@@ -197,7 +197,7 @@ export default function AdminStockForecast() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={typeof window !== 'undefined' && window.innerWidth < 768 ? 200 : 300}>
             <BarChart data={weeklyChartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="week" />
@@ -228,13 +228,14 @@ export default function AdminStockForecast() {
                 placeholder="Rechercher par SKU ou nom..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64"
+                className="w-full sm:w-64"
               />
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          {/* Vue Desktop - Tableau */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b">
@@ -299,6 +300,56 @@ export default function AdminStockForecast() {
               </tbody>
             </table>
           </div>
+
+          {/* Vue Mobile - Cartes */}
+          <div className="md:hidden space-y-3">
+            {(filteredForecasts || []).map((forecast) => {
+              const hasAlerts = forecast.weeks.some((w) => w.alerts.length > 0);
+              const hasRupture = forecast.weeks.some((w) => w.alerts.includes("RUPTURE"));
+              return (
+                <div
+                  key={forecast.productId}
+                  className="p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => setSelectedProductId(forecast.productId)}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{forecast.productName}</p>
+                      <p className="text-xs text-muted-foreground font-mono">{forecast.productSku}</p>
+                    </div>
+                    {hasRupture ? (
+                      <Badge variant="destructive" className="text-xs flex-shrink-0">Rupture</Badge>
+                    ) : hasAlerts ? (
+                      <Badge variant="secondary" className="text-xs flex-shrink-0">Alerte</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-xs flex-shrink-0">OK</Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Stock actuel</span>
+                    <span className="font-semibold">{forecast.currentStock}</span>
+                  </div>
+                  <div className="flex gap-2 mt-2 overflow-x-auto">
+                    {(forecast.weeks || []).slice(0, 4).map((week) => (
+                      <div key={week.weekLabel} className="flex-1 min-w-[60px] text-center p-1.5 bg-muted/30 rounded text-xs">
+                        <p className="text-muted-foreground">{week.weekLabel}</p>
+                        <p className={`font-semibold ${
+                          week.alerts.includes("RUPTURE") ? "text-destructive" :
+                          week.alerts.includes("STOCK_CRITIQUE") ? "text-orange-600 dark:text-orange-400" :
+                          week.alerts.includes("STOCK_BAS") ? "text-yellow-600" : ""
+                        }`}>
+                          {week.projectedStock}
+                          {week.incomingQuantity > 0 && (
+                            <span className="text-emerald-600 dark:text-emerald-400 block">+{week.incomingQuantity}</span>
+                          )}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
 
@@ -320,7 +371,7 @@ export default function AdminStockForecast() {
             {/* Product Forecast Chart */}
             <div>
               <h3 className="text-lg font-semibold mb-4">Évolution du stock projeté</h3>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={typeof window !== 'undefined' && window.innerWidth < 768 ? 200 : 300}>
                 <LineChart data={productForecast.forecast}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="weekLabel" />
@@ -354,11 +405,11 @@ export default function AdminStockForecast() {
                     key={week.weekLabel}
                     className="flex items-center justify-between p-3 border rounded-lg"
                   >
-                    <div className="flex items-center gap-3">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{week.weekLabel}</span>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="font-medium text-sm">{week.weekLabel}</span>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-2">
                       {week.incomingQuantity > 0 && (
                         <Badge variant="outline" className="bg-emerald-500/10 dark:bg-emerald-500/20">
                           <TrendingUp className="mr-1 h-3 w-3" />

@@ -341,74 +341,131 @@ export default function AdminProducts() {
               {isLoading ? (
                 <TableSkeleton rows={10} columns={6} />
               ) : products && products.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-10"></TableHead>
-                      <TableHead>SKU</TableHead>
-                      <TableHead>Nom</TableHead>
-                      <TableHead>Prix HT</TableHead>
-                      <TableHead>Stock total</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <>
+                  {/* Vue Desktop - Tableau */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-10"></TableHead>
+                          <TableHead>SKU</TableHead>
+                          <TableHead>Nom</TableHead>
+                          <TableHead>Prix HT</TableHead>
+                          <TableHead>Stock total</TableHead>
+                          <TableHead>Statut</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {products.map((product: any) => (
+                          <React.Fragment key={product.id}>
+                            <TableRow
+                              className={`cursor-pointer hover:bg-muted/50 transition-colors ${expandedProductId === product.id ? "bg-muted/30 border-b-0" : ""}`}
+                              onClick={() => handleToggleExpand(product.id)}
+                            >
+                              <TableCell className="w-10 px-2">
+                                {expandedProductId === product.id ? (
+                                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </TableCell>
+                              <TableCell className="font-mono text-sm">{product.sku}</TableCell>
+                              <TableCell className="font-medium">{product.name}</TableCell>
+                              <TableCell>{Number(product.pricePublicHT || 0).toFixed(2)} €</TableCell>
+                              <TableCell>
+                                <ProductStockCell productId={product.id} />
+                              </TableCell>
+                              <TableCell>
+                                {product.isActive ? (
+                                  <Badge variant="default">Actif</Badge>
+                                ) : (
+                                  <Badge variant="secondary">Inactif</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right space-x-2" onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEditProduct(product)}
+                                  title="Modifier le produit"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDeleteProduct(product.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                            {expandedProductId === product.id && (
+                              <TableRow className="bg-muted/10 hover:bg-muted/10">
+                                <TableCell colSpan={7} className="p-0">
+                                  <ExpandedVariantsRow productId={product.id} />
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Vue Mobile - Cartes */}
+                  <div className="md:hidden space-y-3">
                     {products.map((product: any) => (
-                      <React.Fragment key={product.id}>
-                        <TableRow
-                          className={`cursor-pointer hover:bg-muted/50 transition-colors ${expandedProductId === product.id ? "bg-muted/30 border-b-0" : ""}`}
+                      <div key={product.id}>
+                        <Card
+                          className={`cursor-pointer transition-all ${expandedProductId === product.id ? "ring-2 ring-primary/30" : ""}`}
                           onClick={() => handleToggleExpand(product.id)}
                         >
-                          <TableCell className="w-10 px-2">
-                            {expandedProductId === product.id ? (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            )}
-                          </TableCell>
-                          <TableCell className="font-mono text-sm">{product.sku}</TableCell>
-                          <TableCell className="font-medium">{product.name}</TableCell>
-                          <TableCell>{Number(product.pricePublicHT || 0).toFixed(2)} €</TableCell>
-                          <TableCell>
-                            <ProductStockCell productId={product.id} />
-                          </TableCell>
-                          <TableCell>
-                            {product.isActive ? (
-                              <Badge variant="default">Actif</Badge>
-                            ) : (
-                              <Badge variant="secondary">Inactif</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right space-x-2" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEditProduct(product)}
-                              title="Modifier le produit"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDeleteProduct(product.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm truncate">{product.name}</p>
+                                <p className="text-xs text-muted-foreground font-mono">{product.sku}</p>
+                              </div>
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                {product.isActive ? (
+                                  <Badge variant="default" className="text-xs">Actif</Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="text-xs">Inactif</Badge>
+                                )}
+                                {expandedProductId === product.id ? (
+                                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                              <div className="flex items-center gap-4">
+                                <span className="text-sm font-semibold">{Number(product.pricePublicHT || 0).toFixed(2)} €</span>
+                                <span className="text-xs text-muted-foreground"><ProductStockCell productId={product.id} /></span>
+                              </div>
+                              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                <Button size="sm" variant="outline" onClick={() => handleEditProduct(product)}>
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button size="sm" variant="destructive" onClick={() => handleDeleteProduct(product.id)}>
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
                         {expandedProductId === product.id && (
-                          <TableRow className="bg-muted/10 hover:bg-muted/10">
-                            <TableCell colSpan={7} className="p-0">
-                              <ExpandedVariantsRow productId={product.id} />
-                            </TableCell>
-                          </TableRow>
+                          <div className="mt-1 ml-2 border-l-2 border-primary/20 pl-3">
+                            <ExpandedVariantsRow productId={product.id} />
+                          </div>
                         )}
-                      </React.Fragment>
+                      </div>
                     ))}
-                  </TableBody>
-                </Table>
+                  </div>
+                </>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   Aucun produit. Créez-en un pour commencer.

@@ -108,7 +108,7 @@ export default function Cart() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-4 md:gap-4 md:p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-3 md:p-8">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-6">
               {/* In Stock Items */}
@@ -128,9 +128,9 @@ export default function Cart() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {inStockItems.map((item: any) => (
-                      <div key={item.productId} className="flex gap-4 p-4 rounded-lg border">
+                      <div key={item.productId} className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border">
                         {/* Product Image */}
-                        <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                        <div className="w-full sm:w-24 h-32 sm:h-24 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                           {item.product?.imageUrl ? (
                             <img
                               src={item.product.imageUrl}
@@ -213,9 +213,9 @@ export default function Cart() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {preorderItems.map((item: any) => (
-                      <div key={`preorder-${item.productId}`} className="flex gap-4 p-4 rounded-lg border border-orange-500/20 dark:border-orange-500/30 bg-orange-500/10 dark:bg-orange-500/20/50">
+                      <div key={`preorder-${item.productId}`} className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border border-orange-500/20 dark:border-orange-500/30 bg-orange-500/10 dark:bg-orange-500/20/50">
                         {/* Product Image */}
-                        <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                        <div className="w-full sm:w-24 h-32 sm:h-24 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                           {item.product?.imageUrl ? (
                             <img
                               src={item.product.imageUrl}

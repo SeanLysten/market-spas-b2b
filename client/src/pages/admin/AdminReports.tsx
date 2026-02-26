@@ -205,7 +205,7 @@ export default function AdminReports() {
         </div>
 
         {/* Report Type Selection */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {reportTypes.map((type) => {
             const Icon = type.icon;
             return (
@@ -247,7 +247,7 @@ export default function AdminReports() {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Date Range (optional) */}
-            <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="dateFrom">Date de début (optionnel)</Label>
                 <div className="relative">

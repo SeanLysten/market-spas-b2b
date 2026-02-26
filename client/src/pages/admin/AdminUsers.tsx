@@ -201,7 +201,7 @@ export default function AdminUsers() {
                 Inviter un utilisateur
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md w-[95vw] sm:w-full">
               <form onSubmit={handleSubmit}>
                 <DialogHeader>
                   <DialogTitle>Inviter un nouvel utilisateur</DialogTitle>
@@ -223,7 +223,7 @@ export default function AdminUsers() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">Prénom</Label>
                       <Input
@@ -246,7 +246,7 @@ export default function AdminUsers() {
                   </div>
                 </div>
 
-                <DialogFooter>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                     Annuler
                   </Button>
@@ -293,6 +293,42 @@ export default function AdminUsers() {
                 {isLoading ? (
                   <TableSkeleton rows={8} columns={7} />
                 ) : users && users.length > 0 ? (
+                  <>
+                  <div className="md:hidden space-y-3 p-3">
+                    {users.map((user) => (
+                      <Card key={user.id} className="p-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-sm truncate">{user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || '—'}</p>
+                            <p className="text-xs text-muted-foreground truncate">{user.email || '—'}</p>
+                          </div>
+                          <div className="flex gap-1 flex-shrink-0">
+                            <Button variant="ghost" size="sm" onClick={() => { setEditingUserId(user.id); setSelectedRole(user.role || 'PARTNER'); }}><Edit className="w-3 h-3" /></Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleToggleActive(user.id, user.isActive || false)}>
+                              {user.isActive ? <UserX className="w-3 h-3 text-orange-600" /> : <UserCheck className="w-3 h-3 text-emerald-600" />}
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          <Badge className={getRoleBadge(user.role || 'USER') + ' text-[10px]'}>{user.role?.replace('_', ' ') || 'USER'}</Badge>
+                          {user.isActive ? <Badge className="bg-emerald-500/15 text-emerald-800 text-[10px]">Actif</Badge> : <Badge className="bg-muted text-gray-800 text-[10px]">Inactif</Badge>}
+                        </div>
+                        {editingUserId === user.id && (
+                          <div className="mt-2">
+                            <Select value={selectedRole} onValueChange={(value) => { setSelectedRole(value); handleUpdateRole(user.id, value); }}>
+                              <SelectTrigger className="w-full h-8 text-sm"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="PARTNER">Partenaire</SelectItem>
+                                <SelectItem value="ADMIN">Administrateur</SelectItem>
+                                <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                  <div className="hidden md:block">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -380,6 +416,8 @@ export default function AdminUsers() {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
+                  </>
                 ) : (
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">Aucun utilisateur trouvé</p>
@@ -402,6 +440,36 @@ export default function AdminUsers() {
                 {invitationsLoading ? (
                   <TableSkeleton rows={5} columns={6} />
                 ) : invitations && invitations.length > 0 ? (
+                  <>
+                  <div className="md:hidden space-y-3 p-3">
+                    {invitations.map((invitation: any) => (
+                      <Card key={invitation.id} className="p-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-sm truncate">{invitation.email}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {invitation.firstName || invitation.lastName ? `${invitation.firstName || ''} ${invitation.lastName || ''}`.trim() : '—'}
+                            </p>
+                          </div>
+                          {getStatusBadge(invitation.status)}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
+                          <p>Envoyé le {new Date(invitation.createdAt).toLocaleDateString('fr-FR')}</p>
+                          <p>Expire le {new Date(invitation.expiresAt).toLocaleDateString('fr-FR')}</p>
+                        </div>
+                        {invitation.status === 'PENDING' && (
+                          <div className="flex gap-2 mt-3">
+                            <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => handleResendInvitation(invitation.id)} disabled={resendInvitationMutation.isPending}><RotateCw className="w-3 h-3 mr-1" />Renvoyer</Button>
+                            <Button variant="outline" size="sm" className="flex-1 text-xs text-destructive" onClick={() => handleCancelInvitation(invitation.id)} disabled={cancelInvitationMutation.isPending}><X className="w-3 h-3 mr-1" />Annuler</Button>
+                          </div>
+                        )}
+                        {invitation.status === 'EXPIRED' && (
+                          <Button variant="outline" size="sm" className="w-full mt-3 text-xs" onClick={() => handleResendInvitation(invitation.id)} disabled={resendInvitationMutation.isPending}><RotateCw className="w-3 h-3 mr-1" />Renvoyer</Button>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                  <div className="hidden md:block">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -479,9 +547,10 @@ export default function AdminUsers() {
                             )}
                           </TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
+                      ))}                    </TableBody>
                   </Table>
+                  </div>
+                  </>
                 ) : (
                   <div className="text-center py-12">
                     <Mail className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />

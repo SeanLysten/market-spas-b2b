@@ -288,7 +288,7 @@ export default function Resources() {
 
         {/* Preview Modal */}
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+          <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[90vh] overflow-auto">
             <DialogHeader>
               <DialogTitle>{previewResource?.title}</DialogTitle>
             </DialogHeader>

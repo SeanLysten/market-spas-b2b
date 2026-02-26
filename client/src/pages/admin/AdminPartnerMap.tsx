@@ -154,12 +154,12 @@ function AddCandidateForm({ onSuccess }: { onSuccess: () => void }) {
           Ajouter un candidat
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nouveau candidat partenaire</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Entreprise *</Label>
               <Input value={form.companyName} onChange={e => setForm(f => ({ ...f, companyName: e.target.value }))} required />
@@ -169,7 +169,7 @@ function AddCandidateForm({ onSuccess }: { onSuccess: () => void }) {
               <Input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} required />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Ville *</Label>
               <Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} required />
@@ -189,7 +189,7 @@ function AddCandidateForm({ onSuccess }: { onSuccess: () => void }) {
               <Star className="w-4 h-4 text-amber-500" />
               Score de priorité : <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold ${PRIORITY_COLORS[priorityScore] || 'bg-gray-300'}`}>{priorityScore}</span>
             </h4>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { key: 'showroom', label: 'A un showroom ?', points: '+2' },
                 { key: 'vendSpa', label: 'Vend déjà des spas ?', points: '+3' },
@@ -220,7 +220,7 @@ function AddCandidateForm({ onSuccess }: { onSuccess: () => void }) {
             <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} />
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
             <Button type="submit" disabled={createMutation.isPending}>
               {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
@@ -491,7 +491,39 @@ function CandidatesTable({ candidates, onRefresh }: { candidates: any[]; onRefre
       <p className="text-xs md:text-sm text-muted-foreground">{filtered.length} candidat{filtered.length !== 1 ? 's' : ''} trouvé{filtered.length !== 1 ? 's' : ''}</p>
 
       {/* Table */}
-      <div className="border rounded-lg overflow-x-auto">
+      {/* Vue mobile en cartes */}
+      <div className="md:hidden space-y-3">
+        {filtered.length === 0 ? (
+          <Card className="p-8 text-center text-muted-foreground">Aucun contact trouvé</Card>
+        ) : (
+          filtered.map((candidate: any) => (
+            <Card key={candidate.id} className={`p-4 ${candidate.visited ? 'border-emerald-500/30 bg-emerald-500/5' : ''}`}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${getPriorityColor(candidate.priorityScore)}`}>{candidate.priorityScore}</span>
+                    <p className="font-medium text-sm truncate">{candidate.company}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{candidate.city} • {candidate.status}</p>
+                </div>
+                <div className="flex gap-1 flex-shrink-0">
+                  <Button variant="ghost" size="sm" onClick={() => { setEditingId(candidate.id); setEditForm(candidate); }}><Pencil className="h-3 w-3" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => toggleVisited(candidate)}>{candidate.visited ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}</Button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1 mt-2">
+                {candidate.showroom === 'oui' && <Badge variant="outline" className="text-[10px]">Showroom</Badge>}
+                {candidate.vendSpa === 'oui' && <Badge variant="outline" className="text-[10px]">Vend Spa</Badge>}
+                {candidate.autreMarque === 'oui' && <Badge variant="outline" className="text-[10px]">Autre Marque</Badge>}
+              </div>
+              {candidate.notes && <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{candidate.notes}</p>}
+            </Card>
+          ))
+        )}
+      </div>
+
+      {/* Vue desktop en tableau */}
+      <div className="hidden md:block border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -579,7 +611,7 @@ function CandidatesTable({ candidates, onRefresh }: { candidates: any[]; onRefre
                   {/* Criteria */}
                   <TableCell>
                     {isEditing ? (
-                      <div className="grid grid-cols-2 gap-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
                         {['showroom', 'vendSpa', 'autreMarque', 'domaineSimilaire'].map(key => (
                           <Select key={key} value={editForm[key]} onValueChange={v => setEditForm((f: any) => ({ ...f, [key]: v }))}>
                             <SelectTrigger className="h-7 text-xs w-16">

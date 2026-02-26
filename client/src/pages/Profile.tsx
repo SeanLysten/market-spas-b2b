@@ -151,7 +151,7 @@ export default function Profile() {
 
       <main className="container py-8">
         <Tabs defaultValue="personal" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 max-w-3xl">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 max-w-3xl">
             <TabsTrigger value="personal" className="gap-2">
               <User className="w-4 h-4" />
               <span className="hidden sm:inline">Personnel</span>
@@ -667,7 +667,7 @@ function TeamManagementTab() {
                 {teamMembers.map((member: any) => (
                   <div
                     key={member.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 sm:p-4 border rounded-lg"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -719,7 +719,7 @@ function TeamManagementTab() {
                 {invitations.map((invitation: any) => (
                   <div
                     key={invitation.id}
-                    className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 sm:p-4 border rounded-lg bg-muted/30"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-orange-500/15 dark:bg-orange-500/25 flex items-center justify-center">

@@ -256,7 +256,7 @@ export default function AdminPartners() {
 
   const PartnerForm = () => (
     <div className="grid gap-4 py-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="companyName">Nom de l'entreprise *</Label>
           <Input
@@ -299,7 +299,7 @@ export default function AdminPartners() {
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor="addressPostalCode">Code postal</Label>
           <Input
@@ -340,7 +340,7 @@ export default function AdminPartners() {
 
       <Separator />
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor="primaryContactName">Nom du contact *</Label>
           <Input
@@ -373,7 +373,7 @@ export default function AdminPartners() {
 
       <Separator />
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor="level">Niveau partenaire</Label>
           <Select
@@ -459,7 +459,7 @@ export default function AdminPartners() {
                 Nouveau partenaire
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Créer un nouveau partenaire</DialogTitle>
                 <DialogDescription>
@@ -467,7 +467,7 @@ export default function AdminPartners() {
                 </DialogDescription>
               </DialogHeader>
               <PartnerForm />
-              <DialogFooter>
+              <DialogFooter className="flex-col sm:flex-row gap-2">
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Annuler
                 </Button>
@@ -480,7 +480,7 @@ export default function AdminPartners() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total partenaires</CardTitle>
@@ -524,7 +524,7 @@ export default function AdminPartners() {
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -571,6 +571,32 @@ export default function AdminPartners() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
             ) : partners && partners.length > 0 ? (
+              <>
+              <div className="md:hidden space-y-3">
+                {partners.map((partner: any) => (
+                  <Card key={partner.id} className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm">{partner.companyName}</p>
+                        <p className="text-xs text-muted-foreground">{partner.contactName} • {partner.email}</p>
+                      </div>
+                      <Badge variant={partner.isActive ? 'default' : 'secondary'} className="text-[10px] flex-shrink-0">
+                        {partner.isActive ? 'Actif' : 'Inactif'}
+                      </Badge>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      <Badge variant="outline" className="text-[10px]">{partner.partnerLevel}</Badge>
+                      <Badge variant="outline" className="text-[10px]">{partner.discountRate}% remise</Badge>
+                      <Badge variant="outline" className="text-[10px]">{partner.orderCount || 0} cmd</Badge>
+                    </div>
+                    <div className="flex gap-1 mt-3">
+                      <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => { setEditingPartner(partner); setIsDialogOpen(true); }}>Modifier</Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="hidden md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -655,6 +681,8 @@ export default function AdminPartners() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
+              </>
             ) : (
               <div className="text-center py-12">
                 <Building2 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
@@ -669,7 +697,7 @@ export default function AdminPartners() {
 
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Modifier le partenaire</DialogTitle>
               <DialogDescription>
@@ -677,7 +705,7 @@ export default function AdminPartners() {
               </DialogDescription>
             </DialogHeader>
             <PartnerForm />
-            <DialogFooter>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Annuler
               </Button>

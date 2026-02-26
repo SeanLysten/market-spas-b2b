@@ -181,6 +181,7 @@ export default function Calendar() {
                 variant={viewMode === "month" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setViewMode("month")}
+                className="hidden sm:inline-flex"
               >
                 <CalendarIcon className="w-4 h-4 mr-1" />
                 Mois
@@ -189,9 +190,25 @@ export default function Calendar() {
                 variant={viewMode === "list" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setViewMode("list")}
+                className="hidden sm:inline-flex"
               >
                 Liste
               </Button>
+              {/* Mobile toggle */}
+              <div className="sm:hidden flex bg-muted rounded-lg p-0.5">
+                <button
+                  onClick={() => setViewMode("month")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${viewMode === "month" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
+                >
+                  Mois
+                </button>
+                <button
+                  onClick={() => setViewMode("list")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${viewMode === "list" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
+                >
+                  Liste
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -224,35 +241,50 @@ export default function Calendar() {
                 {viewMode === "month" ? (
                   <>
                     {/* En-têtes des jours */}
-                    <div className="grid grid-cols-7 gap-1 mb-2">
+                    <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-1 sm:mb-2">
                       {DAYS.map(day => (
-                        <div key={day} className="text-center text-sm font-medium text-muted-foreground dark:text-muted-foreground py-2">
+                        <div key={day} className="text-center text-[10px] sm:text-sm font-medium text-muted-foreground dark:text-muted-foreground py-1 sm:py-2">
                           {day}
                         </div>
                       ))}
                     </div>
                     
                     {/* Grille du calendrier */}
-                    <div className="grid grid-cols-7 gap-1">
+                    <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
                       {calendarDays.map((day, index) => {
                         const isToday = day.date && day.date.getTime() === today.getTime();
                         const isCurrentMonth = day.date !== null;
+                        const hasEvents = day.events.length > 0;
                         
                         return (
                           <div
                             key={index}
-                            className={`min-h-[100px] p-1 border rounded-lg ${
+                            className={`min-h-[44px] sm:min-h-[100px] p-0.5 sm:p-1 border rounded sm:rounded-lg ${
                               isCurrentMonth ? "bg-card dark:bg-card" : "bg-muted/50 dark:bg-muted/30"
                             } ${isToday ? "ring-2 ring-primary" : ""}`}
                           >
                             {day.date && (
                               <>
-                                <div className={`text-sm font-medium mb-1 ${
+                                <div className={`text-[10px] sm:text-sm font-medium sm:mb-1 text-center sm:text-left ${
                                   isToday ? "text-primary" : "text-foreground dark:text-foreground"
                                 }`}>
                                   {day.date.getDate()}
                                 </div>
-                                <div className="space-y-1">
+                                {/* Mobile: juste des points colorés */}
+                                <div className="sm:hidden flex justify-center gap-0.5 mt-0.5">
+                                  {day.events.slice(0, 3).map(event => {
+                                    const typeConfig = EVENT_TYPES[event.type];
+                                    return (
+                                      <button
+                                        key={event.id}
+                                        onClick={() => setSelectedEvent(event)}
+                                        className={`w-1.5 h-1.5 rounded-full ${typeConfig.color.split(' ')[0].replace('/15', '').replace('/25', '')}`}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                                {/* Desktop: titres complets */}
+                                <div className="hidden sm:block space-y-1">
                                   {day.events.slice(0, 3).map(event => {
                                     const typeConfig = EVENT_TYPES[event.type];
                                     return (

@@ -286,7 +286,44 @@ export default function AdminSpareParts() {
 
         {/* Parts Table */}
         <Card>
-          <CardContent className="p-0">
+          {/* Vue mobile en cartes */}
+          <div className="md:hidden p-3 space-y-3">
+            {parts.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                {partsQuery.isLoading ? "Chargement..." : "Aucune pièce trouvée."}
+              </div>
+            ) : (
+              parts.map((part: any) => (
+                <Card key={part.id} className={`p-3 ${!part.isActive ? 'opacity-50' : ''}`}>
+                  <div className="flex items-start gap-3">
+                    {part.imageUrl && <img src={part.imageUrl} alt={part.name} className="w-12 h-12 rounded object-cover flex-shrink-0" />}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm truncate">{part.name}</p>
+                          <p className="text-xs text-muted-foreground font-mono">{part.reference}</p>
+                        </div>
+                        <p className="font-semibold text-sm flex-shrink-0">{parseFloat(part.priceHT).toFixed(2)} €</p>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        <Badge variant="outline" className="text-[10px]">{CATEGORIES[part.category] || part.category}</Badge>
+                        <Badge variant={part.stockQuantity <= (part.lowStockThreshold || 3) ? 'destructive' : 'default'} className="text-[10px]">Stock: {part.stockQuantity}</Badge>
+                        <Badge variant={part.isActive ? 'default' : 'secondary'} className="text-[10px]">{part.isActive ? 'Actif' : 'Inactif'}</Badge>
+                      </div>
+                      <div className="flex gap-1 mt-2">
+                        <Button variant="ghost" size="sm" onClick={() => setCompatDialog(part)}><Link2 className="h-3 w-3" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => setEditingPart(part)}><Edit className="h-3 w-3" /></Button>
+                        {part.isActive && <Button variant="ghost" size="sm" onClick={() => { if (confirm('Désactiver ?')) deleteMutation.mutate({ id: part.id }); }}><Trash2 className="h-3 w-3 text-destructive" /></Button>}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Vue desktop en tableau */}
+          <CardContent className="p-0 hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -514,7 +551,7 @@ function SparePartFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{part ? "Modifier la pièce" : "Ajouter une pièce"}</DialogTitle>
         </DialogHeader>
@@ -629,7 +666,7 @@ function SparePartFormDialog({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button variant="outline" onClick={onClose}>
             Annuler
           </Button>
@@ -825,7 +862,7 @@ function CompatibilityDialog({
           </Button>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button variant="outline" onClick={onClose}>
             Fermer
           </Button>

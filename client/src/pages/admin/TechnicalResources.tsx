@@ -180,7 +180,7 @@ export default function AdminTechnicalResources() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Type *</Label>
                   <Select
@@ -281,7 +281,7 @@ export default function AdminTechnicalResources() {
 
       {/* Filters */}
       <Card className="p-4">
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -322,7 +322,38 @@ export default function AdminTechnicalResources() {
       </Card>
 
       {/* Table */}
-      <Card>
+      {/* Vue mobile en cartes */}
+      <div className="md:hidden space-y-3">
+        {resources.length === 0 ? (
+          <Card className="p-8 text-center text-muted-foreground">Aucune ressource trouvée</Card>
+        ) : (
+          resources.map((resource: any) => (
+            <Card key={resource.id} className="p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  {getTypeIcon(resource.type)}
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{resource.title}</p>
+                    <p className="text-xs text-muted-foreground">{resource.category} {resource.productCategory ? `• ${resource.productCategory}` : ''}</p>
+                  </div>
+                </div>
+                <div className="flex gap-1 flex-shrink-0">
+                  <Button variant="ghost" size="sm" onClick={() => handleEdit(resource)}><Pencil className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleDelete(resource.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                <span>{resource.type}</span>
+                <span>•</span>
+                <span>{resource.viewCount} vues</span>
+              </div>
+            </Card>
+          ))
+        )}
+      </div>
+
+      {/* Vue desktop en tableau */}
+      <Card className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>

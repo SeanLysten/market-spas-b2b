@@ -117,7 +117,7 @@ export default function Checkout() {
       </header>
 
       <div className="container py-8">
-        <div className="grid lg:grid-cols-3 gap-4 md:gap-4 md:p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-3 md:p-8">
           {/* Left Column - Forms */}
           <div className="lg:col-span-2 space-y-6">
             {/* Delivery Address */}
@@ -132,7 +132,7 @@ export default function Checkout() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="col-span-2 space-y-2">
                     <Label htmlFor="street">Adresse *</Label>
                     <Input
@@ -181,7 +181,7 @@ export default function Checkout() {
 
                 <Separator />
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="contactName">Nom du contact *</Label>
                     <Input

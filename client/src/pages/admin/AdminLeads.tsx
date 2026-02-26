@@ -933,7 +933,7 @@ export default function AdminLeads() {
           <TabsContent value="campaigns" className="space-y-4">
             {/* Sous-onglets Meta Ads / Google Ads */}
             <Tabs value={adsTab} onValueChange={(v) => setAdsTab(v as 'meta' | 'google')} className="space-y-4">
-              <TabsList className="grid w-full max-w-md grid-cols-1 md:grid-cols-2">
+              <TabsList className="grid w-full max-w-md grid-cols-2">
                 <TabsTrigger value="meta">
                   <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                   Meta Ads
@@ -1964,7 +1964,7 @@ export default function AdminLeads() {
 
       {/* Modal détail lead */}
       <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[85vh] overflow-y-auto">
           {selectedLead && (() => {
             // Parse customFields JSON
             let parsedCustomFields: Record<string, string> = {};
@@ -2029,7 +2029,7 @@ export default function AdminLeads() {
 
               {/* Bandeau candidat partenaire */}
               {isPartnerCandidate(selectedLead) && (
-                <div className="bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/20 dark:border-orange-500/30 rounded-lg p-3 flex items-center justify-between">
+                <div className="bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/20 dark:border-orange-500/30 rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:justify-between">
                   <div className="flex items-center gap-2">
                     <Handshake className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                     <div>
@@ -2050,9 +2050,9 @@ export default function AdminLeads() {
                   <h4 className="text-sm font-semibold text-foreground dark:text-foreground mb-3 flex items-center gap-2">
                     <User className="w-4 h-4" /> Coordonnées
                   </h4>
-                  <div className="grid grid-cols-2 gap-3 bg-muted/50 dark:bg-muted/30 rounded-lg p-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Email</p>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-muted/50 dark:bg-muted/30 rounded-lg p-3 sm:p-4">
+                     <div>
+                       <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Email</p>
                       <p className="font-medium text-sm">{selectedLead.email || "-"}</p>
                     </div>
                     <div>
@@ -2074,8 +2074,8 @@ export default function AdminLeads() {
                     <h4 className="text-sm font-semibold text-foreground dark:text-foreground mb-3 flex items-center gap-2">
                       <MapPin className="w-4 h-4" /> Localisation
                     </h4>
-                    <div className="grid grid-cols-2 gap-3 bg-muted/50 dark:bg-muted/30 rounded-lg p-4">
-                      {displayAddress && (
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-muted/50 dark:bg-muted/30 rounded-lg p-3 sm:p-4">
+                       {displayAddress && (
                         <div className="col-span-2">
                           <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Adresse</p>
                           <p className="font-medium text-sm">{displayAddress}</p>
@@ -2102,9 +2102,9 @@ export default function AdminLeads() {
                   <h4 className="text-sm font-semibold text-foreground dark:text-foreground mb-3 flex items-center gap-2">
                     <Target className="w-4 h-4" /> Détails du lead
                   </h4>
-                  <div className="grid grid-cols-2 gap-3 bg-muted/50 dark:bg-muted/30 rounded-lg p-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Statut</p>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-muted/50 dark:bg-muted/30 rounded-lg p-3 sm:p-4">
+                     <div>
+                       <p className="text-xs text-muted-foreground dark:text-muted-foreground uppercase tracking-wide">Statut</p>
                       <Badge className={LEAD_STATUSES[selectedLead.status as keyof typeof LEAD_STATUSES]?.color + " mt-1"}>
                         {LEAD_STATUSES[selectedLead.status as keyof typeof LEAD_STATUSES]?.label}
                       </Badge>
@@ -2204,7 +2204,7 @@ export default function AdminLeads() {
                 </div>
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="flex-col sm:flex-row gap-2">
                 <Button variant="outline" onClick={() => setSelectedLead(null)}>
                   Fermer
                 </Button>

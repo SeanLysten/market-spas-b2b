@@ -369,17 +369,17 @@ export default function Leads() {
                   onClick={() => setSelectedLead(lead)}
                 >
                   <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4">
-                        <div className={`p-2 rounded-full ${statusConfig.color}`}>
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 w-full sm:w-auto">
+                        <div className={`p-2 rounded-full ${statusConfig.color} flex-shrink-0`}>
                           <StatusIcon className="w-5 h-5" />
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-gray-900">
-                              {lead.firstName} {lead.lastName}
-                            </h3>
-                            <Badge variant="outline" className={statusConfig.color}>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 mb-2">
+                            {lead.firstName} {lead.lastName}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <Badge variant="outline" className={`${statusConfig.color} text-xs`}>
                               {statusConfig.label}
                             </Badge>
                             <Badge variant="outline" className="text-xs">
@@ -433,7 +433,7 @@ export default function Leads() {
 
       {/* Modal détail lead */}
       <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
           {selectedLead && (
             <>
               <DialogHeader>
@@ -454,7 +454,7 @@ export default function Leads() {
               </DialogHeader>
 
               <Tabs defaultValue="info" className="mt-4">
-                <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="info">Informations</TabsTrigger>
                   <TabsTrigger value="history">Historique</TabsTrigger>
                   <TabsTrigger value="notes">Notes</TabsTrigger>
@@ -462,7 +462,7 @@ export default function Leads() {
                 
                 <TabsContent value="info" className="space-y-4 mt-4">
                   {/* Coordonnées */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-3">
                       <h4 className="font-medium text-gray-900">Coordonnées</h4>
                       {selectedLead.email && (

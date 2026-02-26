@@ -138,7 +138,7 @@ export default function AdminOrders() {
               Suivez et gérez toutes les commandes partenaires
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => refetch()} className="gap-2">
               <RefreshCw className="w-4 h-4" />
               Actualiser
@@ -151,7 +151,7 @@ export default function AdminOrders() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total commandes</CardTitle>
@@ -343,7 +343,7 @@ export default function AdminOrders() {
                   <Building2 className="w-4 h-4" />
                   Informations partenaire
                 </h4>
-                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 sm:p-4 bg-muted/30 rounded-lg">
                   <div>
                     <p className="text-xs md:text-sm text-muted-foreground">Entreprise</p>
                     <p className="font-medium">{selectedOrder.partner?.companyName || "N/A"}</p>
@@ -433,7 +433,7 @@ export default function AdminOrders() {
               </div>
 
               {/* Dates */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div>
                   <p className="text-muted-foreground">Date de création</p>
                   <p className="font-medium">{formatDate(selectedOrder.createdAt)}</p>
@@ -502,7 +502,7 @@ export default function AdminOrders() {
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setIsStatusDialogOpen(false)}>
               Annuler
             </Button>

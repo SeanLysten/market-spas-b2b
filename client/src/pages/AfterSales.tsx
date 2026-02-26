@@ -372,13 +372,14 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl text-display text-display">Nouvelle demande SAV</DialogTitle>
         </DialogHeader>
 
         {/* Stepper */}
-        <div className="flex items-center justify-between mb-6 px-4">
+        {/* Stepper - version mobile simplifiée */}
+        <div className="hidden sm:flex items-center justify-between mb-6 px-4">
           {stepTitles.map((title, i) => (
             <div key={i} className="flex items-center">
               <div className={`flex flex-col items-center ${i + 1 <= step ? "text-primary" : "text-muted-foreground"}`}>
@@ -395,6 +396,16 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
                 <div className={`h-0.5 w-8 mx-1 mt-[-16px] ${i + 1 < step ? "bg-primary" : "bg-muted"}`} />
               )}
             </div>
+          ))}
+        </div>
+        {/* Stepper mobile - compact */}
+        <div className="sm:hidden flex items-center justify-center gap-2 mb-4">
+          <span className="text-sm font-medium text-primary">Étape {step}/{stepTitles.length}</span>
+          <span className="text-sm text-muted-foreground">- {stepTitles[step - 1]}</span>
+        </div>
+        <div className="sm:hidden flex gap-1 mb-4">
+          {stepTitles.map((_, i) => (
+            <div key={i} className={`h-1 flex-1 rounded-full ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
           ))}
         </div>
 
@@ -421,7 +432,7 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Marque *</Label>
                 <Select value={formData.brand} onValueChange={(v) => setFormData({ ...formData, brand: v, productLine: "", component: "", defectType: "" })}>
@@ -449,7 +460,7 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Modèle</Label>
                 <Input
@@ -537,7 +548,7 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
               Conditions de garantie
             </h3>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Date d'achat *</Label>
                 <Input type="date" value={formData.purchaseDate} onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })} />
@@ -594,7 +605,7 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
             {/* Customer info */}
             <div className="border-t pt-4">
               <h4 className="font-medium mb-3">Informations du client final</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Nom du client</Label>
                   <Input value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} />
@@ -868,19 +879,18 @@ export default function AfterSales() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
+    <div className="container mx-auto px-3 sm:px-6 py-4 md:py-8">
+      <div className="space-y-3 mb-6">
+        <div className="flex items-center gap-3">
           <Link href="/dashboard">
-            <Button variant="outline" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="flex-shrink-0"><ArrowLeft className="h-4 w-4" /></Button>
           </Link>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold">Service Après-Vente</h1>
-            <p className="text-muted-foreground">Gérez vos demandes de SAV avec analyse de garantie automatique</p>
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-3xl font-bold truncate">Service Après-Vente</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">Gérez vos demandes de SAV avec analyse de garantie automatique</p>
           </div>
         </div>
-
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
+        <Button onClick={() => setIsCreateDialogOpen(true)} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Nouvelle demande SAV
         </Button>
@@ -911,22 +921,22 @@ export default function AfterSales() {
       {/* Filters */}
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className="space-y-4">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Rechercher par ticket, série, marque, modèle, client..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
+          <div className="space-y-3">
+            {/* Recherche */}
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher par ticket, série, marque..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
 
+            {/* Filtres */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48"><SelectValue placeholder="Statut" /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Statut" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les statuts</SelectItem>
                   {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
@@ -936,7 +946,7 @@ export default function AfterSales() {
               </Select>
 
               <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
-                <SelectTrigger className="w-40"><SelectValue placeholder="Urgence" /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Urgence" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes</SelectItem>
                   <SelectItem value="NORMAL">Normale</SelectItem>
@@ -946,7 +956,7 @@ export default function AfterSales() {
               </Select>
 
               <Select value={warrantyFilter} onValueChange={setWarrantyFilter}>
-                <SelectTrigger className="w-48"><SelectValue placeholder="Garantie" /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Garantie" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes garanties</SelectItem>
                   {Object.entries(WARRANTY_STATUS_CONFIG).map(([key, cfg]) => (
@@ -956,20 +966,22 @@ export default function AfterSales() {
               </Select>
             </div>
 
-            <div className="flex gap-4 items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 items-end">
               {isAdmin && (
-              <div className="flex-1">
+              <div>
                 <Input type="text" placeholder="Nom du client..." value={customerNameFilter} onChange={(e) => setCustomerNameFilter(e.target.value)} />
               </div>
               )}
-              {!isAdmin && <div className="flex-1" />}
-              <div className="w-48">
+              {!isAdmin && <div className="hidden sm:block" />}
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Du</label>
                 <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
               </div>
-              <div className="w-48">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Au</label>
                 <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
               </div>
-              <Button variant="outline" onClick={handleResetFilters} className="flex items-center gap-2 w-full sm:w-auto">
+              <Button variant="outline" onClick={handleResetFilters} className="flex items-center gap-2 w-full">
                 <RotateCcw className="h-4 w-4" /> Réinitialiser
               </Button>
             </div>
@@ -981,7 +993,7 @@ export default function AfterSales() {
       {!isLoading && filteredServices.length > 0 && (
         <Card className="mb-4">
           <CardContent className="pt-4 pb-4">
-            <div className="flex gap-4 md:p-6 items-center text-sm font-medium">
+            <div className="flex flex-wrap gap-2 md:gap-4 md:p-6 items-center text-xs sm:text-sm font-medium">
               {[
                 { key: "createdAt", label: "Date" },
                 { key: "status", label: "Statut" },
@@ -1067,7 +1079,7 @@ export default function AfterSales() {
       {/* Detail Dialog */}
       {selectedServiceId && (
         <Dialog open={!!selectedServiceId} onOpenChange={() => setSelectedServiceId(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
             <DialogHeader className="sr-only">
               <DialogTitle>Détail de la demande SAV</DialogTitle>
             </DialogHeader>

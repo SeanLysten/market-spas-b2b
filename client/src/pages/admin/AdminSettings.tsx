@@ -92,7 +92,7 @@ export default function AdminSettings() {
         </div>
 
         <Tabs defaultValue="company" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
             <TabsTrigger value="company" className="gap-2">
               <Building2 className="w-4 h-4" />
               Entreprise
@@ -128,7 +128,7 @@ export default function AdminSettings() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="companyName">Nom commercial</Label>
                     <Input
@@ -147,7 +147,7 @@ export default function AdminSettings() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="vatNumber">Numéro de TVA</Label>
                     <Input
@@ -175,7 +175,7 @@ export default function AdminSettings() {
                   />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-2">
                     <Label htmlFor="postalCode">Code postal</Label>
                     <Input
@@ -212,7 +212,7 @@ export default function AdminSettings() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email de contact</Label>
                     <Input
@@ -252,7 +252,7 @@ export default function AdminSettings() {
                   {(partnerLevels || []).map((level, index) => (
                     <div key={level.level} className="flex items-center gap-4 p-4 border rounded-lg">
                       <div className="w-24 font-semibold">{level.level}</div>
-                      <div className="flex-1 grid gap-4 md:grid-cols-1 md:grid-cols-2">
+                      <div className="flex-1 grid gap-4 grid-cols-1 md:grid-cols-2">
                         <div className="space-y-2">
                           <Label>Remise (%)</Label>
                           <Input
@@ -298,7 +298,7 @@ export default function AdminSettings() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Seuil de livraison gratuite (€)</Label>
                     <Input
@@ -320,7 +320,7 @@ export default function AdminSettings() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Frais de livraison express (€)</Label>
                     <Input

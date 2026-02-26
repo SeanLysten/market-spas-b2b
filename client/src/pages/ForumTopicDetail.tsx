@@ -175,12 +175,12 @@ export default function ForumTopicDetail() {
         </div>
       </header>
 
-      <div className="container py-8 max-w-4xl space-y-6">
+        <div className="container py-4 md:py-8 max-w-4xl space-y-4 md:space-y-6">
         {/* Topic */}
         <Card>
           <CardHeader>
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 space-y-2">
+            <div className="space-y-3">
+              <div className="space-y-2">
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant={isResolved ? "default" : "secondary"}>
                     {getCategoryLabel(topic.category || "autre")}
@@ -197,15 +197,15 @@ export default function ForumTopicDetail() {
                     </Badge>
                   )}
                 </div>
-                <CardTitle className="text-2xl text-display text-display">{topic.title}</CardTitle>
-                <CardDescription className="flex items-center gap-4 text-sm">
+                <CardTitle className="text-xl md:text-2xl">{topic.title}</CardTitle>
+                <CardDescription className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
                   <span className="flex items-center gap-1">
-                    <User className="w-4 h-4" />
+                    <User className="w-3 h-3 sm:w-4 sm:h-4" />
                     {topic.authorName || "Utilisateur"}
                   </span>
                   <span>{formatDate(topic.createdAt)}</span>
                   <span className="flex items-center gap-1">
-                    <MessageSquare className="w-4 h-4" />
+                    <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4" />
                     {topic.replyCount || 0} réponse{(topic.replyCount || 0) > 1 ? "s" : ""}
                   </span>
                 </CardDescription>

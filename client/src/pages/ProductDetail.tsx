@@ -163,7 +163,7 @@ export default function ProductDetail() {
       </header>
 
       <main className="container py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-4 md:p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-3 md:p-8">
           {/* Product Image */}
           <div className="space-y-4">
             <div className="aspect-square bg-white rounded-xl border overflow-hidden">
@@ -185,7 +185,7 @@ export default function ProductDetail() {
               <div className="flex gap-2 overflow-x-auto pb-2">
                 <button
                   onClick={() => setSelectedVariantId(null)}
-                  className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden ${
+                  className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg border-2 overflow-hidden ${
                     !selectedVariantId ? "border-blue-600" : "border-border dark:border-border"
                   }`}
                 >
@@ -205,7 +205,7 @@ export default function ProductDetail() {
                   <button
                     key={variant.id}
                     onClick={() => setSelectedVariantId(variant.id)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden ${
+                    className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg border-2 overflow-hidden ${
                       selectedVariantId === variant.id
                         ? "border-blue-600"
                         : "border-border dark:border-border"
@@ -387,7 +387,7 @@ export default function ProductDetail() {
             <TabsContent value="specs" className="mt-4">
               <Card>
                 <CardContent className="pt-6">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex justify-between py-2 border-b">
                       <span className="text-muted-foreground dark:text-muted-foreground">SKU</span>
                       <span className="font-medium">{product.sku}</span>

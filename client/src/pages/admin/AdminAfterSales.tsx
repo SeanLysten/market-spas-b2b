@@ -132,7 +132,7 @@ function AdminManageDialog({ serviceId, open, onOpenChange, onSuccess }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl text-display text-display flex items-center gap-2">
             Gestion du ticket {service.ticketNumber}
@@ -141,7 +141,7 @@ function AdminManageDialog({ serviceId, open, onOpenChange, onSuccess }: {
         </DialogHeader>
 
         <Tabs defaultValue="warranty" className="w-full">
-          <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
             <TabsTrigger value="warranty">Garantie</TabsTrigger>
             <TabsTrigger value="parts">Pièces</TabsTrigger>
             <TabsTrigger value="quote">Devis</TabsTrigger>
@@ -414,7 +414,7 @@ function AdminManageDialog({ serviceId, open, onOpenChange, onSuccess }: {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Numéro de suivi *</Label>
                     <Input value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} placeholder="Ex: 1Z999AA10123456784" />
@@ -646,7 +646,7 @@ export default function AdminAfterSales() {
             <Card className="mb-6">
               <CardContent className="pt-6">
                 <div className="space-y-4">
-                  <div className="flex gap-4">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <div className="flex-1">
                       <div className="relative">
                         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -677,10 +677,10 @@ export default function AdminAfterSales() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex gap-4 items-center">
-                    <Input type="text" placeholder="Nom du client..." value={customerNameFilter} onChange={(e) => setCustomerNameFilter(e.target.value)} className="flex-1" />
-                    <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-48" />
-                    <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-48" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 items-end">
+                    <Input type="text" placeholder="Nom du client..." value={customerNameFilter} onChange={(e) => setCustomerNameFilter(e.target.value)} />
+                    <div><label className="text-xs text-muted-foreground mb-1 block">Du</label><Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} /></div>
+                    <div><label className="text-xs text-muted-foreground mb-1 block">Au</label><Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} /></div>
                     <Button variant="outline" onClick={handleResetFilters}><RotateCcw className="h-4 w-4 mr-2" />Réinitialiser</Button>
                   </div>
                 </div>
@@ -691,7 +691,7 @@ export default function AdminAfterSales() {
             {!isLoading && filteredServices.length > 0 && (
               <Card className="mb-4">
                 <CardContent className="pt-4 pb-4">
-                  <div className="flex gap-4 md:p-6 items-center text-sm font-medium">
+                  <div className="flex flex-wrap gap-2 md:gap-4 md:p-6 items-center text-xs sm:text-sm font-medium">
                     {[{ key: "createdAt", label: "Date" }, { key: "status", label: "Statut" }, { key: "urgency", label: "Urgence" }, { key: "brand", label: "Marque" }, { key: "warrantyStatus", label: "Garantie" }].map(({ key, label }) => (
                       <button key={key} onClick={() => handleSort(key)} className="flex items-center gap-1 hover:text-primary transition-colors">
                         {label}
@@ -715,7 +715,7 @@ export default function AdminAfterSales() {
                   return (
                     <Card key={svc.id} className="hover:shadow-md transition-shadow">
                       <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                           <div>
                             <CardTitle className="text-lg flex items-center gap-2">
                               {svc.ticketNumber}
@@ -728,7 +728,7 @@ export default function AdminAfterSales() {
                               {svc.component && ` • ${svc.component}`}
                             </CardDescription>
                           </div>
-                          <div className="flex gap-2 flex-wrap justify-end">
+                          <div className="flex gap-1.5 flex-wrap">
                             {getStatusBadge(svc.status)}
                             {getUrgencyBadge(svc.urgency)}
                             {getWarrantyBadge(svc.warrantyStatus)}
@@ -773,17 +773,17 @@ export default function AdminAfterSales() {
               </Select>
             </div>
 
-            <div className="grid grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Tickets</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{statsData?.totalTickets || 0}</div></CardContent></Card>
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Critiques</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold text-destructive dark:text-destructive">{statsData?.byUrgency?.find((u: any) => u.urgency === "CRITICAL")?.count || 0}</div></CardContent></Card>
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Urgents</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold text-orange-600 dark:text-orange-400">{statsData?.byUrgency?.find((u: any) => u.urgency === "URGENT")?.count || 0}</div></CardContent></Card>
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Taux Résolution</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{resolutionRate}%</div></CardContent></Card>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 md:p-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               <Card><CardHeader><CardTitle>Par Partenaire</CardTitle></CardHeader><CardContent>{partnerStatsData ? <Bar data={partnerStatsData} options={{ responsive: true, plugins: { legend: { position: "top" as const } }, scales: { y: { beginAtZero: true } } }} /> : <div className="text-center py-8 text-muted-foreground">Chargement...</div>}</CardContent></Card>
               <Card><CardHeader><CardTitle>Par Statut</CardTitle></CardHeader><CardContent>{statusData ? <Pie data={statusData} options={{ responsive: true, plugins: { legend: { position: "top" as const } } }} /> : <div className="text-center py-8 text-muted-foreground">Chargement...</div>}</CardContent></Card>
-              <Card className="col-span-2"><CardHeader><CardTitle>Évolution Hebdomadaire</CardTitle></CardHeader><CardContent>{weeklyChartData ? <Line data={weeklyChartData} options={{ responsive: true, plugins: { legend: { position: "top" as const } }, scales: { y: { beginAtZero: true } } }} /> : <div className="text-center py-8 text-muted-foreground">Chargement...</div>}</CardContent></Card>
+              <Card className="md:col-span-2"><CardHeader><CardTitle>Évolution Hebdomadaire</CardTitle></CardHeader><CardContent>{weeklyChartData ? <Line data={weeklyChartData} options={{ responsive: true, plugins: { legend: { position: "top" as const } }, scales: { y: { beginAtZero: true } } }} /> : <div className="text-center py-8 text-muted-foreground">Chargement...</div>}</CardContent></Card>
             </div>
           </TabsContent>
         </Tabs>
@@ -791,7 +791,7 @@ export default function AdminAfterSales() {
         {/* Detail Dialog */}
         {selectedServiceId && (
           <Dialog open={!!selectedServiceId} onOpenChange={() => setSelectedServiceId(null)}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
               <DialogHeader className="sr-only"><DialogTitle>Détail SAV</DialogTitle></DialogHeader>
               <AfterSalesDetail serviceId={selectedServiceId} onClose={() => setSelectedServiceId(null)} />
             </DialogContent>
