@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-import AdminLayout from "@/components/AdminLayout";
+import { AdminLayout } from "@/components/AdminLayout";
 import {
   Chart as ChartJS,
   CategoryScale,

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import AdminLayout from '@/components/AdminLayout';
+import { AdminLayout } from '@/components/AdminLayout';
 import InteractivePartnerMap from '@/components/InteractivePartnerMap';
 import { trpc } from '@/lib/trpc';
 import {

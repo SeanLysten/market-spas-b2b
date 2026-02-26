@@ -1246,6 +1246,60 @@ export const appRouter = router({
           await db.updateUserRole(input.userId, input.role);
           return { success: true, message: 'Rôle mis à jour avec succès' };
         }),
+
+      // List all invitations
+      listInvitations: adminProcedure
+        .query(async () => {
+          return await db.getPendingInvitations();
+        }),
+
+      // Cancel an invitation
+      cancelInvitation: adminProcedure
+        .input(z.object({ tokenId: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.cancelInvitation(input.tokenId);
+          return { success: true, message: 'Invitation annulée avec succès' };
+        }),
+
+      // Resend an invitation
+      resendInvitation: adminProcedure
+        .input(z.object({ tokenId: z.number() }))
+        .mutation(async ({ input }) => {
+          const invitation = await db.getInvitationForResend(input.tokenId);
+          
+          if (!invitation) {
+            throw new TRPCError({ 
+              code: 'NOT_FOUND', 
+              message: 'Invitation non trouvée' 
+            });
+          }
+
+          // Generate invitation link
+          const invitationUrl = `${process.env.VITE_OAUTH_PORTAL_URL || 'http://localhost:3000'}/register?token=${invitation.token}`;
+
+          // Resend invitation email
+          try {
+            await sendInvitationEmail({
+              to: invitation.email,
+              firstName: invitation.firstName,
+              lastName: invitation.lastName,
+              invitationUrl,
+              expiresAt: invitation.expiresAt,
+            });
+            console.log(`[Invitation] Email resent to ${invitation.email}`);
+          } catch (emailError) {
+            console.error('[Invitation] Failed to resend email:', emailError);
+            throw new TRPCError({ 
+              code: 'INTERNAL_SERVER_ERROR', 
+              message: 'Erreur lors de l\'envoi de l\'email' 
+            });
+          }
+
+          return { 
+            success: true, 
+            message: 'Invitation renvoyée avec succès' 
+          };
+        }),
     }),
 
     products: router({

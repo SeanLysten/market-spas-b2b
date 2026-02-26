@@ -1,4 +1,4 @@
-import AdminLayout from "@/components/AdminLayout";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -28,15 +28,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { useSafeQuery } from "@/hooks/useSafeQuery";
 import { TableSkeleton } from "@/components/TableSkeleton";
-import { Plus, Mail, UserCheck, UserX, Trash2, Edit } from "lucide-react";
-import { useState } from "react";
+import { Plus, Mail, UserCheck, UserX, Edit, RotateCw, X, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { AdminLayout } from "@/components/AdminLayout";
 
 export default function AdminUsers() {
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("users");
   const [formData, setFormData] = useState({
     email: "",
     firstName: "",
@@ -47,12 +49,28 @@ export default function AdminUsers() {
 
   const { data: usersData, isLoading, refetch } = trpc.admin.users.list.useQuery();
   const users = useSafeQuery(usersData);
+  
+  const { data: invitationsData, isLoading: invitationsLoading, refetch: refetchInvitations } = trpc.admin.users.listInvitations.useQuery();
+  const invitations = useSafeQuery(invitationsData);
+  
   const inviteMutation = trpc.admin.users.invite.useMutation();
   const toggleActiveMutation = trpc.admin.users.toggleActive.useMutation();
   const updateRoleMutation = trpc.admin.users.updateRole.useMutation();
+  const cancelInvitationMutation = trpc.admin.users.cancelInvitation.useMutation();
+  const resendInvitationMutation = trpc.admin.users.resendInvitation.useMutation();
   
   const [editingUserId, setEditingUserId] = useState<number | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("");
+
+  // Auto-refresh invitations every 30 seconds
+  useEffect(() => {
+    if (activeTab === "invitations") {
+      const interval = setInterval(() => {
+        refetchInvitations();
+      }, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [activeTab, refetchInvitations]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +92,7 @@ export default function AdminUsers() {
         partnerId: "",
       });
       refetch();
+      refetchInvitations();
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de l'envoi de l'invitation");
     }
@@ -106,6 +125,26 @@ export default function AdminUsers() {
     }
   };
 
+  const handleCancelInvitation = async (tokenId: number) => {
+    try {
+      await cancelInvitationMutation.mutateAsync({ tokenId });
+      toast.success("Invitation annulée avec succès");
+      refetchInvitations();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de l'annulation");
+    }
+  };
+
+  const handleResendInvitation = async (tokenId: number) => {
+    try {
+      await resendInvitationMutation.mutateAsync({ tokenId });
+      toast.success("Invitation renvoyée avec succès");
+      refetchInvitations();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors du renvoi");
+    }
+  };
+
   const getRoleBadge = (role: string) => {
     const colors: Record<string, string> = {
       SUPER_ADMIN: "bg-red-100 text-red-800",
@@ -116,13 +155,41 @@ export default function AdminUsers() {
     return colors[role] || colors.USER;
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'PENDING':
+        return (
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            <Clock className="w-3 h-3 mr-1" />
+            En attente
+          </Badge>
+        );
+      case 'ACCEPTED':
+        return (
+          <Badge variant="secondary" className="bg-green-100 text-green-800">
+            <CheckCircle2 className="w-3 h-3 mr-1" />
+            Accepté
+          </Badge>
+        );
+      case 'EXPIRED':
+        return (
+          <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Expiré
+          </Badge>
+        );
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Gestion des utilisateurs</h1>
+            <h1 className="text-3xl font-bold text-display">Gestion des utilisateurs</h1>
             <p className="text-muted-foreground mt-2">
               Invitez de nouveaux utilisateurs et gérez les accès
             </p>
@@ -177,38 +244,6 @@ export default function AdminUsers() {
                       />
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Rôle *</Label>
-                    <Select
-                      value={formData.role}
-                      onValueChange={(value: any) => setFormData({ ...formData, role: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USER">Utilisateur</SelectItem>
-                        <SelectItem value="PARTNER">Partenaire</SelectItem>
-                        <SelectItem value="ADMIN">Administrateur</SelectItem>
-                        <SelectItem value="SUPER_ADMIN">Super Administrateur</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="partnerId">ID Partenaire (optionnel)</Label>
-                    <Input
-                      id="partnerId"
-                      type="number"
-                      value={formData.partnerId}
-                      onChange={(e) => setFormData({ ...formData, partnerId: e.target.value })}
-                      placeholder="Laisser vide si non applicable"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Associer cet utilisateur à un partenaire existant
-                    </p>
-                  </div>
                 </div>
 
                 <DialogFooter>
@@ -234,112 +269,232 @@ export default function AdminUsers() {
           </Dialog>
         </div>
 
-        {/* Users Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Liste des utilisateurs</CardTitle>
-            <CardDescription>
-              {users?.length || 0} utilisateur(s) enregistré(s)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <TableSkeleton rows={8} columns={7} />
-            ) : users && users.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Utilisateur</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Rôle</TableHead>
-                    <TableHead>Partenaire</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Dernière connexion</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">
-                        {user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim() || "—"}
-                      </TableCell>
-                      <TableCell>{user.email || "—"}</TableCell>
-                      <TableCell>
-                        {editingUserId === user.id ? (
-                          <Select
-                            value={selectedRole}
-                            onValueChange={(value) => {
-                              setSelectedRole(value);
-                              handleUpdateRole(user.id, value);
-                            }}
-                          >
-                            <SelectTrigger className="w-[180px]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="PARTNER">Partenaire</SelectItem>
-                              <SelectItem value="ADMIN">Administrateur</SelectItem>
-                              <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <Badge className={getRoleBadge(user.role || "USER")}>
-                            {user.role?.replace("_", " ") || "USER"}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>{user.partnerId || "—"}</TableCell>
-                      <TableCell>
-                        {user.isActive ? (
-                          <Badge className="bg-green-100 text-green-800">Actif</Badge>
-                        ) : (
-                          <Badge className="bg-gray-100 text-gray-800">Inactif</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {user.lastSignedIn
-                          ? new Date(user.lastSignedIn).toLocaleDateString("fr-FR")
-                          : "Jamais"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setEditingUserId(user.id);
-                              setSelectedRole(user.role || "PARTNER");
-                            }}
-                            title="Modifier le rôle"
-                          >
-                            <Edit className="w-4 h-4 text-blue-600" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleToggleActive(user.id, user.isActive || false)}
-                            disabled={toggleActiveMutation.isPending}
-                          >
-                            {user.isActive ? (
-                              <UserX className="w-4 h-4 text-orange-600" />
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="users">
+              Utilisateurs ({users?.length || 0})
+            </TabsTrigger>
+            <TabsTrigger value="invitations">
+              Invitations ({invitations?.filter((inv: any) => inv.status === 'PENDING').length || 0})
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Users Tab */}
+          <TabsContent value="users">
+            <Card>
+              <CardHeader>
+                <CardTitle>Liste des utilisateurs</CardTitle>
+                <CardDescription>
+                  {users?.length || 0} utilisateur(s) enregistré(s)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <TableSkeleton rows={8} columns={7} />
+                ) : users && users.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Utilisateur</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Rôle</TableHead>
+                        <TableHead>Partenaire</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead>Dernière connexion</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">
+                            {user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim() || "—"}
+                          </TableCell>
+                          <TableCell>{user.email || "—"}</TableCell>
+                          <TableCell>
+                            {editingUserId === user.id ? (
+                              <Select
+                                value={selectedRole}
+                                onValueChange={(value) => {
+                                  setSelectedRole(value);
+                                  handleUpdateRole(user.id, value);
+                                }}
+                              >
+                                <SelectTrigger className="w-[180px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="PARTNER">Partenaire</SelectItem>
+                                  <SelectItem value="ADMIN">Administrateur</SelectItem>
+                                  <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
+                                </SelectContent>
+                              </Select>
                             ) : (
-                              <UserCheck className="w-4 h-4 text-green-600" />
+                              <Badge className={getRoleBadge(user.role || "USER")}>
+                                {user.role?.replace("_", " ") || "USER"}
+                              </Badge>
                             )}
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Aucun utilisateur trouvé</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                          </TableCell>
+                          <TableCell>{user.partnerId || "—"}</TableCell>
+                          <TableCell>
+                            {user.isActive ? (
+                              <Badge className="bg-green-100 text-green-800">Actif</Badge>
+                            ) : (
+                              <Badge className="bg-gray-100 text-gray-800">Inactif</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {user.lastSignedIn
+                              ? new Date(user.lastSignedIn).toLocaleDateString("fr-FR")
+                              : "Jamais"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingUserId(user.id);
+                                  setSelectedRole(user.role || "PARTNER");
+                                }}
+                                title="Modifier le rôle"
+                              >
+                                <Edit className="w-4 h-4 text-blue-600" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleToggleActive(user.id, user.isActive || false)}
+                                disabled={toggleActiveMutation.isPending}
+                              >
+                                {user.isActive ? (
+                                  <UserX className="w-4 h-4 text-orange-600" />
+                                ) : (
+                                  <UserCheck className="w-4 h-4 text-green-600" />
+                                )}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">Aucun utilisateur trouvé</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Invitations Tab */}
+          <TabsContent value="invitations">
+            <Card>
+              <CardHeader>
+                <CardTitle>Invitations en cours</CardTitle>
+                <CardDescription>
+                  {invitations?.length || 0} invitation(s) envoyée(s)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {invitationsLoading ? (
+                  <TableSkeleton rows={5} columns={6} />
+                ) : invitations && invitations.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Nom</TableHead>
+                        <TableHead>Invité par</TableHead>
+                        <TableHead>Date d'envoi</TableHead>
+                        <TableHead>Expire le</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {invitations.map((invitation: any) => (
+                        <TableRow key={invitation.id}>
+                          <TableCell className="font-medium">{invitation.email}</TableCell>
+                          <TableCell>
+                            {invitation.firstName || invitation.lastName
+                              ? `${invitation.firstName || ""} ${invitation.lastName || ""}`.trim()
+                              : "—"}
+                          </TableCell>
+                          <TableCell>
+                            {invitation.inviterName || invitation.inviterEmail || "—"}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(invitation.createdAt).toLocaleDateString("fr-FR", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(invitation.expiresAt).toLocaleDateString("fr-FR", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            })}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(invitation.status)}</TableCell>
+                          <TableCell className="text-right">
+                            {invitation.status === 'PENDING' && (
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleResendInvitation(invitation.id)}
+                                  disabled={resendInvitationMutation.isPending}
+                                  title="Renvoyer l'invitation"
+                                >
+                                  <RotateCw className="w-4 h-4 text-blue-600" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleCancelInvitation(invitation.id)}
+                                  disabled={cancelInvitationMutation.isPending}
+                                  title="Annuler l'invitation"
+                                >
+                                  <X className="w-4 h-4 text-red-600" />
+                                </Button>
+                              </div>
+                            )}
+                            {invitation.status === 'EXPIRED' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleResendInvitation(invitation.id)}
+                                disabled={resendInvitationMutation.isPending}
+                                title="Renvoyer l'invitation"
+                              >
+                                <RotateCw className="w-4 h-4 text-blue-600" />
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-12">
+                    <Mail className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground">Aucune invitation envoyée</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Cliquez sur "Inviter un utilisateur" pour commencer
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </AdminLayout>
   );

@@ -1806,3 +1806,17 @@
 - [x] Créer la page "Mot de passe oublié" (/forgot-password)
 - [x] Créer la page de réinitialisation (/reset-password/:token)
 - [x] Tester le flux complet de réinitialisation de mot de passe
+- [x] Vérifier si le système d'invitation par email existe et est fonctionnel
+- [x] Vérifier la table DB pour les invitations (statut: pending/accepted)
+- [x] Vérifier l'envoi d'email d'invitation avec lien unique
+- [x] Vérifier la page d'acceptation d'invitation avec formulaire complet
+- [x] Ajouter fonction db.getPendingInvitations() dans server/db.ts
+- [x] Ajouter procédure admin.users.listInvitations dans server/routers.ts
+- [x] Ajouter fonction db.cancelInvitation() dans server/db.ts
+- [x] Ajouter fonction db.resendInvitation() dans server/db.ts
+- [x] Ajouter onglet "Invitations" dans AdminUsers.tsx
+- [x] Afficher tableau des invitations avec statuts (En attente/Accepté/Expiré)
+- [x] Ajouter actions Renvoyer/Annuler sur chaque invitation
+- [x] Implémenter rafraîchissement automatique toutes les 30 secondes
+- [ ] Ajouter notification WebSocket temps réel quand invitation acceptée
+- [x] Tester le flux complet d'invitation utilisateur

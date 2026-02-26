@@ -4964,3 +4964,96 @@ export async function upsertMetaCampaignStats(data: {
       updated_at = NOW()
   `);
 }
+
+/**
+ * Get all pending invitations (for admin view)
+ */
+export async function getPendingInvitations(): Promise<any[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const invitations = await db
+    .select({
+      id: invitationTokens.id,
+      email: invitationTokens.email,
+      firstName: invitationTokens.firstName,
+      lastName: invitationTokens.lastName,
+      token: invitationTokens.token,
+      invitedBy: invitationTokens.invitedBy,
+      expiresAt: invitationTokens.expiresAt,
+      usedAt: invitationTokens.usedAt,
+      createdAt: invitationTokens.createdAt,
+      inviterName: users.name,
+      inviterEmail: users.email,
+    })
+    .from(invitationTokens)
+    .leftJoin(users, eq(invitationTokens.invitedBy, users.id))
+    .orderBy(desc(invitationTokens.createdAt));
+
+  return invitations.map(inv => ({
+    ...inv,
+    status: inv.usedAt 
+      ? 'ACCEPTED' 
+      : new Date() > new Date(inv.expiresAt) 
+        ? 'EXPIRED' 
+        : 'PENDING'
+  }));
+}
+
+/**
+ * Cancel an invitation
+ */
+export async function cancelInvitation(tokenId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  // Delete the invitation token
+  await db
+    .delete(invitationTokens)
+    .where(eq(invitationTokens.id, tokenId));
+}
+
+/**
+ * Resend an invitation email
+ * Returns the invitation data needed to send email
+ */
+export async function getInvitationForResend(tokenId: number): Promise<any | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  const [invitation] = await db
+    .select()
+    .from(invitationTokens)
+    .where(eq(invitationTokens.id, tokenId))
+    .limit(1);
+
+  if (!invitation) return null;
+
+  // Check if not already used
+  if (invitation.usedAt) {
+    throw new Error('Cette invitation a déjà été acceptée');
+  }
+
+  // Check if expired
+  if (new Date() > new Date(invitation.expiresAt)) {
+    // Create a new token with extended expiration
+    const newExpiresAt = new Date();
+    newExpiresAt.setDate(newExpiresAt.getDate() + 7);
+
+    await db
+      .update(invitationTokens)
+      .set({ 
+        expiresAt: newExpiresAt,
+        createdAt: new Date() // Update sent date
+      })
+      .where(eq(invitationTokens.id, tokenId));
+
+    return {
+      ...invitation,
+      expiresAt: newExpiresAt,
+      createdAt: new Date()
+    };
+  }
+
+  return invitation;
+}
