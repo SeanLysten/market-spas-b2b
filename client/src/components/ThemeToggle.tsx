@@ -11,11 +11,13 @@ export function ThemeToggle() {
     const initialTheme = stored || "light";
     setTheme(initialTheme);
     
-    // Only set data-theme if dark mode is explicitly chosen
+    // Set both data-theme and class for Tailwind compatibility
     if (initialTheme === "dark") {
       document.documentElement.setAttribute("data-theme", "dark");
+      document.documentElement.classList.add("dark");
     } else {
       document.documentElement.removeAttribute("data-theme");
+      document.documentElement.classList.remove("dark");
     }
   }, []);
 
@@ -25,8 +27,10 @@ export function ThemeToggle() {
     
     if (newTheme === "dark") {
       document.documentElement.setAttribute("data-theme", "dark");
+      document.documentElement.classList.add("dark");
     } else {
       document.documentElement.removeAttribute("data-theme");
+      document.documentElement.classList.remove("dark");
     }
     
     localStorage.setItem("theme", newTheme);
