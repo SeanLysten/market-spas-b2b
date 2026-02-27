@@ -3870,6 +3870,86 @@ export const appRouter = router({
         };
       }),
   }),
+
+  // ============================================
+  // CUSTOMER SAV TICKETS (tickets SAV clients finaux)
+  // ============================================
+  customerSav: router({
+    list: adminProcedure
+      .input(z.object({
+        status: z.string().optional(),
+        priority: z.string().optional(),
+        search: z.string().optional(),
+        limit: z.number().optional().default(50),
+        offset: z.number().optional().default(0),
+      }).optional())
+    .query(async ({ input }) => {
+      const dbUrl = process.env.DATABASE_URL;
+      if (!dbUrl) return { tickets: [], total: 0 };
+      const mysql = await import('mysql2/promise');
+      const conn = await mysql.default.createConnection(dbUrl);
+      try {
+        let where = '1=1';
+        const params: any[] = [];
+        if (input?.status && input.status !== 'all') { where += ' AND status = ?'; params.push(input.status); }
+        if (input?.priority && input.priority !== 'all') { where += ' AND priority = ?'; params.push(input.priority); }
+        if (input?.search) {
+          where += ' AND (customerName LIKE ? OR customerEmail LIKE ? OR subject LIKE ? OR ticketNumber LIKE ?)';
+          const s = `%${input.search}%`;
+          params.push(s, s, s, s);
+        }
+        const [countRows] = await conn.execute<any[]>(`SELECT COUNT(*) as total FROM customer_sav_tickets WHERE ${where}`, params);
+        const total = countRows[0]?.total || 0;
+        const [rows] = await conn.execute<any[]>(
+          `SELECT * FROM customer_sav_tickets WHERE ${where} ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
+          [...params, input?.limit || 50, input?.offset || 0]
+        );
+        return { tickets: rows, total };
+      } finally { await conn.end(); }
+    }),
+
+    updateStatus: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(['NEW', 'IN_PROGRESS', 'WAITING_CUSTOMER', 'RESOLVED', 'CLOSED']),
+        internalNotes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbUrl = process.env.DATABASE_URL;
+        if (!dbUrl) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const mysql = await import('mysql2/promise');
+        const conn = await mysql.default.createConnection(dbUrl);
+        try {
+          const resolvedAt = input.status === 'RESOLVED' || input.status === 'CLOSED' ? new Date() : null;
+          await conn.execute(
+            'UPDATE customer_sav_tickets SET status = ?, internalNotes = COALESCE(?, internalNotes), resolvedAt = ?, updatedAt = NOW() WHERE id = ?',
+            [input.status, input.internalNotes || null, resolvedAt, input.id]
+          );
+          return { success: true };
+        } finally { await conn.end(); }
+      }),
+
+    stats: adminProcedure.query(async () => {
+      const dbUrl = process.env.DATABASE_URL;
+      if (!dbUrl) return { total: 0, new: 0, inProgress: 0, resolved: 0 };
+      const mysql = await import('mysql2/promise');
+      const conn = await mysql.default.createConnection(dbUrl);
+      try {
+        const [rows] = await conn.execute<any[]>(
+          `SELECT status, COUNT(*) as count FROM customer_sav_tickets GROUP BY status`
+        );
+        const byStatus = Object.fromEntries(rows.map((r: any) => [r.status, r.count]));
+        return {
+          total: rows.reduce((s: number, r: any) => s + r.count, 0),
+          new: byStatus['NEW'] || 0,
+          inProgress: byStatus['IN_PROGRESS'] || 0,
+          waitingCustomer: byStatus['WAITING_CUSTOMER'] || 0,
+          resolved: byStatus['RESOLVED'] || 0,
+          closed: byStatus['CLOSED'] || 0,
+        };
+      } finally { await conn.end(); }
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

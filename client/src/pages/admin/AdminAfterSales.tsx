@@ -515,6 +515,146 @@ function AdminManageDialog({ serviceId, open, onOpenChange, onSuccess }: {
   );
 }
 
+// ===== CUSTOMER SAV TAB COMPONENT =====
+const CUSTOMER_SAV_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  NEW: { label: 'Nouveau', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
+  IN_PROGRESS: { label: 'En cours', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' },
+  WAITING_CUSTOMER: { label: 'En attente client', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' },
+  RESOLVED: { label: 'Résolu', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' },
+  CLOSED: { label: 'Fermé', color: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' },
+};
+
+function CustomerSavTab() {
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const [newStatus, setNewStatus] = useState('');
+  const [internalNotes, setInternalNotes] = useState('');
+
+  const { data, refetch } = trpc.customerSav.list.useQuery({ search: search || undefined, status: statusFilter !== 'all' ? statusFilter : undefined });
+  const { data: savStats, refetch: refetchStats } = trpc.customerSav.stats.useQuery();
+  const updateStatusMutation = trpc.customerSav.updateStatus.useMutation({
+    onSuccess: () => { refetch(); refetchStats(); setSelectedTicket(null); },
+  });
+
+  const tickets = data?.tickets || [];
+  const total = data?.total || 0;
+
+  return (
+    <div className="space-y-4">
+      {/* Stats rapides */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{savStats?.total || 0}</div></CardContent></Card>
+        <Card className="border-blue-200 dark:border-blue-800"><CardHeader className="pb-2"><CardTitle className="text-sm text-blue-600 dark:text-blue-400">Nouveaux</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{savStats?.new || 0}</div></CardContent></Card>
+        <Card className="border-amber-200 dark:border-amber-800"><CardHeader className="pb-2"><CardTitle className="text-sm text-amber-600 dark:text-amber-400">En cours</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{savStats?.inProgress || 0}</div></CardContent></Card>
+        <Card className="border-emerald-200 dark:border-emerald-800"><CardHeader className="pb-2"><CardTitle className="text-sm text-emerald-600 dark:text-emerald-400">Résolus</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{savStats?.resolved || 0}</div></CardContent></Card>
+      </div>
+
+      {/* Filtres */}
+      <Card className="mb-4">
+        <CardContent className="pt-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Rechercher par nom, email, sujet, numéro..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-48"><SelectValue placeholder="Statut" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                {Object.entries(CUSTOMER_SAV_STATUS_CONFIG).map(([k, c]) => <SelectItem key={k} value={k}>{c.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Liste des tickets */}
+      {tickets.length === 0 ? (
+        <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground">Aucun ticket client trouvé</p></CardContent></Card>
+      ) : (
+        <div className="grid gap-3">
+          {tickets.map((ticket: any) => {
+            const statusConf = CUSTOMER_SAV_STATUS_CONFIG[ticket.status] || CUSTOMER_SAV_STATUS_CONFIG.NEW;
+            return (
+              <Card key={ticket.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                    <div>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <span className="font-mono text-sm text-muted-foreground">{ticket.ticketNumber}</span>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusConf.color}`}>{statusConf.label}</span>
+                      </CardTitle>
+                      <CardDescription className="mt-1">{ticket.subject}</CardDescription>
+                    </div>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">{new Date(ticket.createdAt).toLocaleDateString('fr-FR')}</span>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
+                    {ticket.customerName && <span className="flex items-center gap-1"><span className="font-medium">Client :</span> {ticket.customerName}</span>}
+                    {ticket.customerEmail && <span className="flex items-center gap-1"><span className="font-medium">Email :</span> {ticket.customerEmail}</span>}
+                    {ticket.customerPhone && <span className="flex items-center gap-1"><span className="font-medium">Tél :</span> {ticket.customerPhone}</span>}
+                  </div>
+                  {ticket.message && <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{ticket.message}</p>}
+                  <Button size="sm" variant="outline" onClick={() => { setSelectedTicket(ticket); setNewStatus(ticket.status); setInternalNotes(ticket.internalNotes || ''); }}>
+                    <Wrench className="mr-1 h-3 w-3" /> Gérer
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Dialog de gestion */}
+      {selectedTicket && (
+        <Dialog open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
+          <DialogContent className="max-w-lg w-[95vw]">
+            <DialogHeader><DialogTitle>Ticket {selectedTicket.ticketNumber}</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium mb-1">Sujet</p>
+                <p className="text-sm text-muted-foreground">{selectedTicket.subject}</p>
+              </div>
+              {selectedTicket.message && (
+                <div>
+                  <p className="text-sm font-medium mb-1">Message</p>
+                  <div className="bg-muted rounded p-3 text-sm max-h-40 overflow-y-auto whitespace-pre-wrap">{selectedTicket.message}</div>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                {selectedTicket.customerName && <div><span className="font-medium">Client :</span> {selectedTicket.customerName}</div>}
+                {selectedTicket.customerEmail && <div><span className="font-medium">Email :</span> {selectedTicket.customerEmail}</div>}
+                {selectedTicket.customerPhone && <div><span className="font-medium">Tél :</span> {selectedTicket.customerPhone}</div>}
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Changer le statut</Label>
+                <Select value={newStatus} onValueChange={setNewStatus}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(CUSTOMER_SAV_STATUS_CONFIG).map(([k, c]) => <SelectItem key={k} value={k}>{c.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Notes internes</Label>
+                <Textarea className="mt-1" rows={3} placeholder="Notes visibles uniquement par l’équipe admin..." value={internalNotes} onChange={e => setInternalNotes(e.target.value)} />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setSelectedTicket(null)}>Annuler</Button>
+                <Button onClick={() => updateStatusMutation.mutate({ id: selectedTicket.id, status: newStatus as any, internalNotes })} disabled={updateStatusMutation.isPending}>
+                  {updateStatusMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
+
 // ===== MAIN ADMIN PAGE =====
 export default function AdminAfterSales() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -554,6 +694,7 @@ export default function AdminAfterSales() {
   const { data: statsData } = trpc.afterSales.stats.useQuery({ period: statsPeriod });
   const { data: weeklyStats } = trpc.afterSales.weeklyStats.useQuery({ period: statsPeriod });
   const { data: partners } = trpc.partners.list.useQuery({});
+  const { data: customerSavStats } = trpc.customerSav.stats.useQuery();
 
   const filteredServices = (services || []).filter((s: any) => {
     if (!searchQuery) return true;
@@ -627,9 +768,17 @@ export default function AdminAfterSales() {
         </div>
 
         <Tabs defaultValue="tickets" className="w-full">
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 flex flex-wrap gap-1">
             <TabsTrigger value="tickets">Tickets ({stats.total})</TabsTrigger>
             <TabsTrigger value="stats"><BarChart3 className="h-4 w-4 mr-2" />Statistiques</TabsTrigger>
+            <TabsTrigger value="customer-sav" className="flex items-center gap-1.5">
+              <span>Tickets clients</span>
+              {customerSavStats && customerSavStats.total > 0 && (
+                <span className="inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-bold min-w-[1.25rem] h-5 px-1">
+                  {customerSavStats.new > 0 ? customerSavStats.new : customerSavStats.total}
+                </span>
+              )}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="tickets">
@@ -785,6 +934,11 @@ export default function AdminAfterSales() {
               <Card><CardHeader><CardTitle>Par Statut</CardTitle></CardHeader><CardContent>{statusData ? <Pie data={statusData} options={{ responsive: true, plugins: { legend: { position: "top" as const } } }} /> : <div className="text-center py-8 text-muted-foreground">Chargement...</div>}</CardContent></Card>
               <Card className="md:col-span-2"><CardHeader><CardTitle>Évolution Hebdomadaire</CardTitle></CardHeader><CardContent>{weeklyChartData ? <Line data={weeklyChartData} options={{ responsive: true, plugins: { legend: { position: "top" as const } }, scales: { y: { beginAtZero: true } } }} /> : <div className="text-center py-8 text-muted-foreground">Chargement...</div>}</CardContent></Card>
             </div>
+          </TabsContent>
+
+          {/* ─── TAB: TICKETS CLIENTS FINAUX ─────────────────────────────────── */}
+          <TabsContent value="customer-sav">
+            <CustomerSavTab />
           </TabsContent>
         </Tabs>
 

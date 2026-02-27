@@ -14,6 +14,49 @@ import {
 } from '../lead-routing';
 import mysql from 'mysql2/promise';
 
+// ─── Helpers SAV clients ─────────────────────────────────────────────────────
+
+async function createCustomerSavTicket(params: {
+  subject: string;
+  message: string;
+  fromEmail: string;
+  customerName?: string;
+  customerPhone?: string;
+  priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+}): Promise<number | null> {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return null;
+
+  let conn: mysql.Connection | null = null;
+  try {
+    conn = await mysql.createConnection(dbUrl);
+    const ticketNumber = `CST-${Date.now().toString(36).toUpperCase()}`;
+    const [result] = await conn.execute<mysql.ResultSetHeader>(
+      `INSERT INTO customer_sav_tickets
+       (ticketNumber, customerEmail, customerName, customerPhone, subject, message, source, category, status, priority, rawEmailFrom, rawEmailSubject)
+       VALUES (?, ?, ?, ?, ?, ?, 'EMAIL', 'SAV', 'NEW', ?, ?, ?)`,
+      [
+        ticketNumber,
+        params.fromEmail,
+        params.customerName || null,
+        params.customerPhone || null,
+        params.subject.substring(0, 500),
+        params.message?.substring(0, 5000) || null,
+        params.priority || 'NORMAL',
+        params.fromEmail,
+        params.subject.substring(0, 500),
+      ]
+    );
+    console.log(`[CustomerSAV] Ticket créé: ${ticketNumber} (ID: ${result.insertId})`);
+    return result.insertId;
+  } catch (err) {
+    console.error('[CustomerSAV] Error creating ticket:', err);
+    return null;
+  } finally {
+    if (conn) await conn.end();
+  }
+}
+
 export const inboundLeadsRouter = Router();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -148,6 +191,27 @@ inboundLeadsRouter.post('/api/webhooks/email-lead', async (req: Request, res: Re
     const parsed = parseEmailForLead(subject, body, fromEmail);
 
     if (!parsed.isLead) {
+      // Si c'est un SAV client final, créer un ticket dans customer_sav_tickets
+      if (parsed.category === 'SAV') {
+        const ticketId = await createCustomerSavTicket({
+          subject,
+          message: `[Email reçu]\nDe: ${fromEmail}\nSujet: ${subject}\n\n${body.substring(0, 5000)}`,
+          fromEmail,
+          customerName: parsed.firstName && parsed.lastName
+            ? `${parsed.firstName} ${parsed.lastName}`.trim()
+            : parsed.firstName || undefined,
+          customerPhone: parsed.phone,
+          priority: 'NORMAL',
+        });
+        console.log(`[EmailLead] Ticket SAV client créé: #${ticketId} | Sujet: "${subject}"`);
+        return res.status(200).json({
+          success: true,
+          savTicketId: ticketId,
+          category: 'SAV',
+          message: 'SAV ticket created for end customer',
+        });
+      }
+
       console.log(`[EmailLead] Email ignoré — Catégorie: ${parsed.category} (${parsed.confidence}) | Sujet: "${subject}"`);
       return res.status(200).json({
         ignored: true,

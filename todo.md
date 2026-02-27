@@ -1933,3 +1933,18 @@
 - [x] Anti-doublon : ne pas créer deux leads avec le même email/téléphone dans les 60 jours
 - [x] Mise à jour du lead existant si doublon détecté (enrichissement des données)
 - [x] Tests vitest pour la classification et la déduplication (19 tests passent)
+
+## SAV clients finaux et formulaire Shopify
+- [ ] Fournir le code du formulaire Shopify en texte copiable (pas en .liquid)
+- [ ] Créer la table customer_sav_tickets pour les demandes SAV clients finaux par email
+- [ ] Stocker les emails SAV (catégorie SAV) comme tickets clients dans la base
+- [ ] Ajouter un 3ème onglet "Tickets clients" dans l'interface SAV admin avec compteur
+- [ ] Afficher les tickets SAV clients finaux dans cet onglet avec statut et détails
+
+## SAV clients finaux et formulaire Shopify (session 2026-02-27)
+- [x] Table customer_sav_tickets en base de données
+- [x] Webhook email : créer un ticket SAV client quand la catégorie est SAV
+- [x] Router tRPC customerSav (list, updateStatus, stats) dans appRouter
+- [x] Onglet "Tickets clients" dans AdminAfterSales avec compteur de nouveaux tickets
+- [x] Interface de gestion des tickets SAV clients (statut, notes internes)
+- [x] Formulaire Shopify mis à jour avec envoi direct à l'API Market Spas

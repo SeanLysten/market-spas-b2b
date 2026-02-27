@@ -2371,3 +2371,48 @@ export const candidateContactHistory = mysqlTable(
 export type CandidateContactHistory = typeof candidateContactHistory.$inferSelect;
 export type InsertCandidateContactHistory = typeof candidateContactHistory.$inferInsert;
 
+
+// ============================================
+// CUSTOMER SAV TICKETS (demandes SAV clients finaux par email)
+// ============================================
+export const customerSavTickets = mysqlTable(
+  "customer_sav_tickets",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    // Identifiant unique du ticket
+    ticketNumber: varchar("ticketNumber", { length: 20 }).notNull().unique(),
+    // Informations du client
+    customerName: varchar("customerName", { length: 200 }),
+    customerEmail: varchar("customerEmail", { length: 255 }),
+    customerPhone: varchar("customerPhone", { length: 50 }),
+    // Contenu du ticket
+    subject: varchar("subject", { length: 500 }).notNull(),
+    message: text("message"),
+    // Source et catégorie
+    source: mysqlEnum("source", ["EMAIL", "MANUAL"]).default("EMAIL").notNull(),
+    category: mysqlEnum("category", ["SAV", "COMPLAINT", "INFO", "OTHER"]).default("SAV").notNull(),
+    // Statut du ticket
+    status: mysqlEnum("status", ["NEW", "IN_PROGRESS", "WAITING_CUSTOMER", "RESOLVED", "CLOSED"]).default("NEW").notNull(),
+    // Priorité
+    priority: mysqlEnum("priority", ["LOW", "NORMAL", "HIGH", "URGENT"]).default("NORMAL").notNull(),
+    // Partenaire attribué (si applicable)
+    assignedPartnerId: int("assignedPartnerId"),
+    assignedAdminId: int("assignedAdminId"),
+    // Notes internes
+    internalNotes: text("internalNotes"),
+    // Email brut (pour référence)
+    rawEmailFrom: varchar("rawEmailFrom", { length: 255 }),
+    rawEmailSubject: varchar("rawEmailSubject", { length: 500 }),
+    // Timestamps
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+    resolvedAt: timestamp("resolvedAt"),
+  },
+  (table) => ({
+    statusIdx: index("cst_status_idx").on(table.status),
+    emailIdx: index("cst_email_idx").on(table.customerEmail),
+    createdAtIdx: index("cst_created_idx").on(table.createdAt),
+  })
+);
+export type CustomerSavTicket = typeof customerSavTickets.$inferSelect;
+export type InsertCustomerSavTicket = typeof customerSavTickets.$inferInsert;
