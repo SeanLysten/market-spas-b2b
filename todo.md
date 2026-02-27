@@ -1894,3 +1894,25 @@
 - [x] Cart, Orders, Favorites, Profile - Optimiser pour mobile
 
 - [x] Fix erreur API tRPC sur /admin/leads - retourne HTML au lieu de JSON (ajout maxURLLength: 2048)
+
+## Système d'envoi d'emails
+- [ ] Vérifier configuration Resend et identifier pourquoi les emails ne sont pas envoyés
+- [ ] Créer template email d'invitation partenaire (design professionnel Market Spas)
+- [ ] Créer template email de réinitialisation de mot de passe
+- [ ] Créer template email de bienvenue après inscription
+- [ ] Corriger la route /forgot-password pour envoyer réellement l'email
+- [ ] Corriger la route /reset-password pour valider le token et changer le mot de passe
+- [ ] Ajouter un système de newsletter dans l'interface admin
+- [ ] Tester l'envoi réel d'emails (invitation, reset password)
+
+## Système d'envoi d'emails (révision complète)
+- [x] Vérifier la configuration Resend et identifier les problèmes (domaine à vérifier)
+- [x] Créer des templates d'emails professionnels Market Spas (déjà existants)
+- [x] Corriger les routes forgot-password et reset-password (déjà fonctionnelles)
+- [x] Ajouter un système de newsletter dans l'interface admin (page AdminNewsletter créée)
+- [x] Créer la fonction sendNewsletterEmail avec batch processing
+- [x] Créer le template createNewsletterTemplate avec design Market Spas
+- [x] Ajouter la route tRPC admin.newsletter.send
+- [x] Créer la page AdminNewsletter avec éditeur et aperçu
+- [x] Ajouter le lien Newsletter dans la sidebar admin
+- [ ] Vérifier le domaine dans Resend pour activer l'envoi réel d'emails (voir RESEND_SETUP_GUIDE.md)

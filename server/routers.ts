@@ -3800,6 +3800,76 @@ export const appRouter = router({
         return { success: true, leadId: lead };
       }),
   }),
+
+  // ============================================
+  // NEWSLETTER
+  // ============================================
+  newsletter: router({
+    send: adminProcedure
+      .input(
+        z.object({
+          subject: z.string().min(1, "Le sujet est requis"),
+          title: z.string().min(1, "Le titre est requis"),
+          content: z.string().min(1, "Le contenu est requis"),
+          ctaText: z.string().optional(),
+          ctaUrl: z.string().url().optional(),
+          recipients: z.enum(['ALL', 'PARTNERS_ONLY', 'ADMINS_ONLY']).default('ALL'),
+        })
+      )
+      .mutation(async ({ input }) => {
+        // Get recipients based on selection
+        let recipientEmails: string[] = [];
+        
+        if (input.recipients === 'ALL') {
+          const allUsers = await db.getAllUsers();
+          recipientEmails = allUsers.filter(u => u.isActive && u.email).map(u => u.email);
+        } else if (input.recipients === 'PARTNERS_ONLY') {
+          const allUsers = await db.getAllUsers();
+          recipientEmails = allUsers
+            .filter(u => u.isActive && u.email && u.role === 'PARTNER')
+            .map(u => u.email);
+        } else if (input.recipients === 'ADMINS_ONLY') {
+          const allUsers = await db.getAllUsers();
+          recipientEmails = allUsers
+            .filter(u => u.isActive && u.email && (u.role === 'ADMIN' || u.role === 'SUPER_ADMIN'))
+            .map(u => u.email);
+        }
+
+        if (recipientEmails.length === 0) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'Aucun destinataire trouvé' 
+          });
+        }
+
+        // Create HTML content using template
+        const { createNewsletterTemplate, sendNewsletterEmail } = await import('./email');
+        const htmlContent = createNewsletterTemplate(
+          input.title,
+          input.content,
+          input.ctaText,
+          input.ctaUrl
+        );
+
+        // Send newsletter
+        const result = await sendNewsletterEmail(
+          recipientEmails,
+          input.subject,
+          htmlContent
+        );
+
+        const successCount = result.results.filter(r => r.success).length;
+        const failureCount = result.results.filter(r => !r.success).length;
+
+        return {
+          success: result.success,
+          totalRecipients: recipientEmails.length,
+          successCount,
+          failureCount,
+          message: `Newsletter envoyée à ${successCount}/${recipientEmails.length} destinataires`,
+        };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

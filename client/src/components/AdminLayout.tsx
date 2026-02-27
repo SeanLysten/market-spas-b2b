@@ -12,6 +12,7 @@ import {
   X,
   Image as ImageIcon,
   ShoppingBag,
+  Mail,
   Building2,
   FileSpreadsheet,
   Target,
@@ -130,6 +131,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       name: "Pièces Détachées",
       href: "/admin/spare-parts",
       icon: Cog,
+    },
+    {
+      name: "Newsletter",
+      href: "/admin/newsletter",
+      icon: Mail,
     },
     {
       name: "Paramètres",
