@@ -680,25 +680,7 @@ export default function AdminLeads() {
                 </>
               )}
             </Button>
-            {metaCampaignsData?.connected && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setIsSyncingMeta(true);
-                  syncMetaLeadsMutation.mutate({});
-                }}
-                disabled={isSyncingMeta || syncMetaLeadsMutation.isPending}
-                title="Récupérer les leads Meta manquants depuis les formulaires"
-                className="text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-700 dark:hover:bg-blue-900/20"
-              >
-                {isSyncingMeta || syncMetaLeadsMutation.isPending ? (
-                  <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Sync Meta...</>
-                ) : (
-                  <><RefreshCw className="w-4 h-4 mr-2" />Sync Meta</>
-                )}
-              </Button>
-            )}
+
             <Button 
               variant="outline" 
               size="icon" 

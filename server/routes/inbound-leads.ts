@@ -78,8 +78,23 @@ async function updateLeadAssignment(leadId: number, reason: string, partnerId: n
   }
 }
 
-// ─── 1. Endpoint formulaire Shopify ──────────────────────────────────────────
+// ─── CORS pour les endpoints publics (Shopify, formulaires externes) ───────────────────────────────────────────────
+inboundLeadsRouter.options('/api/leads/inbound', (_req: Request, res: Response) => {
+  res.set({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  }).status(204).send();
+});
+
+// ─── 1. Endpoint formulaire Shopify ───────────────────────────────────────────────
 inboundLeadsRouter.post('/api/leads/inbound', async (req: Request, res: Response) => {
+  // CORS headers pour autoriser les requêtes depuis Shopify et autres domaines externes
+  res.set({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  });
   try {
     const {
       firstName,

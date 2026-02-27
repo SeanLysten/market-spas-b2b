@@ -1,0 +1,120 @@
+{
+  "query": "SELECT id, firstName, lastName, email, phone, postalCode, source, status, createdAt FROM leads ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, firstName, lastName, email, phone, postalCode, source, status, createdAt FROM leads ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "180116",
+      "firstName": "Franck",
+      "lastName": "Mazïller",
+      "email": "franckmaziller@hotmail.com",
+      "phone": "+33780097826",
+      "postalCode": "",
+      "source": "META_ADS",
+      "status": "NEW",
+      "createdAt": "2026-02-27 15:37:11"
+    },
+    {
+      "id": "180115",
+      "firstName": "Albatre",
+      "lastName": "Piscines",
+      "email": "albatre.piscines@outlook.fr",
+      "phone": "+33661188461",
+      "postalCode": "",
+      "source": "META_ADS",
+      "status": "NEW",
+      "createdAt": "2026-02-27 15:37:11"
+    },
+    {
+      "id": "180114",
+      "firstName": "Sauveur",
+      "lastName": "Calassi",
+      "email": "Calassi.sauveur@wanadoo.fr",
+      "phone": "+33608480400",
+      "postalCode": "",
+      "source": "META_ADS",
+      "status": "NEW",
+      "createdAt": "2026-02-27 15:37:11"
+    },
+    {
+      "id": "180113",
+      "firstName": "Hendel",
+      "lastName": "",
+      "email": "hmsystemepolyester@gmail.com",
+      "phone": "+33695319201",
+      "postalCode": "",
+      "source": "META_ADS",
+      "status": "NEW",
+      "createdAt": "2026-02-27 15:37:11"
+    },
+    {
+      "id": "180112",
+      "firstName": "Presta",
+      "lastName": "Agriviti",
+      "email": "cagtay.ercan@gmail.com",
+      "phone": "+33765170566",
+      "postalCode": "",
+      "source": "META_ADS",
+      "status": "NEW",
+      "createdAt": "2026-02-27 15:37:11"
+    },
+    {
+      "id": "180111",
+      "firstName": "Deven",
+      "lastName": "Beautour",
+      "email": "dbeautour@gmail.com",
+      "phone": "+33672698284",
+      "postalCode": "",
+      "source": "META_ADS",
+      "status": "NEW",
+      "createdAt": "2026-02-27 15:37:11"
+    },
+    {
+      "id": "180110",
+      "firstName": "Philippe",
+      "lastName": "Gangloff",
+      "email": "info.tpa67@gmail.com",
+      "phone": "+33620502399",
+      "postalCode": "",
+      "source": "META_ADS",
+      "status": "NEW",
+      "createdAt": "2026-02-27 15:37:11"
+    },
+    {
+      "id": "180109",
+      "firstName": "William",
+      "lastName": "Humbert",
+      "email": "williamhumbert@orange.fr",
+      "phone": "+33680685809",
+      "postalCode": "",
+      "source": "META_ADS",
+      "status": "NEW",
+      "createdAt": "2026-02-27 15:37:11"
+    },
+    {
+      "id": "180108",
+      "firstName": "Mathieu",
+      "lastName": "Conturla",
+      "email": "mcbat03500@gmail.com",
+      "phone": "+33618401650",
+      "postalCode": "",
+      "source": "META_ADS",
+      "status": "NEW",
+      "createdAt": "2026-02-27 15:37:11"
+    },
+    {
+      "id": "180107",
+      "firstName": "Jean",
+      "lastName": "Michel Ollier",
+      "email": "jeanmichel.ollier82@gmail.com",
+      "phone": "+33787005756",
+      "postalCode": "",
+      "source": "META_ADS",
+      "status": "NEW",
+      "createdAt": "2026-02-27 15:37:11"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\temail\tphone\tpostalCode\tsource\tstatus\tcreatedAt\n180116\tFranck\tMazïller\tfranckmaziller@hotmail.com\t+33780097826\t\tMETA_ADS\tNEW\t2026-02-27 15:37:11\n180115\tAlbatre\tPiscines\talbatre.piscines@outlook.fr\t+33661188461\t\tMETA_ADS\tNEW\t2026-02-27 15:37:11\n180114\tSauveur\tCalassi\tCalassi.sauveur@wanadoo.fr\t+33608480400\t\tMETA_ADS\tNEW\t2026-02-27 15:37:11\n180113\tHendel\t\thmsystemepolyester@gmail.com\t+33695319201\t\tMETA_ADS\tNEW\t2026-02-27 15:37:11\n180112\tPresta\tAgriviti\tcagtay.ercan@gmail.com\t+33765170566\t\tMETA_ADS\tNEW\t2026-02-27 15:37:11\n180111\tDeven\tBeautour\tdbeautour@gmail.com\t+33672698284\t\tMETA_ADS\tNEW\t2026-02-27 15:37:11\n180110\tPhilippe\tGangloff\tinfo.tpa67@gmail.com\t+33620502399\t\tMETA_ADS\tNEW\t2026-02-27 15:37:11\n180109\tWilliam\tHumbert\twilliamhumbert@orange.fr\t+33680685809\t\tMETA_ADS\tNEW\t2026-02-27 15:37:11\n180108\tMathieu\tConturla\tmcbat03500@gmail.com\t+33618401650\t\tMETA_ADS\tNEW\t2026-02-27 15:37:11\n180107\tJean\tMichel Ollier\tjeanmichel.ollier82@gmail.com\t+33787005756\t\tMETA_ADS\tNEW\t2026-02-27 15:37:11\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

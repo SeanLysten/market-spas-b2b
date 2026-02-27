@@ -235,6 +235,11 @@ async function startServer() {
     import("../jobs/processIncomingStock").then(({ startIncomingStockJob }) => {
       startIncomingStockJob();
     }).catch(console.error);
+
+    // Démarrer la synchronisation automatique des leads Meta (toutes les 60 secondes)
+    import("../jobs/syncMetaLeads").then(({ startMetaLeadsSyncJob }) => {
+      startMetaLeadsSyncJob();
+    }).catch(console.error);
   });
 }
 
