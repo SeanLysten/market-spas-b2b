@@ -374,40 +374,51 @@ export async function findBestPartnerForLead(params: {
       }
     }
 
-    // 2. Correspondance par département (2 premiers chiffres, France)
+    // 2. Correspondance par département FR (mapping statique)
     if (postalCode && countryCode === 'FR' && postalCode.length >= 2) {
       const dept = postalCode.substring(0, 2);
+      if (DEPT_TO_PARTNER_ID[dept]) {
+        return { partnerId: DEPT_TO_PARTNER_ID[dept], reason: `dept_${dept}` };
+      }
+      // Fallback DB si le département n'est pas dans le mapping
       const [rows] = await conn.execute<mysql.RowDataPacket[]>(
         'SELECT id FROM partners WHERE addressCountry = ? AND status = ? AND addressPostalCode LIKE ? LIMIT 1',
         ['FR', 'APPROVED', `${dept}%`]
       );
       if (rows.length > 0) {
-        return { partnerId: rows[0].id, reason: `department_match_${dept}` };
+        return { partnerId: rows[0].id, reason: `dept_db_${dept}` };
       }
     }
 
-    // 3. Correspondance par région française
-    if (postalCode && countryCode === 'FR') {
-      const region = getRegionFromPostalCode(postalCode);
-      if (region) {
-        const [rows] = await conn.execute<mysql.RowDataPacket[]>(
-          'SELECT id FROM partners WHERE addressCountry = ? AND status = ? AND addressRegion LIKE ? LIMIT 1',
-          ['FR', 'APPROVED', `%${region}%`]
-        );
-        if (rows.length > 0) {
-          return { partnerId: rows[0].id, reason: `region_match_${region}` };
-        }
+    // 3. Correspondance par province BE (mapping statique)
+    if (postalCode && countryCode === 'BE' && postalCode.length >= 2) {
+      const prefix = postalCode.substring(0, 2);
+      if (BE_PREFIX_TO_PARTNER_ID[prefix]) {
+        return { partnerId: BE_PREFIX_TO_PARTNER_ID[prefix], reason: `be_province_${prefix}` };
       }
     }
 
-    // 4. Correspondance par pays
+    // 4. Correspondance par pays (fallback)
+    if (countryCode === 'FR') {
+      return { partnerId: 60002, reason: 'country_fallback_FR' }; // Fab'Elec
+    }
+    if (countryCode === 'BE') {
+      return { partnerId: 60009, reason: 'country_fallback_BE' }; // Market Spas Bruxelles
+    }
+    if (countryCode === 'LU') {
+      return { partnerId: 60015, reason: 'country_LU' }; // SaniDesign
+    }
+    if (countryCode === 'ES') {
+      return { partnerId: 60001, reason: 'country_ES' }; // Market Spas Palmones
+    }
+    // Fallback DB générique
     if (countryCode) {
       const [rows] = await conn.execute<mysql.RowDataPacket[]>(
         'SELECT id FROM partners WHERE addressCountry = ? AND status = ? LIMIT 1',
         [countryCode, 'APPROVED']
       );
       if (rows.length > 0) {
-        return { partnerId: rows[0].id, reason: `country_match_${countryCode}` };
+        return { partnerId: rows[0].id, reason: `country_db_${countryCode}` };
       }
     }
 
@@ -419,6 +430,72 @@ export async function findBestPartnerForLead(params: {
     if (conn) await conn.end();
   }
 }
+
+// Mapping département FR → partenaire (ID)
+const DEPT_TO_PARTNER_ID: Record<string, number> = {
+  // Normandie
+  '14': 60002, '27': 60002, '50': 60002, '61': 60002, '76': 60004,
+  // Hauts-de-France
+  '59': 60007, '60': 60008, '62': 60007, '80': 60006, '02': 60006,
+  // Nouvelle-Aquitaine
+  '16': 60003, '17': 60003, '19': 60005, '23': 60005, '24': 60003,
+  '33': 60003, '40': 60003, '47': 60003, '64': 60003, '79': 60003,
+  '86': 60003, '87': 60005,
+  // Auvergne-Rhône-Alpes
+  '01': 60010, '03': 60010, '07': 60010, '15': 60010, '26': 60010,
+  '38': 60012, '42': 60010, '43': 60010, '63': 60010, '69': 60010,
+  '73': 60010, '74': 60010,
+  // Bourgogne-Franche-Comté
+  '21': 60011, '25': 60014, '39': 60011, '58': 60011, '70': 60014,
+  '71': 60011, '89': 60011, '90': 60014,
+  // Grand Est
+  '08': 60016, '10': 60016, '51': 60016, '52': 60016, '54': 60016,
+  '55': 60016, '57': 60016, '67': 60016, '68': 60016, '88': 60016,
+  // Île-de-France
+  '75': 60008, '77': 60008, '78': 60008, '91': 60008, '92': 60008,
+  '93': 60008, '94': 60008, '95': 60008,
+  // Bretagne
+  '22': 60002, '29': 60002, '35': 60002, '56': 60002,
+  // Pays de la Loire
+  '44': 60002, '49': 60002, '53': 60002, '72': 60002, '85': 60002,
+  // Centre-Val de Loire
+  '18': 60011, '28': 60008, '36': 60011, '37': 60011, '41': 60011, '45': 60008,
+  // PACA
+  '04': 60012, '05': 60012, '06': 60012, '13': 60012, '83': 60012, '84': 60012,
+  // Occitanie
+  '09': 60003, '11': 60003, '12': 60003, '30': 60012, '31': 60003,
+  '32': 60003, '34': 60003, '46': 60003, '48': 60003, '65': 60003,
+  '66': 60003, '81': 60003, '82': 60003,
+};
+
+// Mapping province BE (2 premiers chiffres CP) → partenaire
+const BE_PREFIX_TO_PARTNER_ID: Record<string, number> = {
+  // Bruxelles + Brabant (10-19)
+  '10': 60009, '11': 60009, '12': 60009, '13': 60009, '14': 60009,
+  '15': 60009, '16': 60009, '17': 60009, '18': 60009, '19': 60009,
+  // Anvers (20-29)
+  '20': 60009, '21': 60009, '22': 60009, '23': 60009, '24': 60009,
+  '25': 60009, '26': 60009, '27': 60009, '28': 60009, '29': 60009,
+  // Limbourg (30-39)
+  '30': 60009, '31': 60009, '32': 60009, '33': 60009, '34': 60009,
+  '35': 60009, '36': 60009, '37': 60009, '38': 60009, '39': 60009,
+  // Liège (40-49)
+  '40': 60013, '41': 60013, '42': 60013, '43': 60013, '44': 60013,
+  '45': 60013, '46': 60013, '47': 60013, '48': 60013, '49': 60013,
+  // Namur (50-59)
+  '50': 60013, '51': 60013, '52': 60013, '53': 60013, '54': 60013,
+  '55': 60013, '56': 60013, '57': 60013, '58': 60013, '59': 60013,
+  // Hainaut + Luxembourg belge (60-79)
+  '60': 60009, '61': 60009, '62': 60009, '63': 60009, '64': 60009,
+  '65': 60009, '66': 60009, '67': 60009, '68': 60009, '69': 60009,
+  '70': 60009, '71': 60009, '72': 60009, '73': 60009, '74': 60009,
+  '75': 60009, '76': 60009, '77': 60009, '78': 60009, '79': 60009,
+  // Flandre (80-99)
+  '80': 60009, '81': 60009, '82': 60009, '83': 60009, '84': 60009,
+  '85': 60009, '86': 60009, '87': 60009, '88': 60009, '89': 60009,
+  '90': 60009, '91': 60009, '92': 60009, '93': 60009, '94': 60009,
+  '95': 60009, '96': 60009, '97': 60009, '98': 60009, '99': 60009,
+};
 
 function normalizeCountry(country?: string): string | null {
   if (!country) return null;
