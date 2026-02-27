@@ -1948,3 +1948,13 @@
 - [x] Onglet "Tickets clients" dans AdminAfterSales avec compteur de nouveaux tickets
 - [x] Interface de gestion des tickets SAV clients (statut, notes internes)
 - [x] Formulaire Shopify mis à jour avec envoi direct à l'API Market Spas
+
+## Correction attribution pays des leads Meta (session 2026-02-27)
+- [x] Prioriser le préfixe téléphonique (+33=FR, +32=BE) pour déterminer le pays
+- [x] Utiliser les réponses du formulaire Meta (PAYS=FR) en priorité sur la localisation Meta
+- [x] Corriger createLeadFromMeta pour extraire post_code et pays des réponses formulaire
+- [x] Corriger distributeLeadToPartner pour enrichir CP et pays depuis customFields
+- [x] Corriger syncMetaLeads.ts pour extraire les bons champs et assigner automatiquement
+- [x] Ajouter resolveCountryFromPhone dans lead-routing.ts
+- [x] Réassigner tous les leads en base (160 pays corrigés, 227 CP extraits, 220 réassignés)
+- [x] 547 leads : 405 France, 129 Belgique, 12 Luxembourg, 1 Pays-Bas — tous assignés

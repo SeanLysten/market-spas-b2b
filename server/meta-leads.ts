@@ -67,6 +67,49 @@ const META_CONFIG = {
 };
 
 // ============================================
+// COUNTRY RESOLUTION
+// ============================================
+
+/**
+ * Détermine le pays réel d'un lead en utilisant plusieurs sources de vérité.
+ * Priorité : réponse formulaire > préfixe téléphonique > fallback
+ * 
+ * Le champ "country" de Meta est souvent incorrect (ex: "Belgium" pour des leads français)
+ * car il reflète le pays de la page Facebook, pas celui du lead.
+ */
+export function resolveCountry(formCountry: string, phone: string): string {
+  // 1. Réponse explicite du formulaire (PAYS = FR, BE, etc.)
+  if (formCountry) {
+    const fc = formCountry.toLowerCase().trim();
+    if (fc === 'fr' || fc === 'france') return 'France';
+    if (fc === 'be' || fc === 'belgique' || fc === 'belgium' || fc === 'belgie') return 'Belgium';
+    if (fc === 'lu' || fc === 'luxembourg') return 'Luxembourg';
+    if (fc === 'de' || fc === 'allemagne' || fc === 'germany' || fc === 'deutschland') return 'Germany';
+    if (fc === 'nl' || fc === 'pays-bas' || fc === 'netherlands' || fc === 'nederland') return 'Netherlands';
+    if (fc === 'es' || fc === 'espagne' || fc === 'spain' || fc === 'españa') return 'Spain';
+    if (fc === 'ch' || fc === 'suisse' || fc === 'switzerland' || fc === 'schweiz') return 'Switzerland';
+    // Si la réponse est déjà un nom de pays complet
+    if (fc.length > 2) return formCountry;
+  }
+
+  // 2. Préfixe téléphonique
+  const cleanPhone = (phone || '').replace(/\s/g, '');
+  if (cleanPhone.startsWith('+33') || cleanPhone.startsWith('0033')) return 'France';
+  if (cleanPhone.startsWith('+32') || cleanPhone.startsWith('0032')) return 'Belgium';
+  if (cleanPhone.startsWith('+352')) return 'Luxembourg';
+  if (cleanPhone.startsWith('+49') || cleanPhone.startsWith('0049')) return 'Germany';
+  if (cleanPhone.startsWith('+31') || cleanPhone.startsWith('0031')) return 'Netherlands';
+  if (cleanPhone.startsWith('+34') || cleanPhone.startsWith('0034')) return 'Spain';
+  if (cleanPhone.startsWith('+41') || cleanPhone.startsWith('0041')) return 'Switzerland';
+  if (cleanPhone.startsWith('+39')) return 'Italy';
+  if (cleanPhone.startsWith('+44')) return 'United Kingdom';
+  if (cleanPhone.startsWith('+351')) return 'Portugal';
+
+  // 3. Aucune info fiable → retourner vide (sera géré par le routing)
+  return '';
+}
+
+// ============================================
 // PARTNER LEAD DETECTION
 // ============================================
 
@@ -499,15 +542,21 @@ async function createLeadFromMeta(
   const lastName = fields.last_name || fields.nom || fields.lastname || "";
   const email = fields.email || "";
   const phone = fields.phone_number || fields.phone || fields.telephone || "";
-  const postalCode = fields.postal_code || fields.zip || fields.code_postal || "";
+  const postalCode = fields.post_code || fields.postal_code || fields.zip || fields.code_postal || fields.postcode || "";
   const city = fields.city || fields.ville || "";
-  const productInterest = fields.product_interest || fields.produit || fields.interest || "";
+  const productInterest = fields.product_interest || fields.produit || fields.interest || fields["que_recherchez-vous_?"] || "";
   const budget = fields.budget || "";
   const timeline = fields.timeline || fields.delai || "";
   const message = fields.message || fields.comments || "";
 
+  // Déterminer le vrai pays : réponse formulaire > préfixe téléphonique > fallback
+  const formCountry = fields.pays || fields.country || fields.land || "";
+  const realCountry = resolveCountry(formCountry, phone);
+
   // Stocker les champs personnalisés
   const customFields = JSON.stringify(fields);
+
+  console.log(`[Meta] Lead parsed: CP=${postalCode}, formCountry=${formCountry}, phone=${phone}, resolvedCountry=${realCountry}`);
 
   const [result] = await db.insert(leads).values({
     firstName,
@@ -516,6 +565,7 @@ async function createLeadFromMeta(
     phone,
     postalCode,
     city,
+    country: realCountry,
     source: "META_ADS",
     status: "NEW",
     metaLeadgenId: leadData.id,
@@ -539,8 +589,9 @@ async function createLeadFromMeta(
 // ============================================
 
 /**
- * Distribue un lead au partenaire approprié selon le code postal
- * Utilise le nouveau système de territoires par régions
+ * Distribue un lead au partenaire approprié selon le code postal et le pays.
+ * Utilise le nouveau système de territoires par régions.
+ * Enrichit les données du lead si nécessaire (CP et pays depuis customFields/téléphone).
  */
 export async function distributeLeadToPartner(leadId: number): Promise<void> {
   const db = await getDb();
@@ -548,15 +599,55 @@ export async function distributeLeadToPartner(leadId: number): Promise<void> {
 
   // Récupérer le lead
   const [lead] = await db.select().from(leads).where(eq(leads.id, leadId));
-  
-  if (!lead || !lead.postalCode) {
-    console.log(`[Lead] Lead ${leadId} sans code postal - non distribué`);
+  if (!lead) return;
+
+  // Enrichir le lead : extraire CP et pays des customFields si manquants
+  let postalCode = lead.postalCode || '';
+  let country = lead.country || '';
+  let needsUpdate = false;
+
+  // Extraire les données des customFields
+  let customData: Record<string, string> = {};
+  try {
+    if (lead.customFields) customData = JSON.parse(lead.customFields as string);
+  } catch (e) { /* ignore */ }
+
+  // Extraire le code postal des customFields si vide
+  if (!postalCode) {
+    postalCode = customData.post_code || customData.postal_code || customData.zip || customData.code_postal || customData.postcode || '';
+    if (postalCode) {
+      needsUpdate = true;
+      console.log(`[Lead] Lead ${leadId}: CP extrait des customFields: ${postalCode}`);
+    }
+  }
+
+  // Résoudre le pays via formulaire > préfixe téléphonique
+  const formCountry = customData.pays || customData.country || customData.land || '';
+  const resolvedCountry = resolveCountry(formCountry, lead.phone || '');
+  if (resolvedCountry && resolvedCountry !== country) {
+    country = resolvedCountry;
+    needsUpdate = true;
+    console.log(`[Lead] Lead ${leadId}: Pays résolu: ${country} (form=${formCountry}, phone=${lead.phone})`);
+  }
+
+  // Mettre à jour le lead si des données ont été enrichies
+  if (needsUpdate) {
+    const updateData: Record<string, any> = {};
+    if (postalCode && postalCode !== lead.postalCode) updateData.postalCode = postalCode;
+    if (country && country !== lead.country) updateData.country = country;
+    if (Object.keys(updateData).length > 0) {
+      await db.update(leads).set(updateData).where(eq(leads.id, leadId));
+    }
+  }
+
+  if (!postalCode && !country) {
+    console.log(`[Lead] Lead ${leadId} sans code postal ni pays - non distribué`);
     return;
   }
 
   // Utiliser le nouveau système de territoires
   const { findBestPartnerForPostalCode } = await import("./territories-db");
-  const partnerMatch = await findBestPartnerForPostalCode(lead.postalCode, lead.country || undefined);
+  const partnerMatch = await findBestPartnerForPostalCode(postalCode, country || undefined);
 
   if (partnerMatch) {
     // Assigner le lead au partenaire

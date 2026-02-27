@@ -350,14 +350,26 @@ export async function findBestPartnerForLead(params: {
   postalCode?: string;
   city?: string;
   country?: string;
-}): Promise<{ partnerId: number | null; reason: string }> {
+  phone?: string;
+}): Promise<{ partnerId: number | null; partnerName?: string; reason: string }> {
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) return { partnerId: null, reason: 'database_unavailable' };
 
-  const { postalCode, city, country } = params;
-  const countryCode = normalizeCountry(country);
+  const { postalCode, city, phone } = params;
+  let { country } = params;
 
-  console.log(`[LeadRouting] Routing lead: CP=${postalCode} Country=${country} → CountryCode=${countryCode}`);
+  // Résoudre le pays via préfixe téléphonique si le pays est vide ou suspect
+  if (phone) {
+    const cleanPhone = phone.replace(/\s/g, '');
+    const phoneCountry = resolveCountryFromPhone(cleanPhone);
+    if (phoneCountry && (!country || normalizeCountry(country) !== phoneCountry)) {
+      console.log(`[LeadRouting] Pays corrigé via téléphone: ${country} → ${phoneCountry} (phone: ${phone})`);
+      country = phoneCountry;
+    }
+  }
+
+  const countryCode = normalizeCountry(country);
+  console.log(`[LeadRouting] Routing lead: CP=${postalCode} Country=${country} Phone=${phone} → CountryCode=${countryCode}`);
 
   let conn: mysql.Connection | null = null;
   try {
@@ -496,6 +508,26 @@ const BE_PREFIX_TO_PARTNER_ID: Record<string, number> = {
   '90': 60009, '91': 60009, '92': 60009, '93': 60009, '94': 60009,
   '95': 60009, '96': 60009, '97': 60009, '98': 60009, '99': 60009,
 };
+
+/**
+ * Résout le pays à partir du préfixe téléphonique.
+ * Retourne le code pays ISO 2 lettres ou null.
+ */
+function resolveCountryFromPhone(phone: string): string | null {
+  if (!phone) return null;
+  const p = phone.replace(/\s/g, '');
+  if (p.startsWith('+33') || p.startsWith('0033')) return 'FR';
+  if (p.startsWith('+32') || p.startsWith('0032')) return 'BE';
+  if (p.startsWith('+352')) return 'LU';
+  if (p.startsWith('+49') || p.startsWith('0049')) return 'DE';
+  if (p.startsWith('+31') || p.startsWith('0031')) return 'NL';
+  if (p.startsWith('+34') || p.startsWith('0034')) return 'ES';
+  if (p.startsWith('+41') || p.startsWith('0041')) return 'CH';
+  if (p.startsWith('+39')) return 'IT';
+  if (p.startsWith('+44')) return 'GB';
+  if (p.startsWith('+351')) return 'PT';
+  return null;
+}
 
 function normalizeCountry(country?: string): string | null {
   if (!country) return null;

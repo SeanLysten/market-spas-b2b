@@ -1,5 +1,7 @@
 import * as metaOAuth from "../meta-oauth";
 import { getConnectedMetaAdAccounts } from "../db";
+import { resolveCountry } from "../meta-leads";
+import { findBestPartnerForLead } from "../lead-routing";
 import mysql2 from "mysql2/promise";
 
 let isSyncing = false;
@@ -7,6 +9,7 @@ let isSyncing = false;
 /**
  * Synchronise les leads Meta depuis les formulaires Lead Ads
  * Récupère uniquement les leads plus récents que le dernier lead connu
+ * Corrige le pays via préfixe téléphonique et réponse formulaire
  */
 export async function runMetaLeadsSync() {
   if (isSyncing) {
@@ -75,24 +78,51 @@ export async function runMetaLeadsSync() {
         const lastName = fields.last_name || fields.full_name?.split(" ").slice(1).join(" ") || "";
         const email = fields.email || "";
         const phone = fields.phone_number || fields.phone || "";
-        const postalCode = fields.postal_code || fields.zip || fields.code_postal || "";
+        // Extraire le CP depuis TOUS les noms de champs possibles
+        const postalCode = fields.post_code || fields.postal_code || fields.zip || fields.code_postal || fields.postcode || "";
         const city = fields.city || fields.ville || "";
         const message = fields.message || fields.comments || "";
-        const productInterest = fields.product_interest || fields.produit || "";
+        const productInterest = fields.product_interest || fields.produit || fields["que_recherchez-vous_?"] || "";
 
-        await conn.execute(
-          `INSERT INTO leads (firstName, lastName, email, phone, postalCode, city, source, status, metaLeadgenId, metaFormId, productInterest, message, customFields, receivedAt, createdAt, updatedAt)
-           VALUES (?, ?, ?, ?, ?, ?, 'META_ADS', 'NEW', ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        // Résoudre le pays : réponse formulaire > préfixe téléphonique
+        const formCountry = fields.pays || fields.country || fields.land || "";
+        const country = resolveCountry(formCountry, phone);
+
+        console.log(`[MetaLeadsSync] Lead: ${firstName} ${lastName}, CP=${postalCode}, formCountry=${formCountry}, phone=${phone}, resolvedCountry=${country}`);
+
+        // Insérer le lead avec le bon pays et CP
+        const [insertResult] = await conn.execute(
+          `INSERT INTO leads (firstName, lastName, email, phone, postalCode, city, country, source, status, metaLeadgenId, metaFormId, productInterest, message, customFields, receivedAt, createdAt, updatedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'META_ADS', 'NEW', ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
           [
-            firstName, lastName, email, phone, postalCode, city,
+            firstName, lastName, email, phone, postalCode, city, country,
             leadData.id, form.id, productInterest, message,
             JSON.stringify(fields),
             new Date(leadData.created_time)
           ]
-        );
+        ) as any;
+
+        // Assigner au partenaire via le routing
+        const newLeadId = insertResult.insertId;
+        try {
+          const partner = await findBestPartnerForLead({
+            postalCode,
+            country,
+            phone,
+          });
+          if (partner) {
+            await conn.execute(
+              'UPDATE leads SET assignedPartnerId = ?, assignedAt = NOW(), assignmentReason = ?, status = "ASSIGNED" WHERE id = ?',
+              [partner.partnerId, partner.reason, newLeadId]
+            );
+            console.log(`[MetaLeadsSync] Lead ${newLeadId} assigné à ${partner.partnerName} (${partner.reason})`);
+          }
+        } catch (routingErr) {
+          console.error(`[MetaLeadsSync] Erreur routing lead ${newLeadId}:`, routingErr);
+        }
 
         imported++;
-        console.log(`[MetaLeadsSync] ✓ Nouveau lead importé: ${firstName} ${lastName} <${email}>`);
+        console.log(`[MetaLeadsSync] ✓ Nouveau lead importé: ${firstName} ${lastName} <${email}> (${country}, CP: ${postalCode})`);
       }
     }
 
