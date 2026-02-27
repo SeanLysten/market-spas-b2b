@@ -2,20 +2,40 @@
  * Routes pour la réception des leads entrants :
  * 1. POST /api/leads/inbound       — Formulaire Shopify (JSON direct)
  * 2. POST /api/webhooks/email-lead — Webhook Resend pour emails entrants
+ * 3. GET  /api/leads/inbound/ping  — Vérification de santé
  */
 import { Router, Request, Response } from 'express';
 import { createLead } from '../db';
-import { findBestPartnerForLead, parseEmailForLead } from '../lead-routing';
-import { getDb } from '../db';
-import { leads } from '../../drizzle/schema';
-import { eq } from 'drizzle-orm';
+import {
+  findBestPartnerForLead,
+  parseEmailForLead,
+  findExistingLead,
+  enrichExistingLead,
+} from '../lead-routing';
+import mysql from 'mysql2/promise';
 
 export const inboundLeadsRouter = Router();
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+async function updateLeadAssignment(leadId: number, reason: string, partnerId: number | null) {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return;
+  let conn: mysql.Connection | null = null;
+  try {
+    conn = await mysql.createConnection(dbUrl);
+    await conn.execute(
+      'UPDATE leads SET assignmentReason = ?, assignedPartnerId = ?, assignedAt = ? WHERE id = ?',
+      [reason, partnerId, partnerId ? new Date() : null, leadId]
+    );
+  } catch (err) {
+    console.error('[InboundLead] Error updating assignment:', err);
+  } finally {
+    if (conn) await conn.end();
+  }
+}
+
 // ─── 1. Endpoint formulaire Shopify ──────────────────────────────────────────
-// Le formulaire Shopify envoie un POST JSON à cette URL
-// Champs attendus : firstName, lastName, email, phone, postalCode, city, country,
-//                  productInterest, budget, message
 inboundLeadsRouter.post('/api/leads/inbound', async (req: Request, res: Response) => {
   try {
     const {
@@ -39,10 +59,24 @@ inboundLeadsRouter.post('/api/leads/inbound', async (req: Request, res: Response
 
     console.log(`[InboundLead] Nouveau lead Shopify: ${firstName} ${lastName} <${email}> CP:${postalCode} Pays:${country}`);
 
-    // Attribution automatique au partenaire
+    // ── Anti-doublon ──────────────────────────────────────────────────────────
+    const existingLeadId = await findExistingLead({ email, phone });
+    if (existingLeadId) {
+      // Enrichir le lead existant sans le dupliquer
+      await enrichExistingLead(existingLeadId, { postalCode, city, country, productInterest, budget, message });
+      console.log(`[InboundLead] Doublon détecté → enrichissement du lead #${existingLeadId}`);
+      return res.status(200).json({
+        success: true,
+        duplicate: true,
+        existingLeadId,
+        message: 'Lead already exists, data enriched',
+      });
+    }
+
+    // ── Attribution automatique au partenaire ─────────────────────────────────
     const { partnerId, reason } = await findBestPartnerForLead({ postalCode, city, country });
 
-    // Créer le lead
+    // ── Créer le lead ─────────────────────────────────────────────────────────
     const result = await createLead({
       firstName,
       lastName,
@@ -58,14 +92,8 @@ inboundLeadsRouter.post('/api/leads/inbound', async (req: Request, res: Response
       assignedPartnerId: partnerId || undefined,
     });
 
-    // Mettre à jour la raison d'attribution si un partenaire a été trouvé
-    if (partnerId && result.insertId) {
-      const db = await getDb();
-      if (db) {
-        await db.update(leads)
-          .set({ assignmentReason: reason, assignedAt: new Date() })
-          .where(eq(leads.id, result.insertId));
-      }
+    if (result.insertId) {
+      await updateLeadAssignment(result.insertId, reason, partnerId);
     }
 
     console.log(`[InboundLead] Lead créé ID:${result.insertId} → Partenaire:${partnerId || 'non assigné'} (${reason})`);
@@ -83,46 +111,86 @@ inboundLeadsRouter.post('/api/leads/inbound', async (req: Request, res: Response
 });
 
 // ─── 2. Webhook Resend — emails entrants sur info@marketspas.com ──────────────
-// Resend envoie un POST quand un email est reçu sur le domaine
-// Documentation : https://resend.com/docs/dashboard/emails/inbound
 inboundLeadsRouter.post('/api/webhooks/email-lead', async (req: Request, res: Response) => {
   try {
     const payload = req.body;
 
     // Format Resend inbound email webhook
-    const fromEmail: string = payload?.from || payload?.sender || '';
+    const fromEmail: string = (payload?.from || payload?.sender || '').toLowerCase();
     const subject: string = payload?.subject || '';
     const body: string = payload?.text || payload?.html || payload?.body || '';
-    const toEmail: string = payload?.to || '';
+    const toEmail: string = (payload?.to || '').toLowerCase();
 
-    console.log(`[EmailLead] Email reçu de: ${fromEmail} → ${toEmail} | Sujet: ${subject}`);
+    console.log(`[EmailLead] Email reçu de: ${fromEmail} → ${toEmail} | Sujet: "${subject}"`);
+
+    // ── Filtres préliminaires ─────────────────────────────────────────────────
 
     // Ignorer les emails qui ne sont pas destinés à info@marketspas.com
-    if (toEmail && !toEmail.includes('info@marketspas.com') && !toEmail.includes('france@marketspas.com')) {
+    if (toEmail && !toEmail.includes('info@marketspas.com') && !toEmail.includes('info@marketspas.pro')) {
       return res.status(200).json({ ignored: true, reason: 'not_target_address' });
     }
 
     // Ignorer les emails internes (de nos propres domaines)
-    if (fromEmail.includes('@marketspas.com') || fromEmail.includes('@marketspas.pro') || fromEmail.includes('@spas-wellis.com')) {
-      return res.status(200).json({ ignored: true, reason: 'internal_email' });
+    if (
+      fromEmail.includes('@marketspas.com') ||
+      fromEmail.includes('@marketspas.pro') ||
+      fromEmail.includes('@spas-wellis.com') ||
+      fromEmail.includes('noreply') ||
+      fromEmail.includes('no-reply') ||
+      fromEmail.includes('donotreply') ||
+      fromEmail.includes('mailer-daemon') ||
+      fromEmail.includes('postmaster')
+    ) {
+      return res.status(200).json({ ignored: true, reason: 'internal_or_automated_email' });
     }
 
-    // Parser l'email pour détecter si c'est un lead
+    // ── Classification intelligente ───────────────────────────────────────────
     const parsed = parseEmailForLead(subject, body, fromEmail);
 
-    if (!parsed.isLeadEmail) {
-      console.log(`[EmailLead] Email ignoré (non-commercial): ${subject}`);
-      return res.status(200).json({ ignored: true, reason: 'not_a_lead' });
+    if (!parsed.isLead) {
+      console.log(`[EmailLead] Email ignoré — Catégorie: ${parsed.category} (${parsed.confidence}) | Sujet: "${subject}"`);
+      return res.status(200).json({
+        ignored: true,
+        reason: 'not_a_lead',
+        category: parsed.category,
+        confidence: parsed.confidence,
+      });
     }
 
-    // Attribution automatique
+    console.log(`[EmailLead] Lead détecté — Catégorie: ${parsed.category} (${parsed.confidence}) | De: ${fromEmail}`);
+
+    // ── Anti-doublon ──────────────────────────────────────────────────────────
+    const existingLeadId = await findExistingLead({ email: parsed.email, phone: parsed.phone });
+    if (existingLeadId) {
+      await enrichExistingLead(existingLeadId, {
+        postalCode: parsed.postalCode,
+        city: parsed.city,
+        country: parsed.country,
+        productInterest: parsed.productInterest,
+        budget: parsed.budget,
+        message: `[Email supplémentaire]\nDe: ${fromEmail}\nSujet: ${subject}\n\n${parsed.message}`,
+      });
+      console.log(`[EmailLead] Doublon détecté → enrichissement du lead #${existingLeadId}`);
+      return res.status(200).json({
+        success: true,
+        duplicate: true,
+        existingLeadId,
+        category: parsed.category,
+      });
+    }
+
+    // ── Attribution automatique ───────────────────────────────────────────────
     const { partnerId, reason } = await findBestPartnerForLead({
       postalCode: parsed.postalCode,
       city: parsed.city,
       country: parsed.country,
     });
 
-    // Créer le lead
+    // ── Créer le lead ─────────────────────────────────────────────────────────
+    const productInterest = parsed.category === 'LEAD_PARTENARIAT'
+      ? `[Demande de partenariat] ${parsed.productInterest || ''}`.trim()
+      : parsed.productInterest;
+
     const result = await createLead({
       firstName: parsed.firstName,
       lastName: parsed.lastName,
@@ -132,23 +200,14 @@ inboundLeadsRouter.post('/api/webhooks/email-lead', async (req: Request, res: Re
       city: parsed.city,
       country: parsed.country,
       source: 'EMAIL',
-      productInterest: parsed.productInterest,
+      productInterest,
       budget: parsed.budget,
-      message: `[Email reçu]\nDe: ${fromEmail}\nSujet: ${subject}\n\n${parsed.message}`,
+      message: `[Email reçu]\nDe: ${fromEmail}\nSujet: ${subject}\nCatégorie: ${parsed.category}\n\n${parsed.message}`,
       assignedPartnerId: partnerId || undefined,
     });
 
-    // Mettre à jour la raison d'attribution
     if (result.insertId) {
-      const db = await getDb();
-      if (db) {
-        await db.update(leads)
-          .set({
-            assignmentReason: reason,
-            assignedAt: partnerId ? new Date() : null,
-          })
-          .where(eq(leads.id, result.insertId));
-      }
+      await updateLeadAssignment(result.insertId, reason, partnerId);
     }
 
     console.log(`[EmailLead] Lead créé ID:${result.insertId} → Partenaire:${partnerId || 'non assigné'} (${reason})`);
@@ -156,7 +215,10 @@ inboundLeadsRouter.post('/api/webhooks/email-lead', async (req: Request, res: Re
     return res.status(200).json({
       success: true,
       leadId: result.insertId,
+      category: parsed.category,
+      confidence: parsed.confidence,
       assignedPartnerId: partnerId,
+      assignmentReason: reason,
     });
   } catch (error: any) {
     console.error('[EmailLead] Erreur:', error);

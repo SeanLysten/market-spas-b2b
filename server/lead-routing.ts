@@ -1,8 +1,346 @@
 /**
- * Lead Routing — Attribution automatique des leads aux partenaires
- * selon le code postal, la ville et le pays du lead.
+ * Lead Routing — Classification, filtrage et attribution automatique des leads
+ *
+ * Catégories d'emails :
+ *  - LEAD_VENTE       → demande de devis, intérêt pour un spa/jacuzzi → crée un lead
+ *  - LEAD_PARTENARIAT → demande de revendeur/partenariat              → crée un lead
+ *  - SAV              → service après-vente, panne, garantie           → ignoré
+ *  - SPAM             → démarchage, pub, newsletter, facture           → ignoré
+ *  - UNKNOWN          → inclassable                                    → ignoré
  */
 import mysql from 'mysql2/promise';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export type EmailCategory =
+  | 'LEAD_VENTE'
+  | 'LEAD_PARTENARIAT'
+  | 'SAV'
+  | 'SPAM'
+  | 'UNKNOWN';
+
+export interface ParsedEmail {
+  category: EmailCategory;
+  isLead: boolean;          // true uniquement pour LEAD_VENTE et LEAD_PARTENARIAT
+  confidence: 'HIGH' | 'MEDIUM' | 'LOW';
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
+  productInterest?: string;
+  budget?: string;
+  message?: string;
+  source: 'EMAIL' | 'WEBSITE';
+  productType?: 'VENTE' | 'PARTENARIAT';
+}
+
+// ─── Mots-clés par catégorie ──────────────────────────────────────────────────
+
+// Mots-clés POSITIFS → lead commercial (vente)
+const LEAD_VENTE_KEYWORDS = [
+  // Français
+  'devis', 'spa', 'jacuzzi', 'balnéo', 'balneo', 'hot tub', 'swim spa',
+  'spa de nage', 'prix', 'tarif', 'achat', 'acheter', 'commander',
+  'renseignement', 'information', 'intéressé', 'interesse', 'projet',
+  'installation', 'livraison', 'disponible', 'disponibilité', 'stock',
+  'modèle', 'modele', 'gamme', 'catalogue', 'brochure',
+  // Néerlandais
+  'offerte', 'prijs', 'kopen', 'aanvraag', 'spa', 'jacuzzi', 'zwembad',
+  'interesse', 'project', 'levering',
+  // Anglais
+  'quote', 'price', 'buy', 'purchase', 'interested', 'inquiry', 'enquiry',
+  'hot tub', 'swim spa', 'delivery', 'available',
+  // Espagnol
+  'presupuesto', 'precio', 'comprar', 'interesado', 'consulta',
+];
+
+// Mots-clés POSITIFS → lead partenariat
+const LEAD_PARTENARIAT_KEYWORDS = [
+  'partenariat', 'partnership', 'revendeur', 'revendeuse', 'reseller',
+  'distributeur', 'distributrice', 'dealer', 'franchise', 'franchisé',
+  'devenir partenaire', 'become partner', 'wederverkoper', 'verdeler',
+  'collaboration', 'représentant', 'agent commercial', 'grossiste',
+  'rejoindre', 'réseau', 'réseau market', 'market spas partenaire',
+];
+
+// Mots-clés NÉGATIFS → SAV (service après-vente)
+const SAV_KEYWORDS = [
+  'panne', 'défaut', 'défectueux', 'réparation', 'réparer', 'maintenance',
+  'entretien', 'problème', 'erreur', 'dysfonctionnement', 'garantie',
+  'sav', 'service après-vente', 'après-vente', 'retour', 'remboursement',
+  'rembourser', 'échange', 'rappel', 'recall', 'fuite', 'fissure',
+  'pompe', 'filtre', 'chauffage', 'chauffe', 'température', 'produit chimique',
+  'chlore', 'ph', 'brome', 'commande n°', 'commande #', 'facture n°',
+  'numéro de commande', 'mon spa', 'mon jacuzzi', 'notre spa',
+  'kapot', 'defect', 'reparatie', 'garantie', 'onderhoud',
+  'repair', 'broken', 'warranty', 'maintenance issue',
+];
+
+// Mots-clés NÉGATIFS → SPAM / démarchage
+const SPAM_KEYWORDS = [
+  // Démarchage commercial entrant
+  'référencement', 'seo', 'google ads', 'publicité', 'agence', 'marketing digital',
+  'création de site', 'site web', 'développement web', 'application mobile',
+  'logiciel', 'crm', 'erp', 'solution', 'plateforme', 'saas',
+  'audit', 'formation', 'coaching', 'consultant', 'prestataire',
+  'assurance', 'mutuelle', 'prévoyance', 'banque', 'financement',
+  'investissement', 'immobilier', 'recrutement', 'offre d\'emploi',
+  'candidature', 'cv', 'stage', 'alternance',
+  // Newsletters / automatiques
+  'unsubscribe', 'désabonner', 'newsletter', 'no-reply', 'noreply',
+  'notification', 'automated', 'automatique', 'do not reply',
+  // Factures / comptabilité
+  'facture', 'invoice', 'paiement reçu', 'payment received',
+  'relevé', 'statement', 'reçu', 'receipt',
+];
+
+// ─── Classification d'un email ────────────────────────────────────────────────
+
+/**
+ * Classifie un email entrant et détermine s'il s'agit d'un lead.
+ */
+export function classifyEmail(
+  subject: string,
+  body: string,
+  fromEmail: string
+): { category: EmailCategory; confidence: 'HIGH' | 'MEDIUM' | 'LOW'; productType?: 'VENTE' | 'PARTENARIAT' } {
+  const text = (subject + ' ' + body + ' ' + fromEmail).toLowerCase();
+
+  // ── 1. Détection SPAM en priorité ──────────────────────────────────────────
+  const spamScore = SPAM_KEYWORDS.filter(kw => text.includes(kw)).length;
+  if (spamScore >= 2) {
+    return { category: 'SPAM', confidence: 'HIGH' };
+  }
+  if (spamScore === 1) {
+    // Un seul mot-clé spam : vérifier si un mot-clé lead compense
+    const leadScore = LEAD_VENTE_KEYWORDS.filter(kw => text.includes(kw)).length;
+    if (leadScore === 0) {
+      return { category: 'SPAM', confidence: 'MEDIUM' };
+    }
+  }
+
+  // ── 2. Détection SAV ───────────────────────────────────────────────────────
+  const savScore = SAV_KEYWORDS.filter(kw => text.includes(kw)).length;
+  if (savScore >= 2) {
+    return { category: 'SAV', confidence: 'HIGH' };
+  }
+  if (savScore === 1) {
+    const leadScore = LEAD_VENTE_KEYWORDS.filter(kw => text.includes(kw)).length;
+    if (leadScore <= 1) {
+      return { category: 'SAV', confidence: 'MEDIUM' };
+    }
+  }
+
+  // ── 3. Détection PARTENARIAT ───────────────────────────────────────────────
+  const partnerScore = LEAD_PARTENARIAT_KEYWORDS.filter(kw => text.includes(kw)).length;
+  if (partnerScore >= 1) {
+    return {
+      category: 'LEAD_PARTENARIAT',
+      confidence: partnerScore >= 2 ? 'HIGH' : 'MEDIUM',
+      productType: 'PARTENARIAT',
+    };
+  }
+
+  // ── 4. Détection LEAD VENTE ────────────────────────────────────────────────
+  const venteScore = LEAD_VENTE_KEYWORDS.filter(kw => text.includes(kw)).length;
+  if (venteScore >= 3) {
+    return { category: 'LEAD_VENTE', confidence: 'HIGH', productType: 'VENTE' };
+  }
+  if (venteScore >= 1) {
+    return { category: 'LEAD_VENTE', confidence: 'MEDIUM', productType: 'VENTE' };
+  }
+
+  return { category: 'UNKNOWN', confidence: 'LOW' };
+}
+
+// ─── Déduplication ────────────────────────────────────────────────────────────
+
+/**
+ * Vérifie si un lead similaire existe déjà (même email ou téléphone dans les 60 jours).
+ * Retourne l'ID du lead existant ou null.
+ */
+export async function findExistingLead(params: {
+  email?: string;
+  phone?: string;
+}): Promise<number | null> {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return null;
+  if (!params.email && !params.phone) return null;
+
+  let conn: mysql.Connection | null = null;
+  try {
+    conn = await mysql.createConnection(dbUrl);
+
+    // Fenêtre de déduplication : 60 jours
+    const since = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+
+    if (params.email) {
+      const normalizedEmail = params.email.toLowerCase().trim();
+      const [rows] = await conn.execute<mysql.RowDataPacket[]>(
+        'SELECT id FROM leads WHERE LOWER(email) = ? AND createdAt >= ? ORDER BY createdAt DESC LIMIT 1',
+        [normalizedEmail, since]
+      );
+      if (rows.length > 0) {
+        console.log(`[LeadDedup] Doublon détecté par email: ${normalizedEmail} → lead #${rows[0].id}`);
+        return rows[0].id;
+      }
+    }
+
+    if (params.phone) {
+      // Normaliser le téléphone (supprimer espaces, tirets, points)
+      const normalizedPhone = params.phone.replace(/[\s\-\.()]/g, '');
+      const [rows] = await conn.execute<mysql.RowDataPacket[]>(
+        "SELECT id FROM leads WHERE REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '.', '') = ? AND createdAt >= ? ORDER BY createdAt DESC LIMIT 1",
+        [normalizedPhone, since]
+      );
+      if (rows.length > 0) {
+        console.log(`[LeadDedup] Doublon détecté par téléphone: ${normalizedPhone} → lead #${rows[0].id}`);
+        return rows[0].id;
+      }
+    }
+
+    return null;
+  } catch (err) {
+    console.error('[LeadDedup] Error:', err);
+    return null;
+  } finally {
+    if (conn) await conn.end();
+  }
+}
+
+/**
+ * Enrichit un lead existant avec de nouvelles informations (sans écraser les données existantes).
+ */
+export async function enrichExistingLead(leadId: number, newData: {
+  postalCode?: string;
+  city?: string;
+  country?: string;
+  productInterest?: string;
+  budget?: string;
+  message?: string;
+}): Promise<void> {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return;
+
+  let conn: mysql.Connection | null = null;
+  try {
+    conn = await mysql.createConnection(dbUrl);
+
+    // Construire la mise à jour : ne mettre à jour que les champs vides
+    const updates: string[] = ['updatedAt = NOW()'];
+    const values: any[] = [];
+
+    if (newData.postalCode) {
+      updates.push('postalCode = COALESCE(NULLIF(postalCode, ""), ?)');
+      values.push(newData.postalCode);
+    }
+    if (newData.city) {
+      updates.push('city = COALESCE(NULLIF(city, ""), ?)');
+      values.push(newData.city);
+    }
+    if (newData.country) {
+      updates.push('country = COALESCE(NULLIF(country, ""), ?)');
+      values.push(newData.country);
+    }
+    if (newData.productInterest) {
+      updates.push('productInterest = COALESCE(NULLIF(productInterest, ""), ?)');
+      values.push(newData.productInterest);
+    }
+    if (newData.budget) {
+      updates.push('budget = COALESCE(NULLIF(budget, ""), ?)');
+      values.push(newData.budget);
+    }
+    if (newData.message) {
+      // Ajouter le message en annexe (ne pas écraser)
+      updates.push('notes = CONCAT(COALESCE(notes, ""), "\n\n[Email supplémentaire reçu]\n", ?)');
+      values.push(newData.message.substring(0, 500));
+    }
+
+    values.push(leadId);
+    await conn.execute(
+      `UPDATE leads SET ${updates.join(', ')} WHERE id = ?`,
+      values
+    );
+
+    console.log(`[LeadDedup] Lead #${leadId} enrichi avec nouvelles données`);
+  } catch (err) {
+    console.error('[LeadDedup] Error enriching lead:', err);
+  } finally {
+    if (conn) await conn.end();
+  }
+}
+
+// ─── Parsing d'email ──────────────────────────────────────────────────────────
+
+/**
+ * Parse un email entrant pour en extraire les données structurées.
+ * Inclut la classification et la détection de doublon.
+ */
+export function parseEmailForLead(
+  subject: string,
+  body: string,
+  fromEmail: string
+): ParsedEmail {
+  const { category, confidence, productType } = classifyEmail(subject, body, fromEmail);
+  const isLead = category === 'LEAD_VENTE' || category === 'LEAD_PARTENARIAT';
+
+  if (!isLead) {
+    return {
+      category,
+      isLead: false,
+      confidence,
+      source: 'EMAIL',
+    };
+  }
+
+  // Extraction des champs depuis le corps de l'email
+  const extractField = (labels: string[]): string | undefined => {
+    for (const label of labels) {
+      const pattern = new RegExp(`${label}[:\\s]+([^\\n<]{2,80})`, 'i');
+      const match = body.match(pattern);
+      if (match) return match[1].trim().replace(/\s+/g, ' ');
+    }
+    return undefined;
+  };
+
+  // Code postal (4 ou 5 chiffres)
+  const cpMatch = body.match(/\b(\d{4,5})\b/);
+  const postalCode = cpMatch ? cpMatch[1] : undefined;
+
+  // Téléphone
+  const phoneMatch =
+    body.match(/(?:téléphone|phone|tel|tél|gsm|mobile)[:\s]*([+\d\s().\-]{8,20})/i) ||
+    body.match(/\b((?:\+32|0032|04|0[1-9])[\s.\-]?\d{2}[\s.\-]?\d{2}[\s.\-]?\d{2}[\s.\-]?\d{2})\b/) ||
+    body.match(/\b((?:\+33|0033|0)[1-9](?:[\s.\-]?\d{2}){4})\b/);
+  const phone = phoneMatch ? phoneMatch[1].trim() : undefined;
+
+  // Email (depuis le corps ou l'expéditeur)
+  const emailMatch = body.match(/\b([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})\b/);
+  const email = emailMatch ? emailMatch[1] : fromEmail;
+
+  return {
+    category,
+    isLead: true,
+    confidence,
+    source: 'EMAIL',
+    productType,
+    email,
+    phone,
+    postalCode,
+    city: extractField(['ville', 'city', 'stad', 'ciudad', 'ort']),
+    country: extractField(['pays', 'country', 'land', 'país']),
+    firstName: extractField(['prénom', 'prenom', 'first name', 'voornaam', 'nombre', 'vorname']),
+    lastName: extractField(['nom', 'last name', 'achternaam', 'apellido', 'nachname']),
+    productInterest: extractField(['projet', 'project', 'produit', 'product', 'type de spa', 'spa type']),
+    budget: extractField(['budget', 'montant', 'amount']),
+    message: body.substring(0, 1000),
+  };
+}
+
+// ─── Routing géographique ─────────────────────────────────────────────────────
 
 /**
  * Trouve le partenaire le plus approprié pour un lead
@@ -25,19 +363,18 @@ export async function findBestPartnerForLead(params: {
   try {
     conn = await mysql.createConnection(dbUrl);
 
-    // ── 1. Correspondance exacte par code postal ──────────────────────────────
+    // 1. Correspondance exacte par code postal
     if (postalCode) {
       const [rows] = await conn.execute<mysql.RowDataPacket[]>(
         'SELECT id FROM partners WHERE addressPostalCode = ? AND status = ? LIMIT 1',
         [postalCode, 'APPROVED']
       );
       if (rows.length > 0) {
-        console.log(`[LeadRouting] Exact match: partner ${rows[0].id} for CP ${postalCode}`);
         return { partnerId: rows[0].id, reason: `exact_postal_code_${postalCode}` };
       }
     }
 
-    // ── 2. Correspondance par département (2 premiers chiffres pour FR) ────────
+    // 2. Correspondance par département (2 premiers chiffres, France)
     if (postalCode && countryCode === 'FR' && postalCode.length >= 2) {
       const dept = postalCode.substring(0, 2);
       const [rows] = await conn.execute<mysql.RowDataPacket[]>(
@@ -45,12 +382,11 @@ export async function findBestPartnerForLead(params: {
         ['FR', 'APPROVED', `${dept}%`]
       );
       if (rows.length > 0) {
-        console.log(`[LeadRouting] Dept match: partner ${rows[0].id} for dept ${dept}`);
         return { partnerId: rows[0].id, reason: `department_match_${dept}` };
       }
     }
 
-    // ── 3. Correspondance par région ─────────────────────────────────────────
+    // 3. Correspondance par région française
     if (postalCode && countryCode === 'FR') {
       const region = getRegionFromPostalCode(postalCode);
       if (region) {
@@ -59,25 +395,22 @@ export async function findBestPartnerForLead(params: {
           ['FR', 'APPROVED', `%${region}%`]
         );
         if (rows.length > 0) {
-          console.log(`[LeadRouting] Region match: partner ${rows[0].id} for region ${region}`);
           return { partnerId: rows[0].id, reason: `region_match_${region}` };
         }
       }
     }
 
-    // ── 4. Correspondance par pays ────────────────────────────────────────────
+    // 4. Correspondance par pays
     if (countryCode) {
       const [rows] = await conn.execute<mysql.RowDataPacket[]>(
         'SELECT id FROM partners WHERE addressCountry = ? AND status = ? LIMIT 1',
         [countryCode, 'APPROVED']
       );
       if (rows.length > 0) {
-        console.log(`[LeadRouting] Country match: partner ${rows[0].id} for country ${countryCode}`);
         return { partnerId: rows[0].id, reason: `country_match_${countryCode}` };
       }
     }
 
-    console.log(`[LeadRouting] No match found for CP=${postalCode} Country=${countryCode}`);
     return { partnerId: null, reason: 'no_match' };
   } catch (err) {
     console.error('[LeadRouting] Error:', err);
@@ -87,9 +420,6 @@ export async function findBestPartnerForLead(params: {
   }
 }
 
-/**
- * Normalise le nom de pays en code ISO 2 lettres
- */
 function normalizeCountry(country?: string): string | null {
   if (!country) return null;
   const c = country.toLowerCase().trim();
@@ -102,86 +432,20 @@ function normalizeCountry(country?: string): string | null {
   return country.substring(0, 2).toUpperCase();
 }
 
-/**
- * Détermine la région française à partir du code postal
- */
 function getRegionFromPostalCode(postalCode: string): string | null {
   const cp = parseInt(postalCode.substring(0, 2), 10);
   if (isNaN(cp)) return null;
-
   if ([75, 77, 78, 91, 92, 93, 94, 95].includes(cp)) return 'Île-de-France';
   if ([59, 60, 62, 80, 2].includes(cp)) return 'Hauts-de-France';
   if ([14, 27, 50, 61, 76].includes(cp)) return 'Normandie';
   if ([8, 10, 51, 52, 54, 55, 57, 67, 68, 88].includes(cp)) return 'Grand Est';
   if ([21, 25, 39, 58, 70, 71, 89, 90].includes(cp)) return 'Bourgogne-Franche-Comté';
   if ([1, 3, 7, 15, 26, 38, 42, 43, 63, 69, 73, 74].includes(cp)) return 'Auvergne-Rhône-Alpes';
-  if ([4, 5, 6, 13, 83, 84].includes(cp)) return 'Provence-Alpes-Côte d\'Azur';
+  if ([4, 5, 6, 13, 83, 84].includes(cp)) return "Provence-Alpes-Côte d'Azur";
   if ([9, 11, 12, 30, 31, 32, 34, 46, 48, 65, 66, 81, 82].includes(cp)) return 'Occitanie';
   if ([16, 17, 19, 23, 24, 33, 40, 47, 64, 79, 86, 87].includes(cp)) return 'Nouvelle-Aquitaine';
   if ([44, 49, 53, 72, 85].includes(cp)) return 'Pays de la Loire';
   if ([22, 29, 35, 56].includes(cp)) return 'Bretagne';
   if ([18, 28, 36, 37, 41, 45].includes(cp)) return 'Centre-Val de Loire';
-
   return null;
-}
-
-/**
- * Parse un email entrant pour en extraire les données de lead
- */
-export function parseEmailForLead(subject: string, body: string, fromEmail: string): {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  postalCode?: string;
-  city?: string;
-  country?: string;
-  productInterest?: string;
-  budget?: string;
-  message?: string;
-  isLeadEmail: boolean;
-} {
-  const leadKeywords = [
-    'devis', 'quote', 'spa', 'jacuzzi', 'prix', 'price', 'offerte',
-    'demande', 'request', 'aanvraag', 'contact', 'renseignement',
-    'information', 'acheter', 'buy', 'kopen', 'partenariat', 'partnership',
-    'revendeur', 'distributeur', 'reseller', 'dealer'
-  ];
-
-  const fullText = (subject + ' ' + body).toLowerCase();
-  const isLeadEmail = leadKeywords.some(kw => fullText.includes(kw));
-
-  if (!isLeadEmail) {
-    return { isLeadEmail: false };
-  }
-
-  const extractField = (label: string): string | undefined => {
-    const pattern = new RegExp(`${label}[:\\s]+([^\\n<]+)`, 'i');
-    const match = body.match(pattern);
-    return match ? match[1].trim() : undefined;
-  };
-
-  const cpMatch = body.match(/\b(\d{4,5})\b/);
-  const postalCode = cpMatch ? cpMatch[1] : undefined;
-
-  const phoneMatch = body.match(/(?:téléphone|phone|tel|tél)[:\s]*([+\d\s().-]{8,20})/i)
-    || body.match(/\b((?:\+33|0033|0)[1-9](?:[\s.-]?\d{2}){4})\b/);
-  const phone = phoneMatch ? phoneMatch[1].trim() : undefined;
-
-  const emailMatch = body.match(/\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/);
-  const email = emailMatch ? emailMatch[1] : fromEmail;
-
-  return {
-    isLeadEmail: true,
-    email,
-    phone,
-    postalCode,
-    city: extractField('ville') || extractField('city') || extractField('stad'),
-    country: extractField('pays') || extractField('country') || extractField('land'),
-    firstName: extractField('prénom') || extractField('prenom') || extractField('first name') || extractField('voornaam'),
-    lastName: extractField('nom') || extractField('last name') || extractField('achternaam'),
-    productInterest: extractField('projet') || extractField('project') || extractField('produit'),
-    budget: extractField('budget'),
-    message: body.substring(0, 1000),
-  };
 }

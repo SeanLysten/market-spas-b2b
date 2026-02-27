@@ -1926,3 +1926,10 @@
 - [x] Attribution par correspondance exacte CP, puis département, puis région, puis pays
 - [x] Modifier le formulaire Shopify pour envoyer les données directement à l'API (SHOPIFY_FORM_UPDATED.liquid)
 - [x] Tests vitest pour le parsing d'emails et le routing (7 tests passent)
+
+## Filtrage intelligent des emails entrants
+- [x] Classification des emails en catégories : LEAD_VENTE, LEAD_PARTENARIAT, SAV, SPAM
+- [x] Filtrage des emails parasites (démarchage, SAV, newsletters, factures)
+- [x] Anti-doublon : ne pas créer deux leads avec le même email/téléphone dans les 60 jours
+- [x] Mise à jour du lead existant si doublon détecté (enrichissement des données)
+- [x] Tests vitest pour la classification et la déduplication (19 tests passent)
