@@ -55,6 +55,8 @@ import {
   Archive,
   AlertCircle,
   Edit,
+  Handshake,
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -886,6 +888,253 @@ function StatsTab({ candidates }: { candidates: any[] }) {
 // MAIN PAGE
 // ============================================
 
+// ============================================
+// PARTNERSHIP LEADS TAB
+// ============================================
+
+function PartnershipLeadsTab() {
+  const { data: partnershipLeads, isLoading } = trpc.admin.leads.partnershipLeads.useQuery();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const leads = (partnershipLeads || []).map((item: any) => item.leads || item);
+
+  const filtered = leads.filter((lead: any) => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      (lead.firstName || '').toLowerCase().includes(term) ||
+      (lead.lastName || '').toLowerCase().includes(term) ||
+      (lead.email || '').toLowerCase().includes(term) ||
+      (lead.phone || '').toLowerCase().includes(term) ||
+      (lead.city || '').toLowerCase().includes(term)
+    );
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs md:text-sm text-muted-foreground">Total demandes</p>
+            <p className="text-3xl font-bold">{leads.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs md:text-sm text-muted-foreground">Ce mois</p>
+            <p className="text-3xl font-bold text-info">
+              {leads.filter((l: any) => {
+                const d = new Date(l.receivedAt || l.createdAt);
+                const now = new Date();
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+              }).length}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs md:text-sm text-muted-foreground">France</p>
+            <p className="text-3xl font-bold">
+              {leads.filter((l: any) => (l.country || '').toLowerCase().includes('france') || (l.country || '') === 'FR').length}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs md:text-sm text-muted-foreground">Belgique</p>
+            <p className="text-3xl font-bold">
+              {leads.filter((l: any) => (l.country || '').toLowerCase().includes('belgi') || (l.country || '') === 'BE').length}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Search */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher par nom, email, ville..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Badge variant="outline">{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</Badge>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {filtered.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Handshake className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>Aucune demande de partenariat</p>
+          </div>
+        ) : (
+          filtered.map((lead: any) => {
+            let customData: Record<string, string> = {};
+            try { customData = JSON.parse(lead.customFields || '{}'); } catch (e) { /* ignore */ }
+            return (
+              <Card key={lead.id} className="p-4">
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-medium text-sm">{lead.firstName} {lead.lastName}</p>
+                      <p className="text-xs text-muted-foreground">{customData.company_name || '-'}</p>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {new Date(lead.receivedAt || lead.createdAt).toLocaleDateString('fr-FR')}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {lead.city && <Badge variant="secondary" className="text-xs"><MapPin className="w-3 h-3 mr-1" />{lead.city}</Badge>}
+                    {lead.country && <Badge variant="secondary" className="text-xs">{lead.country}</Badge>}
+                  </div>
+                  <div className="flex flex-wrap gap-1 text-xs">
+                    {customData['poss\u00e9dez-vous_un_showroom_?_'] && (
+                      <Badge variant={normalizeYesNoForBadge(customData['poss\u00e9dez-vous_un_showroom_?_']) ? 'default' : 'outline'} className="text-[10px]">
+                        Showroom: {normalizeYesNoForBadge(customData['poss\u00e9dez-vous_un_showroom_?_']) ? 'Oui' : 'Non'}
+                      </Badge>
+                    )}
+                    {customData['travaillez-vous_d\u00e9j\u00e0_dans_la_vente_de_spa_?_'] && (
+                      <Badge variant={normalizeYesNoForBadge(customData['travaillez-vous_d\u00e9j\u00e0_dans_la_vente_de_spa_?_']) ? 'default' : 'outline'} className="text-[10px]">
+                        Vend Spa: {normalizeYesNoForBadge(customData['travaillez-vous_d\u00e9j\u00e0_dans_la_vente_de_spa_?_']) ? 'Oui' : 'Non'}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    {lead.phone && (
+                      <a href={`tel:${lead.phone}`}>
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                          <Phone className="w-3 h-3 mr-1" />{lead.phone}
+                        </Button>
+                      </a>
+                    )}
+                    {lead.email && (
+                      <a href={`mailto:${lead.email}`}>
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                          <Mail className="w-3 h-3 mr-1" />Email
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block border rounded-lg overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Entreprise</TableHead>
+              <TableHead>Ville / Pays</TableHead>
+              <TableHead>Téléphone</TableHead>
+              <TableHead>Critères</TableHead>
+              <TableHead>Source</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <Handshake className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  Aucune demande de partenariat
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((lead: any) => {
+                let customData: Record<string, string> = {};
+                try { customData = JSON.parse(lead.customFields || '{}'); } catch (e) { /* ignore */ }
+                const showroom = normalizeYesNoForBadge(customData['poss\u00e9dez-vous_un_showroom_?_']);
+                const vendSpa = normalizeYesNoForBadge(customData['travaillez-vous_d\u00e9j\u00e0_dans_la_vente_de_spa_?_']);
+                const autreMarque = normalizeYesNoForBadge(customData['vendez-vous_actuellement_une_autre_marque_?']);
+                const domaineSimilaire = normalizeYesNoForBadge(customData['travaillez-vous_dans_un_domaine_similaire_?_']);
+
+                return (
+                  <TableRow key={lead.id}>
+                    <TableCell className="text-sm whitespace-nowrap">
+                      {new Date(lead.receivedAt || lead.createdAt).toLocaleDateString('fr-FR')}
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-sm">{lead.firstName} {lead.lastName}</p>
+                        <p className="text-xs text-muted-foreground">{lead.email}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm">{customData.company_name || '-'}</TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="text-sm">{lead.city || '-'}</p>
+                        <p className="text-xs text-muted-foreground">{lead.country || '-'}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm">{lead.phone || '-'}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {showroom && <Badge variant="outline" className="text-xs">Showroom</Badge>}
+                        {vendSpa && <Badge variant="outline" className="text-xs">Vend Spa</Badge>}
+                        {autreMarque && <Badge variant="outline" className="text-xs">Autre marque</Badge>}
+                        {domaineSimilaire && <Badge variant="outline" className="text-xs">Similaire</Badge>}
+                        {!showroom && !vendSpa && !autreMarque && !domaineSimilaire && (
+                          <span className="text-xs text-muted-foreground">Aucun</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-xs">
+                        {lead.source === 'META_ADS' ? 'Meta Ads' : lead.source === 'EMAIL' ? 'Email' : lead.source}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {lead.phone && (
+                          <a href={`tel:${lead.phone}`}>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-info">
+                              <Phone className="w-3.5 h-3.5" />
+                            </Button>
+                          </a>
+                        )}
+                        {lead.email && (
+                          <a href={`mailto:${lead.email}`}>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-info">
+                              <Mail className="w-3.5 h-3.5" />
+                            </Button>
+                          </a>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function normalizeYesNoForBadge(value: string | undefined): boolean {
+  if (!value) return false;
+  return value.toLowerCase().trim().replace(/_/g, ' ').startsWith('oui');
+}
+
 export default function AdminPartnerMap() {
   const [activeTab, setActiveTab] = useState('carte');
   const [candidateStatusFilter, setCandidateStatusFilter] = useState('all');
@@ -1005,6 +1254,10 @@ export default function AdminPartnerMap() {
               <BarChart3 className="w-4 h-4" />
               Statistiques
             </TabsTrigger>
+            <TabsTrigger value="demandes" className="flex items-center gap-2">
+              <Handshake className="w-4 h-4" />
+              Demandes partenariat
+            </TabsTrigger>
           </TabsList>
 
           {/* CARTE TAB */}
@@ -1120,6 +1373,24 @@ export default function AdminPartnerMap() {
             ) : (
               <StatsTab candidates={candidatesList} />
             )}
+          </TabsContent>
+
+          {/* DEMANDES PARTENARIAT TAB */}
+          <TabsContent value="demandes">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Handshake className="w-5 h-5" />
+                  Demandes de Partenariat (Leads Meta)
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Leads reçus via les formulaires "Devenir Partenaire" de Meta Ads. Ces leads ne sont pas assignés à un partenaire.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <PartnershipLeadsTab />
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

@@ -190,6 +190,13 @@
       "when": 1772205082942,
       "tag": "0026_cooing_runaways",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "5",
+      "when": 1772209595153,
+      "tag": "0027_even_wallop",
+      "breakpoints": true
     }
   ]
 }

@@ -258,17 +258,46 @@ inboundLeadsRouter.post('/api/webhooks/email-lead', async (req: Request, res: Re
       });
     }
 
-    // ── Attribution automatique ───────────────────────────────────────────────
+    // ── Leads PARTENARIAT → PAS d'assignation partenaire ─────────────────────
+    if (parsed.category === 'LEAD_PARTENARIAT') {
+      const result = await createLead({
+        firstName: parsed.firstName,
+        lastName: parsed.lastName,
+        email: parsed.email,
+        phone: parsed.phone,
+        postalCode: parsed.postalCode,
+        city: parsed.city,
+        country: parsed.country,
+        source: 'EMAIL',
+        productInterest: `[Demande de partenariat] ${parsed.productInterest || ''}`.trim(),
+        budget: parsed.budget,
+        message: `[Email reçu]\nDe: ${fromEmail}\nSujet: ${subject}\nCatégorie: LEAD_PARTENARIAT\n\n${parsed.message}`,
+        // PAS de assignedPartnerId — les demandes de partenariat vont dans la carte du réseau
+      });
+
+      if (result.insertId) {
+        await updateLeadAssignment(result.insertId, 'partnership_request_no_assignment', null);
+      }
+
+      console.log(`[EmailLead] Lead PARTENARIAT créé ID:${result.insertId} → PAS assigné (carte du réseau)`);
+
+      return res.status(200).json({
+        success: true,
+        leadId: result.insertId,
+        category: 'LEAD_PARTENARIAT',
+        confidence: parsed.confidence,
+        assignedPartnerId: null,
+        assignmentReason: 'partnership_request_no_assignment',
+      });
+    }
+
+    // ── Leads VENTE → Attribution automatique au partenaire ───────────────────
     const { partnerId, reason } = await findBestPartnerForLead({
       postalCode: parsed.postalCode,
       city: parsed.city,
       country: parsed.country,
+      phone: parsed.phone,
     });
-
-    // ── Créer le lead ─────────────────────────────────────────────────────────
-    const productInterest = parsed.category === 'LEAD_PARTENARIAT'
-      ? `[Demande de partenariat] ${parsed.productInterest || ''}`.trim()
-      : parsed.productInterest;
 
     const result = await createLead({
       firstName: parsed.firstName,
@@ -279,9 +308,9 @@ inboundLeadsRouter.post('/api/webhooks/email-lead', async (req: Request, res: Re
       city: parsed.city,
       country: parsed.country,
       source: 'EMAIL',
-      productInterest,
+      productInterest: parsed.productInterest,
       budget: parsed.budget,
-      message: `[Email reçu]\nDe: ${fromEmail}\nSujet: ${subject}\nCatégorie: ${parsed.category}\n\n${parsed.message}`,
+      message: `[Email reçu]\nDe: ${fromEmail}\nSujet: ${subject}\nCatégorie: LEAD_VENTE\n\n${parsed.message}`,
       assignedPartnerId: partnerId || undefined,
     });
 
@@ -289,7 +318,7 @@ inboundLeadsRouter.post('/api/webhooks/email-lead', async (req: Request, res: Re
       await updateLeadAssignment(result.insertId, reason, partnerId);
     }
 
-    console.log(`[EmailLead] Lead créé ID:${result.insertId} → Partenaire:${partnerId || 'non assigné'} (${reason})`);
+    console.log(`[EmailLead] Lead VENTE créé ID:${result.insertId} → Partenaire:${partnerId || 'non assigné'} (${reason})`);
 
     return res.status(200).json({
       success: true,

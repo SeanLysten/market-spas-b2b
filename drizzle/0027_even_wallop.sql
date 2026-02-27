@@ -1,0 +1,1 @@
+ALTER TABLE `leads` ADD `leadType` enum('VENTE','PARTENARIAT','SAV') DEFAULT 'VENTE' NOT NULL;

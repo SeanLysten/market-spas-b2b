@@ -2122,6 +2122,7 @@ export async function getLeads(filters?: {
   status?: string; 
   partnerId?: number; 
   source?: string;
+  leadType?: 'VENTE' | 'PARTENARIAT' | 'SAV' | 'all';
 }) {
   const db = await getDb();
   if (!db) return [];
@@ -2131,6 +2132,13 @@ export async function getLeads(filters?: {
   .leftJoin(partners, eq(leads.assignedPartnerId, partners.id));
   
   const conditions = [];
+  
+  // Par défaut, ne montrer que les leads VENTE (sauf si leadType spécifié)
+  if (filters?.leadType && filters.leadType !== 'all') {
+    conditions.push(eq(leads.leadType, filters.leadType as any));
+  } else if (!filters?.leadType) {
+    conditions.push(eq(leads.leadType, 'VENTE' as any));
+  }
   
   if (filters?.status && filters.status !== 'all') {
     conditions.push(eq(leads.status, filters.status as any));
@@ -2180,6 +2188,7 @@ export async function createLead(data: {
   city?: string;
   postalCode?: string;
   country?: string;
+  leadType?: 'VENTE' | 'PARTENARIAT' | 'SAV';
   source: 'META_ADS' | 'GOOGLE_ADS' | 'WEBSITE' | 'REFERRAL' | 'PHONE' | 'EMAIL' | 'TRADE_SHOW' | 'OTHER';
   metaCampaignId?: string;
   metaAdsetId?: string;
@@ -2202,6 +2211,7 @@ export async function createLead(data: {
     city: data.city || null,
     postalCode: data.postalCode || null,
     country: data.country || 'Belgium',
+    leadType: data.leadType || 'VENTE',
     source: data.source,
     metaCampaignId: data.metaCampaignId || null,
     metaAdsetId: data.metaAdsetId || null,

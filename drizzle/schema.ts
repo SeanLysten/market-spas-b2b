@@ -1203,6 +1203,12 @@ export const leadSourceEnum = mysqlEnum("source", [
   "OTHER",
 ]);
 
+export const leadTypeEnum = mysqlEnum("leadType", [
+  "VENTE",
+  "PARTENARIAT",
+  "SAV",
+]);
+
 export const leads = mysqlTable(
   "leads",
   {
@@ -1221,6 +1227,7 @@ export const leads = mysqlTable(
     country: varchar("country", { length: 100 }).default("Belgium"),
     
     // Lead details
+    leadType: leadTypeEnum.default("VENTE").notNull(),
     status: leadStatusEnum.default("NEW").notNull(),
     source: leadSourceEnum.default("META_ADS").notNull(),
     

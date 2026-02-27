@@ -1702,10 +1702,17 @@ export const appRouter = router({
             status: z.string().optional(),
             partnerId: z.number().optional(),
             source: z.string().optional(),
+            leadType: z.enum(['VENTE', 'PARTENARIAT', 'SAV', 'all']).optional(),
           }).optional()
         )
         .query(async ({ input }) => {
           return await db.getLeads(input);
+        }),
+
+      // Liste des leads PARTENARIAT pour la carte du réseau
+      partnershipLeads: adminProcedure
+        .query(async () => {
+          return await db.getLeads({ leadType: 'PARTENARIAT' });
         }),
 
       getById: adminProcedure
@@ -1772,8 +1779,8 @@ export const appRouter = router({
         .mutation(async () => {
           const { findBestPartnerForPostalCode } = await import('./territories-db');
           
-          // Récupérer tous les leads non assignés avec un code postal
-          const unassignedLeads = await db.getLeads({});
+          // Récupérer UNIQUEMENT les leads VENTE (pas PARTENARIAT ni SAV)
+          const unassignedLeads = await db.getLeads({ leadType: 'VENTE' });
           const leadsWithPostalCode = unassignedLeads.filter((lead: any) => {
             const postalCode = lead.leads?.postalCode || lead.postalCode;
             return postalCode && postalCode.trim() !== '';

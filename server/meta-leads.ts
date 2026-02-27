@@ -293,16 +293,20 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
 
             if (isPartnerLead(fields)) {
               // === LEAD "DEVENIR PARTENAIRE" ===
+              // Ces leads ne sont PAS assignés à un partenaire.
+              // Ils apparaissent uniquement dans la Carte du Réseau.
               console.log(`[Meta] Lead ${leadgenId} détecté comme candidat partenaire`);
               
-              // Marquer le lead comme candidat partenaire
+              // Marquer le lead comme candidat partenaire avec leadType = PARTENARIAT
               const db = await getDb();
               if (db) {
                 await db.update(leads)
                   .set({ 
+                    leadType: "PARTENARIAT" as any,
                     status: "QUALIFIED" as any,
                     notes: "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau",
                     assignmentReason: "partner_candidate",
+                    assignedPartnerId: null,
                   })
                   .where(eq(leads.id, lead.id));
               }
@@ -730,11 +734,13 @@ export async function reclassifyExistingPartnerLeads(): Promise<{
         alreadyExists++;
       }
 
-      // Marquer le lead comme candidat partenaire
+      // Marquer le lead comme candidat partenaire (pas d'assignation partenaire)
       await db.update(leads)
         .set({
+          leadType: "PARTENARIAT" as any,
           notes: "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau",
           assignmentReason: "partner_candidate",
+          assignedPartnerId: null,
         })
         .where(eq(leads.id, lead.id));
 

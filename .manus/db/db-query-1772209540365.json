@@ -1,0 +1,210 @@
+{
+  "query": "SELECT id, firstName, lastName, email, assignedPartnerId, assignmentReason, status, notes\nFROM leads \nWHERE customFields LIKE '%company_name%' \nLIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, firstName, lastName, email, assignedPartnerId, assignmentReason, status, notes\nFROM leads \nWHERE customFields LIKE '%company_name%' \nLIMIT 20",
+  "rows": [
+    {
+      "id": "120002",
+      "firstName": "Ergün",
+      "lastName": "ERCAN",
+      "email": "ergun.ercan558@gmail.com",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120003",
+      "firstName": "Jonathan",
+      "lastName": "Corbel",
+      "email": "j.corbel71@gmail.com",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120004",
+      "firstName": "Jeremy",
+      "lastName": "Hercouet",
+      "email": "jerem5613@hotmail.fr",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120005",
+      "firstName": "Vogt",
+      "lastName": "",
+      "email": "Rs596267@orange.fr",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120006",
+      "firstName": "Kevin",
+      "lastName": "",
+      "email": "Kevin.robert56@icloud.com",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120007",
+      "firstName": "Alp",
+      "lastName": "",
+      "email": "bilgin.koca@gmail.com",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120008",
+      "firstName": "Manuel",
+      "lastName": "Dos Santos",
+      "email": "referencecarrelage@orange.fr",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120009",
+      "firstName": "Christophe",
+      "lastName": "Lechuga",
+      "email": "christophelechuga@yahoo.fr",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120010",
+      "firstName": "Jimmy",
+      "lastName": "DP",
+      "email": "wineo82@gmail.com",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120011",
+      "firstName": "David",
+      "lastName": "Ducongé",
+      "email": "ducongedavid7@gmail.com",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120012",
+      "firstName": "Julien",
+      "lastName": "Lamy",
+      "email": "direction@hydrex-piscines.spas.fr",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120013",
+      "firstName": "Yusuf",
+      "lastName": "Bayrakdar",
+      "email": "contact@livingconcept.fr",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120014",
+      "firstName": "Jimmy",
+      "lastName": "Marichal",
+      "email": "dsp42300@gmail.com",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120015",
+      "firstName": "David",
+      "lastName": "Saluaux",
+      "email": "dadalone@hotmail.fr",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120016",
+      "firstName": "Maxime",
+      "lastName": "dumas",
+      "email": "m.dumas.pro@gmail.com",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120017",
+      "firstName": "Bousquet",
+      "lastName": "",
+      "email": "bousquet.gilles12@sfr.fr",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120018",
+      "firstName": "Clement",
+      "lastName": "Audige",
+      "email": "clement.audige@orange.fr",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120019",
+      "firstName": "Jimmy",
+      "lastName": "Laisne",
+      "email": "somme.renove@gmail.com",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120020",
+      "firstName": "Ferhat",
+      "lastName": "CAGLAR",
+      "email": "caglar.ferhat.tsp@icloud.com",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    },
+    {
+      "id": "120021",
+      "firstName": "Antoine",
+      "lastName": "Fernande",
+      "email": "stq@apanages.eu",
+      "assignedPartnerId": "60006",
+      "assignmentReason": "default_fallback",
+      "status": "NEW",
+      "notes": "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\temail\tassignedPartnerId\tassignmentReason\tstatus\tnotes\n120002\tErgün\tERCAN\tergun.ercan558@gmail.com\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120003\tJonathan\tCorbel\tj.corbel71@gmail.com\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120004\tJeremy\tHercouet\tjerem5613@hotmail.fr\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120005\tVogt\t\tRs596267@orange.fr\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120006\tKevin\t\tKevin.robert56@icloud.com\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120007\tAlp\t\tbilgin.koca@gmail.com\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120008\tManuel\tDos Santos\treferencecarrelage@orange.fr\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120009\tChristophe\tLechuga\tchristophelechuga@yahoo.fr\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120010\tJimmy\tDP\twineo82@gmail.com\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120011\tDavid\tDucongé\tducongedavid7@gmail.com\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120012\tJulien\tLamy\tdirection@hydrex-piscines.spas.fr\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120013\tYusuf\tBayrakdar\tcontact@livingconcept.fr\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120014\tJimmy\tMarichal\tdsp42300@gmail.com\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120015\tDavid\tSaluaux\tdadalone@hotmail.fr\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120016\tMaxime\tdumas\tm.dumas.pro@gmail.com\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120017\tBousquet\t\tbousquet.gilles12@sfr.fr\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120018\tClement\tAudige\tclement.audige@orange.fr\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120019\tJimmy\tLaisne\tsomme.renove@gmail.com\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120020\tFerhat\tCAGLAR\tcaglar.ferhat.tsp@icloud.com\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n120021\tAntoine\tFernande\tstq@apanages.eu\t60006\tdefault_fallback\tNEW\tLead Devenir Partenaire - Redirigé vers la Carte du Réseau\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

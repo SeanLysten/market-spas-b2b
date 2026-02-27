@@ -1976,3 +1976,16 @@
 - [x] Réassignation en masse des 547 leads existants avec la nouvelle logique BDD
 - [x] Distribution finale : 15 partenaires actifs, 107 leads en fallback Valentins
 - [x] Interface admin /admin/territories fonctionne correctement avec noms partenaires visibles
+
+## Séparation des leads par type (session 2026-02-27 #3)
+- [x] Leads VENTE : seuls leads assignés à un partenaire selon territoire
+- [x] Leads PARTENARIAT : PAS assignés à un partenaire, affichés dans la carte du réseau
+- [x] Leads SAV : PAS assignés à un partenaire, affichés dans la section SAV tickets clients
+- [x] Corriger le routing pour ne pas assigner les leads PARTENARIAT et SAV
+- [x] Ajouter un tableau des demandes de partenariat dans /admin/partner-map
+- [x] Nettoyer les leads existants mal assignés (87 leads partenariat désassignés)
+- [x] Ajout du champ leadType (VENTE/PARTENARIAT/SAV) dans la table leads
+- [x] getLeads() filtre par défaut sur leadType=VENTE
+- [x] reassignAll ne réassigne que les leads VENTE
+- [x] meta-leads.ts marque les leads partenariat avec leadType=PARTENARIAT et assignedPartnerId=null
+- [x] 13 tests vitest passent pour la logique de séparation des leads
