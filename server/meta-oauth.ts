@@ -481,3 +481,91 @@ export async function debugToken(accessToken: string): Promise<{
     scopes: data.data?.scopes || [],
   };
 }
+
+// ============================================
+// LEAD FORMS SYNC (Rattrapage des leads manquants)
+// ============================================
+
+/**
+ * Récupère les pages liées au compte avec leur token
+ */
+export async function getLinkedPages(accessToken: string): Promise<{ id: string; name: string; access_token: string }[]> {
+  try {
+    const url = `https://graph.facebook.com/${META_GRAPH_VERSION}/me/accounts?access_token=${accessToken}&limit=50`;
+    const resp = await fetch(url);
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return data.data || [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Récupère tous les formulaires Lead Ads des pages liées au compte
+ */
+export async function getLeadForms(accessToken: string): Promise<{ id: string; name: string; status: string; pageId: string; pageToken: string }[]> {
+  try {
+    const pages = await getLinkedPages(accessToken);
+    const allForms: { id: string; name: string; status: string; pageId: string; pageToken: string }[] = [];
+
+    for (const page of pages) {
+      const formsUrl = `https://graph.facebook.com/${META_GRAPH_VERSION}/${page.id}/leadgen_forms?access_token=${page.access_token}&fields=id,name,status&limit=100`;
+      const formsResp = await fetch(formsUrl);
+      if (!formsResp.ok) continue;
+      const formsData = await formsResp.json();
+      if (formsData.data) {
+        allForms.push(...formsData.data.map((f: any) => ({ ...f, pageId: page.id, pageToken: page.access_token })));
+      }
+    }
+
+    return allForms;
+  } catch (error) {
+    console.error("[Meta] Erreur récupération formulaires:", error);
+    return [];
+  }
+}
+
+/**
+ * Récupère les leads d'un formulaire Meta depuis une date donnée
+ */
+export async function getLeadsFromForm(
+  formId: string,
+  pageToken: string,
+  since?: Date
+): Promise<Array<{
+  id: string;
+  created_time: string;
+  ad_id?: string;
+  field_data: Array<{ name: string; values: string[] }>;
+}>> {
+  try {
+    let url = `https://graph.facebook.com/${META_GRAPH_VERSION}/${formId}/leads?` +
+      `access_token=${pageToken}&fields=id,created_time,ad_id,field_data&limit=100`;
+
+    if (since) {
+      const sinceTimestamp = Math.floor(since.getTime() / 1000);
+      url += `&filtering=[{"field":"time_created","operator":"GREATER_THAN","value":${sinceTimestamp}}]`;
+    }
+
+    const allLeads: any[] = [];
+    let nextUrl: string | null = url;
+
+    while (nextUrl) {
+      const resp = await fetch(nextUrl);
+      if (!resp.ok) {
+        const err = await resp.text();
+        console.error(`[Meta] Erreur récupération leads formulaire ${formId}: ${err}`);
+        break;
+      }
+      const data = await resp.json();
+      if (data.data) allLeads.push(...data.data);
+      nextUrl = data.paging?.next || null;
+    }
+
+    return allLeads;
+  } catch (error) {
+    console.error(`[Meta] Erreur getLeadsFromForm ${formId}:`, error);
+    return [];
+  }
+}

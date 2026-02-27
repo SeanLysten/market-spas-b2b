@@ -154,7 +154,7 @@ export default function AdminLeads() {
     status: statusFilter !== "all" ? statusFilter : undefined,
     partnerId: partnerFilter !== "all" ? parseInt(partnerFilter) : undefined,
   }, {
-    refetchInterval: 30000, // Polling toutes les 30 secondes
+    refetchInterval: 10000, // Polling toutes les 10 secondes
     refetchIntervalInBackground: false, // Pas de polling quand l'onglet est en arrière-plan
   });
 
@@ -333,6 +333,28 @@ export default function AdminLeads() {
   });
   const disconnectMutation = trpc.metaAds.disconnectAdAccount.useMutation({
     onSuccess: () => refetchMeta(),
+  });
+
+  // Synchronisation manuelle des leads Meta
+  const [isSyncingMeta, setIsSyncingMeta] = useState(false);
+  const syncMetaLeadsMutation = trpc.metaAds.syncLeads.useMutation({
+    onSuccess: (data) => {
+      setIsSyncingMeta(false);
+      if (data.success) {
+        if (data.imported > 0) {
+          toast.success(`${data.imported} lead(s) Meta récupéré(s) avec succès !`);
+          refetch();
+        } else {
+          toast.info(`Aucun nouveau lead Meta trouvé (${data.skipped} déjà présents)`);
+        }
+      } else {
+        toast.error(data.error || "Erreur lors de la synchronisation Meta");
+      }
+    },
+    onError: (error) => {
+      setIsSyncingMeta(false);
+      toast.error(`Erreur sync Meta: ${error.message}`);
+    },
   });
 
   // Google Ads queries and mutations
@@ -658,6 +680,25 @@ export default function AdminLeads() {
                 </>
               )}
             </Button>
+            {metaCampaignsData?.connected && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsSyncingMeta(true);
+                  syncMetaLeadsMutation.mutate({});
+                }}
+                disabled={isSyncingMeta || syncMetaLeadsMutation.isPending}
+                title="Récupérer les leads Meta manquants depuis les formulaires"
+                className="text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-700 dark:hover:bg-blue-900/20"
+              >
+                {isSyncingMeta || syncMetaLeadsMutation.isPending ? (
+                  <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Sync Meta...</>
+                ) : (
+                  <><RefreshCw className="w-4 h-4 mr-2" />Sync Meta</>
+                )}
+              </Button>
+            )}
             <Button 
               variant="outline" 
               size="icon" 

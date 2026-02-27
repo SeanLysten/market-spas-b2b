@@ -1,0 +1,183 @@
+======================================================
+FORMULAIRE DE CONTACT SHOPIFY - CODE À COPIER-COLLER
+======================================================
+
+Copiez TOUT le code ci-dessous et collez-le dans votre
+section de formulaire Shopify (éditeur de thème > section
+contact ou formulaire personnalisé).
+
+IMPORTANT : Remplacez "https://marketspas.pro" par votre
+URL de production si elle est différente.
+
+======================================================
+
+{% form 'contact' %}
+  <div class="contact-form-wrapper">
+    
+    <div class="form-group">
+      <label for="contact-name">Nom complet *</label>
+      <input 
+        type="text" 
+        id="contact-name"
+        name="contact[name]" 
+        placeholder="Votre nom et prénom"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="contact-email">Email *</label>
+      <input 
+        type="email" 
+        id="contact-email"
+        name="contact[email]" 
+        placeholder="votre@email.com"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="contact-phone">Téléphone</label>
+      <input 
+        type="tel" 
+        id="contact-phone"
+        name="contact[phone]" 
+        placeholder="+33 6 00 00 00 00"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="contact-postal">Code postal</label>
+      <input 
+        type="text" 
+        id="contact-postal"
+        name="contact[postal_code]" 
+        placeholder="75001"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="contact-city">Ville</label>
+      <input 
+        type="text" 
+        id="contact-city"
+        name="contact[city]" 
+        placeholder="Paris"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="contact-country">Pays</label>
+      <select id="contact-country" name="contact[country]">
+        <option value="FR">France</option>
+        <option value="BE">Belgique</option>
+        <option value="LU">Luxembourg</option>
+        <option value="CH">Suisse</option>
+        <option value="NL">Pays-Bas</option>
+        <option value="DE">Allemagne</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="contact-subject">Sujet *</label>
+      <input 
+        type="text" 
+        id="contact-subject"
+        name="contact[subject]" 
+        placeholder="Demande de devis, information produit..."
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="contact-message">Message *</label>
+      <textarea 
+        id="contact-message"
+        name="contact[body]" 
+        rows="5"
+        placeholder="Décrivez votre projet ou votre demande..."
+        required
+      ></textarea>
+    </div>
+
+    <div class="form-group">
+      <input type="submit" value="Envoyer ma demande" id="contact-submit" />
+    </div>
+
+    <div id="market-spas-status" style="display:none; margin-top: 10px; padding: 10px; border-radius: 4px;"></div>
+
+  </div>
+{% endform %}
+
+<script>
+// ============================================================
+// ENVOI AUTOMATIQUE VERS MARKET SPAS B2B
+// Ce script envoie les données du formulaire à la plateforme
+// Market Spas en parallèle de l'envoi Shopify normal.
+// ============================================================
+var MARKET_SPAS_API = "https://marketspas.pro/api/leads/inbound";
+
+document.addEventListener('DOMContentLoaded', function() {
+  var form = document.querySelector('form[action="/contact#contact_form"]');
+  if (!form) {
+    // Fallback: chercher n'importe quel formulaire de contact
+    form = document.querySelector('.contact-form-wrapper')?.closest('form');
+  }
+  
+  if (!form) return;
+
+  form.addEventListener('submit', function(e) {
+    // Récupérer les données du formulaire
+    var name    = document.getElementById('contact-name')?.value || '';
+    var email   = document.getElementById('contact-email')?.value || '';
+    var phone   = document.getElementById('contact-phone')?.value || '';
+    var postal  = document.getElementById('contact-postal')?.value || '';
+    var city    = document.getElementById('contact-city')?.value || '';
+    var country = document.getElementById('contact-country')?.value || 'FR';
+    var subject = document.getElementById('contact-subject')?.value || '';
+    var message = document.getElementById('contact-message')?.value || '';
+
+    if (!email && !name) return; // Rien à envoyer
+
+    // Extraire prénom et nom
+    var nameParts = name.trim().split(' ');
+    var firstName = nameParts[0] || '';
+    var lastName  = nameParts.slice(1).join(' ') || '';
+
+    // Envoyer à la plateforme Market Spas (sans bloquer l'envoi Shopify)
+    fetch(MARKET_SPAS_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        source: 'SHOPIFY_FORM',
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phone: phone,
+        postalCode: postal,
+        city: city,
+        country: country,
+        subject: subject || 'Demande depuis le site',
+        message: message,
+        metadata: {
+          shopifyPage: window.location.href,
+          submittedAt: new Date().toISOString()
+        }
+      })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      console.log('[Market Spas] Lead enregistré:', data);
+    })
+    .catch(function(err) {
+      console.warn('[Market Spas] Erreur envoi lead (non bloquant):', err);
+    });
+    
+    // L'envoi Shopify continue normalement
+  });
+});
+</script>
+
+======================================================
+FIN DU CODE
+======================================================

@@ -3464,6 +3464,90 @@ export const appRouter = router({
           return { connected: true, current: null, previous: null, error: error.message };
         }
       }),
+
+    // Synchronisation manuelle des leads depuis les formulaires Meta (rattrapage)
+    syncLeads: adminProcedure
+      .input(z.object({
+        since: z.string().optional(), // ISO date string, default: 7 jours
+      }).optional())
+      .mutation(async () => {
+        const accounts = await db.getConnectedMetaAdAccounts();
+        if (accounts.length === 0) {
+          return { success: false, error: "Aucun compte Meta connecté", imported: 0, skipped: 0 };
+        }
+
+        const targetAccount = accounts[0];
+        const isValid = await metaOAuth.validateToken(targetAccount.accessToken);
+        if (!isValid) {
+          return { success: false, error: "Token Meta expiré - veuillez reconnecter votre compte", imported: 0, skipped: 0 };
+        }
+
+        // Récupérer les formulaires
+        const forms = await metaOAuth.getLeadForms(targetAccount.accessToken);
+        if (forms.length === 0) {
+          return { success: false, error: "Aucun formulaire Lead Ads trouvé", imported: 0, skipped: 0 };
+        }
+
+        // Date de début : dernier lead Meta connu ou 30 jours
+        const mysql2 = await import('mysql2/promise');
+        const conn = await mysql2.createConnection(process.env.DATABASE_URL!);
+        const [lastLeadRows] = await conn.execute('SELECT MAX(receivedAt) as lastDate FROM leads WHERE source = "META_ADS"') as any;
+        const lastLeadDate = lastLeadRows[0]?.lastDate ? new Date(lastLeadRows[0].lastDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        // Reculer de 1 heure pour éviter les ratages
+        lastLeadDate.setHours(lastLeadDate.getHours() - 1);
+
+        let imported = 0;
+        let skipped = 0;
+
+        for (const form of forms) {
+          const formLeads = await metaOAuth.getLeadsFromForm(form.id, form.pageToken, lastLeadDate);
+          
+          for (const leadData of formLeads) {
+            // Vérifier si le lead existe déjà
+            const [existing] = await conn.execute(
+              'SELECT id FROM leads WHERE metaLeadgenId = ?',
+              [leadData.id]
+            ) as any;
+
+            if (existing.length > 0) {
+              skipped++;
+              continue;
+            }
+
+            // Parser les champs
+            const fields: Record<string, string> = {};
+            for (const field of (leadData.field_data || [])) {
+              fields[field.name.toLowerCase()] = field.values[0] || "";
+            }
+
+            const firstName = fields.first_name || fields.full_name?.split(' ')[0] || "";
+            const lastName = fields.last_name || fields.full_name?.split(' ').slice(1).join(' ') || "";
+            const email = fields.email || "";
+            const phone = fields.phone_number || fields.phone || "";
+            const postalCode = fields.postal_code || fields.zip || fields.code_postal || "";
+            const city = fields.city || fields.ville || "";
+            const message = fields.message || fields.comments || "";
+            const productInterest = fields.product_interest || fields.produit || "";
+
+            await conn.execute(
+              `INSERT INTO leads (firstName, lastName, email, phone, postalCode, city, source, status, metaLeadgenId, metaFormId, productInterest, message, customFields, receivedAt, createdAt, updatedAt)
+               VALUES (?, ?, ?, ?, ?, ?, 'META_ADS', 'NEW', ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+              [firstName, lastName, email, phone, postalCode, city, leadData.id, form.id, productInterest, message, JSON.stringify(fields), new Date(leadData.created_time)]
+            );
+
+            imported++;
+          }
+        }
+
+        await conn.end();
+
+        // Notifier les admins si de nouveaux leads ont été importés
+        if (imported > 0) {
+          notifyAdmins("leads:refresh", { timestamp: Date.now() });
+        }
+
+        return { success: true, imported, skipped, forms: forms.length };
+      }),
   }),
 
   // ============================================

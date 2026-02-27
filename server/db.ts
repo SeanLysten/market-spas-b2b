@@ -2146,7 +2146,7 @@ export async function getLeads(filters?: {
     query = query.where(and(...conditions)) as any;
   }
   
-  return query.orderBy(desc(leads.receivedAt));
+  return query.orderBy(desc(leads.receivedAt), desc(leads.id));
 }
 
 export async function getLeadById(id: number) {
@@ -2168,7 +2168,7 @@ export async function getLeadsByPartnerId(partnerId: number) {
   return db.select()
     .from(leads)
     .where(eq(leads.assignedPartnerId, partnerId))
-    .orderBy(desc(leads.receivedAt));
+    .orderBy(desc(leads.receivedAt), desc(leads.id));
 }
 
 export async function createLead(data: {
