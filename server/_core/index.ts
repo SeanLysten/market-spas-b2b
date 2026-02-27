@@ -16,6 +16,7 @@ import { handleStripeWebhook } from "../stripe-webhook";
 import { initializeWebSocket } from "./websocket";
 import { webhooksRouter } from "../webhooks";
 import { getPrivacyHTML, getTermsHTML } from "../static-pages";
+import { inboundLeadsRouter } from "../routes/inbound-leads";
 import { validateEnv } from "./env";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -192,6 +193,8 @@ async function startServer() {
 
   // Webhooks Make (routes HTTP standard)
   app.use("/api/webhooks", webhooksRouter);
+  // Inbound leads (formulaire Shopify + emails entrants)
+  app.use(inboundLeadsRouter);
   // tRPC API
   app.use(
     "/api/trpc",

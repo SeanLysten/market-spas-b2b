@@ -1916,3 +1916,13 @@
 - [x] Créer la page AdminNewsletter avec éditeur et aperçu
 - [x] Ajouter le lien Newsletter dans la sidebar admin
 - [ ] Vérifier le domaine dans Resend pour activer l'envoi réel d'emails (voir RESEND_SETUP_GUIDE.md)
+
+## Import partenaires et système de leads entrants
+- [x] Importer les 16 partenaires depuis le CSV stockist-locations dans la base de données
+- [x] Associer chaque partenaire à sa région et son territoire géographique
+- [x] Créer l'endpoint API public POST /api/leads/inbound pour le formulaire Shopify
+- [x] Créer le webhook POST /api/webhooks/email-lead pour les emails entrants (Resend)
+- [x] Créer la logique d'attribution automatique des leads par code postal (lead-routing.ts)
+- [x] Attribution par correspondance exacte CP, puis département, puis région, puis pays
+- [x] Modifier le formulaire Shopify pour envoyer les données directement à l'API (SHOPIFY_FORM_UPDATED.liquid)
+- [x] Tests vitest pour le parsing d'emails et le routing (7 tests passent)

@@ -1,0 +1,143 @@
+{
+  "query": "SELECT id, tradeName, addressPostalCode, addressCountry, status FROM partners WHERE status = 'APPROVED' ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, tradeName, addressPostalCode, addressCountry, status FROM partners WHERE status = 'APPROVED' ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "tradeName": "Spa Paradise",
+      "addressPostalCode": "1000",
+      "addressCountry": "BE",
+      "status": "APPROVED"
+    },
+    {
+      "id": "2",
+      "tradeName": "Wellness Center",
+      "addressPostalCode": "2000",
+      "addressCountry": "BE",
+      "status": "APPROVED"
+    },
+    {
+      "id": "3",
+      "tradeName": "Aqua Dreams",
+      "addressPostalCode": "1050",
+      "addressCountry": "BE",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60001",
+      "tradeName": "Market Spas Palmones",
+      "addressPostalCode": "11379",
+      "addressCountry": "ES",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60002",
+      "tradeName": "Market Spas Caen",
+      "addressPostalCode": "14310",
+      "addressCountry": "FR",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60003",
+      "tradeName": "Market Spas Bordeaux",
+      "addressPostalCode": "33500",
+      "addressCountry": "FR",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60004",
+      "tradeName": "Market Spas Pourville sur Mer",
+      "addressPostalCode": "76550",
+      "addressCountry": "FR",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60005",
+      "tradeName": "Market Spas Ussac",
+      "addressPostalCode": "19270",
+      "addressCountry": "FR",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60006",
+      "tradeName": "Market Spas Feuquières-en-Vimeu",
+      "addressPostalCode": "80210",
+      "addressCountry": "FR",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60007",
+      "tradeName": "Market Spas Calais",
+      "addressPostalCode": "62100",
+      "addressCountry": "FR",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60008",
+      "tradeName": "Market Spas Rantigny",
+      "addressPostalCode": "60290",
+      "addressCountry": "FR",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60009",
+      "tradeName": "Market Spas Bruxelles",
+      "addressPostalCode": "1820",
+      "addressCountry": "BE",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60010",
+      "tradeName": "Market Spas Limonest",
+      "addressPostalCode": "69760",
+      "addressCountry": "FR",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60011",
+      "tradeName": "Market Spas Sainte-Marie-la-Blanche",
+      "addressPostalCode": "21200",
+      "addressCountry": "FR",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60012",
+      "tradeName": "Market Spas Estrablin",
+      "addressPostalCode": "38780",
+      "addressCountry": "FR",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60013",
+      "tradeName": "Market Spas Liège",
+      "addressPostalCode": "4340",
+      "addressCountry": "BE",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60014",
+      "tradeName": "Market Spas Franois",
+      "addressPostalCode": "25770",
+      "addressCountry": "FR",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60015",
+      "tradeName": "Market Spas Mersch",
+      "addressPostalCode": "7520",
+      "addressCountry": "LU",
+      "status": "APPROVED"
+    },
+    {
+      "id": "60016",
+      "tradeName": "Market Spas Sausheim",
+      "addressPostalCode": "68390",
+      "addressCountry": "FR",
+      "status": "APPROVED"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttradeName\taddressPostalCode\taddressCountry\tstatus\n1\tSpa Paradise\t1000\tBE\tAPPROVED\n2\tWellness Center\t2000\tBE\tAPPROVED\n3\tAqua Dreams\t1050\tBE\tAPPROVED\n60001\tMarket Spas Palmones\t11379\tES\tAPPROVED\n60002\tMarket Spas Caen\t14310\tFR\tAPPROVED\n60003\tMarket Spas Bordeaux\t33500\tFR\tAPPROVED\n60004\tMarket Spas Pourville sur Mer\t76550\tFR\tAPPROVED\n60005\tMarket Spas Ussac\t19270\tFR\tAPPROVED\n60006\tMarket Spas Feuquières-en-Vimeu\t80210\tFR\tAPPROVED\n60007\tMarket Spas Calais\t62100\tFR\tAPPROVED\n60008\tMarket Spas Rantigny\t60290\tFR\tAPPROVED\n60009\tMarket Spas Bruxelles\t1820\tBE\tAPPROVED\n60010\tMarket Spas Limonest\t69760\tFR\tAPPROVED\n60011\tMarket Spas Sainte-Marie-la-Blanche\t21200\tFR\tAPPROVED\n60012\tMarket Spas Estrablin\t38780\tFR\tAPPROVED\n60013\tMarket Spas Liège\t4340\tBE\tAPPROVED\n60014\tMarket Spas Franois\t25770\tFR\tAPPROVED\n60015\tMarket Spas Mersch\t7520\tLU\tAPPROVED\n60016\tMarket Spas Sausheim\t68390\tFR\tAPPROVED\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

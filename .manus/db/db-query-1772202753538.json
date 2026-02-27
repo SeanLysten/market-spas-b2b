@@ -1,0 +1,170 @@
+{
+  "query": "SELECT id, tradeName, addressPostalCode, addressCountry, addressRegion, territory FROM partners ORDER BY id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, tradeName, addressPostalCode, addressCountry, addressRegion, territory FROM partners ORDER BY id LIMIT 20;",
+  "rows": [
+    {
+      "id": "1",
+      "tradeName": "Spa Paradise",
+      "addressPostalCode": "1000",
+      "addressCountry": "BE",
+      "addressRegion": "NULL",
+      "territory": "NULL"
+    },
+    {
+      "id": "2",
+      "tradeName": "Wellness Center",
+      "addressPostalCode": "2000",
+      "addressCountry": "BE",
+      "addressRegion": "NULL",
+      "territory": "NULL"
+    },
+    {
+      "id": "3",
+      "tradeName": "Aqua Dreams",
+      "addressPostalCode": "1050",
+      "addressCountry": "BE",
+      "addressRegion": "NULL",
+      "territory": "NULL"
+    },
+    {
+      "id": "4",
+      "tradeName": "Relax Zone",
+      "addressPostalCode": "9000",
+      "addressCountry": "BE",
+      "addressRegion": "NULL",
+      "territory": "NULL"
+    },
+    {
+      "id": "60001",
+      "tradeName": "Market Spas Palmones",
+      "addressPostalCode": "11379",
+      "addressCountry": "ES",
+      "addressRegion": "Andalousie",
+      "territory": "Espagne - Andalousie"
+    },
+    {
+      "id": "60002",
+      "tradeName": "Market Spas Caen",
+      "addressPostalCode": "14310",
+      "addressCountry": "FR",
+      "addressRegion": "Normandie",
+      "territory": "France - Normandie (14)"
+    },
+    {
+      "id": "60003",
+      "tradeName": "Market Spas Bordeaux",
+      "addressPostalCode": "33500",
+      "addressCountry": "FR",
+      "addressRegion": "Nouvelle-Aquitaine",
+      "territory": "France - Gironde (33)"
+    },
+    {
+      "id": "60004",
+      "tradeName": "Market Spas Pourville sur Mer",
+      "addressPostalCode": "76550",
+      "addressCountry": "FR",
+      "addressRegion": "Normandie",
+      "territory": "France - Seine-Maritime (76)"
+    },
+    {
+      "id": "60005",
+      "tradeName": "Market Spas Ussac",
+      "addressPostalCode": "19270",
+      "addressCountry": "FR",
+      "addressRegion": "Nouvelle-Aquitaine",
+      "territory": "France - Corrèze (19)"
+    },
+    {
+      "id": "60006",
+      "tradeName": "Market Spas Feuquières-en-Vimeu",
+      "addressPostalCode": "80210",
+      "addressCountry": "FR",
+      "addressRegion": "Hauts-de-France",
+      "territory": "France - Somme (80)"
+    },
+    {
+      "id": "60007",
+      "tradeName": "Market Spas Calais",
+      "addressPostalCode": "62100",
+      "addressCountry": "FR",
+      "addressRegion": "Hauts-de-France",
+      "territory": "France - Pas-de-Calais (62)"
+    },
+    {
+      "id": "60008",
+      "tradeName": "Market Spas Rantigny",
+      "addressPostalCode": "60290",
+      "addressCountry": "FR",
+      "addressRegion": "Hauts-de-France",
+      "territory": "France - Oise (60)"
+    },
+    {
+      "id": "60009",
+      "tradeName": "Market Spas Bruxelles",
+      "addressPostalCode": "1820",
+      "addressCountry": "BE",
+      "addressRegion": "Bruxelles",
+      "territory": "Belgique - Bruxelles"
+    },
+    {
+      "id": "60010",
+      "tradeName": "Market Spas Limonest",
+      "addressPostalCode": "69760",
+      "addressCountry": "FR",
+      "addressRegion": "Auvergne-Rhône-Alpes",
+      "territory": "France - Rhône (69)"
+    },
+    {
+      "id": "60011",
+      "tradeName": "Market Spas Sainte-Marie-la-Blanche",
+      "addressPostalCode": "21200",
+      "addressCountry": "FR",
+      "addressRegion": "Bourgogne-Franche-Comté",
+      "territory": "France - Côte-d'Or (21)"
+    },
+    {
+      "id": "60012",
+      "tradeName": "Market Spas Estrablin",
+      "addressPostalCode": "38780",
+      "addressCountry": "FR",
+      "addressRegion": "Auvergne-Rhône-Alpes",
+      "territory": "France - Isère (38)"
+    },
+    {
+      "id": "60013",
+      "tradeName": "Market Spas Liège",
+      "addressPostalCode": "4340",
+      "addressCountry": "BE",
+      "addressRegion": "Liège",
+      "territory": "Belgique - Liège"
+    },
+    {
+      "id": "60014",
+      "tradeName": "Market Spas Franois",
+      "addressPostalCode": "25770",
+      "addressCountry": "FR",
+      "addressRegion": "Bourgogne-Franche-Comté",
+      "territory": "France - Doubs (25)"
+    },
+    {
+      "id": "60015",
+      "tradeName": "Market Spas Mersch",
+      "addressPostalCode": "7520",
+      "addressCountry": "LU",
+      "addressRegion": "Luxembourg",
+      "territory": "Luxembourg"
+    },
+    {
+      "id": "60016",
+      "tradeName": "Market Spas Sausheim",
+      "addressPostalCode": "68390",
+      "addressCountry": "FR",
+      "addressRegion": "Grand Est",
+      "territory": "France - Haut-Rhin (68)"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttradeName\taddressPostalCode\taddressCountry\taddressRegion\tterritory\n1\tSpa Paradise\t1000\tBE\tNULL\tNULL\n2\tWellness Center\t2000\tBE\tNULL\tNULL\n3\tAqua Dreams\t1050\tBE\tNULL\tNULL\n4\tRelax Zone\t9000\tBE\tNULL\tNULL\n60001\tMarket Spas Palmones\t11379\tES\tAndalousie\tEspagne - Andalousie\n60002\tMarket Spas Caen\t14310\tFR\tNormandie\tFrance - Normandie (14)\n60003\tMarket Spas Bordeaux\t33500\tFR\tNouvelle-Aquitaine\tFrance - Gironde (33)\n60004\tMarket Spas Pourville sur Mer\t76550\tFR\tNormandie\tFrance - Seine-Maritime (76)\n60005\tMarket Spas Ussac\t19270\tFR\tNouvelle-Aquitaine\tFrance - Corrèze (19)\n60006\tMarket Spas Feuquières-en-Vimeu\t80210\tFR\tHauts-de-France\tFrance - Somme (80)\n60007\tMarket Spas Calais\t62100\tFR\tHauts-de-France\tFrance - Pas-de-Calais (62)\n60008\tMarket Spas Rantigny\t60290\tFR\tHauts-de-France\tFrance - Oise (60)\n60009\tMarket Spas Bruxelles\t1820\tBE\tBruxelles\tBelgique - Bruxelles\n60010\tMarket Spas Limonest\t69760\tFR\tAuvergne-Rhône-Alpes\tFrance - Rhône (69)\n60011\tMarket Spas Sainte-Marie-la-Blanche\t21200\tFR\tBourgogne-Franche-Comté\tFrance - Côte-d'Or (21)\n60012\tMarket Spas Estrablin\t38780\tFR\tAuvergne-Rhône-Alpes\tFrance - Isère (38)\n60013\tMarket Spas Liège\t4340\tBE\tLiège\tBelgique - Liège\n60014\tMarket Spas Franois\t25770\tFR\tBourgogne-Franche-Comté\tFrance - Doubs (25)\n60015\tMarket Spas Mersch\t7520\tLU\tLuxembourg\tLuxembourg\n60016\tMarket Spas Sausheim\t68390\tFR\tGrand Est\tFrance - Haut-Rhin (68)\n",
+  "stderr": "",
+  "execution_time_ms": 151
+}

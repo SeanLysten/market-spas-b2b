@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, tradeName, addressPostalCode, addressCountry, status FROM partners WHERE tradeName LIKE '%Bordeaux%' OR addressPostalCode = '33500';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, tradeName, addressPostalCode, addressCountry, status FROM partners WHERE tradeName LIKE '%Bordeaux%' OR addressPostalCode = '33500';",
+  "rows": [
+    {
+      "id": "60003",
+      "tradeName": "Market Spas Bordeaux",
+      "addressPostalCode": "33500",
+      "addressCountry": "FR",
+      "status": "APPROVED"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttradeName\taddressPostalCode\taddressCountry\tstatus\n60003\tMarket Spas Bordeaux\t33500\tFR\tAPPROVED\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}
