@@ -1958,3 +1958,21 @@
 - [x] Ajouter resolveCountryFromPhone dans lead-routing.ts
 - [x] Réassigner tous les leads en base (160 pays corrigés, 227 CP extraits, 220 réassignés)
 - [x] 547 leads : 405 France, 129 Belgique, 12 Luxembourg, 1 Pays-Bas — tous assignés
+
+## Correction système de territoires et attribution leads
+- [ ] Connecter le routing des leads au système de territoires en BDD (pas hardcodé)
+- [ ] Corriger le fallback par défaut vers Les Valentins (pas Fab'Elec)
+- [ ] Corriger l'interface admin des territoires pour voir qui est assigné à quoi
+- [ ] Permettre de modifier les attributions de départements/provinces depuis l'interface
+- [ ] Réassigner les leads mal attribués (Fab'Elec 152 leads → seulement dept 14 Caen)
+
+## Correction système de territoires et attribution leads (session 2026-02-27 #2)
+- [x] Connecter le routing des leads à la table partner_territories en BDD (plus de mapping hardcodé)
+- [x] Assigner les 96 départements FR + 11 provinces BE aux 16 partenaires importés
+- [x] Supprimer les territoires des anciens partenaires de test (IDs 1-4)
+- [x] Fallback par défaut → Les Valentins (60006) pour les leads sans zone couverte
+- [x] Résolution du pays via : préfixe téléphonique → réponses formulaire → champ country
+- [x] Extraction du code postal depuis customFields (post_code, postal_code, zip)
+- [x] Réassignation en masse des 547 leads existants avec la nouvelle logique BDD
+- [x] Distribution finale : 15 partenaires actifs, 107 leads en fallback Valentins
+- [x] Interface admin /admin/territories fonctionne correctement avec noms partenaires visibles
