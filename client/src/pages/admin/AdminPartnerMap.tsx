@@ -509,7 +509,7 @@ function CandidatesTable({ candidates, onRefresh }: { candidates: any[]; onRefre
                   <p className="text-xs text-muted-foreground mt-1">{candidate.city} • {candidate.status}</p>
                 </div>
                 <div className="flex gap-1 flex-shrink-0">
-                  <Button variant="ghost" size="sm" onClick={() => { setEditingId(candidate.id); setEditForm(candidate); }}><Pencil className="h-3 w-3" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setEditingId(candidate.id); setEditForm(candidate); }}><Edit className="h-3 w-3" /></Button>
                   <Button variant="ghost" size="sm" onClick={() => toggleVisited(candidate)}>{candidate.visited ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}</Button>
                 </div>
               </div>
@@ -1254,10 +1254,10 @@ export default function AdminPartnerMap() {
               <BarChart3 className="w-4 h-4" />
               Statistiques
             </TabsTrigger>
-            <TabsTrigger value="demandes" className="flex items-center gap-2">
-              <Handshake className="w-4 h-4" />
-              Demandes partenariat
-            </TabsTrigger>
+            <TabsTrigger value="demandes" className="flex items-center gap-1.5">
+              <Handshake className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Demandes</span>
+              <span className="sm:hidden">Dem.</span>           </TabsTrigger>
           </TabsList>
 
           {/* CARTE TAB */}

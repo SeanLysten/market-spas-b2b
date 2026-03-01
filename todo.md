@@ -2023,3 +2023,11 @@
 - [x] Scoring: base 1 + showroom +2 + vendSpa +3 + autreMarque +1 + domaineSimilaire +1 = max 8
 - [x] Sync Meta crée automatiquement les candidats partenaires après import
 - [x] 59 scores existants recalculés avec le nouveau barème
+
+## Bugs Carte du Réseau + Token Meta (session 2026-03-01 #5)
+- [x] Onglet Tableau en erreur (crash/erreur boundary) - Pencil remplacé par Edit
+- [x] Onglet Demandes partenariat : texte raccourci à "Demandes"
+- [x] Onglet Demandes partenariat : icône réduite à h-3.5 w-3.5
+- [x] Onglet Demandes partenariat : contenu correct (89 leads partenariat)
+- [x] Token Meta : rate limiting corrigé (sync 5min au lieu de 60s, validation cachée 10min)
+- [x] syncMetaLeads.ts : détection leadType + création candidat auto pour leads partenariat
