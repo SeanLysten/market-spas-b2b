@@ -2010,3 +2010,6 @@
 - [x] Corrigé mapData : sépare leads VENTE et PARTENARIAT
 - [x] 89 leads PARTENARIAT, 473 leads VENTE (0 leads PARTENARIAT assignés)
 - [x] 19 tests vitest passent
+
+## Bug fix: getPriorityColor not defined (session 2026-03-01 #3)
+- [x] Fix ReferenceError: getPriorityColor is not defined in CandidatesTable component
