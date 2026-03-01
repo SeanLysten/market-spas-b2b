@@ -310,13 +310,20 @@ export default function InteractivePartnerMap({
       const visitedBorder = c.visited ? '3px solid #16a34a' : '3px solid white';
       const textColor = c.priorityScore >= 3 && c.priorityScore <= 4 ? '#1a1a1a' : 'white';
 
+      // Pour les candidats validés, afficher un V vert au lieu du score
+      const isValidated = c.status === 'valide';
+      const markerBg = isValidated ? '#16a34a' : priorityColor;
+      const markerContent = isValidated ? '✓' : String(c.priorityScore);
+      const markerTextColor = isValidated ? 'white' : textColor;
+      const markerSize = isValidated ? '36px' : '34px';
+      const markerFontSize = isValidated ? '18px' : '15px';
+
       const iconHtml = `
         <div style="position: relative;">
-          <div style="background-color: ${priorityColor}; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${textColor}; font-weight: bold; font-size: 15px; border: ${visitedBorder}; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
-            ${c.priorityScore}
+          <div style="background-color: ${markerBg}; width: ${markerSize}; height: ${markerSize}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${markerTextColor}; font-weight: bold; font-size: ${markerFontSize}; border: ${visitedBorder}; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+            ${markerContent}
           </div>
           ${c.status === 'en_cours' ? `<div style="position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; background: #3b82f6; border-radius: 50%; border: 2px solid white;"></div>` : ''}
-          ${c.status === 'valide' ? `<div style="position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; background: #16a34a; border-radius: 50%; border: 2px solid white;"></div>` : ''}
         </div>`;
 
       const statusLabel = CANDIDATE_STATUS_LABELS[c.status] || c.status;
@@ -342,8 +349,8 @@ export default function InteractivePartnerMap({
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; padding: 4px; min-width: 280px;">
           <div style="margin-bottom: 12px;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-              <div style="background-color: ${priorityColor}; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${textColor}; font-weight: bold; font-size: 14px; flex-shrink: 0;">
-                ${c.priorityScore}
+              <div style="background-color: ${markerBg}; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${markerTextColor}; font-weight: bold; font-size: ${isValidated ? '16px' : '14px'}; flex-shrink: 0;">
+                ${markerContent}
               </div>
               <h3 style="margin: 0; font-size: 17px; font-weight: 600; color: #1d1d1f; line-height: 1.3;">${c.companyName}</h3>
             </div>
@@ -411,11 +418,12 @@ export default function InteractivePartnerMap({
           </div>
         </div>`;
 
+      const size = isValidated ? 36 : 34;
       const icon = L.divIcon({
         html: iconHtml,
         className: 'custom-marker',
-        iconSize: [34, 34],
-        iconAnchor: [17, 17],
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
       });
 
       const marker = L.marker([item.lat, item.lng], { icon }).addTo(mapRef.current!);

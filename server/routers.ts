@@ -3574,6 +3574,17 @@ export const appRouter = router({
 
         await conn.end();
 
+        // Créer automatiquement les candidats partenaires pour les leads PARTENARIAT importés
+        if (imported > 0) {
+          try {
+            const { reclassifyExistingPartnerLeads } = await import('./meta-leads');
+            const reclassResult = await reclassifyExistingPartnerLeads();
+            console.log(`[Meta Sync] Candidats partenaires créés: ${reclassResult.created}, déjà existants: ${reclassResult.alreadyExists}`);
+          } catch (e) {
+            console.error('[Meta Sync] Erreur création candidats partenaires:', e);
+          }
+        }
+
         // Notifier les admins si de nouveaux leads ont été importés
         if (imported > 0) {
           notifyAdmins("leads:refresh", { timestamp: Date.now() });

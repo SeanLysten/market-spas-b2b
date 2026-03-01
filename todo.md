@@ -2013,3 +2013,13 @@
 
 ## Bug fix: getPriorityColor not defined (session 2026-03-01 #3)
 - [x] Fix ReferenceError: getPriorityColor is not defined in CandidatesTable component
+
+## Scoring auto leads partenariat + carte optimisée (session 2026-03-01 #4)
+- [x] Créer un système de scoring automatique (1-8) basé sur les réponses des leads partenariat
+- [x] Convertir automatiquement les leads partenariat en candidats sur la carte du réseau (94 candidats, 24 nouveaux créés)
+- [x] Afficher un "✓" (validé) au lieu du chiffre pour les partenaires validés/actifs (carte + tableau)
+- [x] Optimiser le chargement de la carte (coordonnées stockées en base, affichage progressif)
+- [x] Écrire les tests vitest pour le scoring (18 tests passent)
+- [x] Scoring: base 1 + showroom +2 + vendSpa +3 + autreMarque +1 + domaineSimilaire +1 = max 8
+- [x] Sync Meta crée automatiquement les candidats partenaires après import
+- [x] 59 scores existants recalculés avec le nouveau barème

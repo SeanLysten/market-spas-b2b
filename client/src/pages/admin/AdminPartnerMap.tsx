@@ -119,11 +119,11 @@ function AddCandidateForm({ onSuccess }: { onSuccess: () => void }) {
   });
 
   const priorityScore = useMemo(() => {
-    let score = 0;
-    if (form.showroom === 'oui') score += 2;
-    if (form.vendSpa === 'oui') score += 3;
-    if (form.autreMarque === 'oui') score += 2;
-    if (form.domaineSimilaire === 'oui') score += 1;
+    let score = 1; // Score minimum de 1
+    if (form.showroom === 'oui') score += 2;        // +2 si showroom
+    if (form.vendSpa === 'oui') score += 3;          // +3 si vend déjà des spas
+    if (form.autreMarque === 'oui') score += 1;      // +1 si autre marque
+    if (form.domaineSimilaire === 'oui') score += 1; // +1 si domaine similaire
     return score;
   }, [form.showroom, form.vendSpa, form.autreMarque, form.domaineSimilaire]);
 
@@ -195,7 +195,7 @@ function AddCandidateForm({ onSuccess }: { onSuccess: () => void }) {
               {[
                 { key: 'showroom', label: 'A un showroom ?', points: '+2' },
                 { key: 'vendSpa', label: 'Vend déjà des spas ?', points: '+3' },
-                { key: 'autreMarque', label: 'Autre marque de spa ?', points: '+2' },
+                { key: 'autreMarque', label: 'Autre marque de spa ?', points: '+1' },
                 { key: 'domaineSimilaire', label: 'Domaine similaire ?', points: '+1' },
               ].map(({ key, label, points }) => (
                 <div key={key} className="flex items-center justify-between p-2 bg-white rounded-lg border">
@@ -276,10 +276,10 @@ function CSVImport({ onSuccess }: { onSuccess: () => void }) {
         const autreMarque = (row.autremarque || row['autre_marque'] || 'non').toLowerCase() === 'oui' ? 'oui' : 'non';
         const domaineSimilaire = (row.domainesimilaire || row['domaine_similaire'] || 'non').toLowerCase() === 'oui' ? 'oui' : 'non';
 
-        let score = 0;
+        let score = 1; // Score minimum de 1
         if (showroom === 'oui') score += 2;
         if (vendSpa === 'oui') score += 3;
-        if (autreMarque === 'oui') score += 2;
+        if (autreMarque === 'oui') score += 1;
         if (domaineSimilaire === 'oui') score += 1;
 
         return {
@@ -395,10 +395,10 @@ function CandidatesTable({ candidates, onRefresh }: { candidates: any[]; onRefre
   const saveEdit = () => {
     if (!editForm || !editingId) return;
     // Recalculate priority score
-    let score = 0;
+    let score = 1; // Score minimum de 1
     if (editForm.showroom === 'oui') score += 2;
     if (editForm.vendSpa === 'oui') score += 3;
-    if (editForm.autreMarque === 'oui') score += 2;
+    if (editForm.autreMarque === 'oui') score += 1;
     if (editForm.domaineSimilaire === 'oui') score += 1;
 
     updateMutation.mutate({
@@ -503,7 +503,7 @@ function CandidatesTable({ candidates, onRefresh }: { candidates: any[]; onRefre
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${PRIORITY_COLORS[candidate.priorityScore] || 'bg-gray-300'}`}>{candidate.priorityScore}</span>
+                    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${candidate.status === 'valide' ? 'bg-green-600 text-white' : (PRIORITY_COLORS[candidate.priorityScore] || 'bg-gray-300')}`}>{candidate.status === 'valide' ? '✓' : candidate.priorityScore}</span>
                     <p className="font-medium text-sm truncate">{candidate.company}</p>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">{candidate.city} • {candidate.status}</p>
@@ -548,8 +548,8 @@ function CandidatesTable({ candidates, onRefresh }: { candidates: any[]; onRefre
                 <TableRow key={candidate.id} className={`${candidate.visited ? 'bg-emerald-500/10 dark:bg-emerald-500/20/50' : ''} ${isEditing ? 'bg-info/10 dark:bg-info-light/50' : ''}`}>
                   {/* Priority Score */}
                   <TableCell>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${PRIORITY_COLORS[candidate.priorityScore] || 'bg-gray-300'}`}>
-                      {candidate.priorityScore}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${candidate.status === 'valide' ? 'bg-green-600 text-white' : (PRIORITY_COLORS[candidate.priorityScore] || 'bg-gray-300')}`}>
+                      {candidate.status === 'valide' ? '✓' : candidate.priorityScore}
                     </div>
                   </TableCell>
 
@@ -1323,7 +1323,11 @@ export default function AdminPartnerMap() {
                         </div>
                       ))}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">8 = priorité maximale (contacter absolument), bordure verte = visité</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold bg-green-600 text-white">✓</div>
+                      <span className="text-xs text-muted-foreground">= Partenaire validé</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">8 = priorité maximale (contacter absolument), bordure verte = visité</p>
                   </div>
 
                   {/* Candidate statuses */}

@@ -168,13 +168,14 @@ export function calculatePartnerScore(fields: Record<string, string>): {
   const autreMarque = normalizeYesNo(fields["vendez-vous_actuellement_une_autre_marque_?"]);
   const domaineSimilaire = normalizeYesNo(fields["travaillez-vous_dans_un_domaine_similaire_?_"]);
 
-  let score = 0;
-  if (showroom === "oui") score += 2;
-  if (vendSpa === "oui") score += 2;
-  if (autreMarque === "oui") score += 2;
-  if (domaineSimilaire === "oui") score += 2;
+  let score = 1; // Score minimum de 1 pour tout lead partenariat
+  if (showroom === "oui") score += 2;        // +2 si showroom
+  if (vendSpa === "oui") score += 3;          // +3 si vend déjà des spas (le plus important)
+  if (autreMarque === "oui") score += 1;      // +1 si vend une autre marque
+  if (domaineSimilaire === "oui") score += 1; // +1 si domaine similaire
+  // Score max = 1 + 2 + 3 + 1 + 1 = 8
 
-  return { score, showroom, vendSpa, autreMarque, domaineSimilaire };
+  return { score: Math.min(score, 8), showroom, vendSpa, autreMarque, domaineSimilaire };
 }
 
 /**
