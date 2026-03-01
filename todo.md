@@ -1989,3 +1989,11 @@
 - [x] reassignAll ne réassigne que les leads VENTE
 - [x] meta-leads.ts marque les leads partenariat avec leadType=PARTENARIAT et assignedPartnerId=null
 - [x] 13 tests vitest passent pour la logique de séparation des leads
+
+## Reconnexion token Meta permanent (session 2026-03-01)
+- [x] Reconnecter le token Meta permanent pour la synchronisation des leads
+- [x] Token PAGE permanent obtenu (expires_at: 0 = jamais)
+- [x] META_PAGE_ACCESS_TOKEN mis à jour dans les secrets
+- [x] Token long-lived user mis à jour dans meta_ad_accounts
+- [x] Vérifier que la synchronisation reprend correctement (23 campagnes, 230 leads, 7152€ budget)
+- [x] 5 tests vitest passent pour la validation du token

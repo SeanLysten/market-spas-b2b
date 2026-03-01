@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, metaUserName, adAccountId, adAccountName, accessToken LIKE 'EAAR%' as hasToken, tokenExpiresAt, isActive, syncError FROM meta_ad_accounts;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, metaUserName, adAccountId, adAccountName, accessToken LIKE 'EAAR%' as hasToken, tokenExpiresAt, isActive, syncError FROM meta_ad_accounts;",
+  "rows": [
+    {
+      "id": "1",
+      "metaUserName": "Sean Lysten",
+      "adAccountId": "act_1377275919235351",
+      "adAccountName": "MarketSpas",
+      "hasToken": "1",
+      "tokenExpiresAt": "2026-04-11 12:04:05",
+      "isActive": "1",
+      "syncError": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tmetaUserName\tadAccountId\tadAccountName\thasToken\ttokenExpiresAt\tisActive\tsyncError\n1\tSean Lysten\tact_1377275919235351\tMarketSpas\t1\t2026-04-11 12:04:05\t1\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 95
+}

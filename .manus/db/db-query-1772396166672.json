@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE meta_ad_accounts SET accessToken = 'EAARdZAJNzrbkBQzvn0XuDiUvH7MRhqGtqQCnXLgmWVsqfjW6IquV2eLicbygL6OiLLZCxjYA3S11jdKWZBOEZA0Y6ghSH8ncKbonkNpeDrDFaZC2tkZB6XJewMWZCfpl5ywBIsJfSmEUnfkUT9LIJToEQdPra5d3NzuhfmZAsEhR2PsejWxCVIXqCNXZBwQGcRFoq', tokenExpiresAt = NULL, syncError = NULL WHERE isActive = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute UPDATE meta_ad_accounts SET accessToken = 'EAARdZAJNzrbkBQzvn0XuDiUvH7MRhqGtqQCnXLgmWVsqfjW6IquV2eLicbygL6OiLLZCxjYA3S11jdKWZBOEZA0Y6ghSH8ncKbonkNpeDrDFaZC2tkZB6XJewMWZCfpl5ywBIsJfSmEUnfkUT9LIJToEQdPra5d3NzuhfmZAsEhR2PsejWxCVIXqCNXZBwQGcRFoq', tokenExpiresAt = NULL, syncError = NULL WHERE isActive = 1;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 65
+}

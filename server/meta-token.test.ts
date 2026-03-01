@@ -41,16 +41,14 @@ describe("META_PAGE_ACCESS_TOKEN validation", () => {
     expect(data.name).toBe("Market Spa");
   });
 
-  it("should be able to get page tokens via me/accounts", async () => {
+  it("should be able to get page info via me (page token)", async () => {
     const token = process.env.META_PAGE_ACCESS_TOKEN;
+    // A page token returns the page itself when calling /me
     const res = await fetch(
-      `https://graph.facebook.com/v24.0/me/accounts?fields=id,name&access_token=${token}`
+      `https://graph.facebook.com/v24.0/me?fields=id,name&access_token=${token}`
     );
     const data = await res.json();
-    expect(data.data).toBeDefined();
-    expect(data.data.length).toBeGreaterThan(0);
-    const pageNames = data.data.map((p: any) => p.name);
-    expect(pageNames).toContain("Market Spa");
-    expect(pageNames).toContain("Market spas - Online store");
+    expect(data.id).toBeDefined();
+    expect(data.name).toBe("Market Spa");
   });
 });
