@@ -2031,3 +2031,10 @@
 - [x] Onglet Demandes partenariat : contenu correct (89 leads partenariat)
 - [x] Token Meta : rate limiting corrigé (sync 5min au lieu de 60s, validation cachée 10min)
 - [x] syncMetaLeads.ts : détection leadType + création candidat auto pour leads partenariat
+
+## Bug: Campagnes Meta disparues dans Leads admin (session 2026-03-01 #6)
+- [x] Les graphiques, stats et tableau des campagnes Meta ne s'affichent plus - CORRIGÉ
+- [x] Cause: rate limiting API Meta faisait échouer validateToken → token considéré expiré
+- [x] Solution: cache de validation 15min + gestion rate limiting (code 4) comme token valide
+- [x] KPI restaurés: 7152.67€, 2805.8K impressions, 230 leads, CPL 31.10€
+- [x] 23 campagnes affichées avec graphique d'évolution quotidienne

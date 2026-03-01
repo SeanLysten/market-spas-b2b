@@ -440,15 +440,43 @@ export async function getPeriodInsights(
   return { spend, leads, clicks, impressions, reach, ctr, cpc, cpm, frequency, costPerLead };
 }
 
+// Cache de validation du token pour éviter le rate limiting de l'API Meta
+const tokenValidationCache: Map<string, { valid: boolean; timestamp: number }> = new Map();
+const TOKEN_CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
 /**
- * Vérifie si un token est encore valide
+ * Vérifie si un token est encore valide (avec cache pour éviter le rate limiting)
  */
 export async function validateToken(accessToken: string): Promise<boolean> {
+  // Vérifier le cache d'abord
+  const tokenKey = accessToken.substring(0, 20);
+  const cached = tokenValidationCache.get(tokenKey);
+  if (cached && (Date.now() - cached.timestamp) < TOKEN_CACHE_DURATION_MS) {
+    return cached.valid;
+  }
+
   try {
     const url = `https://graph.facebook.com/${META_GRAPH_VERSION}/me?access_token=${accessToken}`;
     const response = await fetch(url);
-    return response.ok;
+    
+    // Si rate limited (code 4), considérer le token comme valide (il l'était probablement)
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      if (body?.error?.code === 4 || body?.error?.is_transient) {
+        console.log("[Meta] Rate limited lors de la validation du token - on considère le token comme valide");
+        tokenValidationCache.set(tokenKey, { valid: true, timestamp: Date.now() });
+        return true;
+      }
+    }
+    
+    const isValid = response.ok;
+    tokenValidationCache.set(tokenKey, { valid: isValid, timestamp: Date.now() });
+    return isValid;
   } catch {
+    // En cas d'erreur réseau, considérer le token comme valide si on avait un cache positif avant
+    if (cached?.valid) {
+      return true;
+    }
     return false;
   }
 }
