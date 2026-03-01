@@ -2175,7 +2175,10 @@ export async function getLeadsByPartnerId(partnerId: number) {
 
   return db.select()
     .from(leads)
-    .where(eq(leads.assignedPartnerId, partnerId))
+    .where(and(
+      eq(leads.assignedPartnerId, partnerId),
+      eq(leads.leadType, 'VENTE' as any)
+    ))
     .orderBy(desc(leads.receivedAt), desc(leads.id));
 }
 

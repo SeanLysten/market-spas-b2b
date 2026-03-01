@@ -150,6 +150,9 @@ export default function InteractivePartnerMap({
   }
   const [geocodedItems, setGeocodedItems] = useState<GeocodedCandidate[]>([]);
 
+  // Mutation pour sauvegarder les coordonnées géocodées en base
+  const saveCoordsMutation = trpc.admin.candidates.saveCoordinates.useMutation();
+
   // tRPC mutations for status change, visited toggle, increment calls/emails
   const updateMutation = trpc.admin.candidates.update.useMutation({
     onSuccess: () => {
@@ -225,6 +228,7 @@ export default function InteractivePartnerMap({
     const geocodeAll = async () => {
       const items: GeocodedCandidate[] = [];
       const cache = geocodeCacheRef.current;
+      const coordsToSave: { id: number; latitude: string; longitude: string }[] = [];
 
       // Filter by status
       const filtered = statusFilter === 'all'
@@ -255,15 +259,33 @@ export default function InteractivePartnerMap({
         if (coords === undefined) {
           coords = await geocodeAddress(address);
           cache.set(`candidate-${address}`, coords);
+          // Sauvegarder en base pour éviter le géocodage futur
+          if (coords) {
+            coordsToSave.push({ id: candidate.id, latitude: String(coords.lat), longitude: String(coords.lng) });
+          }
           await new Promise(r => setTimeout(r, 200));
         }
         if (coords) {
           items.push({ id: `candidate-${candidate.id}`, lat: coords.lat, lng: coords.lng, data: candidate });
         }
+
+        // Afficher progressivement les markers (tous les 5 géocodages)
+        if (items.length % 5 === 0 && !cancelled) {
+          setGeocodedItems([...items]);
+        }
       }
 
       if (!cancelled) {
         setGeocodedItems(items);
+      }
+
+      // Sauvegarder les coordonnées en base en batch
+      if (coordsToSave.length > 0 && !cancelled) {
+        try {
+          saveCoordsMutation.mutate(coordsToSave);
+        } catch (e) {
+          console.warn('[Map] Erreur sauvegarde coordonnées:', e);
+        }
       }
     };
 

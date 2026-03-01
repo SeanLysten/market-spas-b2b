@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('./db', () => ({
   getLeads: vi.fn(),
   createLead: vi.fn(),
+  getLeadsByPartnerId: vi.fn(),
   getDb: vi.fn(),
 }));
 
@@ -25,7 +26,6 @@ describe('Lead Type Routing', () => {
 
       await getLeads({});
       
-      // The function should have been called - we verify the filter logic works
       expect(mockGetLeads).toHaveBeenCalledWith({});
     });
 
@@ -115,7 +115,6 @@ describe('Lead Type Routing', () => {
 
   describe('isPartnerLead detection', () => {
     it('should detect partner leads by company_name field', async () => {
-      // Import the isPartnerLead function from meta-leads
       const { isPartnerLead } = await import('./meta-leads');
       
       const partnerFields = {
@@ -140,6 +139,42 @@ describe('Lead Type Routing', () => {
       expect(isPartnerLead(partnerFields)).toBe(true);
     });
 
+    it('should detect partner leads by vente de spa field', async () => {
+      const { isPartnerLead } = await import('./meta-leads');
+      
+      const partnerFields = {
+        full_name: 'Test',
+        email: 'test@test.com',
+        'travaillez-vous_déjà_dans_la_vente_de_spa_?_': 'oui',
+      };
+      
+      expect(isPartnerLead(partnerFields)).toBe(true);
+    });
+
+    it('should detect partner leads by domaine similaire field', async () => {
+      const { isPartnerLead } = await import('./meta-leads');
+      
+      const partnerFields = {
+        full_name: 'Test',
+        email: 'test@test.com',
+        'travaillez-vous_dans_un_domaine_similaire_?_': 'oui',
+      };
+      
+      expect(isPartnerLead(partnerFields)).toBe(true);
+    });
+
+    it('should detect partner leads by autre marque field', async () => {
+      const { isPartnerLead } = await import('./meta-leads');
+      
+      const partnerFields = {
+        full_name: 'Test',
+        email: 'test@test.com',
+        'vendez-vous_actuellement_une_autre_marque_?': 'oui',
+      };
+      
+      expect(isPartnerLead(partnerFields)).toBe(true);
+    });
+
     it('should NOT detect regular client leads as partner leads', async () => {
       const { isPartnerLead } = await import('./meta-leads');
       
@@ -151,11 +186,25 @@ describe('Lead Type Routing', () => {
       
       expect(isPartnerLead(clientFields)).toBe(false);
     });
+
+    it('should NOT detect leads with only standard fields as partner leads', async () => {
+      const { isPartnerLead } = await import('./meta-leads');
+      
+      const clientFields = {
+        full_name: 'Jean Dupont',
+        email: 'jean@test.com',
+        phone_number: '+33612345678',
+        city: 'Paris',
+        postal_code: '75001',
+        product_interest: 'un_spa',
+      };
+      
+      expect(isPartnerLead(clientFields)).toBe(false);
+    });
   });
 
   describe('Lead routing rules', () => {
     it('PARTENARIAT leads should NOT have assignedPartnerId', () => {
-      // This is a data integrity rule: PARTENARIAT leads must never be assigned to a partner
       const partnerLead = {
         leadType: 'PARTENARIAT',
         assignedPartnerId: null,
@@ -167,7 +216,6 @@ describe('Lead Type Routing', () => {
     });
 
     it('SAV leads should NOT have assignedPartnerId', () => {
-      // SAV leads go to SAV section, not to partners
       const savLead = {
         leadType: 'SAV',
         assignedPartnerId: null,
@@ -177,7 +225,6 @@ describe('Lead Type Routing', () => {
     });
 
     it('VENTE leads CAN have assignedPartnerId', () => {
-      // Only VENTE leads should be assigned to partners
       const venteLead = {
         leadType: 'VENTE',
         assignedPartnerId: 60006,
@@ -185,6 +232,49 @@ describe('Lead Type Routing', () => {
       };
       
       expect(venteLead.assignedPartnerId).toBe(60006);
+    });
+  });
+
+  describe('Meta sync lead type detection', () => {
+    it('should classify leads with company_name as PARTENARIAT during sync', async () => {
+      const { isPartnerLead } = await import('./meta-leads');
+      
+      // Simulate fields from a Meta lead form "Devenir Partenaire"
+      const syncFields = {
+        full_name: 'Charles ZAMPOL',
+        email: 'loopmaze108@gmail.com',
+        phone_number: '+33612345678',
+        city: 'Metz',
+        company_name: 'LOOPMAZE 108',
+        'travaillez-vous_dans_un_domaine_similaire_?_': 'oui',
+        'travaillez-vous_déjà_dans_la_vente_de_spa_?_': 'non',
+      };
+      
+      const isPartnership = isPartnerLead(syncFields);
+      const leadType = isPartnership ? 'PARTENARIAT' : 'VENTE';
+      
+      expect(isPartnership).toBe(true);
+      expect(leadType).toBe('PARTENARIAT');
+    });
+
+    it('should classify regular client leads as VENTE during sync', async () => {
+      const { isPartnerLead } = await import('./meta-leads');
+      
+      // Simulate fields from a regular client Meta lead form
+      const syncFields = {
+        full_name: 'Jean Dupont',
+        email: 'jean@test.com',
+        phone_number: '+33612345678',
+        postal_code: '75001',
+        city: 'Paris',
+        product_interest: 'un_spa',
+      };
+      
+      const isPartnership = isPartnerLead(syncFields);
+      const leadType = isPartnership ? 'PARTENARIAT' : 'VENTE';
+      
+      expect(isPartnership).toBe(false);
+      expect(leadType).toBe('VENTE');
     });
   });
 });

@@ -2021,15 +2021,17 @@ export const appRouter = router({
 
       // Map data: partners + leads + territories for interactive map
       mapData: adminProcedure.query(async () => {
-        const [allPartners, allLeads, allTerritories, allRegions] = await Promise.all([
+        const [allPartners, allLeads, partnershipLeads, allTerritories, allRegions] = await Promise.all([
           db.getAllPartners({}),
-          db.getLeads({}),
+          db.getLeads({ leadType: 'VENTE' }),
+          db.getLeads({ leadType: 'PARTENARIAT' }),
           territoriesDb.getAllPartnerTerritories(),
           territoriesDb.getAllRegionsWithCountry(),
         ]);
         return {
           partners: allPartners,
           leads: allLeads,
+          partnershipLeads: partnershipLeads,
           territories: allTerritories,
           regions: allRegions,
         };
@@ -2093,6 +2095,25 @@ export const appRouter = router({
         }))
         .mutation(async ({ input }) => {
           return await candidatesDb.updateCandidate(input.id, input.updates);
+        }),
+
+      // Sauvegarder les coordonnées géocodées en batch
+      saveCoordinates: adminProcedure
+        .input(z.array(z.object({
+          id: z.number(),
+          latitude: z.string(),
+          longitude: z.string(),
+        })))
+        .mutation(async ({ input }) => {
+          let saved = 0;
+          for (const item of input) {
+            await candidatesDb.updateCandidate(item.id, {
+              latitude: item.latitude,
+              longitude: item.longitude,
+            });
+            saved++;
+          }
+          return { saved };
         }),
 
       delete: adminProcedure
@@ -3536,10 +3557,15 @@ export const appRouter = router({
             const message = fields.message || fields.comments || "";
             const productInterest = fields.product_interest || fields.produit || "";
 
+            // Détecter si c'est un lead partenariat (Devenir Partenaire)
+            const { isPartnerLead } = await import('./meta-leads');
+            const isPartnership = isPartnerLead(fields);
+            const leadType = isPartnership ? 'PARTENARIAT' : 'VENTE';
+
             await conn.execute(
-              `INSERT INTO leads (firstName, lastName, email, phone, postalCode, city, source, status, metaLeadgenId, metaFormId, productInterest, message, customFields, receivedAt, createdAt, updatedAt)
-               VALUES (?, ?, ?, ?, ?, ?, 'META_ADS', 'NEW', ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-              [firstName, lastName, email, phone, postalCode, city, leadData.id, form.id, productInterest, message, JSON.stringify(fields), new Date(leadData.created_time)]
+              `INSERT INTO leads (firstName, lastName, email, phone, postalCode, city, source, status, leadType, metaLeadgenId, metaFormId, productInterest, message, customFields, receivedAt, createdAt, updatedAt)
+               VALUES (?, ?, ?, ?, ?, ?, 'META_ADS', 'NEW', ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+              [firstName, lastName, email, phone, postalCode, city, leadType, leadData.id, form.id, productInterest, message, JSON.stringify(fields), new Date(leadData.created_time)]
             );
 
             imported++;

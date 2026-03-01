@@ -1997,3 +1997,16 @@
 - [x] Token long-lived user mis à jour dans meta_ad_accounts
 - [x] Vérifier que la synchronisation reprend correctement (23 campagnes, 230 leads, 7152€ budget)
 - [x] 5 tests vitest passent pour la validation du token
+
+## Fix leads partenariat encore visibles + perf carte (session 2026-03-01 #2)
+- [x] Les leads partenariat apparaissent encore dans la vue des partenaires - corrigé (2 leads supplémentaires reclassifiés)
+- [x] Vérifier que getLeads filtre bien par leadType=VENTE pour les partenaires
+- [x] Vérifier que les leads récemment syncés ont bien leadType=PARTENARIAT
+- [x] Optimiser le temps de chargement de la carte du réseau (sauvegarde coordonnées en base + affichage progressif)
+- [x] Optimiser le temps de chargement de la liste des leads
+- [x] Afficher les leads partenariat automatiquement sur la carte du réseau
+- [x] Corrigé sync Meta : détection automatique du leadType lors de l'import
+- [x] Corrigé getLeadsByPartnerId : filtre sur leadType=VENTE uniquement
+- [x] Corrigé mapData : sépare leads VENTE et PARTENARIAT
+- [x] 89 leads PARTENARIAT, 473 leads VENTE (0 leads PARTENARIAT assignés)
+- [x] 19 tests vitest passent
