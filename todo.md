@@ -2124,3 +2124,13 @@
 - [x] Rediriger directement vers /dashboard avec <Redirect to="/dashboard" />
 - [x] Supprimer le code mort de l'ancienne vue authentifiée (250+ lignes)
 - [x] Vérifier que / redirige bien vers /dashboard quand connecté
+
+## Agenda admin pour gestion des événements (session 2026-03-02 #12)
+- [x] Table events déjà existante en DB (titre, description, dates, type, promo, isPublished)
+- [x] Routes serveur CRUD (admin.events.list, create, update, togglePublish, delete)
+- [x] Route publique events.upcoming connectée au dashboard utilisateur
+- [x] Page AdminCalendar avec liste, formulaire création/édition, filtres, recherche, stats
+- [x] Sous-menu "Agenda" ajouté dans Communication de la sidebar admin
+- [x] Widget "Événements à venir" du dashboard utilisateur connecté aux données réelles
+- [x] 5 types d'événements : Promotion, Événement, Annonce, Formation, Webinaire
+- [x] 8 événements existants affichés (2 à venir, 6 passés)

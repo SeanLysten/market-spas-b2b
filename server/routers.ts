@@ -1691,6 +1691,38 @@ export const appRouter = router({
           return await db.createEvent({ ...input, createdBy: ctx.user.id });
         }),
 
+      update: adminProcedure
+        .input(
+          z.object({
+            id: z.number(),
+            title: z.string().optional(),
+            description: z.string().optional().nullable(),
+            type: z.enum(['PROMOTION', 'EVENT', 'ANNOUNCEMENT', 'TRAINING', 'WEBINAR']).optional(),
+            startDate: z.date().optional(),
+            endDate: z.date().optional().nullable(),
+            allDay: z.boolean().optional(),
+            imageUrl: z.string().optional().nullable(),
+            discountPercent: z.number().optional().nullable(),
+            promoCode: z.string().optional().nullable(),
+            isPublished: z.boolean().optional(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          const { id, discountPercent, ...rest } = input;
+          await db.updateEvent(id, {
+            ...rest,
+            discountPercent: discountPercent != null ? discountPercent.toString() : undefined,
+          });
+          return { success: true };
+        }),
+
+      togglePublish: adminProcedure
+        .input(z.object({ id: z.number(), isPublished: z.boolean() }))
+        .mutation(async ({ input }) => {
+          await db.updateEvent(input.id, { isPublished: input.isPublished });
+          return { success: true };
+        }),
+
       delete: adminProcedure
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input }) => {

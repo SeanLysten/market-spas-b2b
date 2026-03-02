@@ -32,8 +32,8 @@ export default function Dashboard() {
   const { data: notificationsData, isLoading: notificationsLoading } = trpc.dashboard.notifications.useQuery({ limit: 5 });
   const notifications = useSafeQuery(notificationsData);
   const { data: unreadCount } = trpc.dashboard.unreadCount.useQuery();
-  // Les événements seront chargés une fois le router events créé
-  const upcomingEvents: any[] = [];
+  const { data: upcomingEventsData } = trpc.events.upcoming.useQuery({ limit: 5 });
+  const upcomingEvents = upcomingEventsData || [];
 
   const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN";
 

@@ -28,6 +28,7 @@ import {
   HeadphonesIcon,
   MessageSquare,
   BarChart3,
+  CalendarDays,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
@@ -131,6 +132,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       label: "Communication",
       icon: MessageSquare,
       items: [
+        { name: "Agenda", href: "/admin/calendar", icon: CalendarDays },
         { name: "Newsletter", href: "/admin/newsletter", icon: Mail },
         { name: "Utilisateurs", href: "/admin/users", icon: Users },
       ],

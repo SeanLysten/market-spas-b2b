@@ -5231,3 +5231,23 @@ export async function deleteScheduledNewsletter(id: number) {
   if (!db) throw new Error("Database not available");
   await db.delete(scheduledNewsletters).where(eq(scheduledNewsletters.id, id));
 }
+
+// ==================== UPDATE EVENT ====================
+
+export async function updateEvent(id: number, data: {
+  title?: string;
+  description?: string | null;
+  type?: 'PROMOTION' | 'EVENT' | 'ANNOUNCEMENT' | 'TRAINING' | 'WEBINAR';
+  startDate?: Date;
+  endDate?: Date | null;
+  allDay?: boolean;
+  imageUrl?: string | null;
+  discountPercent?: string | null;
+  promoCode?: string | null;
+  isPublished?: boolean;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.update(events).set(data).where(eq(events.id, id));
+}
