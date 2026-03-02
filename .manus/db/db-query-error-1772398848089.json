@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT \n  l.id,\n  l.first_name,\n  l.last_name,\n  l.email AS lead_email,\n  l.phone AS lead_phone,\n  l.postal_code,\n  l.city,\n  l.custom_fields,\n  l.created_at,\n  l.status,\n  l.follow_up_status,\n  l.lead_type,\n  p.id AS partner_id,\n  p.company_name AS partner_name,\n  p.contact_email AS partner_email,\n  u.email AS partner_user_email,\n  u.name AS partner_user_name\nFROM leads l\nLEFT JOIN partners p ON l.assigned_partner_id = p.id\nLEFT JOIN users u ON p.id = u.partner_id\nWHERE l.lead_type = 'VENTE'\n  AND l.assigned_partner_id IS NOT NULL\n  AND l.created_at >= DATE_SUB(NOW(), INTERVAL 3 WEEK)\nORDER BY p.company_name, l.created_at DESC;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute \nSELECT \n  l.id,\n  l.first_name,\n  l.last_name,\n  l.email AS lead_email,\n  l.phone AS lead_phone,\n  l.postal_code,\n  l.city,\n  l.custom_fields,\n  l.created_at,\n  l.status,\n  l.follow_up_status,\n  l.lead_type,\n  p.id AS partner_id,\n  p.company_name AS partner_name,\n  p.contact_email AS partner_email,\n  u.email AS partner_user_email,\n  u.name AS partner_user_name\nFROM leads l\nLEFT JOIN partners p ON l.assigned_partner_id = p.id\nLEFT JOIN users u ON p.id = u.partner_id\nWHERE l.lead_type = 'VENTE'\n  AND l.assigned_partner_id IS NOT NULL\n  AND l.created_at >= DATE_SUB(NOW(), INTERVAL 3 WEEK)\nORDER BY p.company_name, l.created_at DESC;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'l.assigned_partner_id' in 'on clause'"
+  ]
+}

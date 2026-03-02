@@ -2038,3 +2038,11 @@
 - [x] Solution: cache de validation 15min + gestion rate limiting (code 4) comme token valide
 - [x] KPI restaurés: 7152.67€, 2805.8K impressions, 230 leads, CPL 31.10€
 - [x] 23 campagnes affichées avec graphique d'évolution quotidienne
+
+## Ajout Luxembourg comme territoire + routing +352 (session 2026-03-02)
+- [x] Ajouter le Luxembourg comme pays d'attribution de territoire (country ID 60001)
+- [x] Créer la région LU-L dans la table regions (region ID 60001)
+- [x] Attribuer le territoire Luxembourg à SaniDesign (ID 60015)
+- [x] Router automatiquement les leads avec indicatif +352 vers SaniDesign (déjà géré dans lead-routing.ts)
+- [x] Réassigner les 14 leads luxembourgeois existants de Valentin vers SaniDesign
+- [x] Normaliser le country 'Luxembourg' → 'LU' pour les leads existants
