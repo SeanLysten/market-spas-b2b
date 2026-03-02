@@ -240,6 +240,11 @@ async function startServer() {
     import("../jobs/syncMetaLeads").then(({ startMetaLeadsSyncJob }) => {
       startMetaLeadsSyncJob();
     }).catch(console.error);
+
+    // Démarrer le job d'envoi des newsletters programmées (toutes les 60 secondes)
+    import("../jobs/sendScheduledNewsletters").then(({ startScheduledNewsletterJob }) => {
+      startScheduledNewsletterJob();
+    }).catch(console.error);
   });
 }
 

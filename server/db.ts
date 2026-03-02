@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like, lte, gte, asc, ne, gt, lt, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts, partnerTerritories } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts, partnerTerritories, scheduledNewsletters } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -5154,4 +5154,80 @@ export async function getInvitationForResend(tokenId: number): Promise<any | nul
   }
 
   return invitation;
+}
+
+
+// ============================================
+// SCHEDULED NEWSLETTERS
+// ============================================
+
+export async function createScheduledNewsletter(data: {
+  subject: string;
+  title: string;
+  htmlContent: string;
+  recipients: 'ALL' | 'PARTNERS_ONLY' | 'ADMINS_ONLY';
+  scheduledAt: Date;
+  createdById: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(scheduledNewsletters).values({
+    subject: data.subject,
+    title: data.title,
+    htmlContent: data.htmlContent,
+    recipients: data.recipients,
+    scheduledAt: data.scheduledAt,
+    createdById: data.createdById,
+    status: 'PENDING',
+  });
+  return { id: result[0].insertId };
+}
+
+export async function getScheduledNewsletters() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(scheduledNewsletters).orderBy(desc(scheduledNewsletters.createdAt));
+}
+
+export async function getPendingScheduledNewsletters() {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  return db.select().from(scheduledNewsletters)
+    .where(and(
+      eq(scheduledNewsletters.status, 'PENDING'),
+      lte(scheduledNewsletters.scheduledAt, now)
+    ));
+}
+
+export async function updateScheduledNewsletterStatus(id: number, status: 'SENT' | 'CANCELLED' | 'FAILED', extra?: {
+  sentAt?: Date;
+  cancelledAt?: Date;
+  totalRecipients?: number;
+  successCount?: number;
+  failureCount?: number;
+  errorMessage?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(scheduledNewsletters)
+    .set({ status, ...extra })
+    .where(eq(scheduledNewsletters.id, id));
+}
+
+export async function cancelScheduledNewsletter(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(scheduledNewsletters)
+    .set({ status: 'CANCELLED', cancelledAt: new Date() })
+    .where(and(
+      eq(scheduledNewsletters.id, id),
+      eq(scheduledNewsletters.status, 'PENDING')
+    ));
+}
+
+export async function deleteScheduledNewsletter(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(scheduledNewsletters).where(eq(scheduledNewsletters.id, id));
 }

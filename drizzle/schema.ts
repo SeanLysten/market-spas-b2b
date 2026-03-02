@@ -2423,3 +2423,36 @@ export const customerSavTickets = mysqlTable(
 );
 export type CustomerSavTicket = typeof customerSavTickets.$inferSelect;
 export type InsertCustomerSavTicket = typeof customerSavTickets.$inferInsert;
+
+
+// ============================================
+// SCHEDULED NEWSLETTERS
+// ============================================
+
+export const scheduledNewsletters = mysqlTable(
+  "scheduled_newsletters",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    subject: varchar("subject", { length: 500 }).notNull(),
+    title: varchar("title", { length: 500 }).notNull(),
+    htmlContent: text("htmlContent").notNull(),
+    recipients: mysqlEnum("recipients", ["ALL", "PARTNERS_ONLY", "ADMINS_ONLY"]).default("ALL").notNull(),
+    status: mysqlEnum("nl_status", ["PENDING", "SENT", "CANCELLED", "FAILED"]).default("PENDING").notNull(),
+    scheduledAt: timestamp("scheduledAt").notNull(),
+    sentAt: timestamp("sentAt"),
+    cancelledAt: timestamp("cancelledAt"),
+    createdById: int("createdById").notNull(),
+    totalRecipients: int("totalRecipients"),
+    successCount: int("successCount"),
+    failureCount: int("failureCount"),
+    errorMessage: text("errorMessage"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    statusIdx: index("nl_status_idx").on(table.status),
+    scheduledAtIdx: index("nl_scheduled_idx").on(table.scheduledAt),
+  })
+);
+export type ScheduledNewsletter = typeof scheduledNewsletters.$inferSelect;
+export type InsertScheduledNewsletter = typeof scheduledNewsletters.$inferInsert;

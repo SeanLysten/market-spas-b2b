@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { AdminLayout } from '@/components/AdminLayout';
 import { trpc } from '../../lib/trpc';
 import { Button } from '../../components/ui/button';
@@ -12,7 +12,8 @@ import {
   Mail, Send, CheckCircle2, AlertCircle, Users, Plus, Trash2, GripVertical,
   Type, Image as ImageIcon, MousePointerClick, Minus, LayoutTemplate, Eye,
   Edit, ArrowUp, ArrowDown, Palette, Copy, Sparkles, Bold, Italic, Underline,
-  AlignLeft, AlignCenter, AlignRight, ChevronDown, ChevronUp
+  AlignLeft, AlignCenter, AlignRight, ChevronDown, ChevronUp, Upload,
+  Clock, Calendar, X, Ban, List
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -31,38 +32,21 @@ const FONT_FAMILIES = [
 ];
 
 const FONT_SIZES = [
-  { value: '11', label: '11px' },
-  { value: '12', label: '12px' },
-  { value: '13', label: '13px' },
-  { value: '14', label: '14px' },
-  { value: '15', label: '15px' },
-  { value: '16', label: '16px' },
-  { value: '18', label: '18px' },
-  { value: '20', label: '20px' },
-  { value: '22', label: '22px' },
-  { value: '24', label: '24px' },
-  { value: '28', label: '28px' },
-  { value: '32', label: '32px' },
-  { value: '36', label: '36px' },
-  { value: '42', label: '42px' },
-  { value: '48', label: '48px' },
+  { value: '11', label: '11px' }, { value: '12', label: '12px' }, { value: '13', label: '13px' },
+  { value: '14', label: '14px' }, { value: '15', label: '15px' }, { value: '16', label: '16px' },
+  { value: '18', label: '18px' }, { value: '20', label: '20px' }, { value: '22', label: '22px' },
+  { value: '24', label: '24px' }, { value: '28', label: '28px' }, { value: '32', label: '32px' },
+  { value: '36', label: '36px' }, { value: '42', label: '42px' }, { value: '48', label: '48px' },
 ];
 
 const LINE_HEIGHTS = [
-  { value: '1.2', label: 'Serré' },
-  { value: '1.4', label: 'Compact' },
-  { value: '1.6', label: 'Normal' },
-  { value: '1.8', label: 'Aéré' },
-  { value: '2.0', label: 'Large' },
+  { value: '1.2', label: 'Serré' }, { value: '1.4', label: 'Compact' },
+  { value: '1.6', label: 'Normal' }, { value: '1.8', label: 'Aéré' }, { value: '2.0', label: 'Large' },
 ];
 
 const PADDING_OPTIONS = [
-  { value: '0', label: 'Aucun' },
-  { value: '8', label: 'Petit' },
-  { value: '16', label: 'Normal' },
-  { value: '24', label: 'Moyen' },
-  { value: '32', label: 'Grand' },
-  { value: '48', label: 'Très grand' },
+  { value: '0', label: 'Aucun' }, { value: '8', label: 'Petit' }, { value: '16', label: 'Normal' },
+  { value: '24', label: 'Moyen' }, { value: '32', label: 'Grand' }, { value: '48', label: 'Très grand' },
 ];
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -89,6 +73,8 @@ interface NewsletterBlock {
   data: Record<string, string>;
   style: BlockStyle;
 }
+
+type TabView = 'editor' | 'preview' | 'scheduled';
 
 // ─── Block Templates ─────────────────────────────────────────────────────────
 
@@ -264,7 +250,7 @@ function blocksToFullHtml(blocks: NewsletterBlock[]): string {
     </div>
     <div style="background:#f1f5f9;padding:24px;text-align:center;border-radius:0 0 12px 12px;">
       <p style="margin:0;font-size:12px;color:#94a3b8;">Vous recevez cet email car vous êtes partenaire Market Spas.</p>
-      <p style="margin:8px 0 0;font-size:12px;color:#94a3b8;">© ${new Date().getFullYear()} Market Spas. Tous droits réservés.</p>
+      <p style="margin:8px 0 0;font-size:12px;color:#94a3b8;">&copy; ${new Date().getFullYear()} Market Spas. Tous droits réservés.</p>
     </div>
   </div>`;
 }
@@ -277,215 +263,111 @@ function StyleToolbar({ style, onChange, blockType }: {
   blockType: BlockType;
 }) {
   const [expanded, setExpanded] = useState(false);
-
   if (blockType === 'divider') return null;
-
   const showTextFormatting = blockType !== 'image';
   const showBgColor = blockType === 'highlight' || blockType === 'two-columns';
 
   return (
     <div className="border-t bg-muted/20 px-3 py-2">
-      {/* Compact toolbar row */}
       <div className="flex flex-wrap items-center gap-1.5">
-        {/* Font Family */}
         {showTextFormatting && (
-          <select
-            value={style.fontFamily || FONT_FAMILIES[FONT_FAMILIES.length - 1].value}
-            onChange={e => onChange({ ...style, fontFamily: e.target.value })}
-            className="h-7 text-[11px] bg-background border rounded px-1.5 max-w-[110px] cursor-pointer"
-            title="Police"
-          >
-            {FONT_FAMILIES.map(f => (
-              <option key={f.value} value={f.value}>{f.label}</option>
-            ))}
+          <select value={style.fontFamily || FONT_FAMILIES[FONT_FAMILIES.length - 1].value} onChange={e => onChange({ ...style, fontFamily: e.target.value })} className="h-7 text-[11px] bg-background border rounded px-1.5 max-w-[110px] cursor-pointer" title="Police">
+            {FONT_FAMILIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
           </select>
         )}
-
-        {/* Font Size */}
-        <select
-          value={style.fontSize || '15'}
-          onChange={e => onChange({ ...style, fontSize: e.target.value })}
-          className="h-7 text-[11px] bg-background border rounded px-1 w-[60px] cursor-pointer"
-          title="Taille"
-        >
-          {FONT_SIZES.map(s => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
+        <select value={style.fontSize || '15'} onChange={e => onChange({ ...style, fontSize: e.target.value })} className="h-7 text-[11px] bg-background border rounded px-1 w-[60px] cursor-pointer" title="Taille">
+          {FONT_SIZES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
-
-        {/* Separator */}
         <div className="w-px h-5 bg-border mx-0.5" />
-
-        {/* Bold / Italic / Underline */}
         {showTextFormatting && (
           <>
-            <button
-              type="button"
-              onClick={() => onChange({ ...style, bold: !style.bold })}
-              className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.bold ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`}
-              title="Gras"
-            >
-              <Bold className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange({ ...style, italic: !style.italic })}
-              className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.italic ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`}
-              title="Italique"
-            >
-              <Italic className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange({ ...style, underline: !style.underline })}
-              className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.underline ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`}
-              title="Souligné"
-            >
-              <Underline className="h-3.5 w-3.5" />
-            </button>
+            <button type="button" onClick={() => onChange({ ...style, bold: !style.bold })} className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.bold ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`} title="Gras"><Bold className="h-3.5 w-3.5" /></button>
+            <button type="button" onClick={() => onChange({ ...style, italic: !style.italic })} className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.italic ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`} title="Italique"><Italic className="h-3.5 w-3.5" /></button>
+            <button type="button" onClick={() => onChange({ ...style, underline: !style.underline })} className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.underline ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`} title="Souligné"><Underline className="h-3.5 w-3.5" /></button>
           </>
         )}
-
-        {/* Separator */}
         <div className="w-px h-5 bg-border mx-0.5" />
-
-        {/* Alignment */}
-        <button
-          type="button"
-          onClick={() => onChange({ ...style, textAlign: 'left' })}
-          className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.textAlign === 'left' ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`}
-          title="Aligner à gauche"
-        >
-          <AlignLeft className="h-3.5 w-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange({ ...style, textAlign: 'center' })}
-          className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.textAlign === 'center' ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`}
-          title="Centrer"
-        >
-          <AlignCenter className="h-3.5 w-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange({ ...style, textAlign: 'right' })}
-          className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.textAlign === 'right' ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`}
-          title="Aligner à droite"
-        >
-          <AlignRight className="h-3.5 w-3.5" />
-        </button>
-
-        {/* Separator */}
+        <button type="button" onClick={() => onChange({ ...style, textAlign: 'left' })} className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.textAlign === 'left' ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`} title="Gauche"><AlignLeft className="h-3.5 w-3.5" /></button>
+        <button type="button" onClick={() => onChange({ ...style, textAlign: 'center' })} className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.textAlign === 'center' ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`} title="Centrer"><AlignCenter className="h-3.5 w-3.5" /></button>
+        <button type="button" onClick={() => onChange({ ...style, textAlign: 'right' })} className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.textAlign === 'right' ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`} title="Droite"><AlignRight className="h-3.5 w-3.5" /></button>
         <div className="w-px h-5 bg-border mx-0.5" />
-
-        {/* Text Color */}
         {showTextFormatting && (
           <div className="flex items-center gap-1" title="Couleur du texte">
             <span className="text-[10px] text-muted-foreground">A</span>
-            <input
-              type="color"
-              value={style.textColor || '#334155'}
-              onChange={e => onChange({ ...style, textColor: e.target.value })}
-              className="h-6 w-6 rounded border cursor-pointer p-0"
-            />
+            <input type="color" value={style.textColor || '#334155'} onChange={e => onChange({ ...style, textColor: e.target.value })} className="h-6 w-6 rounded border cursor-pointer p-0" />
           </div>
         )}
-
-        {/* Background Color */}
         {showBgColor && (
           <div className="flex items-center gap-1" title="Couleur de fond">
             <Palette className="h-3 w-3 text-muted-foreground" />
-            <input
-              type="color"
-              value={style.bgColor || '#eff6ff'}
-              onChange={e => onChange({ ...style, bgColor: e.target.value })}
-              className="h-6 w-6 rounded border cursor-pointer p-0"
-            />
+            <input type="color" value={style.bgColor || '#eff6ff'} onChange={e => onChange({ ...style, bgColor: e.target.value })} className="h-6 w-6 rounded border cursor-pointer p-0" />
           </div>
         )}
-
-        {/* Expand toggle */}
-        <button
-          type="button"
-          onClick={() => setExpanded(!expanded)}
-          className="h-7 px-1.5 flex items-center gap-0.5 rounded text-[10px] text-muted-foreground bg-background border hover:bg-muted ml-auto"
-          title={expanded ? 'Moins d\'options' : 'Plus d\'options'}
-        >
+        <button type="button" onClick={() => setExpanded(!expanded)} className="h-7 px-1.5 flex items-center gap-0.5 rounded text-[10px] text-muted-foreground bg-background border hover:bg-muted ml-auto" title={expanded ? 'Moins d\'options' : 'Plus d\'options'}>
           {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
           <span className="hidden sm:inline">{expanded ? 'Moins' : 'Plus'}</span>
         </button>
       </div>
-
-      {/* Expanded options */}
       {expanded && (
         <div className="flex flex-wrap items-center gap-3 mt-2 pt-2 border-t border-dashed">
-          {/* Line Height */}
           <div className="flex items-center gap-1.5">
             <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Interligne</Label>
-            <select
-              value={style.lineHeight || '1.6'}
-              onChange={e => onChange({ ...style, lineHeight: e.target.value })}
-              className="h-7 text-[11px] bg-background border rounded px-1 cursor-pointer"
-            >
-              {LINE_HEIGHTS.map(l => (
-                <option key={l.value} value={l.value}>{l.label}</option>
-              ))}
+            <select value={style.lineHeight || '1.6'} onChange={e => onChange({ ...style, lineHeight: e.target.value })} className="h-7 text-[11px] bg-background border rounded px-1 cursor-pointer">
+              {LINE_HEIGHTS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
             </select>
           </div>
-
-          {/* Padding Top */}
           <div className="flex items-center gap-1.5">
             <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Espace haut</Label>
-            <select
-              value={style.paddingTop || '16'}
-              onChange={e => onChange({ ...style, paddingTop: e.target.value })}
-              className="h-7 text-[11px] bg-background border rounded px-1 cursor-pointer"
-            >
-              {PADDING_OPTIONS.map(p => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
+            <select value={style.paddingTop || '16'} onChange={e => onChange({ ...style, paddingTop: e.target.value })} className="h-7 text-[11px] bg-background border rounded px-1 cursor-pointer">
+              {PADDING_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
             </select>
           </div>
-
-          {/* Padding Bottom */}
           <div className="flex items-center gap-1.5">
             <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Espace bas</Label>
-            <select
-              value={style.paddingBottom || '16'}
-              onChange={e => onChange({ ...style, paddingBottom: e.target.value })}
-              className="h-7 text-[11px] bg-background border rounded px-1 cursor-pointer"
-            >
-              {PADDING_OPTIONS.map(p => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
+            <select value={style.paddingBottom || '16'} onChange={e => onChange({ ...style, paddingBottom: e.target.value })} className="h-7 text-[11px] bg-background border rounded px-1 cursor-pointer">
+              {PADDING_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
             </select>
           </div>
-
-          {/* Block Background Color (for all blocks in expanded) */}
           {!showBgColor && (
             <div className="flex items-center gap-1.5">
               <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Fond du bloc</Label>
-              <input
-                type="color"
-                value={style.bgColor || '#ffffff'}
-                onChange={e => onChange({ ...style, bgColor: e.target.value === '#ffffff' ? '' : e.target.value })}
-                className="h-6 w-6 rounded border cursor-pointer p-0"
-              />
-              {style.bgColor && (
-                <button
-                  type="button"
-                  onClick={() => onChange({ ...style, bgColor: '' })}
-                  className="text-[10px] text-muted-foreground hover:text-foreground"
-                >
-                  ✕
-                </button>
-              )}
+              <input type="color" value={style.bgColor || '#ffffff'} onChange={e => onChange({ ...style, bgColor: e.target.value === '#ffffff' ? '' : e.target.value })} className="h-6 w-6 rounded border cursor-pointer p-0" />
+              {style.bgColor && <button type="button" onClick={() => onChange({ ...style, bgColor: '' })} className="text-[10px] text-muted-foreground hover:text-foreground">✕</button>}
             </div>
           )}
         </div>
       )}
     </div>
   );
+}
+
+// ─── Image Upload Hook ──────────────────────────────────────────────────────
+
+function useImageUpload() {
+  const uploadMutation = trpc.admin.newsletter.uploadImage.useMutation();
+
+  const uploadImage = useCallback(async (file: File): Promise<string | null> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64 = reader.result as string;
+          const result = await uploadMutation.mutateAsync({
+            fileData: base64,
+            fileName: file.name,
+            fileType: file.type,
+          });
+          resolve(result.url);
+        } catch (err: any) {
+          toast.error('Erreur d\'upload', { description: err.message });
+          resolve(null);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }, [uploadMutation]);
+
+  return { uploadImage, isUploading: uploadMutation.isPending };
 }
 
 // ─── Block Editor Component ──────────────────────────────────────────────────
@@ -503,6 +385,29 @@ function BlockEditor({ block, onChange, onStyleChange, onDelete, onMoveUp, onMov
 }) {
   const blockInfo = BLOCK_TYPES.find(b => b.type === block.type);
   const Icon = blockInfo?.icon || Type;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadImage, isUploading } = useImageUpload();
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Fichier invalide', { description: 'Veuillez sélectionner une image (JPG, PNG, GIF, WebP)' });
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Fichier trop volumineux', { description: 'La taille maximale est de 10 Mo' });
+      return;
+    }
+    toast.info('Upload en cours...', { description: file.name });
+    const url = await uploadImage(file);
+    if (url) {
+      onChange({ ...block.data, url });
+      toast.success('Image uploadée', { description: 'L\'image a été ajoutée à votre newsletter' });
+    }
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   return (
     <div className="group relative border rounded-lg bg-card hover:border-primary/30 transition-colors">
@@ -512,18 +417,10 @@ function BlockEditor({ block, onChange, onStyleChange, onDelete, onMoveUp, onMov
         <Icon className="h-4 w-4 text-primary" />
         <span className="text-xs font-medium text-muted-foreground flex-1">{blockInfo?.label}</span>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onMoveUp} disabled={isFirst}>
-            <ArrowUp className="h-3 w-3" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onMoveDown} disabled={isLast}>
-            <ArrowDown className="h-3 w-3" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onDuplicate}>
-            <Copy className="h-3 w-3" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={onDelete}>
-            <Trash2 className="h-3 w-3" />
-          </Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onMoveUp} disabled={isFirst}><ArrowUp className="h-3 w-3" /></Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onMoveDown} disabled={isLast}><ArrowDown className="h-3 w-3" /></Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onDuplicate}><Copy className="h-3 w-3" /></Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={onDelete}><Trash2 className="h-3 w-3" /></Button>
         </div>
       </div>
 
@@ -531,48 +428,38 @@ function BlockEditor({ block, onChange, onStyleChange, onDelete, onMoveUp, onMov
       <div className="p-3 space-y-3">
         {block.type === 'header' && (
           <>
-            <Input
-              placeholder="Titre principal"
-              value={block.data.title || ''}
-              onChange={e => onChange({ ...block.data, title: e.target.value })}
-              className="text-lg font-semibold"
-            />
-            <Input
-              placeholder="Sous-titre (optionnel)"
-              value={block.data.subtitle || ''}
-              onChange={e => onChange({ ...block.data, subtitle: e.target.value })}
-              className="text-sm"
-            />
+            <Input placeholder="Titre principal" value={block.data.title || ''} onChange={e => onChange({ ...block.data, title: e.target.value })} className="text-lg font-semibold" />
+            <Input placeholder="Sous-titre (optionnel)" value={block.data.subtitle || ''} onChange={e => onChange({ ...block.data, subtitle: e.target.value })} className="text-sm" />
           </>
         )}
 
         {block.type === 'text' && (
-          <Textarea
-            placeholder="Écrivez votre texte ici... Utilisez **gras** pour mettre en valeur."
-            value={block.data.content || ''}
-            onChange={e => onChange({ ...block.data, content: e.target.value })}
-            rows={4}
-            className="text-sm"
-          />
+          <Textarea placeholder="Écrivez votre texte ici... Utilisez **gras** pour mettre en valeur." value={block.data.content || ''} onChange={e => onChange({ ...block.data, content: e.target.value })} rows={4} className="text-sm" />
         )}
 
         {block.type === 'image' && (
           <>
-            <Input
-              placeholder="URL de l'image"
-              value={block.data.url || ''}
-              onChange={e => onChange({ ...block.data, url: e.target.value })}
-              className="text-sm"
-            />
-            <Input
-              placeholder="Légende (optionnel)"
-              value={block.data.alt || ''}
-              onChange={e => onChange({ ...block.data, alt: e.target.value })}
-              className="text-sm"
-            />
+            <div className="flex gap-2">
+              <Input placeholder="URL de l'image ou uploadez un fichier" value={block.data.url || ''} onChange={e => onChange({ ...block.data, url: e.target.value })} className="text-sm flex-1" />
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+              <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="shrink-0">
+                {isUploading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-1" />
+                    Uploader
+                  </>
+                )}
+              </Button>
+            </div>
+            <Input placeholder="Légende (optionnel)" value={block.data.alt || ''} onChange={e => onChange({ ...block.data, alt: e.target.value })} className="text-sm" />
             {block.data.url && (
-              <div className="rounded-lg overflow-hidden border bg-muted/30 p-2">
+              <div className="rounded-lg overflow-hidden border bg-muted/30 p-2 relative">
                 <img src={block.data.url} alt={block.data.alt || ''} className="max-h-40 mx-auto rounded" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                <button type="button" onClick={() => onChange({ ...block.data, url: '' })} className="absolute top-3 right-3 h-6 w-6 bg-destructive/80 hover:bg-destructive text-white rounded-full flex items-center justify-center" title="Supprimer l'image">
+                  <X className="h-3 w-3" />
+                </button>
               </div>
             )}
           </>
@@ -580,26 +467,11 @@ function BlockEditor({ block, onChange, onStyleChange, onDelete, onMoveUp, onMov
 
         {block.type === 'cta' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input
-              placeholder="Texte du bouton"
-              value={block.data.text || ''}
-              onChange={e => onChange({ ...block.data, text: e.target.value })}
-              className="text-sm"
-            />
-            <Input
-              placeholder="URL du lien"
-              value={block.data.url || ''}
-              onChange={e => onChange({ ...block.data, url: e.target.value })}
-              className="text-sm"
-            />
+            <Input placeholder="Texte du bouton" value={block.data.text || ''} onChange={e => onChange({ ...block.data, text: e.target.value })} className="text-sm" />
+            <Input placeholder="URL du lien" value={block.data.url || ''} onChange={e => onChange({ ...block.data, url: e.target.value })} className="text-sm" />
             <div className="flex items-center gap-2 sm:col-span-2">
               <Label className="text-xs text-muted-foreground whitespace-nowrap">Couleur du bouton :</Label>
-              <input
-                type="color"
-                value={block.data.buttonColor || '#2563eb'}
-                onChange={e => onChange({ ...block.data, buttonColor: e.target.value })}
-                className="h-8 w-12 rounded border cursor-pointer"
-              />
+              <input type="color" value={block.data.buttonColor || '#2563eb'} onChange={e => onChange({ ...block.data, buttonColor: e.target.value })} className="h-8 w-12 rounded border cursor-pointer" />
               <span className="text-xs text-muted-foreground">{block.data.buttonColor || '#2563eb'}</span>
             </div>
           </div>
@@ -614,40 +486,107 @@ function BlockEditor({ block, onChange, onStyleChange, onDelete, onMoveUp, onMov
 
         {block.type === 'two-columns' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Textarea
-              placeholder="Colonne gauche... Utilisez **gras**"
-              value={block.data.left || ''}
-              onChange={e => onChange({ ...block.data, left: e.target.value })}
-              rows={4}
-              className="text-sm"
-            />
-            <Textarea
-              placeholder="Colonne droite... Utilisez **gras**"
-              value={block.data.right || ''}
-              onChange={e => onChange({ ...block.data, right: e.target.value })}
-              rows={4}
-              className="text-sm"
-            />
+            <Textarea placeholder="Colonne gauche... Utilisez **gras**" value={block.data.left || ''} onChange={e => onChange({ ...block.data, left: e.target.value })} rows={4} className="text-sm" />
+            <Textarea placeholder="Colonne droite... Utilisez **gras**" value={block.data.right || ''} onChange={e => onChange({ ...block.data, right: e.target.value })} rows={4} className="text-sm" />
           </div>
         )}
 
         {block.type === 'highlight' && (
-          <Textarea
-            placeholder="Texte mis en avant... Utilisez **gras** pour les points clés."
-            value={block.data.content || ''}
-            onChange={e => onChange({ ...block.data, content: e.target.value })}
-            rows={3}
-            className="text-sm"
-          />
+          <Textarea placeholder="Texte mis en avant... Utilisez **gras** pour les points clés." value={block.data.content || ''} onChange={e => onChange({ ...block.data, content: e.target.value })} rows={3} className="text-sm" />
         )}
       </div>
 
-      {/* Style Toolbar */}
-      <StyleToolbar
-        style={block.style}
-        onChange={onStyleChange}
-        blockType={block.type}
-      />
+      <StyleToolbar style={block.style} onChange={onStyleChange} blockType={block.type} />
+    </div>
+  );
+}
+
+// ─── Scheduled Newsletters List ─────────────────────────────────────────────
+
+function ScheduledNewslettersList() {
+  const { data: scheduled, refetch } = trpc.admin.newsletter.listScheduled.useQuery();
+  const cancelMutation = trpc.admin.newsletter.cancel.useMutation({
+    onSuccess: () => { toast.success('Newsletter annulée'); refetch(); },
+    onError: (err) => toast.error('Erreur', { description: err.message }),
+  });
+  const deleteMutation = trpc.admin.newsletter.deleteScheduled.useMutation({
+    onSuccess: () => { toast.success('Newsletter supprimée'); refetch(); },
+    onError: (err) => toast.error('Erreur', { description: err.message }),
+  });
+
+  const statusLabel = (status: string) => {
+    switch (status) {
+      case 'PENDING': return <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-400 px-2 py-0.5 rounded-full"><Clock className="h-3 w-3" />En attente</span>;
+      case 'SENT': return <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 dark:bg-green-950 dark:text-green-400 px-2 py-0.5 rounded-full"><CheckCircle2 className="h-3 w-3" />Envoyée</span>;
+      case 'CANCELLED': return <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 px-2 py-0.5 rounded-full"><Ban className="h-3 w-3" />Annulée</span>;
+      case 'FAILED': return <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 dark:bg-red-950 dark:text-red-400 px-2 py-0.5 rounded-full"><AlertCircle className="h-3 w-3" />Échouée</span>;
+      default: return status;
+    }
+  };
+
+  if (!scheduled || scheduled.length === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="py-12 text-center">
+          <Calendar className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
+          <p className="text-muted-foreground font-medium mb-1">Aucune newsletter programmée</p>
+          <p className="text-sm text-muted-foreground">Les newsletters programmées apparaîtront ici</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {scheduled.map((nl: any) => (
+        <Card key={nl.id}>
+          <CardContent className="py-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  {statusLabel(nl.status)}
+                  <span className="text-xs text-muted-foreground">
+                    {nl.recipients === 'ALL' ? 'Tous' : nl.recipients === 'PARTNERS_ONLY' ? 'Partenaires' : 'Admins'}
+                  </span>
+                </div>
+                <h3 className="font-medium text-sm truncate">{nl.subject}</h3>
+                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    Programmée : {new Date(nl.scheduledAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                  {nl.sentAt && (
+                    <span className="flex items-center gap-1">
+                      <Send className="h-3 w-3" />
+                      Envoyée : {new Date(nl.sentAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                  {nl.successCount != null && (
+                    <span className="text-green-600 dark:text-green-400">{nl.successCount}/{nl.totalRecipients} envoyés</span>
+                  )}
+                </div>
+                {nl.errorMessage && (
+                  <p className="text-xs text-red-500 mt-1">{nl.errorMessage}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {nl.status === 'PENDING' && (
+                  <Button variant="outline" size="sm" onClick={() => cancelMutation.mutate({ id: nl.id })} disabled={cancelMutation.isPending}>
+                    <Ban className="h-3 w-3 mr-1" />
+                    Annuler
+                  </Button>
+                )}
+                {(nl.status === 'CANCELLED' || nl.status === 'SENT' || nl.status === 'FAILED') && (
+                  <Button variant="ghost" size="sm" onClick={() => deleteMutation.mutate({ id: nl.id })} disabled={deleteMutation.isPending} className="text-destructive hover:text-destructive">
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Supprimer
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
@@ -659,7 +598,10 @@ export default function AdminNewsletter() {
   const [recipients, setRecipients] = useState<'ALL' | 'PARTNERS_ONLY' | 'ADMINS_ONLY'>('ALL');
   const [blocks, setBlocks] = useState<NewsletterBlock[]>([]);
   const [sending, setSending] = useState(false);
-  const [view, setView] = useState<'editor' | 'preview'>('editor');
+  const [view, setView] = useState<TabView>('editor');
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
   const [result, setResult] = useState<{
     success: boolean;
     totalRecipients: number;
@@ -673,6 +615,21 @@ export default function AdminNewsletter() {
       setResult(data);
       setSending(false);
       toast.success('Newsletter envoyée', { description: data.message });
+    },
+    onError: (error) => {
+      setSending(false);
+      toast.error('Erreur', { description: error.message });
+    },
+  });
+
+  const scheduleMutation = trpc.admin.newsletter.schedule.useMutation({
+    onSuccess: (data) => {
+      setSending(false);
+      setShowSchedule(false);
+      setScheduleDate('');
+      setScheduleTime('');
+      toast.success('Newsletter programmée', { description: data.message });
+      setView('scheduled');
     },
     onError: (error) => {
       setSending(false);
@@ -727,38 +684,42 @@ export default function AdminNewsletter() {
     toast.success('Template chargé', { description: `Template "${template.name}" appliqué` });
   }, []);
 
-  // Extract title from first header block for the mutation
   const firstHeader = blocks.find(b => b.type === 'header');
   const title = firstHeader?.data.title || subject;
 
   const handleSend = () => {
-    if (!subject) {
-      toast.error('Erreur', { description: 'Veuillez remplir le sujet de l\'email' });
-      return;
-    }
-    if (blocks.length === 0) {
-      toast.error('Erreur', { description: 'Ajoutez au moins un bloc de contenu' });
-      return;
-    }
-
+    if (!subject) { toast.error('Erreur', { description: 'Veuillez remplir le sujet de l\'email' }); return; }
+    if (blocks.length === 0) { toast.error('Erreur', { description: 'Ajoutez au moins un bloc de contenu' }); return; }
     setSending(true);
     setResult(null);
-
     const htmlContent = blocksToFullHtml(blocks);
     const firstCta = blocks.find(b => b.type === 'cta');
-
     sendNewsletterMutation.mutate({
-      subject,
-      title: title,
-      content: htmlContent,
+      subject, title, content: htmlContent,
       ctaText: firstCta?.data.text || undefined,
       ctaUrl: firstCta?.data.url || undefined,
-      recipients,
-      isRawHtml: true,
+      recipients, isRawHtml: true,
+    });
+  };
+
+  const handleSchedule = () => {
+    if (!subject) { toast.error('Erreur', { description: 'Veuillez remplir le sujet de l\'email' }); return; }
+    if (blocks.length === 0) { toast.error('Erreur', { description: 'Ajoutez au moins un bloc de contenu' }); return; }
+    if (!scheduleDate || !scheduleTime) { toast.error('Erreur', { description: 'Veuillez sélectionner une date et une heure' }); return; }
+    const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}`);
+    if (scheduledAt <= new Date()) { toast.error('Erreur', { description: 'La date doit être dans le futur' }); return; }
+    setSending(true);
+    const htmlContent = blocksToFullHtml(blocks);
+    scheduleMutation.mutate({
+      subject, title, content: htmlContent, recipients,
+      scheduledAt: scheduledAt.toISOString(),
     });
   };
 
   const previewHtml = blocksToFullHtml(blocks);
+
+  // Minimum date for schedule (today)
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <AdminLayout>
@@ -771,25 +732,18 @@ export default function AdminNewsletter() {
               Newsletter
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Créez et envoyez des newsletters visuelles à vos partenaires
+              Créez, programmez et envoyez des newsletters visuelles à vos partenaires
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant={view === 'editor' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setView('editor')}
-            >
-              <Edit className="h-4 w-4 mr-1" />
-              Éditeur
+            <Button variant={view === 'editor' ? 'default' : 'outline'} size="sm" onClick={() => setView('editor')}>
+              <Edit className="h-4 w-4 mr-1" /> Éditeur
             </Button>
-            <Button
-              variant={view === 'preview' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setView('preview')}
-            >
-              <Eye className="h-4 w-4 mr-1" />
-              Aperçu
+            <Button variant={view === 'preview' ? 'default' : 'outline'} size="sm" onClick={() => setView('preview')}>
+              <Eye className="h-4 w-4 mr-1" /> Aperçu
+            </Button>
+            <Button variant={view === 'scheduled' ? 'default' : 'outline'} size="sm" onClick={() => setView('scheduled')}>
+              <List className="h-4 w-4 mr-1" /> Programmées
             </Button>
           </div>
         </div>
@@ -797,200 +751,185 @@ export default function AdminNewsletter() {
         {/* Result Alert */}
         {result && (
           <Alert className={result.success ? 'border-green-500 bg-green-50 dark:bg-green-950' : 'border-red-500 bg-red-50 dark:bg-red-950'}>
-            {result.success ? (
-              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-            ) : (
-              <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-            )}
+            {result.success ? <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" /> : <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />}
             <AlertDescription className="text-sm">
               <strong>{result.message}</strong>
               <div className="mt-2 text-xs">
                 <div>Total : {result.totalRecipients} destinataires</div>
                 <div className="text-green-600 dark:text-green-400">Envoyés : {result.successCount}</div>
-                {result.failureCount > 0 && (
-                  <div className="text-red-600 dark:text-red-400">Échecs : {result.failureCount}</div>
-                )}
+                {result.failureCount > 0 && <div className="text-red-600 dark:text-red-400">Échecs : {result.failureCount}</div>}
               </div>
             </AlertDescription>
           </Alert>
         )}
 
-        {/* Settings Bar */}
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Sujet de l'email *</Label>
-                <Input
-                  placeholder="Ex: Nouveaux produits disponibles"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  className="text-sm"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs flex items-center gap-1">
-                  <Users className="h-3 w-3" /> Destinataires
-                </Label>
-                <Select value={recipients} onValueChange={(value: any) => setRecipients(value)}>
-                  <SelectTrigger className="text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Tous les utilisateurs actifs</SelectItem>
-                    <SelectItem value="PARTNERS_ONLY">Partenaires uniquement</SelectItem>
-                    <SelectItem value="ADMINS_ONLY">Administrateurs uniquement</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs flex items-center gap-1">
-                  <LayoutTemplate className="h-3 w-3" /> Template
-                </Label>
-                <Select onValueChange={(value) => loadTemplate(parseInt(value))}>
-                  <SelectTrigger className="text-sm">
-                    <SelectValue placeholder="Choisir un template..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NEWSLETTER_TEMPLATES.map((t, i) => (
-                      <SelectItem key={i} value={i.toString()}>
-                        {t.name} — {t.description}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {view === 'editor' ? (
-          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-            {/* Block Editor */}
-            <div className="xl:col-span-3 space-y-3">
-              {blocks.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="py-12 text-center">
-                    <LayoutTemplate className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
-                    <p className="text-muted-foreground font-medium mb-1">Aucun contenu</p>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Ajoutez des blocs ci-dessous ou choisissez un template pour commencer
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                blocks.map((block, index) => (
-                  <BlockEditor
-                    key={block.id}
-                    block={block}
-                    onChange={(data) => updateBlock(block.id, data)}
-                    onStyleChange={(style) => updateBlockStyle(block.id, style)}
-                    onDelete={() => deleteBlock(block.id)}
-                    onMoveUp={() => moveBlock(block.id, 'up')}
-                    onMoveDown={() => moveBlock(block.id, 'down')}
-                    onDuplicate={() => duplicateBlock(block.id)}
-                    isFirst={index === 0}
-                    isLast={index === blocks.length - 1}
-                  />
-                ))
-              )}
-
-              {/* Add Block Buttons */}
-              <Card>
-                <CardHeader className="py-3 px-4">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Ajouter un bloc
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pb-4 px-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {BLOCK_TYPES.map(bt => {
-                      const Icon = bt.icon;
-                      return (
-                        <Button
-                          key={bt.type}
-                          variant="outline"
-                          size="sm"
-                          className="h-auto py-3 flex flex-col gap-1.5 text-xs"
-                          onClick={() => addBlock(bt.type)}
-                        >
-                          <Icon className="h-4 w-4" />
-                          {bt.label}
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Send Button */}
-              <Button
-                onClick={handleSend}
-                disabled={sending || !subject || blocks.length === 0}
-                className="w-full"
-                size="lg"
-              >
-                {sending ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                    Envoi en cours...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Envoyer la newsletter
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {/* Live Preview Sidebar */}
-            <div className="hidden xl:block xl:col-span-2">
-              <Card className="sticky top-4">
-                <CardHeader className="py-3 px-4">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Eye className="h-4 w-4" />
-                    Aperçu en direct
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Rendu fidèle à l'email reçu
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="border-t overflow-y-auto" style={{ maxHeight: '80vh' }}>
-                    <div
-                      className="bg-[#f1f5f9]"
-                      style={{ padding: '16px 8px' }}
-                      dangerouslySetInnerHTML={{ __html: previewHtml }}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+        {view === 'scheduled' ? (
+          <ScheduledNewslettersList />
         ) : (
-          /* Full Preview */
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5" />
-                Aperçu de la newsletter
-              </CardTitle>
-              <CardDescription>
-                Voici comment votre newsletter apparaîtra dans les boîtes mail
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="max-w-[640px] mx-auto border rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900 p-4">
-                <div className="text-xs text-muted-foreground mb-3 px-2">
-                  <strong>De :</strong> Market Spas &lt;noreply@marketspas.pro&gt;<br />
-                  <strong>Sujet :</strong> {subject || '(aucun sujet)'}
+          <>
+            {/* Settings Bar */}
+            <Card>
+              <CardContent className="pt-4 pb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Sujet de l'email *</Label>
+                    <Input placeholder="Ex: Nouveaux produits disponibles" value={subject} onChange={(e) => setSubject(e.target.value)} className="text-sm" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs flex items-center gap-1"><Users className="h-3 w-3" /> Destinataires</Label>
+                    <Select value={recipients} onValueChange={(value: any) => setRecipients(value)}>
+                      <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ALL">Tous les utilisateurs actifs</SelectItem>
+                        <SelectItem value="PARTNERS_ONLY">Partenaires uniquement</SelectItem>
+                        <SelectItem value="ADMINS_ONLY">Administrateurs uniquement</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs flex items-center gap-1"><LayoutTemplate className="h-3 w-3" /> Template</Label>
+                    <Select onValueChange={(value) => loadTemplate(parseInt(value))}>
+                      <SelectTrigger className="text-sm"><SelectValue placeholder="Choisir un template..." /></SelectTrigger>
+                      <SelectContent>
+                        {NEWSLETTER_TEMPLATES.map((t, i) => <SelectItem key={i} value={i.toString()}>{t.name} — {t.description}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+              </CardContent>
+            </Card>
+
+            {view === 'editor' ? (
+              <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+                {/* Block Editor */}
+                <div className="xl:col-span-3 space-y-3">
+                  {blocks.length === 0 ? (
+                    <Card className="border-dashed">
+                      <CardContent className="py-12 text-center">
+                        <LayoutTemplate className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
+                        <p className="text-muted-foreground font-medium mb-1">Aucun contenu</p>
+                        <p className="text-sm text-muted-foreground mb-4">Ajoutez des blocs ci-dessous ou choisissez un template pour commencer</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    blocks.map((block, index) => (
+                      <BlockEditor
+                        key={block.id} block={block}
+                        onChange={(data) => updateBlock(block.id, data)}
+                        onStyleChange={(style) => updateBlockStyle(block.id, style)}
+                        onDelete={() => deleteBlock(block.id)}
+                        onMoveUp={() => moveBlock(block.id, 'up')}
+                        onMoveDown={() => moveBlock(block.id, 'down')}
+                        onDuplicate={() => duplicateBlock(block.id)}
+                        isFirst={index === 0} isLast={index === blocks.length - 1}
+                      />
+                    ))
+                  )}
+
+                  {/* Add Block Buttons */}
+                  <Card>
+                    <CardHeader className="py-3 px-4">
+                      <CardTitle className="text-sm flex items-center gap-2"><Plus className="h-4 w-4" /> Ajouter un bloc</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pb-4 px-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {BLOCK_TYPES.map(bt => {
+                          const BIcon = bt.icon;
+                          return (
+                            <Button key={bt.type} variant="outline" size="sm" className="h-auto py-3 flex flex-col gap-1.5 text-xs" onClick={() => addBlock(bt.type)}>
+                              <BIcon className="h-4 w-4" /> {bt.label}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Schedule Section */}
+                  {showSchedule && (
+                    <Card className="border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20">
+                      <CardHeader className="py-3 px-4">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-amber-600" />
+                          Programmer l'envoi
+                          <button type="button" onClick={() => setShowSchedule(false)} className="ml-auto text-muted-foreground hover:text-foreground">
+                            <X className="h-4 w-4" />
+                          </button>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pb-4 px-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <Label className="text-xs">Date d'envoi</Label>
+                            <Input type="date" min={today} value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} className="text-sm" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-xs">Heure d'envoi</Label>
+                            <Input type="time" value={scheduleTime} onChange={e => setScheduleTime(e.target.value)} className="text-sm" />
+                          </div>
+                        </div>
+                        <Button onClick={handleSchedule} disabled={sending || !scheduleDate || !scheduleTime} className="w-full mt-3" variant="outline">
+                          {sending ? (
+                            <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" /> Programmation...</>
+                          ) : (
+                            <><Calendar className="h-4 w-4 mr-2" /> Programmer l'envoi</>
+                          )}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    <Button onClick={handleSend} disabled={sending || !subject || blocks.length === 0} className="flex-1" size="lg">
+                      {sending && !showSchedule ? (
+                        <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" /> Envoi en cours...</>
+                      ) : (
+                        <><Send className="h-4 w-4 mr-2" /> Envoyer maintenant</>
+                      )}
+                    </Button>
+                    {!showSchedule && (
+                      <Button variant="outline" size="lg" onClick={() => setShowSchedule(true)} disabled={!subject || blocks.length === 0}>
+                        <Clock className="h-4 w-4 mr-2" /> Programmer
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Live Preview Sidebar */}
+                <div className="hidden xl:block xl:col-span-2">
+                  <Card className="sticky top-4">
+                    <CardHeader className="py-3 px-4">
+                      <CardTitle className="text-sm flex items-center gap-2"><Eye className="h-4 w-4" /> Aperçu en direct</CardTitle>
+                      <CardDescription className="text-xs">Rendu fidèle à l'email reçu</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="border-t overflow-y-auto" style={{ maxHeight: '80vh' }}>
+                        <div className="bg-[#f1f5f9]" style={{ padding: '16px 8px' }} dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            ) : (
+              /* Full Preview */
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Eye className="h-5 w-5" /> Aperçu de la newsletter</CardTitle>
+                  <CardDescription>Voici comment votre newsletter apparaîtra dans les boîtes mail</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="max-w-[640px] mx-auto border rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900 p-4">
+                    <div className="text-xs text-muted-foreground mb-3 px-2">
+                      <strong>De :</strong> Market Spas &lt;noreply@marketspas.pro&gt;<br />
+                      <strong>Sujet :</strong> {subject || '(aucun sujet)'}
+                    </div>
+                    <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </div>
     </AdminLayout>

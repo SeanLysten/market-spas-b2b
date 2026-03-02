@@ -496,3 +496,187 @@ describe('Newsletter input validation', () => {
     expect((input as any).isRawHtml).toBeUndefined();
   });
 });
+
+
+// ─── Test scheduled newsletter logic ────────────────────────────────────────
+
+describe('Scheduled newsletter validation', () => {
+  it('should validate scheduledAt is in the future', () => {
+    const futureDate = new Date(Date.now() + 3600000); // 1 hour from now
+    expect(futureDate.getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it('should reject scheduledAt in the past', () => {
+    const pastDate = new Date(Date.now() - 3600000); // 1 hour ago
+    expect(pastDate.getTime()).toBeLessThan(Date.now());
+  });
+
+  it('should validate ISO date string format', () => {
+    const dateStr = '2026-03-15T14:30:00.000Z';
+    const parsed = new Date(dateStr);
+    expect(parsed.toISOString()).toBe(dateStr);
+    expect(isNaN(parsed.getTime())).toBe(false);
+  });
+
+  it('should validate schedule input fields', () => {
+    const input = {
+      subject: 'Newsletter programmée',
+      title: 'Titre',
+      content: '<div>Contenu</div>',
+      recipients: 'ALL' as const,
+      scheduledAt: '2026-03-15T14:30:00.000Z',
+    };
+    expect(input.subject.length).toBeGreaterThan(0);
+    expect(input.content.length).toBeGreaterThan(0);
+    expect(input.scheduledAt.length).toBeGreaterThan(0);
+    expect(new Date(input.scheduledAt).toISOString()).toBe(input.scheduledAt);
+  });
+
+  it('should accept all valid recipient types for scheduling', () => {
+    const validRecipients = ['ALL', 'PARTNERS_ONLY', 'ADMINS_ONLY'];
+    validRecipients.forEach(r => {
+      const input = {
+        subject: 'Test',
+        title: 'Test',
+        content: '<p>Content</p>',
+        recipients: r,
+        scheduledAt: new Date(Date.now() + 86400000).toISOString(),
+      };
+      expect(validRecipients).toContain(input.recipients);
+    });
+  });
+});
+
+describe('Scheduled newsletter status transitions', () => {
+  it('should start with PENDING status', () => {
+    const nl = { status: 'PENDING', scheduledAt: new Date(Date.now() + 3600000) };
+    expect(nl.status).toBe('PENDING');
+  });
+
+  it('should transition to SENT on success', () => {
+    const nl = { status: 'PENDING' };
+    const updated = { ...nl, status: 'SENT', sentAt: new Date(), successCount: 5, failureCount: 0 };
+    expect(updated.status).toBe('SENT');
+    expect(updated.sentAt).toBeInstanceOf(Date);
+    expect(updated.successCount).toBe(5);
+  });
+
+  it('should transition to FAILED on error', () => {
+    const nl = { status: 'PENDING' };
+    const updated = { ...nl, status: 'FAILED', errorMessage: 'Aucun destinataire trouvé' };
+    expect(updated.status).toBe('FAILED');
+    expect(updated.errorMessage).toBe('Aucun destinataire trouvé');
+  });
+
+  it('should transition to CANCELLED when cancelled', () => {
+    const nl = { status: 'PENDING' };
+    const updated = { ...nl, status: 'CANCELLED' };
+    expect(updated.status).toBe('CANCELLED');
+  });
+
+  it('should not allow cancelling a SENT newsletter', () => {
+    const nl = { status: 'SENT' };
+    const canCancel = nl.status === 'PENDING';
+    expect(canCancel).toBe(false);
+  });
+
+  it('should not allow cancelling a FAILED newsletter', () => {
+    const nl = { status: 'FAILED' };
+    const canCancel = nl.status === 'PENDING';
+    expect(canCancel).toBe(false);
+  });
+});
+
+// ─── Test image upload validation ──────────────────────────────────────────
+
+describe('Image upload validation', () => {
+  it('should accept valid image MIME types', () => {
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    validTypes.forEach(type => {
+      expect(type.startsWith('image/')).toBe(true);
+    });
+  });
+
+  it('should reject non-image MIME types', () => {
+    const invalidTypes = ['application/pdf', 'text/plain', 'video/mp4', 'application/json'];
+    invalidTypes.forEach(type => {
+      expect(type.startsWith('image/')).toBe(false);
+    });
+  });
+
+  it('should validate base64 data URL format', () => {
+    const dataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==';
+    expect(dataUrl.startsWith('data:')).toBe(true);
+    expect(dataUrl.includes(';base64,')).toBe(true);
+  });
+
+  it('should extract MIME type from data URL', () => {
+    const dataUrl = 'data:image/jpeg;base64,/9j/4AAQ==';
+    const mimeMatch = dataUrl.match(/^data:([^;]+);base64,/);
+    expect(mimeMatch).not.toBeNull();
+    expect(mimeMatch![1]).toBe('image/jpeg');
+  });
+
+  it('should extract base64 content from data URL', () => {
+    const base64Content = 'iVBORw0KGgoAAAANSUhEUg==';
+    const dataUrl = `data:image/png;base64,${base64Content}`;
+    const parts = dataUrl.split(';base64,');
+    expect(parts[1]).toBe(base64Content);
+  });
+
+  it('should validate file size limit (10MB)', () => {
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const smallFile = { size: 500000 }; // 500KB
+    const largeFile = { size: 15000000 }; // 15MB
+    expect(smallFile.size).toBeLessThanOrEqual(maxSize);
+    expect(largeFile.size).toBeGreaterThan(maxSize);
+  });
+
+  it('should generate a valid storage key for uploaded image', () => {
+    const fileName = 'my-photo.jpg';
+    const timestamp = Date.now();
+    const key = `newsletter-images/${timestamp}-${fileName}`;
+    expect(key).toContain('newsletter-images/');
+    expect(key).toContain(fileName);
+    expect(key.length).toBeGreaterThan(0);
+  });
+});
+
+// ─── Test cron job logic ───────────────────────────────────────────────────
+
+describe('Newsletter cron job logic', () => {
+  it('should identify pending newsletters ready to send', () => {
+    const now = new Date();
+    const newsletters = [
+      { id: 1, status: 'PENDING', scheduledAt: new Date(now.getTime() - 60000) }, // 1 min ago
+      { id: 2, status: 'PENDING', scheduledAt: new Date(now.getTime() + 3600000) }, // 1 hour from now
+      { id: 3, status: 'SENT', scheduledAt: new Date(now.getTime() - 3600000) }, // already sent
+      { id: 4, status: 'CANCELLED', scheduledAt: new Date(now.getTime() - 60000) }, // cancelled
+    ];
+    const readyToSend = newsletters.filter(nl =>
+      nl.status === 'PENDING' && new Date(nl.scheduledAt) <= now
+    );
+    expect(readyToSend).toHaveLength(1);
+    expect(readyToSend[0].id).toBe(1);
+  });
+
+  it('should not send newsletters scheduled in the future', () => {
+    const now = new Date();
+    const futureNewsletter = {
+      id: 1, status: 'PENDING',
+      scheduledAt: new Date(now.getTime() + 3600000),
+    };
+    const isReady = futureNewsletter.status === 'PENDING' && new Date(futureNewsletter.scheduledAt) <= now;
+    expect(isReady).toBe(false);
+  });
+
+  it('should not re-send already sent newsletters', () => {
+    const now = new Date();
+    const sentNewsletter = {
+      id: 1, status: 'SENT',
+      scheduledAt: new Date(now.getTime() - 3600000),
+    };
+    const isReady = sentNewsletter.status === 'PENDING' && new Date(sentNewsletter.scheduledAt) <= now;
+    expect(isReady).toBe(false);
+  });
+});

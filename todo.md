@@ -2087,3 +2087,16 @@
 - [x] Interligne configurable (serré, compact, normal, aéré, large)
 - [x] Mise à jour de la génération HTML pour appliquer tous les styles personnalisés
 - [x] 39 tests vitest passent (style helpers, conversion blocs→HTML avec styles, validation)
+
+## Programmation envois + Upload images newsletter (session 2026-03-02 #7)
+- [x] Table scheduled_newsletters en DB (sujet, contenu HTML, destinataires, date programmée, statut)
+- [x] Route serveur pour programmer un envoi de newsletter (admin.newsletter.schedule)
+- [x] Cron/timer côté serveur pour envoyer les newsletters programmées toutes les 60s
+- [x] Liste des newsletters programmées avec statut (en attente, envoyée, annulée, échouée)
+- [x] Possibilité d'annuler et supprimer une newsletter programmée
+- [x] Route serveur d'upload d'images vers S3 (admin.newsletter.uploadImage)
+- [x] Bouton "Uploader" dans le bloc Image de l'éditeur
+- [x] Prévisualisation de l'image uploadée avec bouton de suppression
+- [x] Interface de programmation (sélecteur date/heure) dans le composant
+- [x] Onglet "Programmées" pour voir toutes les newsletters programmées
+- [x] 60 tests vitest passent (scheduling, upload, cron logic, status transitions)

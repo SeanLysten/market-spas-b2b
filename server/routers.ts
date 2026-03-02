@@ -4017,6 +4017,90 @@ ${input.content}
           message: `Newsletter envoyée à ${successCount}/${recipientEmails.length} destinataires`,
         };
       }),
+
+    // Schedule a newsletter for later
+    schedule: adminProcedure
+      .input(
+        z.object({
+          subject: z.string().min(1, "Le sujet est requis"),
+          title: z.string().min(1, "Le titre est requis"),
+          content: z.string().min(1, "Le contenu est requis"),
+          recipients: z.enum(['ALL', 'PARTNERS_ONLY', 'ADMINS_ONLY']).default('ALL'),
+          scheduledAt: z.string().min(1, "La date de programmation est requise"),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const scheduledDate = new Date(input.scheduledAt);
+        if (scheduledDate <= new Date()) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'La date de programmation doit être dans le futur' });
+        }
+
+        // Build full HTML
+        const htmlContent = `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${input.title}</title></head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#f1f5f9;">
+<table role="presentation" style="width:100%;border-collapse:collapse;"><tr><td align="center" style="padding:32px 16px;">
+${input.content}
+</td></tr></table>
+</body></html>`;
+
+        const result = await db.createScheduledNewsletter({
+          subject: input.subject,
+          title: input.title,
+          htmlContent,
+          recipients: input.recipients,
+          scheduledAt: scheduledDate,
+          createdById: ctx.user.id,
+        });
+
+        return {
+          success: true,
+          id: result.id,
+          scheduledAt: scheduledDate.toISOString(),
+          message: `Newsletter programmée pour le ${scheduledDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+        };
+      }),
+
+    // List scheduled newsletters
+    listScheduled: adminProcedure
+      .query(async () => {
+        return db.getScheduledNewsletters();
+      }),
+
+    // Cancel a scheduled newsletter
+    cancel: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.cancelScheduledNewsletter(input.id);
+        return { success: true, message: 'Newsletter annulée' };
+      }),
+
+    // Delete a scheduled newsletter
+    deleteScheduled: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteScheduledNewsletter(input.id);
+        return { success: true, message: 'Newsletter supprimée' };
+      }),
+
+    // Upload image for newsletter
+    uploadImage: adminProcedure
+      .input(
+        z.object({
+          fileData: z.string().min(1, "Le fichier est requis"),
+          fileName: z.string().min(1, "Le nom du fichier est requis"),
+          fileType: z.string().min(1, "Le type du fichier est requis"),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { storagePut } = await import('./storage');
+        const buffer = Buffer.from(input.fileData.split(',')[1] || input.fileData, 'base64');
+        const ext = input.fileName.split('.').pop() || 'jpg';
+        const fileKey = `newsletter-images/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+        const { url } = await storagePut(fileKey, buffer, input.fileType);
+        return { success: true, url };
+      }),
   }),
 
   // ============================================
