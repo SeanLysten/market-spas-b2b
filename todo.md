@@ -2100,3 +2100,6 @@
 - [x] Interface de programmation (sélecteur date/heure) dans le composant
 - [x] Onglet "Programmées" pour voir toutes les newsletters programmées
 - [x] 60 tests vitest passent (scheduling, upload, cron logic, status transitions)
+
+## Bug fix: routes tRPC newsletter manquantes (session 2026-03-02 #8)
+- [x] Corriger les routes admin.newsletter.listScheduled, cancel, deleteScheduled, uploadImage non trouvées (déplacé newsletter dans le routeur admin)
