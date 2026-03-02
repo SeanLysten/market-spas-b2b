@@ -2108,3 +2108,13 @@
 - [x] Ajouter un bouton toggle desktop/mobile dans l'aperçu en direct (sidebar + onglet Aperçu)
 - [x] Afficher l'aperçu en largeur 600px (desktop) ou 375px (mobile) avec cadre simulé smartphone
 - [x] Modale plein écran avec switch desktop/mobile et bouton Maximize2
+
+## Regroupement menus sidebar admin en catégories dépliables (session 2026-03-02 #10)
+- [x] Analyser tous les menus actuels de la sidebar admin (16 entrées)
+- [x] Définir les catégories : Produits & Stock, Ventes & Partenaires, Marketing & Leads, Médiathèque, Service Après-Vente, Communication
+- [x] Implémenter le système d'accordéon (chevron + animation) dans la sidebar
+- [x] Dashboard et Paramètres restent seuls (sans sous-menu)
+- [x] Persister l'état ouvert/fermé dans localStorage
+- [x] Auto-expansion du groupe contenant la page active
+- [x] Bordure gauche et indentation des sous-menus
+- [x] Fonctionne sur mobile (sidebar responsive)

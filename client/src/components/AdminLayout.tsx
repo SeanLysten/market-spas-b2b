@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   Package,
   Users,
-  FileText,
   Settings,
   LogOut,
   Menu,
@@ -17,14 +16,20 @@ import {
   FileSpreadsheet,
   Target,
   BookOpen,
-  Calendar,
   TrendingUp,
   MapPin,
   Wrench,
   Map,
   Cog,
+  ChevronDown,
+  Megaphone,
+  ShoppingCart,
+  FolderOpen,
+  HeadphonesIcon,
+  MessageSquare,
+  BarChart3,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -33,15 +38,140 @@ interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
+interface NavItem {
+  name: string;
+  href: string;
+  icon: any;
+}
+
+interface NavGroup {
+  label: string;
+  icon: any;
+  items: NavItem[];
+}
+
+type NavEntry = NavItem | NavGroup;
+
+function isGroup(entry: NavEntry): entry is NavGroup {
+  return 'items' in entry;
+}
+
+const STORAGE_KEY = 'admin-sidebar-expanded';
+
+function getInitialExpanded(): Record<string, boolean> {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return {};
+}
+
+function saveExpanded(expanded: Record<string, boolean>) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(expanded));
+  } catch {}
+}
+
 export function AdminLayout({ children }: AdminLayoutProps) {
   const { user } = useAuth();
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>(getInitialExpanded);
   const logoutMutation = trpc.auth.logout.useMutation();
+
+  const navigation: NavEntry[] = [
+    {
+      name: "Dashboard",
+      href: "/admin",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Produits & Stock",
+      icon: Package,
+      items: [
+        { name: "Produits", href: "/admin/products", icon: Package },
+        { name: "Prévisions Stock", href: "/admin/forecast", icon: TrendingUp },
+      ],
+    },
+    {
+      label: "Ventes & Partenaires",
+      icon: ShoppingCart,
+      items: [
+        { name: "Commandes", href: "/admin/orders", icon: ShoppingBag },
+        { name: "Partenaires", href: "/admin/partners", icon: Building2 },
+        { name: "Rapports", href: "/admin/reports", icon: FileSpreadsheet },
+      ],
+    },
+    {
+      label: "Marketing & Leads",
+      icon: Megaphone,
+      items: [
+        { name: "Territoires", href: "/admin/territories", icon: MapPin },
+        { name: "Leads", href: "/admin/leads", icon: Target },
+        { name: "Carte du Réseau", href: "/admin/partner-map", icon: Map },
+      ],
+    },
+    {
+      label: "Médiathèque",
+      icon: FolderOpen,
+      items: [
+        { name: "Ressources média", href: "/admin/resources", icon: ImageIcon },
+        { name: "Ressources Techniques", href: "/admin/technical-resources", icon: BookOpen },
+      ],
+    },
+    {
+      label: "Service Après-Vente",
+      icon: HeadphonesIcon,
+      items: [
+        { name: "SAV", href: "/admin/after-sales", icon: Wrench },
+        { name: "Pièces Détachées", href: "/admin/spare-parts", icon: Cog },
+      ],
+    },
+    {
+      label: "Communication",
+      icon: MessageSquare,
+      items: [
+        { name: "Newsletter", href: "/admin/newsletter", icon: Mail },
+        { name: "Utilisateurs", href: "/admin/users", icon: Users },
+      ],
+    },
+    {
+      name: "Paramètres",
+      href: "/admin/settings",
+      icon: Settings,
+    },
+  ];
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
     window.location.href = "/";
+  };
+
+  // Auto-expand the group that contains the active page
+  useEffect(() => {
+    const newExpanded = { ...expanded };
+    let changed = false;
+    for (const entry of navigation) {
+      if (isGroup(entry)) {
+        const hasActive = entry.items.some(
+          (item) => location === item.href || location.startsWith(item.href + '/')
+        );
+        if (hasActive && !newExpanded[entry.label]) {
+          newExpanded[entry.label] = true;
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      setExpanded(newExpanded);
+      saveExpanded(newExpanded);
+    }
+  }, [location]);
+
+  const toggleGroup = (label: string) => {
+    const newExpanded = { ...expanded, [label]: !expanded[label] };
+    setExpanded(newExpanded);
+    saveExpanded(newExpanded);
   };
 
   // Vérifier que l'utilisateur est admin
@@ -49,7 +179,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
         <div className="text-center space-y-4">
-          <h1 className="text-2xl text-display text-display font-bold">Accès refusé</h1>
+          <h1 className="text-2xl text-display font-bold">Accès refusé</h1>
           <p className="text-muted-foreground">
             Vous n'avez pas les permissions nécessaires pour accéder à cette page.
           </p>
@@ -61,88 +191,68 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  const navigation = [
-    {
-      name: "Dashboard",
-      href: "/admin",
-      icon: LayoutDashboard,
-    },
-    {
-      name: "Produits",
-      href: "/admin/products",
-      icon: Package,
-    },
-    {
-      name: "Prévisions Stock",
-      href: "/admin/forecast",
-      icon: TrendingUp,
-    },
-    {
-      name: "Territoires",
-      href: "/admin/territories",
-      icon: MapPin,
-    },
-    {
-      name: "Ressources média",
-      href: "/admin/resources",
-      icon: ImageIcon,
-    },
-    {
-      name: "Utilisateurs",
-      href: "/admin/users",
-      icon: Users,
-    },
-    {
-      name: "Commandes",
-      href: "/admin/orders",
-      icon: ShoppingBag,
-    },
-    {
-      name: "Partenaires",
-      href: "/admin/partners",
-      icon: Building2,
-    },
-    {
-      name: "Rapports",
-      href: "/admin/reports",
-      icon: FileSpreadsheet,
-    },
-    {
-      name: "Leads",
-      href: "/admin/leads",
-      icon: Target,
-    },
-    {
-      name: "Ressources Techniques",
-      href: "/admin/technical-resources",
-      icon: BookOpen,
-    },
-    {
-      name: "Carte du Réseau",
-      href: "/admin/partner-map",
-      icon: Map,
-    },
-    {
-      name: "SAV",
-      href: "/admin/after-sales",
-      icon: Wrench,
-    },
-    {
-      name: "Pièces Détachées",
-      href: "/admin/spare-parts",
-      icon: Cog,
-    },
-    {
-      name: "Newsletter",
-      href: "/admin/newsletter",
-      icon: Mail,
-    },
-    {
-      name: "Paramètres",
-      href: "/admin/settings",
-      icon: Settings,
-    },
-  ];
+  const renderNavItem = (item: NavItem, indent = false) => {
+    const isActive =
+      item.href === '/admin'
+        ? location === '/admin'
+        : location === item.href || location.startsWith(item.href + '/');
+    const Icon = item.icon;
+    return (
+      <Link key={item.name} href={item.href}>
+        <div
+          className={`flex items-center gap-3 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+            indent ? 'ml-2 px-3 py-1.5' : 'px-3 py-2'
+          } ${
+            isActive
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          }`}
+          onClick={() => setSidebarOpen(false)}
+        >
+          <Icon className={`${indent ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0`} />
+          <span className="truncate">{item.name}</span>
+        </div>
+      </Link>
+    );
+  };
+
+  const renderNavGroup = (group: NavGroup) => {
+    const isOpen = !!expanded[group.label];
+    const hasActive = group.items.some(
+      (item) => location === item.href || location.startsWith(item.href + '/')
+    );
+    const Icon = group.icon;
+
+    return (
+      <div key={group.label} className="space-y-0.5">
+        <button
+          onClick={() => toggleGroup(group.label)}
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+            hasActive && !isOpen
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          }`}
+        >
+          <Icon className="w-5 h-5 flex-shrink-0" />
+          <span className="truncate flex-1 text-left">{group.label}</span>
+          <ChevronDown
+            className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${
+              isOpen ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
+        <div
+          className={`overflow-hidden transition-all duration-200 ease-in-out ${
+            isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="ml-4 pl-3 border-l-2 border-border/40 space-y-0.5 py-0.5">
+            {group.items.map((item) => renderNavItem(item, true))}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -165,7 +275,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <div className="p-6 border-b">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Administration</p>
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                  Administration
+                </p>
                 <p className="text-xs text-muted-foreground">Market Spas</p>
               </div>
               <Button
@@ -180,25 +292,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            {navigation.map((item) => {
-              const isActive = location === item.href;
-              const Icon = item.icon;
-              return (
-                <Link key={item.name} href={item.href}>
-                  <div
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {item.name}
-                  </div>
-                </Link>
-              );
+          <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+            {navigation.map((entry) => {
+              if (isGroup(entry)) {
+                return renderNavGroup(entry);
+              }
+              return renderNavItem(entry);
             })}
           </nav>
 
@@ -211,7 +310,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user.name || user.email}</p>
+                <p className="text-sm font-medium truncate">
+                  {user.name || user.email}
+                </p>
                 <p className="text-xs text-muted-foreground capitalize">
                   {user.role?.toLowerCase().replace("_", " ")}
                 </p>
@@ -245,8 +346,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             >
               <Menu className="w-5 h-5" />
             </Button>
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Administration</p>
-            <div className="w-10" /> {/* Spacer for alignment */}
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+              Administration
+            </p>
+            <div className="w-10" />
           </div>
         </header>
 
