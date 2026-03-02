@@ -2103,3 +2103,8 @@
 
 ## Bug fix: routes tRPC newsletter manquantes (session 2026-03-02 #8)
 - [x] Corriger les routes admin.newsletter.listScheduled, cancel, deleteScheduled, uploadImage non trouvées (déplacé newsletter dans le routeur admin)
+
+## Prévisualisation desktop/mobile newsletter (session 2026-03-02 #9)
+- [x] Ajouter un bouton toggle desktop/mobile dans l'aperçu en direct (sidebar + onglet Aperçu)
+- [x] Afficher l'aperçu en largeur 600px (desktop) ou 375px (mobile) avec cadre simulé smartphone
+- [x] Modale plein écran avec switch desktop/mobile et bouton Maximize2

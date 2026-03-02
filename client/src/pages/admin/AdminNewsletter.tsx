@@ -13,7 +13,7 @@ import {
   Type, Image as ImageIcon, MousePointerClick, Minus, LayoutTemplate, Eye,
   Edit, ArrowUp, ArrowDown, Palette, Copy, Sparkles, Bold, Italic, Underline,
   AlignLeft, AlignCenter, AlignRight, ChevronDown, ChevronUp, Upload,
-  Clock, Calendar, X, Ban, List
+  Clock, Calendar, X, Ban, List, Monitor, Smartphone, Maximize2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -602,6 +602,8 @@ export default function AdminNewsletter() {
   const [showSchedule, setShowSchedule] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [fullscreenPreview, setFullscreenPreview] = useState(false);
   const [result, setResult] = useState<{
     success: boolean;
     totalRecipients: number;
@@ -900,31 +902,115 @@ export default function AdminNewsletter() {
                 <div className="hidden xl:block xl:col-span-2">
                   <Card className="sticky top-4">
                     <CardHeader className="py-3 px-4">
-                      <CardTitle className="text-sm flex items-center gap-2"><Eye className="h-4 w-4" /> Aperçu en direct</CardTitle>
-                      <CardDescription className="text-xs">Rendu fidèle à l'email reçu</CardDescription>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-sm flex items-center gap-2"><Eye className="h-4 w-4" /> Aperçu en direct</CardTitle>
+                          <CardDescription className="text-xs mt-0.5">
+                            {previewDevice === 'desktop' ? 'Bureau (600px)' : 'Mobile (375px)'}
+                          </CardDescription>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant={previewDevice === 'desktop' ? 'default' : 'ghost'}
+                            size="icon" className="h-7 w-7"
+                            onClick={() => setPreviewDevice('desktop')}
+                            title="Aperçu bureau"
+                          >
+                            <Monitor className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant={previewDevice === 'mobile' ? 'default' : 'ghost'}
+                            size="icon" className="h-7 w-7"
+                            onClick={() => setPreviewDevice('mobile')}
+                            title="Aperçu mobile"
+                          >
+                            <Smartphone className="h-3.5 w-3.5" />
+                          </Button>
+                          <div className="w-px h-5 bg-border mx-1" />
+                          <Button
+                            variant="ghost" size="icon" className="h-7 w-7"
+                            onClick={() => setFullscreenPreview(true)}
+                            title="Plein écran"
+                          >
+                            <Maximize2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
                     </CardHeader>
                     <CardContent className="p-0">
-                      <div className="border-t overflow-y-auto" style={{ maxHeight: '80vh' }}>
-                        <div className="bg-[#f1f5f9]" style={{ padding: '16px 8px' }} dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                      <div className="border-t overflow-y-auto flex justify-center" style={{ maxHeight: '80vh', backgroundColor: '#e2e8f0' }}>
+                        <div
+                          className="transition-all duration-300 bg-[#f1f5f9]"
+                          style={{
+                            width: previewDevice === 'mobile' ? '375px' : '100%',
+                            maxWidth: '600px',
+                            padding: '16px 8px',
+                            margin: previewDevice === 'mobile' ? '16px auto' : '0',
+                            borderRadius: previewDevice === 'mobile' ? '16px' : '0',
+                            boxShadow: previewDevice === 'mobile' ? '0 4px 24px rgba(0,0,0,0.15)' : 'none',
+                            minHeight: previewDevice === 'mobile' ? '667px' : 'auto',
+                          }}
+                          dangerouslySetInnerHTML={{ __html: previewHtml }}
+                        />
                       </div>
                     </CardContent>
                   </Card>
                 </div>
               </div>
             ) : (
-              /* Full Preview */
+              /* Full Preview with device toggle */
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Eye className="h-5 w-5" /> Aperçu de la newsletter</CardTitle>
-                  <CardDescription>Voici comment votre newsletter apparaîtra dans les boîtes mail</CardDescription>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                      <CardTitle className="flex items-center gap-2"><Eye className="h-5 w-5" /> Aperçu de la newsletter</CardTitle>
+                      <CardDescription className="mt-1">Voici comment votre newsletter apparaîtra dans les boîtes mail</CardDescription>
+                    </div>
+                    <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+                      <Button
+                        variant={previewDevice === 'desktop' ? 'default' : 'ghost'}
+                        size="sm" className="h-8 gap-1.5 text-xs"
+                        onClick={() => setPreviewDevice('desktop')}
+                      >
+                        <Monitor className="h-3.5 w-3.5" /> Bureau
+                      </Button>
+                      <Button
+                        variant={previewDevice === 'mobile' ? 'default' : 'ghost'}
+                        size="sm" className="h-8 gap-1.5 text-xs"
+                        onClick={() => setPreviewDevice('mobile')}
+                      >
+                        <Smartphone className="h-3.5 w-3.5" /> Mobile
+                      </Button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="max-w-[640px] mx-auto border rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900 p-4">
-                    <div className="text-xs text-muted-foreground mb-3 px-2">
-                      <strong>De :</strong> Market Spas &lt;noreply@marketspas.pro&gt;<br />
-                      <strong>Sujet :</strong> {subject || '(aucun sujet)'}
+                  <div className="flex justify-center" style={{ backgroundColor: '#e2e8f0', borderRadius: '12px', padding: '24px 16px', minHeight: '500px' }}>
+                    <div
+                      className="transition-all duration-300"
+                      style={{
+                        width: previewDevice === 'mobile' ? '375px' : '640px',
+                        maxWidth: '100%',
+                        backgroundColor: '#f1f5f9',
+                        borderRadius: previewDevice === 'mobile' ? '24px' : '8px',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+                        overflow: 'hidden',
+                        border: previewDevice === 'mobile' ? '8px solid #1e293b' : 'none',
+                      }}
+                    >
+                      {previewDevice === 'mobile' && (
+                        <div className="bg-[#1e293b] flex justify-center py-1.5">
+                          <div className="w-20 h-1.5 bg-gray-600 rounded-full" />
+                        </div>
+                      )}
+                      <div style={{ padding: '16px' }}>
+                        <div className="text-xs text-muted-foreground mb-3 px-2" style={{ fontSize: previewDevice === 'mobile' ? '10px' : '12px' }}>
+                          <strong>De :</strong> Market Spas &lt;noreply@marketspas.pro&gt;<br />
+                          <strong>Sujet :</strong> {subject || '(aucun sujet)'}
+                        </div>
+                        <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                      </div>
                     </div>
-                    <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
                   </div>
                 </CardContent>
               </Card>
@@ -932,6 +1018,77 @@ export default function AdminNewsletter() {
           </>
         )}
       </div>
+
+      {/* Fullscreen Preview Modal */}
+      {fullscreenPreview && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex flex-col" onClick={() => setFullscreenPreview(false)}>
+          {/* Toolbar */}
+          <div className="flex items-center justify-between px-6 py-3 bg-background/95 backdrop-blur border-b" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              <Eye className="h-5 w-5 text-primary" />
+              <span className="font-semibold text-sm">Prévisualisation</span>
+              <span className="text-xs text-muted-foreground">
+                {previewDevice === 'desktop' ? 'Bureau (600px)' : 'Mobile (375px)'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+                <Button
+                  variant={previewDevice === 'desktop' ? 'default' : 'ghost'}
+                  size="sm" className="h-8 gap-1.5 text-xs"
+                  onClick={() => setPreviewDevice('desktop')}
+                >
+                  <Monitor className="h-3.5 w-3.5" /> Bureau
+                </Button>
+                <Button
+                  variant={previewDevice === 'mobile' ? 'default' : 'ghost'}
+                  size="sm" className="h-8 gap-1.5 text-xs"
+                  onClick={() => setPreviewDevice('mobile')}
+                >
+                  <Smartphone className="h-3.5 w-3.5" /> Mobile
+                </Button>
+              </div>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setFullscreenPreview(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          {/* Preview Area */}
+          <div className="flex-1 overflow-y-auto flex justify-center" style={{ backgroundColor: '#cbd5e1', padding: '32px 16px' }} onClick={e => e.stopPropagation()}>
+            <div
+              className="transition-all duration-300"
+              style={{
+                width: previewDevice === 'mobile' ? '375px' : '640px',
+                maxWidth: '100%',
+                backgroundColor: '#f1f5f9',
+                borderRadius: previewDevice === 'mobile' ? '32px' : '8px',
+                boxShadow: '0 8px 40px rgba(0,0,0,0.2)',
+                overflow: 'hidden',
+                border: previewDevice === 'mobile' ? '10px solid #1e293b' : 'none',
+                alignSelf: 'flex-start',
+              }}
+            >
+              {previewDevice === 'mobile' && (
+                <div className="bg-[#1e293b] flex justify-center py-2">
+                  <div className="w-24 h-1.5 bg-gray-600 rounded-full" />
+                </div>
+              )}
+              <div style={{ padding: '16px' }}>
+                <div className="text-xs mb-3 px-2" style={{ color: '#64748b', fontSize: previewDevice === 'mobile' ? '10px' : '12px' }}>
+                  <strong>De :</strong> Market Spas &lt;noreply@marketspas.pro&gt;<br />
+                  <strong>Sujet :</strong> {subject || '(aucun sujet)'}
+                </div>
+                <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+              </div>
+              {previewDevice === 'mobile' && (
+                <div className="bg-[#1e293b] flex justify-center py-2">
+                  <div className="w-10 h-10 border-2 border-gray-600 rounded-full" />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }
