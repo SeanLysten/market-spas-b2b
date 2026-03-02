@@ -2118,3 +2118,9 @@
 - [x] Auto-expansion du groupe contenant la page active
 - [x] Bordure gauche et indentation des sous-menus
 - [x] Fonctionne sur mobile (sidebar responsive)
+
+## Supprimer page intermédiaire après connexion (session 2026-03-02 #11)
+- [x] Identifier la page intermédiaire (Home) qui s'affiche après connexion
+- [x] Rediriger directement vers /dashboard avec <Redirect to="/dashboard" />
+- [x] Supprimer le code mort de l'ancienne vue authentifiée (250+ lignes)
+- [x] Vérifier que / redirige bien vers /dashboard quand connecté
