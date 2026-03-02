@@ -2062,3 +2062,12 @@
 - [x] Gestion des doublons de territoires lors du transfert
 - [x] Leads non-VENTE (PARTENARIAT, SAV) désassignés au lieu d'être transférés
 - [x] Route delete retourne les infos de réattribution (partenaire cible, distance, nb territoires/leads)
+
+## Newsletter: navigation + éditeur visuel (session 2026-03-02 #4)
+- [x] Corriger le menu latéral manquant sur la page Newsletter admin
+- [x] Améliorer l'éditeur de newsletter pour créer des newsletters visuelles et personnalisées
+- [x] Ajouter des blocs visuels (header, texte, image, bouton CTA, séparateur, 2 colonnes, encadré)
+- [x] Templates de newsletter prédéfinis (Promotion, Nouveautés, Événement, Information)
+- [x] Prévisualisation en temps réel (sidebar + mode plein écran)
+- [x] Support isRawHtml côté serveur pour envoyer le HTML de l'éditeur par blocs
+- [x] 21 tests vitest newsletter passent (filtrage destinataires, conversion blocs→HTML, validation)

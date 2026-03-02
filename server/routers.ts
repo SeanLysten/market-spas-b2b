@@ -3947,6 +3947,7 @@ export const appRouter = router({
           ctaText: z.string().optional(),
           ctaUrl: z.string().url().optional(),
           recipients: z.enum(['ALL', 'PARTNERS_ONLY', 'ADMINS_ONLY']).default('ALL'),
+          isRawHtml: z.boolean().optional().default(false),
         })
       )
       .mutation(async ({ input }) => {
@@ -3975,14 +3976,28 @@ export const appRouter = router({
           });
         }
 
-        // Create HTML content using template
         const { createNewsletterTemplate, sendNewsletterEmail } = await import('./email');
-        const htmlContent = createNewsletterTemplate(
-          input.title,
-          input.content,
-          input.ctaText,
-          input.ctaUrl
-        );
+        
+        // If content is raw HTML from the block editor, wrap in basic email structure
+        // Otherwise use the legacy template function
+        let htmlContent: string;
+        if (input.isRawHtml) {
+          htmlContent = `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${input.title}</title></head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#f1f5f9;">
+<table role="presentation" style="width:100%;border-collapse:collapse;"><tr><td align="center" style="padding:32px 16px;">
+${input.content}
+</td></tr></table>
+</body></html>`;
+        } else {
+          htmlContent = createNewsletterTemplate(
+            input.title,
+            input.content,
+            input.ctaText,
+            input.ctaUrl
+          );
+        }
 
         // Send newsletter
         const result = await sendNewsletterEmail(
