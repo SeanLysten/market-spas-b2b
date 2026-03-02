@@ -11,18 +11,83 @@ import { Alert, AlertDescription } from '../../components/ui/alert';
 import {
   Mail, Send, CheckCircle2, AlertCircle, Users, Plus, Trash2, GripVertical,
   Type, Image as ImageIcon, MousePointerClick, Minus, LayoutTemplate, Eye,
-  Edit, ArrowUp, ArrowDown, Palette, Copy, Sparkles
+  Edit, ArrowUp, ArrowDown, Palette, Copy, Sparkles, Bold, Italic, Underline,
+  AlignLeft, AlignCenter, AlignRight, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// ─── Constants ──────────────────────────────────────────────────────────────
+
+const FONT_FAMILIES = [
+  { value: 'Arial, Helvetica, sans-serif', label: 'Arial' },
+  { value: 'Georgia, serif', label: 'Georgia' },
+  { value: 'Verdana, Geneva, sans-serif', label: 'Verdana' },
+  { value: "'Times New Roman', Times, serif", label: 'Times New Roman' },
+  { value: "'Trebuchet MS', sans-serif", label: 'Trebuchet MS' },
+  { value: "'Courier New', Courier, monospace", label: 'Courier New' },
+  { value: 'Tahoma, Geneva, sans-serif', label: 'Tahoma' },
+  { value: "'Lucida Sans', sans-serif", label: 'Lucida Sans' },
+  { value: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", label: 'Système (défaut)' },
+];
+
+const FONT_SIZES = [
+  { value: '11', label: '11px' },
+  { value: '12', label: '12px' },
+  { value: '13', label: '13px' },
+  { value: '14', label: '14px' },
+  { value: '15', label: '15px' },
+  { value: '16', label: '16px' },
+  { value: '18', label: '18px' },
+  { value: '20', label: '20px' },
+  { value: '22', label: '22px' },
+  { value: '24', label: '24px' },
+  { value: '28', label: '28px' },
+  { value: '32', label: '32px' },
+  { value: '36', label: '36px' },
+  { value: '42', label: '42px' },
+  { value: '48', label: '48px' },
+];
+
+const LINE_HEIGHTS = [
+  { value: '1.2', label: 'Serré' },
+  { value: '1.4', label: 'Compact' },
+  { value: '1.6', label: 'Normal' },
+  { value: '1.8', label: 'Aéré' },
+  { value: '2.0', label: 'Large' },
+];
+
+const PADDING_OPTIONS = [
+  { value: '0', label: 'Aucun' },
+  { value: '8', label: 'Petit' },
+  { value: '16', label: 'Normal' },
+  { value: '24', label: 'Moyen' },
+  { value: '32', label: 'Grand' },
+  { value: '48', label: 'Très grand' },
+];
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type BlockType = 'header' | 'text' | 'image' | 'cta' | 'divider' | 'two-columns' | 'highlight';
 
+interface BlockStyle {
+  fontFamily?: string;
+  fontSize?: string;
+  textColor?: string;
+  bgColor?: string;
+  textAlign?: 'left' | 'center' | 'right';
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  lineHeight?: string;
+  paddingTop?: string;
+  paddingBottom?: string;
+}
+
 interface NewsletterBlock {
   id: string;
   type: BlockType;
   data: Record<string, string>;
+  style: BlockStyle;
 }
 
 // ─── Block Templates ─────────────────────────────────────────────────────────
@@ -37,45 +102,55 @@ const BLOCK_TYPES: { type: BlockType; label: string; icon: any; description: str
   { type: 'highlight', label: 'Encadré', icon: Sparkles, description: 'Texte mis en avant' },
 ];
 
+const DEFAULT_STYLES: Record<BlockType, BlockStyle> = {
+  header: { fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", fontSize: '28', textColor: '#1e293b', bgColor: '', textAlign: 'center', bold: true, italic: false, underline: false, lineHeight: '1.4', paddingTop: '32', paddingBottom: '16' },
+  text: { fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", fontSize: '15', textColor: '#334155', bgColor: '', textAlign: 'left', bold: false, italic: false, underline: false, lineHeight: '1.7', paddingTop: '16', paddingBottom: '16' },
+  image: { fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", fontSize: '13', textColor: '#94a3b8', bgColor: '', textAlign: 'center', bold: false, italic: false, underline: false, lineHeight: '1.4', paddingTop: '16', paddingBottom: '16' },
+  cta: { fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", fontSize: '16', textColor: '#ffffff', bgColor: '', textAlign: 'center', bold: true, italic: false, underline: false, lineHeight: '1.4', paddingTop: '24', paddingBottom: '24' },
+  divider: { fontFamily: '', fontSize: '', textColor: '#e2e8f0', bgColor: '', textAlign: 'center', bold: false, italic: false, underline: false, lineHeight: '1', paddingTop: '16', paddingBottom: '16' },
+  'two-columns': { fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", fontSize: '14', textColor: '#334155', bgColor: '#f8fafc', textAlign: 'left', bold: false, italic: false, underline: false, lineHeight: '1.6', paddingTop: '16', paddingBottom: '16' },
+  highlight: { fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", fontSize: '15', textColor: '#1e293b', bgColor: '#eff6ff', textAlign: 'left', bold: false, italic: false, underline: false, lineHeight: '1.7', paddingTop: '16', paddingBottom: '16' },
+};
+
 const NEWSLETTER_TEMPLATES = [
   {
     name: 'Promotion',
     description: 'Annonce de promotion ou offre spéciale',
     blocks: [
-      { type: 'header' as BlockType, data: { title: '🎉 Offre Spéciale Partenaires', subtitle: 'Profitez de remises exceptionnelles sur notre gamme' } },
-      { type: 'image' as BlockType, data: { url: '', alt: 'Promotion en cours' } },
-      { type: 'text' as BlockType, data: { content: 'Chers partenaires,\n\nNous avons le plaisir de vous annoncer une offre exceptionnelle sur notre gamme de spas. Pendant une durée limitée, bénéficiez de conditions préférentielles sur les modèles sélectionnés.\n\nN\'hésitez pas à nous contacter pour plus de détails.' } },
-      { type: 'cta' as BlockType, data: { text: 'Voir les offres', url: 'https://marketspas.pro/catalog', bgColor: '#2563eb' } },
+      { type: 'header' as BlockType, data: { title: '🎉 Offre Spéciale Partenaires', subtitle: 'Profitez de remises exceptionnelles sur notre gamme' }, style: { ...DEFAULT_STYLES.header } },
+      { type: 'image' as BlockType, data: { url: '', alt: 'Promotion en cours' }, style: { ...DEFAULT_STYLES.image } },
+      { type: 'text' as BlockType, data: { content: 'Chers partenaires,\n\nNous avons le plaisir de vous annoncer une offre exceptionnelle sur notre gamme de spas. Pendant une durée limitée, bénéficiez de conditions préférentielles sur les modèles sélectionnés.\n\nN\'hésitez pas à nous contacter pour plus de détails.' }, style: { ...DEFAULT_STYLES.text } },
+      { type: 'cta' as BlockType, data: { text: 'Voir les offres', url: 'https://marketspas.pro/catalog', buttonColor: '#2563eb' }, style: { ...DEFAULT_STYLES.cta } },
     ],
   },
   {
     name: 'Nouveautés',
     description: 'Présentation de nouveaux produits',
     blocks: [
-      { type: 'header' as BlockType, data: { title: 'Nouveaux Modèles Disponibles', subtitle: 'Découvrez les dernières nouveautés de notre catalogue' } },
-      { type: 'text' as BlockType, data: { content: 'Nous sommes ravis de vous présenter nos nouveaux modèles qui viennent enrichir notre gamme. Ces spas ont été conçus pour répondre aux attentes de vos clients les plus exigeants.' } },
-      { type: 'two-columns' as BlockType, data: { left: '**Modèle Premium**\nCapacité : 5 places\nJets : 45\nDimensions : 220x220cm\nGarantie : 5 ans', right: '**Modèle Confort**\nCapacité : 4 places\nJets : 32\nDimensions : 200x200cm\nGarantie : 5 ans' } },
-      { type: 'cta' as BlockType, data: { text: 'Consulter le catalogue', url: 'https://marketspas.pro/catalog', bgColor: '#2563eb' } },
+      { type: 'header' as BlockType, data: { title: 'Nouveaux Modèles Disponibles', subtitle: 'Découvrez les dernières nouveautés de notre catalogue' }, style: { ...DEFAULT_STYLES.header } },
+      { type: 'text' as BlockType, data: { content: 'Nous sommes ravis de vous présenter nos nouveaux modèles qui viennent enrichir notre gamme. Ces spas ont été conçus pour répondre aux attentes de vos clients les plus exigeants.' }, style: { ...DEFAULT_STYLES.text } },
+      { type: 'two-columns' as BlockType, data: { left: '**Modèle Premium**\nCapacité : 5 places\nJets : 45\nDimensions : 220x220cm\nGarantie : 5 ans', right: '**Modèle Confort**\nCapacité : 4 places\nJets : 32\nDimensions : 200x200cm\nGarantie : 5 ans' }, style: { ...DEFAULT_STYLES['two-columns'] } },
+      { type: 'cta' as BlockType, data: { text: 'Consulter le catalogue', url: 'https://marketspas.pro/catalog', buttonColor: '#2563eb' }, style: { ...DEFAULT_STYLES.cta } },
     ],
   },
   {
     name: 'Événement',
     description: 'Invitation à un événement ou salon',
     blocks: [
-      { type: 'header' as BlockType, data: { title: '📅 Événement à venir', subtitle: 'Nous vous invitons à nous rejoindre' } },
-      { type: 'highlight' as BlockType, data: { content: '**Date :** [À compléter]\n**Lieu :** [À compléter]\n**Horaires :** [À compléter]', bgColor: '#eff6ff' } },
-      { type: 'text' as BlockType, data: { content: 'Nous serions ravis de vous accueillir lors de cet événement. Ce sera l\'occasion de découvrir nos dernières innovations et d\'échanger avec notre équipe technique.' } },
-      { type: 'cta' as BlockType, data: { text: 'Confirmer ma présence', url: 'https://marketspas.pro', bgColor: '#16a34a' } },
+      { type: 'header' as BlockType, data: { title: '📅 Événement à venir', subtitle: 'Nous vous invitons à nous rejoindre' }, style: { ...DEFAULT_STYLES.header } },
+      { type: 'highlight' as BlockType, data: { content: '**Date :** [À compléter]\n**Lieu :** [À compléter]\n**Horaires :** [À compléter]' }, style: { ...DEFAULT_STYLES.highlight } },
+      { type: 'text' as BlockType, data: { content: 'Nous serions ravis de vous accueillir lors de cet événement. Ce sera l\'occasion de découvrir nos dernières innovations et d\'échanger avec notre équipe technique.' }, style: { ...DEFAULT_STYLES.text } },
+      { type: 'cta' as BlockType, data: { text: 'Confirmer ma présence', url: 'https://marketspas.pro', buttonColor: '#16a34a' }, style: { ...DEFAULT_STYLES.cta } },
     ],
   },
   {
     name: 'Information',
     description: 'Communication générale ou mise à jour',
     blocks: [
-      { type: 'header' as BlockType, data: { title: 'Information importante', subtitle: 'Mise à jour de nos services' } },
-      { type: 'text' as BlockType, data: { content: 'Chers partenaires,\n\nNous souhaitons vous informer des dernières évolutions concernant nos services et notre plateforme. Votre satisfaction est notre priorité et nous travaillons constamment à améliorer votre expérience.' } },
-      { type: 'divider' as BlockType, data: {} },
-      { type: 'text' as BlockType, data: { content: 'N\'hésitez pas à contacter votre interlocuteur habituel pour toute question.' } },
+      { type: 'header' as BlockType, data: { title: 'Information importante', subtitle: 'Mise à jour de nos services' }, style: { ...DEFAULT_STYLES.header } },
+      { type: 'text' as BlockType, data: { content: 'Chers partenaires,\n\nNous souhaitons vous informer des dernières évolutions concernant nos services et notre plateforme. Votre satisfaction est notre priorité et nous travaillons constamment à améliorer votre expérience.' }, style: { ...DEFAULT_STYLES.text } },
+      { type: 'divider' as BlockType, data: {}, style: { ...DEFAULT_STYLES.divider } },
+      { type: 'text' as BlockType, data: { content: 'N\'hésitez pas à contacter votre interlocuteur habituel pour toute question.' }, style: { ...DEFAULT_STYLES.text } },
     ],
   },
 ];
@@ -91,53 +166,85 @@ function createBlock(type: BlockType): NewsletterBlock {
     header: { title: '', subtitle: '' },
     text: { content: '' },
     image: { url: '', alt: '' },
-    cta: { text: '', url: '', bgColor: '#2563eb' },
+    cta: { text: '', url: '', buttonColor: '#2563eb' },
     divider: {},
     'two-columns': { left: '', right: '' },
-    highlight: { content: '', bgColor: '#eff6ff' },
+    highlight: { content: '' },
   };
-  return { id: generateId(), type, data: { ...defaults[type] } };
+  return { id: generateId(), type, data: { ...defaults[type] }, style: { ...DEFAULT_STYLES[type] } };
 }
 
 // ─── Block to HTML conversion ────────────────────────────────────────────────
 
+function textDecorations(s: BlockStyle): string {
+  const parts: string[] = [];
+  if (s.bold) parts.push('font-weight:700');
+  if (s.italic) parts.push('font-style:italic');
+  if (s.underline) parts.push('text-decoration:underline');
+  return parts.join(';');
+}
+
+function baseStyle(s: BlockStyle, extraFontSize?: string): string {
+  const parts: string[] = [];
+  if (s.fontFamily) parts.push(`font-family:${s.fontFamily}`);
+  parts.push(`font-size:${extraFontSize || s.fontSize || '15'}px`);
+  if (s.textColor) parts.push(`color:${s.textColor}`);
+  if (s.textAlign) parts.push(`text-align:${s.textAlign}`);
+  if (s.lineHeight) parts.push(`line-height:${s.lineHeight}`);
+  const deco = textDecorations(s);
+  if (deco) parts.push(deco);
+  return parts.join(';');
+}
+
+function wrapPadding(s: BlockStyle, bgColor?: string): string {
+  const pt = s.paddingTop || '16';
+  const pb = s.paddingBottom || '16';
+  let style = `padding:${pt}px 24px ${pb}px`;
+  if (bgColor) style += `;background:${bgColor}`;
+  else if (s.bgColor) style += `;background:${s.bgColor}`;
+  return style;
+}
+
 function blockToHtml(block: NewsletterBlock): string {
+  const s = block.style || DEFAULT_STYLES[block.type];
   switch (block.type) {
-    case 'header':
-      return `<div style="text-align:center;padding:32px 24px 16px;">
-        <h1 style="margin:0;font-size:28px;font-weight:700;color:#1e293b;line-height:1.3;">${block.data.title || ''}</h1>
-        ${block.data.subtitle ? `<p style="margin:8px 0 0;font-size:16px;color:#64748b;">${block.data.subtitle}</p>` : ''}
+    case 'header': {
+      const subtitleSize = Math.max(12, Math.round(parseInt(s.fontSize || '28') * 0.57));
+      return `<div style="${wrapPadding(s)}">
+        <h1 style="margin:0;${baseStyle(s)}">${block.data.title || ''}</h1>
+        ${block.data.subtitle ? `<p style="margin:8px 0 0;font-family:${s.fontFamily || 'inherit'};font-size:${subtitleSize}px;color:#64748b;text-align:${s.textAlign || 'center'};">${block.data.subtitle}</p>` : ''}
       </div>`;
+    }
     case 'text':
-      return `<div style="padding:16px 24px;">
-        <p style="margin:0;font-size:15px;line-height:1.7;color:#334155;white-space:pre-line;">${(block.data.content || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>
+      return `<div style="${wrapPadding(s)}">
+        <p style="margin:0;${baseStyle(s)};white-space:pre-line;">${(block.data.content || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>
       </div>`;
     case 'image':
       if (!block.data.url) return '';
-      return `<div style="padding:16px 24px;text-align:center;">
+      return `<div style="${wrapPadding(s)}">
         <img src="${block.data.url}" alt="${block.data.alt || ''}" style="max-width:100%;height:auto;border-radius:8px;" />
-        ${block.data.alt ? `<p style="margin:8px 0 0;font-size:13px;color:#94a3b8;">${block.data.alt}</p>` : ''}
+        ${block.data.alt ? `<p style="margin:8px 0 0;font-family:${s.fontFamily || 'inherit'};font-size:${s.fontSize || '13'}px;color:${s.textColor || '#94a3b8'};text-align:${s.textAlign || 'center'};">${block.data.alt}</p>` : ''}
       </div>`;
     case 'cta':
-      return `<div style="padding:24px;text-align:center;">
-        <a href="${block.data.url || '#'}" style="display:inline-block;padding:14px 32px;background:${block.data.bgColor || '#2563eb'};color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;">${block.data.text || 'Cliquez ici'}</a>
+      return `<div style="${wrapPadding(s)}">
+        <a href="${block.data.url || '#'}" style="display:inline-block;padding:14px 32px;background:${block.data.buttonColor || '#2563eb'};color:#ffffff;font-family:${s.fontFamily || 'inherit'};font-size:${s.fontSize || '16'}px;font-weight:600;text-decoration:none;border-radius:8px;">${block.data.text || 'Cliquez ici'}</a>
       </div>`;
     case 'divider':
-      return `<div style="padding:16px 24px;"><hr style="border:none;border-top:1px solid #e2e8f0;margin:0;" /></div>`;
+      return `<div style="${wrapPadding(s)}"><hr style="border:none;border-top:1px solid ${s.textColor || '#e2e8f0'};margin:0;" /></div>`;
     case 'two-columns':
-      return `<div style="padding:16px 24px;">
+      return `<div style="${wrapPadding(s)}">
         <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
           <tr>
-            <td width="48%" valign="top" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:14px;line-height:1.6;color:#334155;white-space:pre-line;">${(block.data.left || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</td>
+            <td width="48%" valign="top" style="padding:12px;background:${s.bgColor || '#f8fafc'};border-radius:8px;${baseStyle(s)};white-space:pre-line;">${(block.data.left || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</td>
             <td width="4%"></td>
-            <td width="48%" valign="top" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:14px;line-height:1.6;color:#334155;white-space:pre-line;">${(block.data.right || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</td>
+            <td width="48%" valign="top" style="padding:12px;background:${s.bgColor || '#f8fafc'};border-radius:8px;${baseStyle(s)};white-space:pre-line;">${(block.data.right || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</td>
           </tr>
         </table>
       </div>`;
     case 'highlight':
-      return `<div style="padding:16px 24px;">
-        <div style="padding:20px;background:${block.data.bgColor || '#eff6ff'};border-radius:8px;border-left:4px solid #2563eb;">
-          <p style="margin:0;font-size:15px;line-height:1.7;color:#1e293b;white-space:pre-line;">${(block.data.content || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>
+      return `<div style="${wrapPadding(s, '')}">
+        <div style="padding:20px;background:${s.bgColor || '#eff6ff'};border-radius:8px;border-left:4px solid #2563eb;">
+          <p style="margin:0;${baseStyle(s)};white-space:pre-line;">${(block.data.content || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>
         </div>
       </div>`;
     default:
@@ -162,11 +269,231 @@ function blocksToFullHtml(blocks: NewsletterBlock[]): string {
   </div>`;
 }
 
+// ─── Style Toolbar Component ────────────────────────────────────────────────
+
+function StyleToolbar({ style, onChange, blockType }: {
+  style: BlockStyle;
+  onChange: (style: BlockStyle) => void;
+  blockType: BlockType;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (blockType === 'divider') return null;
+
+  const showTextFormatting = blockType !== 'image';
+  const showBgColor = blockType === 'highlight' || blockType === 'two-columns';
+
+  return (
+    <div className="border-t bg-muted/20 px-3 py-2">
+      {/* Compact toolbar row */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {/* Font Family */}
+        {showTextFormatting && (
+          <select
+            value={style.fontFamily || FONT_FAMILIES[FONT_FAMILIES.length - 1].value}
+            onChange={e => onChange({ ...style, fontFamily: e.target.value })}
+            className="h-7 text-[11px] bg-background border rounded px-1.5 max-w-[110px] cursor-pointer"
+            title="Police"
+          >
+            {FONT_FAMILIES.map(f => (
+              <option key={f.value} value={f.value}>{f.label}</option>
+            ))}
+          </select>
+        )}
+
+        {/* Font Size */}
+        <select
+          value={style.fontSize || '15'}
+          onChange={e => onChange({ ...style, fontSize: e.target.value })}
+          className="h-7 text-[11px] bg-background border rounded px-1 w-[60px] cursor-pointer"
+          title="Taille"
+        >
+          {FONT_SIZES.map(s => (
+            <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
+        </select>
+
+        {/* Separator */}
+        <div className="w-px h-5 bg-border mx-0.5" />
+
+        {/* Bold / Italic / Underline */}
+        {showTextFormatting && (
+          <>
+            <button
+              type="button"
+              onClick={() => onChange({ ...style, bold: !style.bold })}
+              className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.bold ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`}
+              title="Gras"
+            >
+              <Bold className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange({ ...style, italic: !style.italic })}
+              className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.italic ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`}
+              title="Italique"
+            >
+              <Italic className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange({ ...style, underline: !style.underline })}
+              className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.underline ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`}
+              title="Souligné"
+            >
+              <Underline className="h-3.5 w-3.5" />
+            </button>
+          </>
+        )}
+
+        {/* Separator */}
+        <div className="w-px h-5 bg-border mx-0.5" />
+
+        {/* Alignment */}
+        <button
+          type="button"
+          onClick={() => onChange({ ...style, textAlign: 'left' })}
+          className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.textAlign === 'left' ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`}
+          title="Aligner à gauche"
+        >
+          <AlignLeft className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange({ ...style, textAlign: 'center' })}
+          className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.textAlign === 'center' ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`}
+          title="Centrer"
+        >
+          <AlignCenter className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange({ ...style, textAlign: 'right' })}
+          className={`h-7 w-7 flex items-center justify-center rounded text-xs transition-colors ${style.textAlign === 'right' ? 'bg-primary text-primary-foreground' : 'bg-background border hover:bg-muted'}`}
+          title="Aligner à droite"
+        >
+          <AlignRight className="h-3.5 w-3.5" />
+        </button>
+
+        {/* Separator */}
+        <div className="w-px h-5 bg-border mx-0.5" />
+
+        {/* Text Color */}
+        {showTextFormatting && (
+          <div className="flex items-center gap-1" title="Couleur du texte">
+            <span className="text-[10px] text-muted-foreground">A</span>
+            <input
+              type="color"
+              value={style.textColor || '#334155'}
+              onChange={e => onChange({ ...style, textColor: e.target.value })}
+              className="h-6 w-6 rounded border cursor-pointer p-0"
+            />
+          </div>
+        )}
+
+        {/* Background Color */}
+        {showBgColor && (
+          <div className="flex items-center gap-1" title="Couleur de fond">
+            <Palette className="h-3 w-3 text-muted-foreground" />
+            <input
+              type="color"
+              value={style.bgColor || '#eff6ff'}
+              onChange={e => onChange({ ...style, bgColor: e.target.value })}
+              className="h-6 w-6 rounded border cursor-pointer p-0"
+            />
+          </div>
+        )}
+
+        {/* Expand toggle */}
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="h-7 px-1.5 flex items-center gap-0.5 rounded text-[10px] text-muted-foreground bg-background border hover:bg-muted ml-auto"
+          title={expanded ? 'Moins d\'options' : 'Plus d\'options'}
+        >
+          {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          <span className="hidden sm:inline">{expanded ? 'Moins' : 'Plus'}</span>
+        </button>
+      </div>
+
+      {/* Expanded options */}
+      {expanded && (
+        <div className="flex flex-wrap items-center gap-3 mt-2 pt-2 border-t border-dashed">
+          {/* Line Height */}
+          <div className="flex items-center gap-1.5">
+            <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Interligne</Label>
+            <select
+              value={style.lineHeight || '1.6'}
+              onChange={e => onChange({ ...style, lineHeight: e.target.value })}
+              className="h-7 text-[11px] bg-background border rounded px-1 cursor-pointer"
+            >
+              {LINE_HEIGHTS.map(l => (
+                <option key={l.value} value={l.value}>{l.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Padding Top */}
+          <div className="flex items-center gap-1.5">
+            <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Espace haut</Label>
+            <select
+              value={style.paddingTop || '16'}
+              onChange={e => onChange({ ...style, paddingTop: e.target.value })}
+              className="h-7 text-[11px] bg-background border rounded px-1 cursor-pointer"
+            >
+              {PADDING_OPTIONS.map(p => (
+                <option key={p.value} value={p.value}>{p.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Padding Bottom */}
+          <div className="flex items-center gap-1.5">
+            <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Espace bas</Label>
+            <select
+              value={style.paddingBottom || '16'}
+              onChange={e => onChange({ ...style, paddingBottom: e.target.value })}
+              className="h-7 text-[11px] bg-background border rounded px-1 cursor-pointer"
+            >
+              {PADDING_OPTIONS.map(p => (
+                <option key={p.value} value={p.value}>{p.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Block Background Color (for all blocks in expanded) */}
+          {!showBgColor && (
+            <div className="flex items-center gap-1.5">
+              <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Fond du bloc</Label>
+              <input
+                type="color"
+                value={style.bgColor || '#ffffff'}
+                onChange={e => onChange({ ...style, bgColor: e.target.value === '#ffffff' ? '' : e.target.value })}
+                className="h-6 w-6 rounded border cursor-pointer p-0"
+              />
+              {style.bgColor && (
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...style, bgColor: '' })}
+                  className="text-[10px] text-muted-foreground hover:text-foreground"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Block Editor Component ──────────────────────────────────────────────────
 
-function BlockEditor({ block, onChange, onDelete, onMoveUp, onMoveDown, onDuplicate, isFirst, isLast }: {
+function BlockEditor({ block, onChange, onStyleChange, onDelete, onMoveUp, onMoveDown, onDuplicate, isFirst, isLast }: {
   block: NewsletterBlock;
   onChange: (data: Record<string, string>) => void;
+  onStyleChange: (style: BlockStyle) => void;
   onDelete: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
@@ -266,14 +593,14 @@ function BlockEditor({ block, onChange, onDelete, onMoveUp, onMoveDown, onDuplic
               className="text-sm"
             />
             <div className="flex items-center gap-2 sm:col-span-2">
-              <Label className="text-xs text-muted-foreground whitespace-nowrap">Couleur :</Label>
+              <Label className="text-xs text-muted-foreground whitespace-nowrap">Couleur du bouton :</Label>
               <input
                 type="color"
-                value={block.data.bgColor || '#2563eb'}
-                onChange={e => onChange({ ...block.data, bgColor: e.target.value })}
+                value={block.data.buttonColor || '#2563eb'}
+                onChange={e => onChange({ ...block.data, buttonColor: e.target.value })}
                 className="h-8 w-12 rounded border cursor-pointer"
               />
-              <span className="text-xs text-muted-foreground">{block.data.bgColor || '#2563eb'}</span>
+              <span className="text-xs text-muted-foreground">{block.data.buttonColor || '#2563eb'}</span>
             </div>
           </div>
         )}
@@ -305,27 +632,22 @@ function BlockEditor({ block, onChange, onDelete, onMoveUp, onMoveDown, onDuplic
         )}
 
         {block.type === 'highlight' && (
-          <>
-            <Textarea
-              placeholder="Texte mis en avant... Utilisez **gras** pour les points clés."
-              value={block.data.content || ''}
-              onChange={e => onChange({ ...block.data, content: e.target.value })}
-              rows={3}
-              className="text-sm"
-            />
-            <div className="flex items-center gap-2">
-              <Label className="text-xs text-muted-foreground whitespace-nowrap">Fond :</Label>
-              <input
-                type="color"
-                value={block.data.bgColor || '#eff6ff'}
-                onChange={e => onChange({ ...block.data, bgColor: e.target.value })}
-                className="h-8 w-12 rounded border cursor-pointer"
-              />
-              <span className="text-xs text-muted-foreground">{block.data.bgColor || '#eff6ff'}</span>
-            </div>
-          </>
+          <Textarea
+            placeholder="Texte mis en avant... Utilisez **gras** pour les points clés."
+            value={block.data.content || ''}
+            onChange={e => onChange({ ...block.data, content: e.target.value })}
+            rows={3}
+            className="text-sm"
+          />
         )}
       </div>
+
+      {/* Style Toolbar */}
+      <StyleToolbar
+        style={block.style}
+        onChange={onStyleChange}
+        blockType={block.type}
+      />
     </div>
   );
 }
@@ -367,6 +689,10 @@ export default function AdminNewsletter() {
     setBlocks(prev => prev.map(b => b.id === id ? { ...b, data } : b));
   }, []);
 
+  const updateBlockStyle = useCallback((id: string, style: BlockStyle) => {
+    setBlocks(prev => prev.map(b => b.id === id ? { ...b, style } : b));
+  }, []);
+
   const deleteBlock = useCallback((id: string) => {
     setBlocks(prev => prev.filter(b => b.id !== id));
   }, []);
@@ -387,7 +713,7 @@ export default function AdminNewsletter() {
     setBlocks(prev => {
       const idx = prev.findIndex(b => b.id === id);
       if (idx < 0) return prev;
-      const clone = { ...prev[idx], id: generateId(), data: { ...prev[idx].data } };
+      const clone = { ...prev[idx], id: generateId(), data: { ...prev[idx].data }, style: { ...prev[idx].style } };
       const arr = [...prev];
       arr.splice(idx + 1, 0, clone);
       return arr;
@@ -397,7 +723,7 @@ export default function AdminNewsletter() {
   const loadTemplate = useCallback((templateIndex: number) => {
     const template = NEWSLETTER_TEMPLATES[templateIndex];
     if (!template) return;
-    setBlocks(template.blocks.map(b => ({ id: generateId(), type: b.type, data: { ...b.data } })));
+    setBlocks(template.blocks.map(b => ({ id: generateId(), type: b.type, data: { ...b.data }, style: { ...b.style } })));
     toast.success('Template chargé', { description: `Template "${template.name}" appliqué` });
   }, []);
 
@@ -558,6 +884,7 @@ export default function AdminNewsletter() {
                     key={block.id}
                     block={block}
                     onChange={(data) => updateBlock(block.id, data)}
+                    onStyleChange={(style) => updateBlockStyle(block.id, style)}
                     onDelete={() => deleteBlock(block.id)}
                     onMoveUp={() => moveBlock(block.id, 'up')}
                     onMoveDown={() => moveBlock(block.id, 'down')}

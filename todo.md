@@ -2075,3 +2075,15 @@
 ## Fix aperçu en direct newsletter (session 2026-03-02 #5)
 - [x] Corriger l'aperçu en direct qui apparaît en tout petit au lieu de s'afficher en taille réelle
 - [x] Afficher l'aperçu avec la mise en page fidèle à l'email final
+
+## Personnalisation avancée éditeur newsletter (session 2026-03-02 #6)
+- [x] Sélecteur de police d'écriture (9 polices : Arial, Georgia, Verdana, Times New Roman, Trebuchet MS, Courier New, Tahoma, Lucida Sans, Système)
+- [x] Sélecteur de taille de texte (11px à 48px, 15 options)
+- [x] Couleur du texte (color picker natif)
+- [x] Couleur de fond des blocs (background color picker, dans "Plus d'options")
+- [x] Alignement du texte (gauche, centre, droite)
+- [x] Styles gras/italique/souligné (boutons toggle B/I/U)
+- [x] Espacement / padding des blocs (haut et bas, 6 options)
+- [x] Interligne configurable (serré, compact, normal, aéré, large)
+- [x] Mise à jour de la génération HTML pour appliquer tous les styles personnalisés
+- [x] 39 tests vitest passent (style helpers, conversion blocs→HTML avec styles, validation)
