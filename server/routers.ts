@@ -1647,8 +1647,13 @@ export const appRouter = router({
       delete: adminProcedure
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input }) => {
-          await db.deletePartner(input.id);
-          return { success: true };
+          const result = await db.deletePartner(input.id);
+          return { 
+            success: true, 
+            reassignedTo: result.reassignedTo,
+            territoriesTransferred: result.territoriesTransferred,
+            leadsReassigned: result.leadsReassigned
+          };
         }),
 
       approve: adminProcedure

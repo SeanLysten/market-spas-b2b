@@ -1202,20 +1202,96 @@ export async function processArrivedStock() {
 
 
 
-export async function deletePartner(id: number) {
+export async function deletePartner(id: number): Promise<{ reassignedTo?: { partnerId: number; partnerName: string; distanceKm: number }; territoriesTransferred: number; leadsReassigned: number }> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  // 1. Supprimer les territoires assignés à ce partenaire
-  await db.delete(partnerTerritories).where(eq(partnerTerritories.partnerId, id));
+  // Récupérer les infos du partenaire à supprimer
+  const [deletedPartner] = await db.select().from(partners).where(eq(partners.id, id));
+  if (!deletedPartner) throw new Error("Partner not found");
+
+  // Récupérer les territoires du partenaire supprimé
+  const territories = await db.select().from(partnerTerritories).where(eq(partnerTerritories.partnerId, id));
   
-  // 2. Désassigner les leads de ce partenaire (mettre assignedPartnerId à null)
-  await db.update(leads)
-    .set({ assignedPartnerId: null, assignmentReason: 'partner_deleted' })
-    .where(eq(leads.assignedPartnerId, id));
-  
-  // 3. Supprimer le partenaire
+  // Compter les leads assignés
+  const leadsToReassign = await db.select({ id: leads.id }).from(leads).where(and(eq(leads.assignedPartnerId, id), eq(leads.leadType, 'VENTE')));
+
+  let result: { reassignedTo?: { partnerId: number; partnerName: string; distanceKm: number }; territoriesTransferred: number; leadsReassigned: number } = {
+    territoriesTransferred: 0,
+    leadsReassigned: 0
+  };
+
+  // Trouver le partenaire le plus proche géographiquement
+  const { findNearestPartner } = await import('./geo-utils');
+  const remainingPartners = await db.select({
+    id: partners.id,
+    companyName: partners.companyName,
+    city: partners.addressCity,
+    postalCode: partners.addressPostalCode,
+    country: partners.addressCountry
+  }).from(partners).where(and(
+    ne(partners.id, id),
+    eq(partners.status, 'APPROVED')
+  ));
+
+  const nearest = await findNearestPartner(
+    { city: deletedPartner.addressCity, postalCode: deletedPartner.addressPostalCode, country: deletedPartner.addressCountry || 'FR' },
+    remainingPartners.map(p => ({ ...p, country: p.country || 'FR' }))
+  );
+
+  if (nearest) {
+    console.log(`[DeletePartner] Réattribution au partenaire le plus proche: ${nearest.partnerName} (ID ${nearest.partnerId}, ${nearest.distanceKm} km)`);
+    
+    // 1. Transférer les territoires au partenaire le plus proche
+    // Vérifier les doublons (le partenaire cible peut déjà avoir certains territoires)
+    for (const territory of territories) {
+      const existing = await db.select().from(partnerTerritories).where(and(
+        eq(partnerTerritories.partnerId, nearest.partnerId),
+        eq(partnerTerritories.regionId, territory.regionId)
+      ));
+      if (existing.length === 0) {
+        // Transférer le territoire
+        await db.update(partnerTerritories)
+          .set({ partnerId: nearest.partnerId })
+          .where(eq(partnerTerritories.id, territory.id));
+        result.territoriesTransferred++;
+      } else {
+        // Le partenaire cible a déjà ce territoire, supprimer le doublon
+        await db.delete(partnerTerritories).where(eq(partnerTerritories.id, territory.id));
+      }
+    }
+
+    // 2. Réassigner les leads VENTE au partenaire le plus proche
+    if (leadsToReassign.length > 0) {
+      await db.update(leads)
+        .set({ 
+          assignedPartnerId: nearest.partnerId, 
+          assignmentReason: `reassigned_from_deleted_partner_${id}_to_nearest` 
+        })
+        .where(and(eq(leads.assignedPartnerId, id), eq(leads.leadType, 'VENTE')));
+      result.leadsReassigned = leadsToReassign.length;
+    }
+
+    // 3. Désassigner les leads non-VENTE (PARTENARIAT, SAV)
+    await db.update(leads)
+      .set({ assignedPartnerId: null, assignmentReason: 'partner_deleted' })
+      .where(and(eq(leads.assignedPartnerId, id), ne(leads.leadType, 'VENTE')));
+
+    result.reassignedTo = nearest;
+  } else {
+    // Aucun partenaire proche trouvé, supprimer les territoires et désassigner les leads
+    console.log(`[DeletePartner] Aucun partenaire proche trouvé, suppression des territoires et désassignation des leads`);
+    await db.delete(partnerTerritories).where(eq(partnerTerritories.partnerId, id));
+    await db.update(leads)
+      .set({ assignedPartnerId: null, assignmentReason: 'partner_deleted' })
+      .where(eq(leads.assignedPartnerId, id));
+  }
+
+  // 4. Supprimer le partenaire
   await db.delete(partners).where(eq(partners.id, id));
+  
+  console.log(`[DeletePartner] Partenaire ${deletedPartner.companyName} (ID ${id}) supprimé. Territoires transférés: ${result.territoriesTransferred}, Leads réassignés: ${result.leadsReassigned}`);
+  return result;
 }
 
 

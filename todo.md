@@ -2052,3 +2052,13 @@
 - [x] Désassigner automatiquement les leads du partenaire supprimé (assignedPartnerId = null)
 - [x] Nettoyer les 10 territoires orphelins existants (partenaire 60016 Espace Aqua Spa supprimé)
 - [x] Corriger l'affichage grisé des régions non décochables dans l'interface admin
+
+## Réattribution auto leads/territoires au partenaire le plus proche (session 2026-03-02 #3)
+- [x] Lors de la suppression d'un partenaire, trouver le partenaire le plus proche géographiquement
+- [x] Réattribuer automatiquement les territoires du partenaire supprimé au plus proche
+- [x] Réattribuer automatiquement les leads VENTE du partenaire supprimé au plus proche
+- [x] Calculer la distance géographique via Haversine + cache de coordonnées (geo-utils.ts)
+- [x] Écrire les tests vitest pour la réattribution automatique (15 tests passent)
+- [x] Gestion des doublons de territoires lors du transfert
+- [x] Leads non-VENTE (PARTENARIAT, SAV) désassignés au lieu d'être transférés
+- [x] Route delete retourne les infos de réattribution (partenaire cible, distance, nb territoires/leads)
