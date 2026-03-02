@@ -2071,3 +2071,7 @@
 - [x] Prévisualisation en temps réel (sidebar + mode plein écran)
 - [x] Support isRawHtml côté serveur pour envoyer le HTML de l'éditeur par blocs
 - [x] 21 tests vitest newsletter passent (filtrage destinataires, conversion blocs→HTML, validation)
+
+## Fix aperçu en direct newsletter (session 2026-03-02 #5)
+- [x] Corriger l'aperçu en direct qui apparaît en tout petit au lieu de s'afficher en taille réelle
+- [x] Afficher l'aperçu avec la mise en page fidèle à l'email final

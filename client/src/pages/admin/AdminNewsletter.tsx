@@ -539,9 +539,9 @@ export default function AdminNewsletter() {
         </Card>
 
         {view === 'editor' ? (
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
             {/* Block Editor */}
-            <div className="xl:col-span-2 space-y-3">
+            <div className="xl:col-span-3 space-y-3">
               {blocks.length === 0 ? (
                 <Card className="border-dashed">
                   <CardContent className="py-12 text-center">
@@ -619,19 +619,22 @@ export default function AdminNewsletter() {
             </div>
 
             {/* Live Preview Sidebar */}
-            <div className="hidden xl:block">
+            <div className="hidden xl:block xl:col-span-2">
               <Card className="sticky top-4">
                 <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Eye className="h-4 w-4" />
                     Aperçu en direct
                   </CardTitle>
+                  <CardDescription className="text-xs">
+                    Rendu fidèle à l'email reçu
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="p-2">
-                  <div className="border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 max-h-[70vh] overflow-y-auto">
+                <CardContent className="p-0">
+                  <div className="border-t overflow-y-auto" style={{ maxHeight: '80vh' }}>
                     <div
-                      className="transform scale-[0.55] origin-top"
-                      style={{ width: '182%' }}
+                      className="bg-[#f1f5f9]"
+                      style={{ padding: '16px 8px' }}
                       dangerouslySetInnerHTML={{ __html: previewHtml }}
                     />
                   </div>
