@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like, lte, gte, asc, ne, gt, lt, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts, partnerTerritories } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -1206,6 +1206,15 @@ export async function deletePartner(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
+  // 1. Supprimer les territoires assignés à ce partenaire
+  await db.delete(partnerTerritories).where(eq(partnerTerritories.partnerId, id));
+  
+  // 2. Désassigner les leads de ce partenaire (mettre assignedPartnerId à null)
+  await db.update(leads)
+    .set({ assignedPartnerId: null, assignmentReason: 'partner_deleted' })
+    .where(eq(leads.assignedPartnerId, id));
+  
+  // 3. Supprimer le partenaire
   await db.delete(partners).where(eq(partners.id, id));
 }
 

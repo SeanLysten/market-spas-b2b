@@ -2046,3 +2046,9 @@
 - [x] Router automatiquement les leads avec indicatif +352 vers SaniDesign (déjà géré dans lead-routing.ts)
 - [x] Réassigner les 14 leads luxembourgeois existants de Valentin vers SaniDesign
 - [x] Normaliser le country 'Luxembourg' → 'LU' pour les leads existants
+
+## Fix: suppression partenaire ne supprime pas les territoires (session 2026-03-02 #2)
+- [x] Supprimer automatiquement les territoires (partner_territories) lors de la suppression d'un partenaire
+- [x] Désassigner automatiquement les leads du partenaire supprimé (assignedPartnerId = null)
+- [x] Nettoyer les 10 territoires orphelins existants (partenaire 60016 Espace Aqua Spa supprimé)
+- [x] Corriger l'affichage grisé des régions non décochables dans l'interface admin
