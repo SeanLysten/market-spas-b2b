@@ -1137,9 +1137,7 @@ function normalizeYesNoForBadge(value: string | undefined): boolean {
 
 export default function AdminPartnerMap() {
   const [activeTab, setActiveTab] = useState('carte');
-  const [candidateStatusFilter, setCandidateStatusFilter] = useState('all');
-  const [candidateScoreFilter, setCandidateScoreFilter] = useState('all');
-  const [candidatePartnerFilter, setCandidatePartnerFilter] = useState('all');
+  const [candidateFilter, setCandidateFilter] = useState('all');
 
   const { data: candidates, isLoading: candidatesLoading, refetch: refetchCandidates } = trpc.admin.candidates.list.useQuery();
 
@@ -1271,55 +1269,25 @@ export default function AdminPartnerMap() {
                     <MapPin className="w-5 h-5" />
                     Carte Interactive
                   </CardTitle>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    {/* Statut filter */}
-                    <Select value={candidateStatusFilter} onValueChange={setCandidateStatusFilter}>
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue placeholder="Statut" />
+                    <Select value={candidateFilter} onValueChange={setCandidateFilter}>
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Tous les statuts</SelectItem>
-                        <SelectItem value="non_contacte">Non contacté</SelectItem>
-                        <SelectItem value="en_cours">En cours</SelectItem>
-                        <SelectItem value="valide">Validé</SelectItem>
-                        <SelectItem value="archive">Archivé</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {/* Partner filter */}
-                    <Select value={candidatePartnerFilter} onValueChange={setCandidatePartnerFilter}>
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue placeholder="Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Partenaires &amp; prospects</SelectItem>
+                        <SelectItem value="all">Tous les candidats</SelectItem>
                         <SelectItem value="valide">Partenaires validés</SelectItem>
-                        <SelectItem value="prospect">Prospects uniquement</SelectItem>
+                        <SelectItem value="score_8">Score 8</SelectItem>
+                        <SelectItem value="score_7">Score 7</SelectItem>
+                        <SelectItem value="score_6">Score 6</SelectItem>
+                        <SelectItem value="score_5">Score 5</SelectItem>
+                        <SelectItem value="score_4">Score 4</SelectItem>
+                        <SelectItem value="score_3">Score 3</SelectItem>
+                        <SelectItem value="score_2">Score 2</SelectItem>
+                        <SelectItem value="score_1">Score 1</SelectItem>
                       </SelectContent>
                     </Select>
-                    {/* Score filter */}
-                    <Select value={candidateScoreFilter} onValueChange={setCandidateScoreFilter}>
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue placeholder="Score" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Tous les scores</SelectItem>
-                        <SelectItem value="high">Score élevé (6-8)</SelectItem>
-                        <SelectItem value="medium">Score moyen (4-5)</SelectItem>
-                        <SelectItem value="low">Score faible (1-3)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {/* Reset filters */}
-                    {(candidateStatusFilter !== 'all' || candidateScoreFilter !== 'all' || candidatePartnerFilter !== 'all') && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-9 px-2 text-xs text-muted-foreground"
-                        onClick={() => { setCandidateStatusFilter('all'); setCandidateScoreFilter('all'); setCandidatePartnerFilter('all'); }}
-                      >
-                        Réinitialiser
-                      </Button>
-                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -1335,9 +1303,7 @@ export default function AdminPartnerMap() {
                   <div className="h-[600px] md:h-[700px]">
                     <InteractivePartnerMap
                       candidates={candidatesList}
-                      statusFilter={candidateStatusFilter}
-                      scoreFilter={candidateScoreFilter}
-                      partnerFilter={candidatePartnerFilter}
+                      combinedFilter={candidateFilter}
                       onRefresh={() => refetchCandidates()}
                     />
                   </div>

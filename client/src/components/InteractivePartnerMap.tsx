@@ -166,17 +166,17 @@ const formatDuration = (minutes: number): string => {
 
 interface InteractivePartnerMapProps {
   candidates: Candidate[];
-  statusFilter: string;
-  scoreFilter?: string; // 'all' | 'low' (1-3) | 'medium' (4-5) | 'high' (6-8)
-  partnerFilter?: string; // 'all' | 'valide' | 'prospect'
+  // Single combined filter: 'all' | 'valide' | 'score_1'..'score_8'
+  combinedFilter?: string;
+  // Legacy props kept for compatibility (unused)
+  statusFilter?: string;
   onRefresh?: () => void;
 }
 
 export default function InteractivePartnerMap({
   candidates,
+  combinedFilter = 'all',
   statusFilter,
-  scoreFilter = 'all',
-  partnerFilter = 'all',
   onRefresh,
 }: InteractivePartnerMapProps) {
   const mapRef = useRef<L.Map | null>(null);
@@ -371,15 +371,12 @@ export default function InteractivePartnerMap({
       const coordsToSave: { id: number; latitude: string; longitude: string }[] = [];
 
       const filtered = candidates.filter(c => {
-        // Status filter
-        if (statusFilter !== 'all' && c.status !== statusFilter) return false;
-        // Partner filter: 'valide' = only validated partners, 'prospect' = all except validated
-        if (partnerFilter === 'valide' && c.status !== 'valide') return false;
-        if (partnerFilter === 'prospect' && c.status === 'valide') return false;
-        // Score filter
-        if (scoreFilter === 'low' && (c.priorityScore < 1 || c.priorityScore > 3)) return false;
-        if (scoreFilter === 'medium' && (c.priorityScore < 4 || c.priorityScore > 5)) return false;
-        if (scoreFilter === 'high' && c.priorityScore < 6) return false;
+        if (combinedFilter === 'all') return true;
+        if (combinedFilter === 'valide') return c.status === 'valide';
+        if (combinedFilter.startsWith('score_')) {
+          const score = parseInt(combinedFilter.replace('score_', ''));
+          return c.priorityScore === score;
+        }
         return true;
       });
 
@@ -429,7 +426,7 @@ export default function InteractivePartnerMap({
 
     geocodeAll();
     return () => { cancelled = true; };
-  }, [candidates, statusFilter, scoreFilter, partnerFilter]);
+  }, [candidates, combinedFilter]);
 
   // ============================================
   // ROUTE CALCULATION

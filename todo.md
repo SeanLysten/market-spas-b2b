@@ -2184,3 +2184,7 @@
 - [x] Filtre par niveau de scoring (Faible 1-3, Moyen 4-5, Élevé 6-8)
 - [x] Filtre par statut partenaire (Partenaires validés / Prospects uniquement)
 - [x] Bouton Réinitialiser les filtres (apparaît si au moins un filtre actif)
+
+## Carte: simplification du filtre en un seul menu (session 2026-03-03 #21)
+- [x] Remplacer les 3 filtres (statut, type, score) par un seul menu déroulant
+- [x] Options : Tous les candidats | Partenaires validés | Score 8 | Score 7 | ... | Score 1
