@@ -2146,3 +2146,16 @@
 ## Carte du réseau: pin logo Market Spa (session 2026-03-03 #15)
 - [x] Uploader le logo Market Spa en CDN (cloudfront)
 - [x] Remplacer l'icône V des magasins validés par un pin avec le logo Market Spa (cercle + pointe verte + drop-shadow)
+
+## Amélioration outil mesurer distance - itinéraire routier (session 2026-03-03 #16)
+- [x] Intégrer l'API OSRM (gratuit, open source) pour calcul de distance voiture réel
+- [x] Mode "Itinéraire" (simple A→B) : calcul entre 2 points avec tracé routier
+- [x] Mode "Tournée" : ajout illimité d'étapes pour planifier un tour des magasins
+- [x] Calcul depuis la position de l'utilisateur (bouton "Partir de ma position")
+- [x] Affichage du tracé routier sur la carte (polyline bleue)
+- [x] Marqueurs numérotés pour chaque étape (vert départ, rouge arrivée, bleu intermédiaires)
+- [x] Affichage distance totale (km) et temps estimé (h/min)
+- [x] Réordonnancement des étapes (boutons haut/bas) en mode tournée
+- [x] Suppression d'étapes individuelles
+- [x] Export vers Google Maps et Waze (liens directs)
+- [x] Panneau latéral responsive avec liste des étapes
