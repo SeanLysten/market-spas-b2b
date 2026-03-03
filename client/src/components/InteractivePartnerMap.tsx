@@ -336,6 +336,21 @@ export default function InteractivePartnerMap({
     incrementEmailMutationRef.current = incrementEmailMutation;
   }, [updateMutation, toggleVisitedMutation, incrementPhoneMutation, incrementEmailMutation]);
 
+  // Inject ping animation CSS once
+  useEffect(() => {
+    const styleId = 'visited-ping-style';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        @keyframes ping-visited {
+          75%, 100% { transform: scale(2); opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
+
   // Initialize map
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -708,12 +723,18 @@ export default function InteractivePartnerMap({
 
       const isValidated = c.status === 'valide';
       const isVisited = c.visited > 0;
+      const pingBadge = isVisited ? `
+        <div style="position: absolute; top: -8px; right: -8px; width: 20px; height: 20px;">
+          <span style="position: absolute; inset: 0; border-radius: 50%; background: #16a34a; opacity: 0.6; animation: ping-visited 1.4s cubic-bezier(0,0,0.2,1) infinite;"></span>
+          <span style="position: relative; display: flex; width: 20px; height: 20px; border-radius: 50%; background: #16a34a; border: 2px solid white; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: white; box-shadow: 0 2px 6px rgba(22,163,74,0.5); line-height: 1;">✓</span>
+        </div>` : '';
       const markerBg = isValidated ? 
         `<div style="position: relative; cursor: pointer; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
           <div style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #16a34a; overflow: hidden; background: white;">
             <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logomarketspa_ec8e23e8.png" style="width: 100%; height: 100%; object-fit: cover;" />
           </div>
           <div style="width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid #16a34a; margin: -2px auto 0;"></div>
+          ${pingBadge}
         </div>` :
         `<div style="position: relative; display: inline-block;">
           <div style="
@@ -725,15 +746,7 @@ export default function InteractivePartnerMap({
             box-shadow: 0 2px 6px rgba(0,0,0,0.25);
             cursor: pointer;
           ">${c.priorityScore}</div>
-          ${isVisited ? `<div style="
-            position: absolute; top: -6px; right: -6px;
-            width: 16px; height: 16px; border-radius: 50%;
-            background: #16a34a; border: 2px solid white;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 9px; font-weight: 900; color: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-            line-height: 1;
-          ">✓</div>` : ''}
+          ${pingBadge}
         </div>`;
 
       const icon = L.divIcon({

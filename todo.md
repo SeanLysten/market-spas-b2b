@@ -2208,3 +2208,6 @@
 - [x] Badge checkmark (✓) vert en haut à droite des marqueurs ayant au moins 1 contact (appel ou email)
 - [x] Option "✓ Visités" dans le filtre unique de la carte
 - [x] Option "○ Non visités" dans le filtre unique de la carte
+
+## Carte: ping animé vert sur les marqueurs visités (session 2026-03-03 #25)
+- [x] Remplacer le badge statique par un ping animé vert avec coche ✓ bien visible (sur marqueurs score ET partenaires validés)
