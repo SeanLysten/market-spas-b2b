@@ -2142,3 +2142,7 @@
 ## Bug fix: réinitialisation mot de passe (session 2026-03-03 #14)
 - [x] Corriger le bouton de validation sur la page ResetPassword (bg-info remplacé par bg-blue-600 text-white, même problème que ForgotPassword)
 - [x] N'envoyer le mail de reset que si l'adresse email existe en base (TRPCError NOT_FOUND avec message explicite)
+
+## Carte du réseau: pin logo Market Spa (session 2026-03-03 #15)
+- [x] Uploader le logo Market Spa en CDN (cloudfront)
+- [x] Remplacer l'icône V des magasins validés par un pin avec le logo Market Spa (cercle + pointe verte + drop-shadow)

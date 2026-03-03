@@ -310,15 +310,24 @@ export default function InteractivePartnerMap({
       const visitedBorder = c.visited ? '3px solid #16a34a' : '3px solid white';
       const textColor = c.priorityScore >= 3 && c.priorityScore <= 4 ? '#1a1a1a' : 'white';
 
-      // Pour les candidats validés, afficher un V vert au lieu du score
+      // Pour les candidats validés, afficher le logo Market Spa comme pin
       const isValidated = c.status === 'valide';
-      const markerBg = isValidated ? '#16a34a' : priorityColor;
-      const markerContent = isValidated ? '✓' : String(c.priorityScore);
+      const markerBg = isValidated ? 'transparent' : priorityColor;
+      const markerContent = isValidated ? '' : String(c.priorityScore);
       const markerTextColor = isValidated ? 'white' : textColor;
-      const markerSize = isValidated ? '36px' : '34px';
+      const markerSize = isValidated ? '44px' : '34px';
       const markerFontSize = isValidated ? '18px' : '15px';
+      const logoUrl = 'https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logomarketspa_91dfb411.png';
 
-      const iconHtml = `
+      const iconHtml = isValidated ? `
+        <div style="position: relative; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35));">
+          <div style="width: 44px; height: 52px; display: flex; flex-direction: column; align-items: center;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 3px solid #16a34a; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+              <img src="${logoUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Market Spa" />
+            </div>
+            <div style="width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid #16a34a; margin-top: -2px;"></div>
+          </div>
+        </div>` : `
         <div style="position: relative;">
           <div style="background-color: ${markerBg}; width: ${markerSize}; height: ${markerSize}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${markerTextColor}; font-weight: bold; font-size: ${markerFontSize}; border: ${visitedBorder}; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
             ${markerContent}
@@ -349,9 +358,7 @@ export default function InteractivePartnerMap({
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; padding: 4px; min-width: 280px;">
           <div style="margin-bottom: 12px;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-              <div style="background-color: ${markerBg}; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${markerTextColor}; font-weight: bold; font-size: ${isValidated ? '16px' : '14px'}; flex-shrink: 0;">
-                ${markerContent}
-              </div>
+              ${isValidated ? `<div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; border: 2px solid #16a34a; flex-shrink: 0;"><img src="${logoUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Market Spa" /></div>` : `<div style="background-color: ${markerBg}; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${markerTextColor}; font-weight: bold; font-size: 14px; flex-shrink: 0;">${markerContent}</div>`}
               <h3 style="margin: 0; font-size: 17px; font-weight: 600; color: #1d1d1f; line-height: 1.3;">${c.companyName}</h3>
             </div>
             <p style="margin: 0; font-size: 13px; color: #86868b;">${c.fullName} &bull; ${c.city}</p>
@@ -418,12 +425,13 @@ export default function InteractivePartnerMap({
           </div>
         </div>`;
 
-      const size = isValidated ? 36 : 34;
+      const size = isValidated ? 44 : 34;
+      const anchorY = isValidated ? 52 : size / 2;
       const icon = L.divIcon({
         html: iconHtml,
         className: 'custom-marker',
-        iconSize: [size, size],
-        iconAnchor: [size / 2, size / 2],
+        iconSize: [size, isValidated ? 52 : size],
+        iconAnchor: [size / 2, anchorY],
       });
 
       const marker = L.marker([item.lat, item.lng], { icon }).addTo(mapRef.current!);
