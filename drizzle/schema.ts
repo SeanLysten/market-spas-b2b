@@ -963,6 +963,7 @@ export const resources = mysqlTable(
 
     // Relations
     uploadedById: int("uploadedById"),
+    folderId: int("folderId"), // lien vers media_folders (null = non classé)
 
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -2479,3 +2480,31 @@ export const savedRoutes = mysqlTable("saved_routes", {
 
 export type SavedRoute = typeof savedRoutes.$inferSelect;
 export type InsertSavedRoute = typeof savedRoutes.$inferInsert;
+
+// ============================================
+// MEDIA FOLDERS (Médiathèque - dossiers dynamiques)
+// ============================================
+
+export const mediaFolders = mysqlTable(
+  "media_folders",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    slug: varchar("slug", { length: 255 }).notNull(),
+    description: text("description"),
+    icon: varchar("icon", { length: 50 }).default("folder"),
+    color: varchar("color", { length: 20 }).default("#6b7280"),
+    parentId: int("parentId"), // null = dossier racine
+    sortOrder: int("sortOrder").default(0),
+    createdById: int("createdById"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    parentIdIdx: index("mf_parentId_idx").on(table.parentId),
+    slugIdx: index("mf_slug_idx").on(table.slug),
+  })
+);
+
+export type MediaFolder = typeof mediaFolders.$inferSelect;
+export type InsertMediaFolder = typeof mediaFolders.$inferInsert;

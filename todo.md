@@ -2211,3 +2211,20 @@
 
 ## Carte: ping animé vert sur les marqueurs visités (session 2026-03-03 #25)
 - [x] Remplacer le badge statique par un ping animé vert avec coche ✓ bien visible (sur marqueurs score ET partenaires validés)
+
+## Médiathèque admin: gestion dossiers/sous-dossiers + drag & drop (session 2026-03-03 #26)
+- [x] Schéma BDD: nouvelle table media_folders avec parent_id + folderId sur resources
+- [x] Routes tRPC: createFolder, updateFolder, deleteFolder, moveToFolder
+- [x] Sidebar arborescente avec expand/collapse des sous-dossiers
+- [x] Créer un dossier (bouton + dans la sidebar, avec couleur)
+- [x] Créer un sous-dossier (menu contextuel sur dossier parent)
+- [x] Renommer un dossier (menu contextuel)
+- [x] Supprimer un dossier (avec confirmation, fichiers remontent au parent)
+- [x] Drag & drop de plusieurs fichiers simultanément dans un dossier
+- [x] Déplacer des fichiers d'un dossier à un autre par drag & drop ou via dialog
+- [x] Upload multi-fichiers par drag & drop dans la zone principale
+- [x] Sélection multiple + suppression groupée
+- [x] Vue grille et vue liste
+- [x] Barre de progression d'upload
+- [x] Aperçu (image, vidéo, PDF)
+- [x] Barre de statut en bas

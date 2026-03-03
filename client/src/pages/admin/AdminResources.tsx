@@ -1,803 +1,793 @@
 import { AdminLayout } from "@/components/AdminLayout";
+import { useState, useRef, useCallback } from "react";
+import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { trpc } from "@/lib/trpc";
 import {
-  Plus,
-  Upload,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import {
+  Folder,
+  FolderOpen,
+  FolderPlus,
+  File,
   FileText,
-  Video,
-  Image as ImageIcon,
-  Trash2,
-  Eye,
+  FileImage,
+  FileVideo,
+  Upload,
   Search,
   Grid3X3,
   List,
-  ChevronRight,
-  FolderOpen,
-  File,
-  FileImage,
-  FileVideo,
-  Package,
-  BookOpen,
-  Wrench,
-  Shield,
-  Award,
-  CheckSquare,
-  Square,
-  SortAsc,
-  SortDesc,
-  X,
+  MoreVertical,
+  Trash2,
+  Edit2,
   Download,
-  Pencil,
+  ChevronRight,
+  ChevronDown,
+  X,
+  Move,
+  Eye,
+  FolderInput,
+  Check,
 } from "lucide-react";
-import { useState, useMemo, useRef } from "react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
 
-type SortField = "title" | "fileSize" | "createdAt" | "downloadCount";
-type SortDir = "asc" | "desc";
+interface MediaFolder {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  icon?: string | null;
+  color?: string | null;
+  parentId?: number | null;
+  sortOrder?: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Resource {
+  id: number;
+  title: string;
+  description?: string | null;
+  category: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+  folderId?: number | null;
+  downloadCount?: number | null;
+  viewCount?: number | null;
+  isActive?: boolean | null;
+  createdAt: string;
+}
+
 type ViewMode = "grid" | "list";
 
-// ─── Category config ──────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const CATEGORIES = [
-  { value: "ALL", label: "Tous les fichiers", icon: FolderOpen, color: "text-primary" },
-  { value: "CATALOG", label: "Catalogues", icon: BookOpen, color: "text-emerald-600" },
-  { value: "MARKETING_IMAGE", label: "Marketing & PLV", icon: ImageIcon, color: "text-pink-600" },
-  { value: "VIDEO_TUTORIAL", label: "Vidéos tutoriels", icon: Video, color: "text-purple-600" },
-  { value: "TECHNICAL_DOC", label: "Documentation", icon: FileText, color: "text-blue-600" },
-  { value: "SALES_GUIDE", label: "Guides de vente", icon: BookOpen, color: "text-amber-600" },
-  { value: "INSTALLATION", label: "Installation", icon: Wrench, color: "text-orange-600" },
-  { value: "TROUBLESHOOTING", label: "Dépannage", icon: Wrench, color: "text-red-600" },
-  { value: "WARRANTY", label: "Garanties", icon: Shield, color: "text-teal-600" },
-  { value: "CERTIFICATE", label: "Certificats", icon: Award, color: "text-yellow-600" },
-  { value: "PLV", label: "PLV", icon: Package, color: "text-indigo-600" },
-];
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
-const getCatConfig = (value: string) =>
-  CATEGORIES.find((c) => c.value === value) ?? CATEGORIES[0];
+function getFileIcon(fileType: string) {
+  if (fileType.startsWith("image/")) return <FileImage className="w-5 h-5 text-blue-500" />;
+  if (fileType.startsWith("video/")) return <FileVideo className="w-5 h-5 text-purple-500" />;
+  if (fileType === "application/pdf") return <FileText className="w-5 h-5 text-red-500" />;
+  return <File className="w-5 h-5 text-gray-500" />;
+}
 
-const getFileIcon = (fileType: string, category: string) => {
-  if (fileType.includes("image")) return FileImage;
-  if (fileType.includes("video")) return FileVideo;
-  if (category === "VIDEO_TUTORIAL") return FileVideo;
-  return File;
-};
+function getFileThumbnail(resource: Resource): string | null {
+  if (resource.fileType.startsWith("image/")) return resource.fileUrl;
+  return null;
+}
 
-const formatSize = (bytes: number) => {
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-};
+// ─── FolderTree Node ─────────────────────────────────────────────────────────
 
-const formatDate = (dateStr: string) =>
-  new Date(dateStr).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
+function FolderTreeNode({
+  folder,
+  allFolders,
+  selectedFolderId,
+  onSelect,
+  onCreateSubfolder,
+  onRename,
+  onDelete,
+  depth = 0,
+  resourceCounts,
+  dragOverFolderId,
+  onDragOver,
+  onDrop,
+}: {
+  folder: MediaFolder;
+  allFolders: MediaFolder[];
+  selectedFolderId: number | null | "all";
+  onSelect: (id: number | null) => void;
+  onCreateSubfolder: (parentId: number) => void;
+  onRename: (folder: MediaFolder) => void;
+  onDelete: (folder: MediaFolder) => void;
+  depth?: number;
+  resourceCounts: Record<number, number>;
+  dragOverFolderId: number | null;
+  onDragOver: (id: number | null) => void;
+  onDrop: (folderId: number | null) => void;
+}) {
+  const [expanded, setExpanded] = useState(true);
+  const children = allFolders.filter((f) => f.parentId === folder.id);
+  const isSelected = selectedFolderId === folder.id;
+  const isDragOver = dragOverFolderId === folder.id;
+  const count = resourceCounts[folder.id] || 0;
 
-// ─── Component ────────────────────────────────────────────────────────────────
+  return (
+    <div>
+      <div
+        className={`group flex items-center gap-1 px-2 py-1.5 rounded-lg cursor-pointer transition-colors select-none ${
+          isSelected
+            ? "bg-emerald-600 text-white"
+            : isDragOver
+            ? "bg-emerald-100 border border-emerald-400"
+            : "hover:bg-gray-100"
+        }`}
+        style={{ paddingLeft: `${8 + depth * 16}px` }}
+        onClick={() => onSelect(folder.id)}
+        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); onDragOver(folder.id); }}
+        onDragLeave={() => onDragOver(null)}
+        onDrop={(e) => { e.preventDefault(); e.stopPropagation(); onDrop(folder.id); }}
+      >
+        {children.length > 0 ? (
+          <button onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} className="p-0.5 rounded hover:bg-black/10">
+            {expanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+          </button>
+        ) : (
+          <span className="w-4" />
+        )}
+        {isSelected ? (
+          <FolderOpen className="w-4 h-4 flex-shrink-0" />
+        ) : (
+          <Folder className="w-4 h-4 flex-shrink-0" style={{ color: folder.color || "#6b7280" }} />
+        )}
+        <span className="flex-1 text-sm truncate">{folder.name}</span>
+        {count > 0 && (
+          <span className={`text-xs px-1.5 py-0.5 rounded-full ${isSelected ? "bg-white/20 text-white" : "bg-gray-200 text-gray-600"}`}>
+            {count}
+          </span>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className={`opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-black/10 ${isSelected ? "text-white" : ""}`} onClick={(e) => e.stopPropagation()}>
+              <MoreVertical className="w-3 h-3" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem onClick={() => onCreateSubfolder(folder.id)}>
+              <FolderPlus className="w-4 h-4 mr-2" />Nouveau sous-dossier
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onRename(folder)}>
+              <Edit2 className="w-4 h-4 mr-2" />Renommer
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-red-600" onClick={() => onDelete(folder)}>
+              <Trash2 className="w-4 h-4 mr-2" />Supprimer
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      {expanded && children.length > 0 && (
+        <div>
+          {children.map((child) => (
+            <FolderTreeNode
+              key={child.id}
+              folder={child}
+              allFolders={allFolders}
+              selectedFolderId={selectedFolderId}
+              onSelect={onSelect}
+              onCreateSubfolder={onCreateSubfolder}
+              onRename={onRename}
+              onDelete={onDelete}
+              depth={depth + 1}
+              resourceCounts={resourceCounts}
+              dragOverFolderId={dragOverFolderId}
+              onDragOver={onDragOver}
+              onDrop={onDrop}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function AdminResources() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("ALL");
+
+  const [selectedFolderId, setSelectedFolderId] = useState<number | null | "all">("all");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [sortField, setSortField] = useState<SortField>("createdAt");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [previewResource, setPreviewResource] = useState<any>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [uploadOpen, setUploadOpen] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    category: "CATALOG" as string,
-    language: "fr",
-    isPublic: false,
-    requiredPartnerLevel: "BRONZE" as string,
-  });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [search, setSearch] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<Set<number>>(new Set());
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [dragOverFolderId, setDragOverFolderId] = useState<number | null>(null);
+  const [draggingFileIds, setDraggingFileIds] = useState<Set<number>>(new Set());
+  const [previewResource, setPreviewResource] = useState<Resource | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<{ name: string; done: boolean }[]>([]);
+
+  const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [createFolderParentId, setCreateFolderParentId] = useState<number | null>(null);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderColor, setNewFolderColor] = useState("#6b7280");
+  const [editingFolder, setEditingFolder] = useState<MediaFolder | null>(null);
+  const [editFolderName, setEditFolderName] = useState("");
+  const [deletingFolder, setDeletingFolder] = useState<MediaFolder | null>(null);
+  const [deletingResource, setDeletingResource] = useState<Resource | null>(null);
+  const [movingFiles, setMovingFiles] = useState(false);
+  const [moveTargetFolderId, setMoveTargetFolderId] = useState<number | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: resources, isLoading, refetch } = trpc.resources.list.useQuery({ limit: 500 });
-  const createMutation = trpc.resources.create.useMutation();
-  const deleteMutation = trpc.resources.delete.useMutation();
+  const { data: folders = [], refetch: refetchFolders } = trpc.mediaFolders.list.useQuery();
+  const { data: allResources = [], refetch: refetchResources } = trpc.resources.list.useQuery({ limit: 1000 });
 
-  // ─── Filtering & sorting ────────────────────────────────────────────────────
+  const createFolder = trpc.mediaFolders.create.useMutation({
+    onSuccess: () => { refetchFolders(); toast.success("Dossier créé"); },
+    onError: (e) => toast.error(e.message),
+  });
+  const updateFolder = trpc.mediaFolders.update.useMutation({
+    onSuccess: () => { refetchFolders(); toast.success("Dossier modifié"); },
+    onError: (e) => toast.error(e.message),
+  });
+  const deleteFolder = trpc.mediaFolders.delete.useMutation({
+    onSuccess: () => { refetchFolders(); refetchResources(); toast.success("Dossier supprimé"); },
+    onError: (e) => toast.error(e.message),
+  });
+  const createResource = trpc.resources.create.useMutation({
+    onError: (e) => toast.error(e.message),
+  });
+  const deleteResource = trpc.resources.delete.useMutation({
+    onSuccess: () => { refetchResources(); toast.success("Fichier supprimé"); },
+    onError: (e) => toast.error(e.message),
+  });
+  const moveToFolder = trpc.resources.moveToFolder.useMutation({
+    onSuccess: () => { refetchResources(); },
+    onError: (e) => toast.error(e.message),
+  });
 
-  const filtered = useMemo(() => {
-    let list = resources ?? [];
-    if (activeCategory !== "ALL") list = list.filter((r) => r.category === activeCategory);
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      list = list.filter(
-        (r) =>
-          r.title.toLowerCase().includes(q) ||
-          r.description?.toLowerCase().includes(q)
-      );
+  // Counts per folder
+  const resourceCounts: Record<number, number> = {};
+  for (const r of allResources as Resource[]) {
+    if (r.folderId) resourceCounts[r.folderId] = (resourceCounts[r.folderId] || 0) + 1;
+  }
+
+  // Filtered resources
+  const displayedResources = (allResources as Resource[]).filter((r) => {
+    const matchSearch = !search || r.title.toLowerCase().includes(search.toLowerCase());
+    if (!matchSearch) return false;
+    if (selectedFolderId === "all") return true;
+    if (selectedFolderId === null) return !r.folderId;
+    return r.folderId === selectedFolderId;
+  });
+
+  const rootFolders = (folders as MediaFolder[]).filter((f) => !f.parentId);
+
+  // Upload
+  const uploadFiles = useCallback(
+    async (files: File[]) => {
+      const targetFolderId = selectedFolderId === "all" ? null : selectedFolderId;
+      setUploadProgress(files.map((f) => ({ name: f.name, done: false })));
+      for (const file of files) {
+        try {
+          const reader = new FileReader();
+          const base64 = await new Promise<string>((resolve, reject) => {
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          const result = await createResource.mutateAsync({
+            title: file.name.replace(/\.[^/.]+$/, ""),
+            category: "CATALOG",
+            language: "fr",
+            fileData: base64,
+            fileName: file.name,
+            fileType: file.type || "application/octet-stream",
+            fileSize: file.size,
+            isPublic: false,
+            requiredPartnerLevel: "BRONZE",
+          });
+          if (targetFolderId && result && (result as any).id) {
+            await moveToFolder.mutateAsync({ id: (result as any).id, folderId: targetFolderId });
+          }
+          setUploadProgress((prev) => prev.map((p) => p.name === file.name ? { ...p, done: true } : p));
+        } catch {
+          setUploadProgress((prev) => prev.filter((p) => p.name !== file.name));
+        }
+      }
+      setTimeout(() => setUploadProgress([]), 2000);
+      refetchResources();
+    },
+    [selectedFolderId, createResource, moveToFolder, refetchResources]
+  );
+
+  const handleZoneDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) { await uploadFiles(files); return; }
+    const fileIdsStr = e.dataTransfer.getData("application/x-file-ids");
+    if (fileIdsStr) {
+      const ids = JSON.parse(fileIdsStr) as number[];
+      const targetFolderId = selectedFolderId === "all" ? null : selectedFolderId;
+      for (const id of ids) await moveToFolder.mutateAsync({ id, folderId: targetFolderId });
+      setDraggingFileIds(new Set());
+      refetchResources();
     }
-    list = [...list].sort((a, b) => {
-      let cmp = 0;
-      if (sortField === "title") cmp = a.title.localeCompare(b.title);
-      else if (sortField === "fileSize") cmp = a.fileSize - b.fileSize;
-      else if (sortField === "downloadCount") cmp = a.downloadCount - b.downloadCount;
-      else if (sortField === "createdAt")
-        cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-    return list;
-  }, [resources, activeCategory, searchQuery, sortField, sortDir]);
+  };
 
-  const counts = useMemo(() => {
-    const all = resources ?? [];
-    const map: Record<string, number> = { ALL: all.length };
-    all.forEach((r) => { map[r.category] = (map[r.category] ?? 0) + 1; });
-    return map;
-  }, [resources]);
+  const handleFolderDrop = async (folderId: number | null) => {
+    setDragOverFolderId(null);
+    const ids = Array.from(draggingFileIds);
+    if (ids.length === 0) return;
+    for (const id of ids) await moveToFolder.mutateAsync({ id, folderId });
+    setDraggingFileIds(new Set());
+    setSelectedFiles(new Set());
+    refetchResources();
+    toast.success(`${ids.length} fichier(s) déplacé(s)`);
+  };
 
-  // ─── Selection ──────────────────────────────────────────────────────────────
-
-  const toggleSelect = (id: number) => {
-    setSelected((prev) => {
+  const toggleSelect = (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedFiles((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
 
-  const selectAll = () => {
-    if (selected.size === filtered.length) setSelected(new Set());
-    else setSelected(new Set(filtered.map((r) => r.id)));
+  const selectAll = () => setSelectedFiles(new Set(displayedResources.map((r) => r.id)));
+  const clearSelection = () => setSelectedFiles(new Set());
+
+  const handleBulkDelete = async () => {
+    for (const id of selectedFiles) await deleteResource.mutateAsync({ id });
+    setSelectedFiles(new Set());
+    refetchResources();
   };
 
-  const clearSelection = () => setSelected(new Set());
+  const handleBulkMove = async () => {
+    for (const id of selectedFiles) await moveToFolder.mutateAsync({ id, folderId: moveTargetFolderId });
+    setSelectedFiles(new Set());
+    setMovingFiles(false);
+    setMoveTargetFolderId(null);
+    refetchResources();
+    toast.success(`${selectedFiles.size} fichier(s) déplacé(s)`);
+  };
 
-  // ─── File handling ──────────────────────────────────────────────────────────
-
-  const processFile = (file: File) => {
-    if (file.size > 50 * 1024 * 1024) {
-      toast.error("Fichier trop volumineux (max 50 MB)");
-      return;
+  const getBreadcrumb = (): MediaFolder[] => {
+    if (selectedFolderId === "all" || selectedFolderId === null) return [];
+    const path: MediaFolder[] = [];
+    let current = (folders as MediaFolder[]).find((f) => f.id === selectedFolderId);
+    while (current) {
+      path.unshift(current);
+      current = current.parentId ? (folders as MediaFolder[]).find((f) => f.id === current!.parentId) : undefined;
     }
-    setSelectedFile(file);
-    if (!formData.title) setFormData((f) => ({ ...f, title: file.name.replace(/\.[^.]+$/, "") }));
+    return path;
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) processFile(file);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedFile) { toast.error("Veuillez sélectionner un fichier"); return; }
-    setUploading(true);
-    try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          await createMutation.mutateAsync({
-            ...formData,
-            fileData: reader.result as string,
-            fileName: selectedFile.name,
-            fileType: selectedFile.type || "application/octet-stream",
-            fileSize: selectedFile.size,
-          });
-          toast.success("Ressource ajoutée");
-          setUploadOpen(false);
-          setSelectedFile(null);
-          setFormData({ title: "", description: "", category: "CATALOG", language: "fr", isPublic: false, requiredPartnerLevel: "BRONZE" });
-          refetch();
-        } catch (err: any) {
-          toast.error(err.message || "Erreur lors de l'upload");
-        } finally {
-          setUploading(false);
-        }
-      };
-      reader.readAsDataURL(selectedFile);
-    } catch {
-      setUploading(false);
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!confirm("Supprimer cette ressource ?")) return;
-    try {
-      await deleteMutation.mutateAsync({ id });
-      toast.success("Ressource supprimée");
-      setSelected((prev) => { const n = new Set(prev); n.delete(id); return n; });
-      refetch();
-    } catch (err: any) {
-      toast.error(err.message || "Erreur");
-    }
-  };
-
-  const handleDeleteSelected = async () => {
-    if (!confirm(`Supprimer ${selected.size} ressource(s) ?`)) return;
-    for (const id of Array.from(selected)) {
-      await deleteMutation.mutateAsync({ id }).catch(() => {});
-    }
-    toast.success(`${selected.size} ressource(s) supprimée(s)`);
-    clearSelection();
-    refetch();
-  };
-
-  const toggleSort = (field: SortField) => {
-    if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else { setSortField(field); setSortDir("asc"); }
-  };
-
-  const SortIcon = sortDir === "asc" ? SortAsc : SortDesc;
-
-  // ─── Render ─────────────────────────────────────────────────────────────────
+  const breadcrumb = getBreadcrumb();
 
   return (
     <AdminLayout>
-      <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
-        {/* Top bar */}
-        <div className="border-b bg-card/80 px-4 py-3 flex items-center gap-3 shrink-0">
-          <div className="flex-1 relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9"
-            />
-          </div>
-          <div className="flex items-center gap-1 ml-auto">
-            <Button
-              variant={viewMode === "grid" ? "secondary" : "ghost"}
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setViewMode("grid")}
-            >
-              <Grid3X3 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "secondary" : "ghost"}
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setViewMode("list")}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-            <Button
-              className="gap-1.5 ml-2"
-              size="sm"
-              onClick={() => setUploadOpen(true)}
-            >
-              <Plus className="w-4 h-4" />
-              Ajouter
+      <div className="flex h-[calc(100vh-4rem)] overflow-hidden -m-6">
+
+        {/* ── Sidebar ── */}
+        <aside className="w-64 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
+          <div className="p-3 border-b border-gray-100 flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Médiathèque</span>
+            <Button variant="ghost" size="icon" className="h-6 w-6" title="Nouveau dossier"
+              onClick={() => { setCreateFolderParentId(null); setNewFolderName(""); setShowCreateFolder(true); }}>
+              <FolderPlus className="w-4 h-4" />
             </Button>
           </div>
-        </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          {/* Sidebar */}
-          <aside className="w-52 shrink-0 border-r bg-muted/30 hidden md:flex flex-col py-3 gap-0.5 overflow-y-auto">
-            <p className="px-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Médiathèque
-            </p>
-            {CATEGORIES.map((cat) => {
-              const Icon = cat.icon;
-              const isActive = activeCategory === cat.value;
-              const count = counts[cat.value] ?? 0;
-              return (
-                <button
-                  key={cat.value}
-                  onClick={() => { setActiveCategory(cat.value); clearSelection(); }}
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 mx-1 rounded-md text-sm transition-colors text-left",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-accent text-foreground"
-                  )}
-                >
-                  <Icon className={cn("w-4 h-4 shrink-0", isActive ? "text-primary-foreground" : cat.color)} />
-                  <span className="flex-1 truncate">{cat.label}</span>
-                  {count > 0 && (
-                    <span className={cn("text-xs tabular-nums", isActive ? "text-primary-foreground/70" : "text-muted-foreground")}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </aside>
-
-          {/* Main */}
-          <main className="flex-1 flex flex-col overflow-hidden">
-            {/* Toolbar */}
-            <div className="border-b bg-card/50 px-4 py-2 flex items-center gap-2 flex-wrap shrink-0">
-              <div className="flex items-center gap-1 text-sm text-muted-foreground flex-1 min-w-0">
-                <span className="font-medium text-foreground truncate">
-                  {getCatConfig(activeCategory).label}
-                </span>
-                <ChevronRight className="w-3 h-3 shrink-0" />
-                <span className="text-xs">{filtered.length} fichier{filtered.length !== 1 ? "s" : ""}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                {(["title", "fileSize", "createdAt"] as SortField[]).map((f) => (
-                  <Button
-                    key={f}
-                    variant={sortField === f ? "secondary" : "ghost"}
-                    size="sm"
-                    className="h-7 px-2 text-xs gap-1"
-                    onClick={() => toggleSort(f)}
-                  >
-                    {f === "title" ? "Nom" : f === "fileSize" ? "Taille" : "Date"}
-                    {sortField === f && <SortIcon className="w-3 h-3" />}
-                  </Button>
-                ))}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs gap-1"
-                onClick={selectAll}
-              >
-                {selected.size === filtered.length && filtered.length > 0 ? (
-                  <CheckSquare className="w-4 h-4" />
-                ) : (
-                  <Square className="w-4 h-4" />
-                )}
-                <span className="hidden sm:inline">Tout sélectionner</span>
-              </Button>
+          <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+            {/* All */}
+            <div
+              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${selectedFolderId === "all" ? "bg-emerald-600 text-white" : "hover:bg-gray-100"}`}
+              onClick={() => setSelectedFolderId("all")}
+            >
+              <FolderOpen className="w-4 h-4 flex-shrink-0" />
+              <span className="flex-1 text-sm font-medium">Tous les fichiers</span>
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${selectedFolderId === "all" ? "bg-white/20 text-white" : "bg-gray-200 text-gray-600"}`}>
+                {(allResources as Resource[]).length}
+              </span>
             </div>
 
-            {/* Selection bar */}
-            {selected.size > 0 && (
-              <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 flex items-center gap-3 shrink-0">
-                <span className="text-sm font-medium text-destructive">
-                  {selected.size} sélectionné{selected.size > 1 ? "s" : ""}
+            {/* Unclassified */}
+            <div
+              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${selectedFolderId === null ? "bg-emerald-600 text-white" : dragOverFolderId === 0 ? "bg-emerald-100 border border-emerald-400" : "hover:bg-gray-100"}`}
+              onClick={() => setSelectedFolderId(null)}
+              onDragOver={(e) => { e.preventDefault(); setDragOverFolderId(0); }}
+              onDragLeave={() => setDragOverFolderId(null)}
+              onDrop={async (e) => { e.preventDefault(); setDragOverFolderId(null); await handleFolderDrop(null); }}
+            >
+              <Folder className="w-4 h-4 flex-shrink-0 text-gray-400" />
+              <span className="flex-1 text-sm">Non classés</span>
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${selectedFolderId === null ? "bg-white/20 text-white" : "bg-gray-200 text-gray-600"}`}>
+                {(allResources as Resource[]).filter((r) => !r.folderId).length}
+              </span>
+            </div>
+
+            {rootFolders.length > 0 && <div className="border-t border-gray-100 my-1" />}
+
+            {rootFolders.map((folder) => (
+              <FolderTreeNode
+                key={folder.id}
+                folder={folder}
+                allFolders={folders as MediaFolder[]}
+                selectedFolderId={selectedFolderId}
+                onSelect={setSelectedFolderId}
+                onCreateSubfolder={(parentId) => { setCreateFolderParentId(parentId); setNewFolderName(""); setShowCreateFolder(true); }}
+                onRename={(f) => { setEditingFolder(f); setEditFolderName(f.name); }}
+                onDelete={setDeletingFolder}
+                resourceCounts={resourceCounts}
+                dragOverFolderId={dragOverFolderId}
+                onDragOver={setDragOverFolderId}
+                onDrop={handleFolderDrop}
+              />
+            ))}
+          </div>
+
+          <div className="p-3 border-t border-gray-100">
+            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" size="sm" onClick={() => fileInputRef.current?.click()}>
+              <Upload className="w-4 h-4 mr-2" />Importer des fichiers
+            </Button>
+            <input ref={fileInputRef} type="file" multiple className="hidden"
+              onChange={(e) => { const files = Array.from(e.target.files || []); if (files.length > 0) uploadFiles(files); e.target.value = ""; }} />
+          </div>
+        </aside>
+
+        {/* ── Main ── */}
+        <main className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+          {/* Toolbar */}
+          <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3">
+            <div className="flex items-center gap-1 text-sm text-gray-600 flex-1 min-w-0">
+              <button className="hover:text-emerald-600 font-medium" onClick={() => setSelectedFolderId("all")}>Médiathèque</button>
+              {breadcrumb.map((f, i) => (
+                <span key={f.id} className="flex items-center gap-1">
+                  <ChevronRight className="w-3 h-3 text-gray-400" />
+                  <button className={`hover:text-emerald-600 ${i === breadcrumb.length - 1 ? "font-semibold text-gray-900" : ""}`} onClick={() => setSelectedFolderId(f.id)}>{f.name}</button>
                 </span>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="h-7 gap-1"
-                  onClick={handleDeleteSelected}
-                  disabled={deleteMutation.isPending}
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Supprimer la sélection
+              ))}
+              {selectedFolderId === null && <><ChevronRight className="w-3 h-3 text-gray-400" /><span className="font-semibold text-gray-900">Non classés</span></>}
+            </div>
+            <div className="relative w-48">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+              <Input placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-8 text-sm" />
+            </div>
+            <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+              <button className={`p-1.5 ${viewMode === "grid" ? "bg-emerald-50 text-emerald-600" : "text-gray-500 hover:bg-gray-50"}`} onClick={() => setViewMode("grid")}><Grid3X3 className="w-4 h-4" /></button>
+              <button className={`p-1.5 ${viewMode === "list" ? "bg-emerald-50 text-emerald-600" : "text-gray-500 hover:bg-gray-50"}`} onClick={() => setViewMode("list")}><List className="w-4 h-4" /></button>
+            </div>
+            {selectedFolderId !== "all" && (
+              <Button variant="outline" size="sm" className="h-8"
+                onClick={() => { setCreateFolderParentId(typeof selectedFolderId === "number" ? selectedFolderId : null); setNewFolderName(""); setShowCreateFolder(true); }}>
+                <FolderPlus className="w-3.5 h-3.5 mr-1.5" />Nouveau dossier
+              </Button>
+            )}
+          </div>
+
+          {/* Selection bar */}
+          {selectedFiles.size > 0 && (
+            <div className="bg-emerald-50 border-b border-emerald-200 px-4 py-2 flex items-center gap-3">
+              <span className="text-sm font-medium text-emerald-800">{selectedFiles.size} fichier(s) sélectionné(s)</span>
+              <div className="flex gap-2 ml-auto">
+                <Button variant="outline" size="sm" className="h-7 text-xs border-emerald-300" onClick={() => { setMovingFiles(true); setMoveTargetFolderId(null); }}>
+                  <Move className="w-3 h-3 mr-1" />Déplacer
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 gap-1 ml-auto"
-                  onClick={clearSelection}
-                >
-                  <X className="w-3.5 h-3.5" />
-                  Désélectionner
+                <Button variant="outline" size="sm" className="h-7 text-xs border-red-300 text-red-600 hover:bg-red-50" onClick={handleBulkDelete}>
+                  <Trash2 className="w-3 h-3 mr-1" />Supprimer
                 </Button>
+                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={clearSelection}>
+                  <X className="w-3 h-3 mr-1" />Désélectionner
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Upload progress */}
+          {uploadProgress.length > 0 && (
+            <div className="bg-blue-50 border-b border-blue-200 px-4 py-2 space-y-1">
+              {uploadProgress.map((p) => (
+                <div key={p.name} className="flex items-center gap-2 text-sm">
+                  <Upload className="w-3.5 h-3.5 text-blue-500 animate-pulse" />
+                  <span className="text-blue-700 truncate flex-1">{p.name}</span>
+                  {p.done ? <Check className="w-3.5 h-3.5 text-green-500" /> : <span className="text-blue-500 text-xs">En cours...</span>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Drop zone */}
+          <div
+            className={`flex-1 overflow-y-auto p-4 relative transition-colors ${isDragOver ? "bg-emerald-50 ring-2 ring-inset ring-emerald-400" : ""}`}
+            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+            onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false); }}
+            onDrop={handleZoneDrop}
+          >
+            {isDragOver && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center gap-3 border-2 border-emerald-400">
+                  <Upload className="w-12 h-12 text-emerald-500" />
+                  <p className="text-lg font-semibold text-emerald-700">Déposer les fichiers ici</p>
+                </div>
               </div>
             )}
 
-            {/* Mobile category pills */}
-            <div className="md:hidden flex gap-2 px-4 py-2 overflow-x-auto border-b shrink-0">
-              {CATEGORIES.map((cat) => {
-                const Icon = cat.icon;
-                return (
-                  <button
-                    key={cat.value}
-                    onClick={() => { setActiveCategory(cat.value); clearSelection(); }}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap border transition-colors",
-                      activeCategory === cat.value
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-background border-border text-foreground"
-                    )}
-                  >
-                    <Icon className="w-3 h-3" />
-                    {cat.label}
-                    {(counts[cat.value] ?? 0) > 0 && (
-                      <span className="opacity-70">{counts[cat.value]}</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* File area */}
-            <div
-              className="flex-1 overflow-y-auto p-4"
-              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setIsDragging(false);
-                const file = e.dataTransfer.files?.[0];
-                if (file) { processFile(file); setUploadOpen(true); }
-              }}
-            >
-              {isDragging && (
-                <div className="absolute inset-0 z-50 bg-primary/10 border-4 border-dashed border-primary rounded-lg flex items-center justify-center pointer-events-none">
-                  <div className="text-center">
-                    <Upload className="w-12 h-12 text-primary mx-auto mb-2" />
-                    <p className="text-primary font-semibold">Déposez le fichier ici</p>
-                  </div>
-                </div>
-              )}
-
-              {isLoading ? (
-                <div className={cn(
-                  viewMode === "grid"
-                    ? "grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-                    : "space-y-1"
-                )}>
-                  {Array.from({ length: 10 }).map((_, i) => (
-                    <div key={i} className={cn("rounded-lg bg-muted animate-pulse", viewMode === "grid" ? "h-32" : "h-12")} />
-                  ))}
-                </div>
-              ) : filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-64 text-center gap-3">
-                  <FolderOpen className="w-16 h-16 text-muted-foreground/30" />
-                  <p className="text-muted-foreground">
-                    {searchQuery ? "Aucun résultat" : "Ce dossier est vide"}
-                  </p>
-                  <Button size="sm" onClick={() => setUploadOpen(true)}>
-                    <Plus className="w-4 h-4 mr-1" />
-                    Ajouter un fichier
-                  </Button>
-                </div>
-              ) : viewMode === "grid" ? (
-                <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {filtered.map((resource) => {
-                    const Icon = getFileIcon(resource.fileType, resource.category);
-                    const catCfg = getCatConfig(resource.category);
-                    const isSelected = selected.has(resource.id);
-                    const isImage = resource.fileType.includes("image");
-                    return (
-                      <div
-                        key={resource.id}
-                        className={cn(
-                          "group relative rounded-xl border-2 transition-all cursor-pointer select-none",
-                          isSelected
-                            ? "border-primary bg-primary/5 shadow-md"
-                            : "border-transparent bg-card hover:border-border hover:shadow-sm"
-                        )}
-                        onClick={() => toggleSelect(resource.id)}
-                        onDoubleClick={() => { setPreviewResource(resource); setPreviewOpen(true); }}
-                      >
-                        <div
-                          className={cn(
-                            "absolute top-2 left-2 z-10 transition-opacity",
-                            isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                          )}
-                          onClick={(e) => { e.stopPropagation(); toggleSelect(resource.id); }}
-                        >
-                          {isSelected ? (
-                            <CheckSquare className="w-5 h-5 text-primary drop-shadow" />
-                          ) : (
-                            <Square className="w-5 h-5 text-muted-foreground bg-background/80 rounded" />
-                          )}
-                        </div>
-
-                        <div className="aspect-square rounded-t-xl overflow-hidden bg-muted/50 flex items-center justify-center">
-                          {isImage ? (
-                            <img
-                              src={resource.fileUrl}
-                              alt={resource.title}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="flex flex-col items-center gap-2 p-4">
-                              <Icon className={cn("w-10 h-10", catCfg.color)} />
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                                {resource.fileType.split("/")[1]?.toUpperCase() || "FILE"}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="p-2">
-                          <p className="text-xs font-medium line-clamp-2 leading-tight">{resource.title}</p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">{formatSize(resource.fileSize)}</p>
-                        </div>
-
-                        <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            size="icon"
-                            variant="secondary"
-                            className="h-6 w-6"
-                            onClick={(e) => { e.stopPropagation(); setPreviewResource(resource); setPreviewOpen(true); }}
-                          >
-                            <Eye className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="destructive"
-                            className="h-6 w-6"
-                            onClick={(e) => { e.stopPropagation(); handleDelete(resource.id); }}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="rounded-lg border overflow-hidden">
-                  <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-2 px-3 py-2 bg-muted/50 text-xs font-medium text-muted-foreground border-b">
-                    <span className="w-5" />
-                    <span>Nom</span>
-                    <span className="w-24 text-right hidden sm:block">Taille</span>
-                    <span className="w-28 text-right hidden md:block">Date</span>
-                    <span className="w-20 text-right hidden sm:block">Télécharg.</span>
-                    <span className="w-20 text-right">Actions</span>
-                  </div>
-                  {filtered.map((resource, idx) => {
-                    const Icon = getFileIcon(resource.fileType, resource.category);
-                    const catCfg = getCatConfig(resource.category);
-                    const isSelected = selected.has(resource.id);
-                    return (
-                      <div
-                        key={resource.id}
-                        className={cn(
-                          "grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-2 px-3 py-2 items-center cursor-pointer transition-colors select-none",
-                          isSelected ? "bg-primary/10" : idx % 2 === 0 ? "bg-background" : "bg-muted/20",
-                          "hover:bg-primary/5"
-                        )}
-                        onClick={() => toggleSelect(resource.id)}
-                        onDoubleClick={() => { setPreviewResource(resource); setPreviewOpen(true); }}
-                      >
-                        <div onClick={(e) => { e.stopPropagation(); toggleSelect(resource.id); }}>
-                          {isSelected ? (
-                            <CheckSquare className="w-4 h-4 text-primary" />
-                          ) : (
-                            <Square className="w-4 h-4 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Icon className={cn("w-4 h-4 shrink-0", catCfg.color)} />
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">{resource.title}</p>
-                            <p className="text-xs text-muted-foreground truncate hidden sm:block">{catCfg.label}</p>
+            {displayedResources.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center py-16">
+                <Folder className="w-16 h-16 text-gray-300 mb-4" />
+                <p className="text-gray-500 font-medium">Ce dossier est vide</p>
+                <p className="text-gray-400 text-sm mt-1">Glissez des fichiers ici ou cliquez sur "Importer des fichiers"</p>
+                <Button className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white" size="sm" onClick={() => fileInputRef.current?.click()}>
+                  <Upload className="w-4 h-4 mr-2" />Importer
+                </Button>
+              </div>
+            ) : viewMode === "grid" ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                {displayedResources.map((resource) => {
+                  const isSelected = selectedFiles.has(resource.id);
+                  const thumb = getFileThumbnail(resource);
+                  return (
+                    <div
+                      key={resource.id}
+                      className={`group relative bg-white rounded-xl border-2 transition-all cursor-pointer overflow-hidden ${isSelected ? "border-emerald-500 shadow-md" : "border-gray-200 hover:border-gray-300 hover:shadow-sm"}`}
+                      draggable
+                      onDragStart={(e) => {
+                        const ids = isSelected ? Array.from(selectedFiles) : [resource.id];
+                        setDraggingFileIds(new Set(ids));
+                        e.dataTransfer.setData("application/x-file-ids", JSON.stringify(ids));
+                      }}
+                      onClick={(e) => toggleSelect(resource.id, e)}
+                      onDoubleClick={() => setPreviewResource(resource)}
+                    >
+                      <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
+                        {thumb ? (
+                          <img src={thumb} alt={resource.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="flex flex-col items-center gap-1 p-4">
+                            {getFileIcon(resource.fileType)}
+                            <span className="text-xs text-gray-400 uppercase font-mono">{resource.fileType.split("/")[1]?.substring(0, 4) || "file"}</span>
                           </div>
-                        </div>
-                        <span className="text-xs text-muted-foreground w-24 text-right hidden sm:block tabular-nums">
-                          {formatSize(resource.fileSize)}
-                        </span>
-                        <span className="text-xs text-muted-foreground w-28 text-right hidden md:block">
-                          {formatDate(resource.createdAt)}
-                        </span>
-                        <span className="text-xs text-muted-foreground w-20 text-right hidden sm:block tabular-nums">
-                          {resource.downloadCount}
-                        </span>
-                        <div className="flex gap-1 w-20 justify-end" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6"
-                            onClick={() => { setPreviewResource(resource); setPreviewOpen(true); }}
-                          >
-                            <Eye className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 text-destructive hover:text-destructive"
-                            onClick={() => handleDelete(resource.id)}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
+                        )}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                      <div className={`absolute top-2 left-2 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${isSelected ? "bg-emerald-500 border-emerald-500" : "bg-white/80 border-gray-300 opacity-0 group-hover:opacity-100"}`}>
+                        {isSelected && <Check className="w-3 h-3 text-white" />}
+                      </div>
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="bg-white/90 rounded-full p-1 shadow hover:bg-white" onClick={(e) => e.stopPropagation()}>
+                              <MoreVertical className="w-3.5 h-3.5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setPreviewResource(resource); }}><Eye className="w-4 h-4 mr-2" />Aperçu</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); window.open(resource.fileUrl, "_blank"); }}><Download className="w-4 h-4 mr-2" />Télécharger</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); setDeletingResource(resource); }}><Trash2 className="w-4 h-4 mr-2" />Supprimer</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      <div className="p-2">
+                        <p className="text-xs font-medium text-gray-800 truncate">{resource.title}</p>
+                        <p className="text-xs text-gray-400">{formatSize(resource.fileSize)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="w-8 px-3 py-2">
+                        <input type="checkbox" checked={selectedFiles.size === displayedResources.length && displayedResources.length > 0} onChange={(e) => e.target.checked ? selectAll() : clearSelection()} className="rounded border-gray-300" />
+                      </th>
+                      <th className="text-left px-3 py-2 font-medium text-gray-600">Nom</th>
+                      <th className="text-left px-3 py-2 font-medium text-gray-600 hidden md:table-cell">Type</th>
+                      <th className="text-left px-3 py-2 font-medium text-gray-600 hidden md:table-cell">Taille</th>
+                      <th className="text-left px-3 py-2 font-medium text-gray-600 hidden lg:table-cell">Date</th>
+                      <th className="w-10 px-3 py-2" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {displayedResources.map((resource) => {
+                      const isSelected = selectedFiles.has(resource.id);
+                      return (
+                        <tr key={resource.id} className={`group cursor-pointer transition-colors ${isSelected ? "bg-emerald-50" : "hover:bg-gray-50"}`}
+                          draggable
+                          onDragStart={(e) => { const ids = isSelected ? Array.from(selectedFiles) : [resource.id]; setDraggingFileIds(new Set(ids)); e.dataTransfer.setData("application/x-file-ids", JSON.stringify(ids)); }}
+                          onClick={(e) => toggleSelect(resource.id, e)}
+                          onDoubleClick={() => setPreviewResource(resource)}
+                        >
+                          <td className="px-3 py-2"><input type="checkbox" checked={isSelected} onChange={() => {}} className="rounded border-gray-300" /></td>
+                          <td className="px-3 py-2"><div className="flex items-center gap-2">{getFileIcon(resource.fileType)}<span className="font-medium text-gray-800 truncate max-w-xs">{resource.title}</span></div></td>
+                          <td className="px-3 py-2 text-gray-500 hidden md:table-cell">{resource.fileType.split("/")[1]?.toUpperCase() || "—"}</td>
+                          <td className="px-3 py-2 text-gray-500 hidden md:table-cell">{formatSize(resource.fileSize)}</td>
+                          <td className="px-3 py-2 text-gray-500 hidden lg:table-cell">{new Date(resource.createdAt).toLocaleDateString("fr-FR")}</td>
+                          <td className="px-3 py-2">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200" onClick={(e) => e.stopPropagation()}><MoreVertical className="w-4 h-4" /></button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setPreviewResource(resource); }}><Eye className="w-4 h-4 mr-2" />Aperçu</DropdownMenuItem>
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); window.open(resource.fileUrl, "_blank"); }}><Download className="w-4 h-4 mr-2" />Télécharger</DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); setDeletingResource(resource); }}><Trash2 className="w-4 h-4 mr-2" />Supprimer</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
 
-            {/* Status bar */}
-            <div className="border-t bg-muted/30 px-4 py-1.5 flex items-center justify-between text-xs text-muted-foreground shrink-0">
-              <span>{filtered.length} élément{filtered.length !== 1 ? "s" : ""}</span>
-              {selected.size > 0 && (
-                <span className="text-destructive font-medium">
-                  {selected.size} sélectionné{selected.size > 1 ? "s" : ""}
-                </span>
-              )}
-              <span className="text-xs">Glissez-déposez pour uploader</span>
-            </div>
-          </main>
-        </div>
+          {/* Status bar */}
+          <div className="bg-white border-t border-gray-200 px-4 py-1.5 flex items-center justify-between text-xs text-gray-500">
+            <span>{displayedResources.length} élément(s)</span>
+            {selectedFiles.size > 0 && <span className="text-emerald-600 font-medium">{selectedFiles.size} sélectionné(s)</span>}
+          </div>
+        </main>
       </div>
 
-      {/* Upload Dialog */}
-      <Dialog open={uploadOpen} onOpenChange={(v) => { setUploadOpen(v); if (!v) setSelectedFile(null); }}>
-        <DialogContent className="max-w-2xl w-[95vw]">
-          <form onSubmit={handleSubmit}>
-            <DialogHeader>
-              <DialogTitle>Ajouter une ressource</DialogTitle>
-              <DialogDescription>Uploadez un fichier et renseignez les informations</DialogDescription>
-            </DialogHeader>
+      {/* ── Dialogs ── */}
 
-            <div className="space-y-4 py-4">
-              {/* Drop zone */}
-              <div
-                className={cn(
-                  "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
-                  isDragging ? "border-primary bg-primary/5" : "hover:border-primary"
-                )}
-                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="hidden"
-                  accept=".pdf,.doc,.docx,.ppt,.pptx,.mp4,.mov,.jpg,.jpeg,.png,.zip"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) processFile(f); }}
-                />
-                {selectedFile ? (
-                  <div className="space-y-1">
-                    <Upload className="w-8 h-8 mx-auto text-green-500" />
-                    <p className="font-medium text-sm">{selectedFile.name}</p>
-                    <p className="text-xs text-muted-foreground">{formatSize(selectedFile.size)}</p>
-                    {selectedFile.type.includes("image") && (
-                      <img
-                        src={URL.createObjectURL(selectedFile)}
-                        alt="Preview"
-                        className="max-h-32 mx-auto rounded-lg mt-2 object-contain"
-                      />
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Glissez-déposez ou cliquez pour sélectionner</p>
-                    <p className="text-xs text-muted-foreground">PDF, DOC, PPT, MP4, JPG, PNG, ZIP (max 50 MB)</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2 sm:col-span-2">
-                  <Label>Titre *</Label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Ex: Catalogue 2025"
-                    required
-                  />
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label>Description</Label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Description…"
-                    rows={2}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Catégorie *</Label>
-                  <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.filter((c) => c.value !== "ALL").map((c) => (
-                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Langue</Label>
-                  <Select value={formData.language} onValueChange={(v) => setFormData({ ...formData, language: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fr">Français</SelectItem>
-                      <SelectItem value="nl">Néerlandais</SelectItem>
-                      <SelectItem value="en">Anglais</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Niveau partenaire minimum</Label>
-                  <Select value={formData.requiredPartnerLevel} onValueChange={(v) => setFormData({ ...formData, requiredPartnerLevel: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="BRONZE">Bronze</SelectItem>
-                      <SelectItem value="SILVER">Silver</SelectItem>
-                      <SelectItem value="GOLD">Gold</SelectItem>
-                      <SelectItem value="PLATINUM">Platinum</SelectItem>
-                      <SelectItem value="VIP">VIP</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+      {/* Create folder */}
+      <Dialog open={showCreateFolder} onOpenChange={setShowCreateFolder}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{createFolderParentId ? "Nouveau sous-dossier" : "Nouveau dossier"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Input placeholder="Nom du dossier" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} autoFocus
+              onKeyDown={(e) => { if (e.key === "Enter" && newFolderName.trim()) { createFolder.mutate({ name: newFolderName.trim(), parentId: createFolderParentId, color: newFolderColor }); setShowCreateFolder(false); } }} />
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">Couleur :</label>
+              <input type="color" value={newFolderColor} onChange={(e) => setNewFolderColor(e.target.value)} className="w-8 h-8 rounded cursor-pointer border border-gray-200" />
             </div>
-
-            <DialogFooter className="gap-2">
-              <Button type="button" variant="outline" onClick={() => setUploadOpen(false)}>
-                Annuler
-              </Button>
-              <Button type="submit" disabled={uploading || !selectedFile}>
-                {uploading ? (
-                  <><Upload className="w-4 h-4 mr-2 animate-spin" />Upload en cours…</>
-                ) : (
-                  <><Upload className="w-4 h-4 mr-2" />Ajouter</>
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateFolder(false)}>Annuler</Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" disabled={!newFolderName.trim()}
+              onClick={() => { createFolder.mutate({ name: newFolderName.trim(), parentId: createFolderParentId, color: newFolderColor }); setShowCreateFolder(false); }}>
+              Créer
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Preview Modal */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="truncate pr-8">{previewResource?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 overflow-auto">
-            {previewResource?.fileType.includes("image") ? (
-              <img src={previewResource.fileUrl} alt={previewResource.title} className="w-full h-auto rounded-lg" />
-            ) : previewResource?.fileType.includes("pdf") ? (
-              <iframe src={previewResource.fileUrl} className="w-full h-[65vh] rounded-lg" title={previewResource.title} />
-            ) : previewResource?.fileType.includes("video") ? (
-              <video src={previewResource.fileUrl} controls className="w-full rounded-lg" />
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 gap-4">
-                <File className="w-16 h-16 text-muted-foreground/40" />
-                <p className="text-muted-foreground text-sm">Aperçu non disponible pour ce type de fichier</p>
-                <Button variant="outline" onClick={() => window.open(previewResource?.fileUrl, "_blank")}>
-                  Ouvrir dans un nouvel onglet
-                </Button>
-              </div>
-            )}
-          </div>
-          <div className="flex gap-2 pt-2 border-t">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => window.open(previewResource?.fileUrl, "_blank")}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Télécharger
+      {/* Rename folder */}
+      <Dialog open={!!editingFolder} onOpenChange={() => setEditingFolder(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Renommer le dossier</DialogTitle></DialogHeader>
+          <Input value={editFolderName} onChange={(e) => setEditFolderName(e.target.value)} autoFocus className="mt-2"
+            onKeyDown={(e) => { if (e.key === "Enter" && editFolderName.trim() && editingFolder) { updateFolder.mutate({ id: editingFolder.id, name: editFolderName.trim() }); setEditingFolder(null); } }} />
+          <DialogFooter className="mt-3">
+            <Button variant="outline" onClick={() => setEditingFolder(null)}>Annuler</Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" disabled={!editFolderName.trim()}
+              onClick={() => { if (editingFolder) { updateFolder.mutate({ id: editingFolder.id, name: editFolderName.trim() }); setEditingFolder(null); } }}>
+              Renommer
             </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (previewResource) {
-                  handleDelete(previewResource.id);
-                  setPreviewOpen(false);
-                }
-              }}
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete folder */}
+      <AlertDialog open={!!deletingFolder} onOpenChange={() => setDeletingFolder(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer le dossier "{deletingFolder?.name}" ?</AlertDialogTitle>
+            <AlertDialogDescription>Les fichiers seront déplacés vers le dossier parent. Les sous-dossiers seront remontés. Cette action est irréversible.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-600 hover:bg-red-700"
+              onClick={() => { if (deletingFolder) { deleteFolder.mutate({ id: deletingFolder.id }); if (selectedFolderId === deletingFolder.id) setSelectedFolderId("all"); setDeletingFolder(null); } }}>
               Supprimer
-            </Button>
-            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
-              Fermer
-            </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete resource */}
+      <AlertDialog open={!!deletingResource} onOpenChange={() => setDeletingResource(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer "{deletingResource?.title}" ?</AlertDialogTitle>
+            <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-600 hover:bg-red-700"
+              onClick={() => { if (deletingResource) { deleteResource.mutate({ id: deletingResource.id }); setDeletingResource(null); } }}>
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Move files */}
+      <Dialog open={movingFiles} onOpenChange={setMovingFiles}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Déplacer {selectedFiles.size} fichier(s) vers...</DialogTitle></DialogHeader>
+          <div className="space-y-1 max-h-64 overflow-y-auto py-2">
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${moveTargetFolderId === null ? "bg-emerald-50 border border-emerald-300" : "hover:bg-gray-50"}`} onClick={() => setMoveTargetFolderId(null)}>
+              <Folder className="w-4 h-4 text-gray-400" /><span className="text-sm">Non classés (racine)</span>
+            </div>
+            {(folders as MediaFolder[]).map((f) => (
+              <div key={f.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${moveTargetFolderId === f.id ? "bg-emerald-50 border border-emerald-300" : "hover:bg-gray-50"}`}
+                style={{ paddingLeft: `${12 + (f.parentId ? 16 : 0)}px` }} onClick={() => setMoveTargetFolderId(f.id)}>
+                <Folder className="w-4 h-4 flex-shrink-0" style={{ color: f.color || "#6b7280" }} /><span className="text-sm">{f.name}</span>
+              </div>
+            ))}
           </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMovingFiles(false)}>Annuler</Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleBulkMove}>
+              <FolderInput className="w-4 h-4 mr-2" />Déplacer ici
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview */}
+      <Dialog open={!!previewResource} onOpenChange={() => setPreviewResource(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">{previewResource && getFileIcon(previewResource.fileType)}{previewResource?.title}</DialogTitle>
+          </DialogHeader>
+          {previewResource && (
+            <div className="mt-2">
+              {previewResource.fileType.startsWith("image/") ? (
+                <img src={previewResource.fileUrl} alt={previewResource.title} className="max-h-96 mx-auto rounded-lg object-contain" />
+              ) : previewResource.fileType.startsWith("video/") ? (
+                <video src={previewResource.fileUrl} controls className="w-full max-h-96 rounded-lg" />
+              ) : previewResource.fileType === "application/pdf" ? (
+                <iframe src={previewResource.fileUrl} className="w-full h-96 rounded-lg border" title={previewResource.title} />
+              ) : (
+                <div className="flex flex-col items-center gap-4 py-8">{getFileIcon(previewResource.fileType)}<p className="text-gray-500">Aperçu non disponible pour ce type de fichier</p></div>
+              )}
+              <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
+                <span>{formatSize(previewResource.fileSize)}</span>
+                <Button size="sm" onClick={() => window.open(previewResource.fileUrl, "_blank")}><Download className="w-4 h-4 mr-2" />Télécharger</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </AdminLayout>

@@ -1122,6 +1122,111 @@ export const appRouter = router({
         await db.deleteResource(input.id);
         return { success: true };
       }),
+
+    // Move resource to a folder
+    moveToFolder: adminProcedure
+      .input(z.object({ id: z.number(), folderId: z.number().nullable() }))
+      .mutation(async ({ input }) => {
+        const { db: drizzleDb } = await import("./db");
+        const { resources } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        await drizzleDb.update(resources).set({ folderId: input.folderId }).where(eq(resources.id, input.id));
+        return { success: true };
+      }),
+
+    // List resources by folder
+    listByFolder: protectedProcedure
+      .input(z.object({ folderId: z.number().nullable().optional() }))
+      .query(async ({ input }) => {
+        const { db: drizzleDb } = await import("./db");
+        const { resources } = await import("../drizzle/schema");
+        const { eq, isNull } = await import("drizzle-orm");
+        if (input.folderId === null || input.folderId === undefined) {
+          return await drizzleDb.select().from(resources).where(isNull(resources.folderId));
+        }
+        return await drizzleDb.select().from(resources).where(eq(resources.folderId, input.folderId));
+      }),
+  }),
+
+  // ============================================
+  // MEDIA FOLDERS
+  // ============================================
+  mediaFolders: router({
+    list: protectedProcedure.query(async () => {
+      const { db: drizzleDb } = await import("./db");
+      const { mediaFolders } = await import("../drizzle/schema");
+      const { asc } = await import("drizzle-orm");
+      return await drizzleDb.select().from(mediaFolders).orderBy(asc(mediaFolders.sortOrder), asc(mediaFolders.name));
+    }),
+
+    create: adminProcedure
+      .input(z.object({
+        name: z.string().min(1).max(255),
+        description: z.string().optional(),
+        icon: z.string().optional().default("folder"),
+        color: z.string().optional().default("#6b7280"),
+        parentId: z.number().nullable().optional(),
+        sortOrder: z.number().optional().default(0),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { db: drizzleDb } = await import("./db");
+        const { mediaFolders } = await import("../drizzle/schema");
+        const slug = input.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Date.now();
+        const [result] = await drizzleDb.insert(mediaFolders).values({
+          name: input.name,
+          slug,
+          description: input.description || null,
+          icon: input.icon || "folder",
+          color: input.color || "#6b7280",
+          parentId: input.parentId || null,
+          sortOrder: input.sortOrder || 0,
+          createdById: ctx.user.id,
+        });
+        return { id: (result as any).insertId, ...input, slug };
+      }),
+
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1).max(255).optional(),
+        description: z.string().optional(),
+        icon: z.string().optional(),
+        color: z.string().optional(),
+        parentId: z.number().nullable().optional(),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { db: drizzleDb } = await import("./db");
+        const { mediaFolders } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const { id, ...data } = input;
+        const updateData: Record<string, unknown> = {};
+        if (data.name !== undefined) updateData.name = data.name;
+        if (data.description !== undefined) updateData.description = data.description;
+        if (data.icon !== undefined) updateData.icon = data.icon;
+        if (data.color !== undefined) updateData.color = data.color;
+        if (data.parentId !== undefined) updateData.parentId = data.parentId;
+        if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder;
+        await drizzleDb.update(mediaFolders).set(updateData).where(eq(mediaFolders.id, id));
+        return { success: true };
+      }),
+
+    delete: adminProcedure
+      .input(z.object({ id: z.number(), moveFilesToParent: z.boolean().optional().default(true) }))
+      .mutation(async ({ input }) => {
+        const { db: drizzleDb } = await import("./db");
+        const { mediaFolders, resources } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        // Move files to parent folder or unclassified
+        const folder = await drizzleDb.select().from(mediaFolders).where(eq(mediaFolders.id, input.id)).limit(1);
+        const parentId = folder[0]?.parentId || null;
+        await drizzleDb.update(resources).set({ folderId: input.moveFilesToParent ? parentId : null }).where(eq(resources.folderId, input.id));
+        // Move sub-folders to parent
+        await drizzleDb.update(mediaFolders).set({ parentId: parentId }).where(eq(mediaFolders.parentId, input.id));
+        // Delete the folder
+        await drizzleDb.delete(mediaFolders).where(eq(mediaFolders.id, input.id));
+        return { success: true };
+      }),
   }),
 
   // ============================================

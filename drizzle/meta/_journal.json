@@ -211,6 +211,13 @@
       "when": 1772542807528,
       "tag": "0029_graceful_weapon_omega",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1772548547760,
+      "tag": "0030_magenta_wendell_vaughn",
+      "breakpoints": true
     }
   ]
 }
