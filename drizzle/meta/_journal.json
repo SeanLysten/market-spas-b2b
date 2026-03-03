@@ -204,6 +204,13 @@
       "when": 1772456827221,
       "tag": "0028_yummy_demogoblin",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1772542807528,
+      "tag": "0029_graceful_weapon_omega",
+      "breakpoints": true
     }
   ]
 }

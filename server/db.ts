@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like, lte, gte, asc, ne, gt, lt, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts, partnerTerritories, scheduledNewsletters } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts, partnerTerritories, scheduledNewsletters, savedRoutes } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -5250,4 +5250,49 @@ export async function updateEvent(id: number, data: {
   if (!db) throw new Error("Database not available");
 
   return db.update(events).set(data).where(eq(events.id, id));
+}
+
+
+// ============================================
+// SAVED ROUTES
+// ============================================
+
+export async function getSavedRoutes(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(savedRoutes).where(eq(savedRoutes.userId, userId)).orderBy(desc(savedRoutes.updatedAt));
+}
+
+export async function getSavedRouteById(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(savedRoutes).where(and(eq(savedRoutes.id, id), eq(savedRoutes.userId, userId)));
+  return rows[0] || null;
+}
+
+export async function createSavedRoute(data: { userId: number; name: string; type: string; points: string; totalDistance?: string; totalDuration?: string; notes?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(savedRoutes).values({
+    userId: data.userId,
+    name: data.name,
+    type: data.type,
+    points: data.points,
+    totalDistance: data.totalDistance || null,
+    totalDuration: data.totalDuration || null,
+    notes: data.notes || null,
+  });
+  return { id: result[0].insertId };
+}
+
+export async function updateSavedRoute(id: number, userId: number, data: { name?: string; points?: string; totalDistance?: string; totalDuration?: string; notes?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(savedRoutes).set(data).where(and(eq(savedRoutes.id, id), eq(savedRoutes.userId, userId)));
+}
+
+export async function deleteSavedRoute(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(savedRoutes).where(and(eq(savedRoutes.id, id), eq(savedRoutes.userId, userId)));
 }

@@ -2162,3 +2162,11 @@
 
 ## Bug fix: logo magasins validés disparu sur la carte (session 2026-03-03 #17)
 - [x] Corriger la référence au logo (window.__LOGO_URL remplacé par URL CDN directe)
+
+## Sauvegarde des itinéraires planifiés (session 2026-03-03 #18)
+- [x] Créer la table saved_routes en DB (nom, notes, points JSON, distance, durée, type, userId)
+- [x] Routes serveur CRUD (savedRoutes.save, list, delete)
+- [x] Bouton "Sauvegarder cet itinéraire" dans le panneau avec formulaire (nom + notes)
+- [x] Panneau "Mes itinéraires" avec liste, badges type, distance/durée, étapes
+- [x] Rechargement d'un itinéraire sauvegardé sur la carte avec recalcul OSRM
+- [x] Suppression d'itinéraires sauvegardés avec confirmation

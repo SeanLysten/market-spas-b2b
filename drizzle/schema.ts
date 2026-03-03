@@ -2456,3 +2456,26 @@ export const scheduledNewsletters = mysqlTable(
 );
 export type ScheduledNewsletter = typeof scheduledNewsletters.$inferSelect;
 export type InsertScheduledNewsletter = typeof scheduledNewsletters.$inferInsert;
+
+
+// ============================================
+// SAVED ROUTES (itinéraires sauvegardés)
+// ============================================
+
+export const savedRoutes = mysqlTable("saved_routes", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: varchar("type", { length: 20 }).notNull().default("tour"), // 'simple' or 'tour'
+  points: text("points").notNull(), // JSON array of RoutePoint objects
+  totalDistance: decimal("total_distance", { precision: 10, scale: 2 }), // km
+  totalDuration: decimal("total_duration", { precision: 10, scale: 2 }), // minutes
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  userIdx: index("sr_user_idx").on(table.userId),
+}));
+
+export type SavedRoute = typeof savedRoutes.$inferSelect;
+export type InsertSavedRoute = typeof savedRoutes.$inferInsert;

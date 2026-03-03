@@ -480,6 +480,67 @@ export const appRouter = router({
   }),
 
   // ============================================
+  // SAVED ROUTES (itinéraires sauvegardés)
+  // ============================================
+  savedRoutes: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return db.getSavedRoutes(ctx.user.id);
+    }),
+
+    get: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const route = await db.getSavedRouteById(input.id, ctx.user.id);
+        if (!route) throw new TRPCError({ code: 'NOT_FOUND', message: 'Itinéraire non trouvé' });
+        return route;
+      }),
+
+    save: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1, 'Le nom est requis'),
+        type: z.enum(['simple', 'tour']),
+        points: z.string(), // JSON string
+        totalDistance: z.string().optional(),
+        totalDuration: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const result = await db.createSavedRoute({
+          userId: ctx.user.id,
+          name: input.name,
+          type: input.type,
+          points: input.points,
+          totalDistance: input.totalDistance,
+          totalDuration: input.totalDuration,
+          notes: input.notes,
+        });
+        return result;
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        points: z.string().optional(),
+        totalDistance: z.string().optional(),
+        totalDuration: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { id, ...data } = input;
+        await db.updateSavedRoute(id, ctx.user.id, data);
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.deleteSavedRoute(input.id, ctx.user.id);
+        return { success: true };
+      }),
+  }),
+
+  // ============================================
   // PARTNERS
   // ============================================
   partners: router({
