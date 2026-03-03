@@ -2203,3 +2203,8 @@
 - [x] Vue admin: même interface Finder avec actions supplémentaires (upload, suppression)
 - [x] Vue admin: sélection multiple + suppression groupée
 - [x] Vue admin: drag & drop pour upload de fichiers (zone + glisser dans la page)
+
+## Carte: badge visité sur marqueurs + filtres visité/non-visité (session 2026-03-03 #24)
+- [x] Badge checkmark (✓) vert en haut à droite des marqueurs ayant au moins 1 contact (appel ou email)
+- [x] Option "✓ Visités" dans le filtre unique de la carte
+- [x] Option "○ Non visités" dans le filtre unique de la carte

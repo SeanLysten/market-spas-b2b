@@ -1283,6 +1283,8 @@ export default function AdminPartnerMap() {
                       >
                         <SelectItem value="all">Tous les candidats</SelectItem>
                         <SelectItem value="valide">Partenaires validés</SelectItem>
+                        <SelectItem value="visited">✓ Visités</SelectItem>
+                        <SelectItem value="not_visited">○ Non visités</SelectItem>
                         <SelectItem value="score_8">Score 8</SelectItem>
                         <SelectItem value="score_7">Score 7</SelectItem>
                         <SelectItem value="score_6">Score 6</SelectItem>

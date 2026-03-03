@@ -373,6 +373,8 @@ export default function InteractivePartnerMap({
       const filtered = candidates.filter(c => {
         if (combinedFilter === 'all') return true;
         if (combinedFilter === 'valide') return c.status === 'valide';
+        if (combinedFilter === 'visited') return c.visited > 0;
+        if (combinedFilter === 'not_visited') return c.visited === 0;
         if (combinedFilter.startsWith('score_')) {
           const score = parseInt(combinedFilter.replace('score_', ''));
           return c.priorityScore === score;
@@ -705,6 +707,7 @@ export default function InteractivePartnerMap({
       const textColor = c.priorityScore >= 3 && c.priorityScore <= 4 ? '#1a1a1a' : 'white';
 
       const isValidated = c.status === 'valide';
+      const isVisited = c.visited > 0;
       const markerBg = isValidated ? 
         `<div style="position: relative; cursor: pointer; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
           <div style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #16a34a; overflow: hidden; background: white;">
@@ -712,21 +715,32 @@ export default function InteractivePartnerMap({
           </div>
           <div style="width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid #16a34a; margin: -2px auto 0;"></div>
         </div>` :
-        `<div style="
-          width: 32px; height: 32px; border-radius: 50%;
-          background: ${priorityColor}; color: ${textColor};
-          display: flex; align-items: center; justify-content: center;
-          font-weight: 700; font-size: 13px;
-          border: ${visitedBorder};
-          box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-          cursor: pointer;
-        ">${c.priorityScore}</div>`;
+        `<div style="position: relative; display: inline-block;">
+          <div style="
+            width: 32px; height: 32px; border-radius: 50%;
+            background: ${priorityColor}; color: ${textColor};
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 13px;
+            border: ${visitedBorder};
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            cursor: pointer;
+          ">${c.priorityScore}</div>
+          ${isVisited ? `<div style="
+            position: absolute; top: -6px; right: -6px;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: #16a34a; border: 2px solid white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 9px; font-weight: 900; color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            line-height: 1;
+          ">✓</div>` : ''}
+        </div>`;
 
       const icon = L.divIcon({
         className: 'custom-marker',
         html: markerBg,
-        iconSize: isValidated ? [40, 52] : [32, 32],
-        iconAnchor: isValidated ? [20, 52] : [16, 16],
+        iconSize: isValidated ? [40, 52] : [38, 38],
+        iconAnchor: isValidated ? [20, 52] : [19, 19],
       });
 
       const marker = L.marker([item.lat, item.lng], { icon }).addTo(mapRef.current!);
