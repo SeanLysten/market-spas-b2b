@@ -261,9 +261,6 @@ export default function AdminResources() {
     onSuccess: () => { refetchFolders(); refetchResources(); toast.success("Dossier supprimé"); },
     onError: (e) => toast.error(e.message),
   });
-  const createResource = trpc.resources.create.useMutation({
-    onError: (e) => toast.error(e.message),
-  });
   const deleteResource = trpc.resources.delete.useMutation({
     onSuccess: () => { refetchResources(); toast.success("Fichier supprimé"); },
     onError: (e) => toast.error(e.message),
@@ -299,42 +296,51 @@ export default function AdminResources() {
 
   const rootFolders = (folders as MediaFolder[]).filter((f) => !f.parentId);
 
-  // Upload
+  // Upload via FormData (supports large files like videos without JSON size limit)
   const uploadFiles = useCallback(
     async (files: File[]) => {
       const targetFolderId = selectedFolderId === "all" ? null : selectedFolderId;
       setUploadProgress(files.map((f) => ({ name: f.name, done: false })));
+
+      const formData = new FormData();
       for (const file of files) {
-        try {
-          const reader = new FileReader();
-          const base64 = await new Promise<string>((resolve, reject) => {
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-          const result = await createResource.mutateAsync({
-            title: file.name.replace(/\.[^/.]+$/, ""),
-            category: "CATALOG",
-            language: "fr",
-            fileData: base64,
-            fileName: file.name,
-            fileType: file.type || "application/octet-stream",
-            fileSize: file.size,
-            isPublic: false,
-            requiredPartnerLevel: "BRONZE",
-          });
-          if (targetFolderId && result && (result as any).id) {
-            await moveToFolder.mutateAsync({ id: (result as any).id, folderId: targetFolderId });
-          }
-          setUploadProgress((prev) => prev.map((p) => p.name === file.name ? { ...p, done: true } : p));
-        } catch {
-          setUploadProgress((prev) => prev.filter((p) => p.name !== file.name));
-        }
+        formData.append("files", file);
       }
+      formData.append("category", "CATALOG");
+      formData.append("language", "fr");
+      formData.append("isPublic", "false");
+      formData.append("requiredPartnerLevel", "BRONZE");
+      if (targetFolderId !== null && targetFolderId !== undefined) {
+        formData.append("folderId", String(targetFolderId));
+      }
+
+      try {
+        const response = await fetch("/api/upload/resource", {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          let errMsg = `Erreur ${response.status}`;
+          try { const d = await response.json(); errMsg = d.error || errMsg; } catch {}
+          throw new Error(errMsg);
+        }
+
+        const result = await response.json();
+        if (result.success) {
+          setUploadProgress((prev) => prev.map((p) => ({ ...p, done: true })));
+          toast.success(`${result.uploaded} fichier(s) importé(s)`);
+        }
+      } catch (err: any) {
+        toast.error(err.message || "Erreur lors de l'upload");
+        setUploadProgress([]);
+      }
+
       setTimeout(() => setUploadProgress([]), 2000);
       refetchResources();
     },
-    [selectedFolderId, createResource, moveToFolder, refetchResources]
+    [selectedFolderId, refetchResources]
   );
 
   const handleZoneDrop = async (e: React.DragEvent) => {

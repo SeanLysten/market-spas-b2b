@@ -2241,3 +2241,10 @@
 - [x] Clic sur un dossier parent → afficher les sous-dossiers comme icônes cliquables dans la zone principale
 - [x] Fil d'Ariane (breadcrumb) cliquable pour remonter dans l'arborescence
 - [x] Appliquer sur AdminResources.tsx et Resources.tsx
+
+## Bug fix: erreur JSON lors de l'upload de vidéos (session 2026-03-03 #29)
+- [x] Identifier la cause: base64 via tRPC dépasse la limite JSON pour les gros fichiers
+- [x] Créer une route Express dédiée /api/upload/resource avec multer (multipart/form-data)
+- [x] Mettre à jour AdminResources.tsx pour utiliser fetch+FormData au lieu de base64
+- [x] Limite de 500 MB par fichier, 20 fichiers max simultanément
+- [x] Message d'erreur explicite si fichier trop volumineux (413)

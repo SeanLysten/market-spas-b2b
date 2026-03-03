@@ -17,6 +17,7 @@ import { initializeWebSocket } from "./websocket";
 import { webhooksRouter } from "../webhooks";
 import { getPrivacyHTML, getTermsHTML } from "../static-pages";
 import { inboundLeadsRouter } from "../routes/inbound-leads";
+import { uploadResourceRouter } from "../routes/upload-resource";
 import { validateEnv } from "./env";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -195,6 +196,8 @@ async function startServer() {
   app.use("/api/webhooks", webhooksRouter);
   // Inbound leads (formulaire Shopify + emails entrants)
   app.use(inboundLeadsRouter);
+  // Resource upload - multipart/form-data for large files (videos, etc.)
+  app.use(uploadResourceRouter);
   // tRPC API
   app.use(
     "/api/trpc",
