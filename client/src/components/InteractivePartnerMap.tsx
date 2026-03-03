@@ -555,7 +555,7 @@ export default function InteractivePartnerMap({
       const markerBg = isValidated ? 
         `<div style="position: relative; cursor: pointer; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
           <div style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #16a34a; overflow: hidden; background: white;">
-            <img src="${(window as any).__LOGO_URL || '/logo.png'}" style="width: 100%; height: 100%; object-fit: cover;" />
+            <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logomarketspa_ec8e23e8.png" style="width: 100%; height: 100%; object-fit: cover;" />
           </div>
           <div style="width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid #16a34a; margin: -2px auto 0;"></div>
         </div>` :

@@ -2159,3 +2159,6 @@
 - [x] Suppression d'étapes individuelles
 - [x] Export vers Google Maps et Waze (liens directs)
 - [x] Panneau latéral responsive avec liste des étapes
+
+## Bug fix: logo magasins validés disparu sur la carte (session 2026-03-03 #17)
+- [x] Corriger la référence au logo (window.__LOGO_URL remplacé par URL CDN directe)
