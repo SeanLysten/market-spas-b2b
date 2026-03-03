@@ -2138,3 +2138,7 @@
 ## Bug fix: page mot de passe oublié (session 2026-03-03 #13)
 - [x] Corriger le bouton Envoyer invisible (bg-info remplacé par bg-blue-600 text-white)
 - [x] Corriger l'erreur "env is not defined" (ENV.siteUrl remplacé par process.env.SITE_URL)
+
+## Bug fix: réinitialisation mot de passe (session 2026-03-03 #14)
+- [x] Corriger le bouton de validation sur la page ResetPassword (bg-info remplacé par bg-blue-600 text-white, même problème que ForgotPassword)
+- [x] N'envoyer le mail de reset que si l'adresse email existe en base (TRPCError NOT_FOUND avec message explicite)

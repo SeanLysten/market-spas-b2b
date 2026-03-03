@@ -170,9 +170,9 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const user = await db.getUserByEmail(input.email);
         
-        // Always return success to prevent email enumeration
+        // Renvoyer une erreur si l'email n'existe pas en base
         if (!user) {
-          return { success: true };
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Aucun compte n\'est associé à cette adresse email.' });
         }
 
         // Generate reset token

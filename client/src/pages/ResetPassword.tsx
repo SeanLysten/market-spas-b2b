@@ -154,7 +154,7 @@ export default function ResetPassword() {
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
-              className="w-full bg-info dark:bg-info-dark hover:bg-info hover:bg-info/90 dark:bg-info-dark dark:hover:bg-info-dark/90"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               disabled={isLoading || !token}
             >
               {isLoading ? (
