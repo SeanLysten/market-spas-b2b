@@ -2191,3 +2191,15 @@
 
 ## Bug fix: menu filtre passe sous la carte Leaflet (session 2026-03-03 #22)
 - [x] Corriger le z-index du SelectContent pour qu'il s'affiche au-dessus de la carte
+
+## Refonte médiathèque style Finder macOS (session 2026-03-03 #23)
+- [x] Vue utilisateur: navigation par dossiers/catégories dans sidebar gauche
+- [x] Vue utilisateur: basculement vue grille / vue liste
+- [x] Vue utilisateur: sélection multiple de fichiers (checkbox ou clic)
+- [x] Vue utilisateur: téléchargement groupé des fichiers sélectionnés
+- [x] Vue utilisateur: barre d'outils contextuelle (nb sélectionnés, bouton télécharger tout)
+- [x] Vue utilisateur: aperçu rapide au survol / double-clic (images, PDF, vidéo)
+- [x] Vue utilisateur: tri par nom, date, taille
+- [x] Vue admin: même interface Finder avec actions supplémentaires (upload, suppression)
+- [x] Vue admin: sélection multiple + suppression groupée
+- [x] Vue admin: drag & drop pour upload de fichiers (zone + glisser dans la page)
