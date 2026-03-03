@@ -2176,3 +2176,11 @@
 - [x] Bouton "Optimiser l'ordre des étapes" visible en mode Tournée avec ≥ 3 étapes
 - [x] Recalcul OSRM automatique après optimisation
 - [x] Indicateur visuel de l'amélioration (% de distance économé ou "déjà optimal")
+
+## Carte: boutons appel/mail directs + filtres scoring/partenaire (session 2026-03-03 #20)
+- [x] Bouton appel direct (tel:) sur les popups des points de la carte
+- [x] Bouton mail direct (mailto:) sur les popups des points de la carte
+- [x] Comptage +1 appel/mail dans les stats du lead à chaque clic
+- [x] Filtre par niveau de scoring (Faible 1-3, Moyen 4-5, Élevé 6-8)
+- [x] Filtre par statut partenaire (Partenaires validés / Prospects uniquement)
+- [x] Bouton Réinitialiser les filtres (apparaît si au moins un filtre actif)

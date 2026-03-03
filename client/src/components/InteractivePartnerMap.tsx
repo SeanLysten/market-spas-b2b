@@ -167,12 +167,16 @@ const formatDuration = (minutes: number): string => {
 interface InteractivePartnerMapProps {
   candidates: Candidate[];
   statusFilter: string;
+  scoreFilter?: string; // 'all' | 'low' (1-3) | 'medium' (4-5) | 'high' (6-8)
+  partnerFilter?: string; // 'all' | 'valide' | 'prospect'
   onRefresh?: () => void;
 }
 
 export default function InteractivePartnerMap({
   candidates,
   statusFilter,
+  scoreFilter = 'all',
+  partnerFilter = 'all',
   onRefresh,
 }: InteractivePartnerMapProps) {
   const mapRef = useRef<L.Map | null>(null);
@@ -366,9 +370,18 @@ export default function InteractivePartnerMap({
       const cache = geocodeCacheRef.current;
       const coordsToSave: { id: number; latitude: string; longitude: string }[] = [];
 
-      const filtered = statusFilter === 'all'
-        ? candidates
-        : candidates.filter(c => c.status === statusFilter);
+      const filtered = candidates.filter(c => {
+        // Status filter
+        if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+        // Partner filter: 'valide' = only validated partners, 'prospect' = all except validated
+        if (partnerFilter === 'valide' && c.status !== 'valide') return false;
+        if (partnerFilter === 'prospect' && c.status === 'valide') return false;
+        // Score filter
+        if (scoreFilter === 'low' && (c.priorityScore < 1 || c.priorityScore > 3)) return false;
+        if (scoreFilter === 'medium' && (c.priorityScore < 4 || c.priorityScore > 5)) return false;
+        if (scoreFilter === 'high' && c.priorityScore < 6) return false;
+        return true;
+      });
 
       for (const candidate of filtered) {
         if (cancelled) return;
@@ -416,7 +429,7 @@ export default function InteractivePartnerMap({
 
     geocodeAll();
     return () => { cancelled = true; };
-  }, [candidates, statusFilter]);
+  }, [candidates, statusFilter, scoreFilter, partnerFilter]);
 
   // ============================================
   // ROUTE CALCULATION
@@ -744,8 +757,14 @@ export default function InteractivePartnerMap({
             </div>
           </div>
           <div style="display: flex; gap: 6px; margin-bottom: 12px;">
-            <button data-action="increment-phone" data-candidate-id="${c.id}" style="flex: 1; padding: 6px; border-radius: 8px; border: 1px solid #e5e7eb; background: white; cursor: pointer; font-size: 12px;">📞 ${c.phoneCallsCount}</button>
-            <button data-action="increment-email" data-candidate-id="${c.id}" style="flex: 1; padding: 6px; border-radius: 8px; border: 1px solid #e5e7eb; background: white; cursor: pointer; font-size: 12px;">✉️ ${c.emailsSentCount}</button>
+            ${c.phoneNumber ? `
+            <a href="tel:${c.phoneNumber}" data-action="call-phone" data-candidate-id="${c.id}" data-phone="${c.phoneNumber}" style="flex: 1; padding: 8px 6px; border-radius: 8px; border: 1px solid #bfdbfe; background: #eff6ff; cursor: pointer; font-size: 12px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; color: #1d4ed8; font-weight: 600;">
+              📞 Appeler <span style="font-size: 11px; color: #6b7280; font-weight: 400;">(${c.phoneCallsCount})</span>
+            </a>` : `<div style="flex: 1; padding: 8px 6px; border-radius: 8px; border: 1px solid #e5e7eb; background: #f9fafb; font-size: 11px; color: #9ca3af; text-align: center;">📞 Pas de tél.</div>`}
+            ${c.email ? `
+            <a href="mailto:${c.email}" data-action="send-email" data-candidate-id="${c.id}" data-email="${c.email}" style="flex: 1; padding: 8px 6px; border-radius: 8px; border: 1px solid #bbf7d0; background: #f0fdf4; cursor: pointer; font-size: 12px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; color: #15803d; font-weight: 600;">
+              ✉️ Email <span style="font-size: 11px; color: #6b7280; font-weight: 400;">(${c.emailsSentCount})</span>
+            </a>` : `<div style="flex: 1; padding: 8px 6px; border-radius: 8px; border: 1px solid #e5e7eb; background: #f9fafb; font-size: 11px; color: #9ca3af; text-align: center;">✉️ Pas d'email</div>`}
           </div>
           ${c.notes ? `<p style="font-size: 12px; color: #6b7280; background: #f9fafb; padding: 8px; border-radius: 8px; margin: 0;">${c.notes}</p>` : ''}
         </div>
@@ -782,19 +801,23 @@ export default function InteractivePartnerMap({
           });
         });
 
-        container.querySelectorAll<HTMLButtonElement>('[data-action="increment-phone"]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
+        // Call button: open tel: link AND count +1
+        container.querySelectorAll<HTMLAnchorElement>('[data-action="call-phone"]').forEach(link => {
+          link.addEventListener('click', (e) => {
             e.stopPropagation();
-            const candidateId = parseInt(btn.dataset.candidateId || '0');
+            const candidateId = parseInt(link.dataset.candidateId || '0');
             incrementPhoneMutationRef.current.mutate({ candidateId });
+            // tel: link opens naturally via href
           });
         });
 
-        container.querySelectorAll<HTMLButtonElement>('[data-action="increment-email"]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
+        // Email button: open mailto: link AND count +1
+        container.querySelectorAll<HTMLAnchorElement>('[data-action="send-email"]').forEach(link => {
+          link.addEventListener('click', (e) => {
             e.stopPropagation();
-            const candidateId = parseInt(btn.dataset.candidateId || '0');
+            const candidateId = parseInt(link.dataset.candidateId || '0');
             incrementEmailMutationRef.current.mutate({ candidateId });
+            // mailto: link opens naturally via href
           });
         });
       });
