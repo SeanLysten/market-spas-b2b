@@ -1275,7 +1275,12 @@ export default function AdminPartnerMap() {
                       <SelectTrigger className="w-[200px]">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent
+                        className="z-[10000]"
+                        style={{ zIndex: 10000 }}
+                        position="popper"
+                        sideOffset={4}
+                      >
                         <SelectItem value="all">Tous les candidats</SelectItem>
                         <SelectItem value="valide">Partenaires validés</SelectItem>
                         <SelectItem value="score_8">Score 8</SelectItem>

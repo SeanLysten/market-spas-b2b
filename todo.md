@@ -2188,3 +2188,6 @@
 ## Carte: simplification du filtre en un seul menu (session 2026-03-03 #21)
 - [x] Remplacer les 3 filtres (statut, type, score) par un seul menu déroulant
 - [x] Options : Tous les candidats | Partenaires validés | Score 8 | Score 7 | ... | Score 1
+
+## Bug fix: menu filtre passe sous la carte Leaflet (session 2026-03-03 #22)
+- [x] Corriger le z-index du SelectContent pour qu'il s'affiche au-dessus de la carte
