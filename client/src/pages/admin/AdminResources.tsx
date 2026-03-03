@@ -279,6 +279,15 @@ export default function AdminResources() {
     if (r.folderId) resourceCounts[r.folderId] = (resourceCounts[r.folderId] || 0) + 1;
   }
 
+  // Sub-folders of the current folder
+  const subFolders = (folders as MediaFolder[]).filter((f) =>
+    selectedFolderId === "all"
+      ? false
+      : selectedFolderId === null
+      ? !f.parentId
+      : f.parentId === selectedFolderId
+  );
+
   // Filtered resources
   const displayedResources = (allResources as Resource[]).filter((r) => {
     const matchSearch = !search || r.title.toLowerCase().includes(search.toLowerCase());
@@ -542,7 +551,32 @@ export default function AdminResources() {
               </div>
             )}
 
-            {displayedResources.length === 0 ? (
+            {/* Sub-folders section */}
+            {subFolders.length > 0 && (
+              <div className="mb-6">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Sous-dossiers</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                  {subFolders.map((sf) => (
+                    <div
+                      key={sf.id}
+                      className="group flex flex-col items-center gap-2 p-3 bg-white rounded-xl border-2 border-gray-200 hover:border-emerald-400 hover:shadow-sm cursor-pointer transition-all"
+                      onClick={() => setSelectedFolderId(sf.id)}
+                      onDragOver={(e) => { e.preventDefault(); setDragOverFolderId(sf.id); }}
+                      onDragLeave={() => setDragOverFolderId(null)}
+                      onDrop={(e) => { e.preventDefault(); e.stopPropagation(); handleFolderDrop(sf.id); }}
+                    >
+                      <FolderOpen className="w-10 h-10" style={{ color: sf.color || "#6b7280" }} />
+                      <span className="text-xs font-medium text-gray-700 text-center truncate w-full text-center">{sf.name}</span>
+                      {resourceCounts[sf.id] != null && (
+                        <span className="text-xs text-gray-400">{resourceCounts[sf.id]} fichier(s)</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {displayedResources.length === 0 && subFolders.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center py-16">
                 <Folder className="w-16 h-16 text-gray-300 mb-4" />
                 <p className="text-gray-500 font-medium">Ce dossier est vide</p>
@@ -551,7 +585,8 @@ export default function AdminResources() {
                   <Upload className="w-4 h-4 mr-2" />Importer
                 </Button>
               </div>
-            ) : viewMode === "grid" ? (
+            ) : displayedResources.length === 0 ? null
+            : viewMode === "grid" ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {displayedResources.map((resource) => {
                   const isSelected = selectedFiles.has(resource.id);

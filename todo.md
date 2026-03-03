@@ -2236,3 +2236,8 @@
 - [x] Navigation dans les sous-dossiers
 - [x] Barre de statut en bas
 - [x] Pillules mobiles pour les dossiers (version mobile)
+
+## Médiathèque: afficher sous-dossiers dans la zone principale (session 2026-03-03 #28)
+- [x] Clic sur un dossier parent → afficher les sous-dossiers comme icônes cliquables dans la zone principale
+- [x] Fil d'Ariane (breadcrumb) cliquable pour remonter dans l'arborescence
+- [x] Appliquer sur AdminResources.tsx et Resources.tsx

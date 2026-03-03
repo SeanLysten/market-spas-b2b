@@ -284,6 +284,17 @@ export default function Resources() {
 
   const SortIcon = sortDir === "asc" ? SortAsc : SortDesc;
 
+  // ─── Sub-folders of current folder ───────────────────────────────────────────
+
+  const subFolders = useMemo(() =>
+    (folders as MediaFolder[]).filter((f) =>
+      activeFolderId === "all" || activeFolderId === "unclassified"
+        ? false
+        : f.parentId === activeFolderId
+    ),
+    [folders, activeFolderId]
+  );
+
   // ─── Active folder label ──────────────────────────────────────────────────────
 
   const activeFolderLabel = useMemo(() => {
@@ -498,6 +509,28 @@ export default function Resources() {
 
           {/* File area */}
           <div className="flex-1 overflow-y-auto p-4">
+            {/* Sub-folders */}
+            {subFolders.length > 0 && (
+              <div className="mb-6">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Sous-dossiers</p>
+                <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  {subFolders.map((sf) => (
+                    <button
+                      key={sf.id}
+                      onClick={() => handleFolderSelect(sf.id)}
+                      className="flex flex-col items-center gap-2 p-4 bg-card rounded-xl border-2 border-border hover:border-primary hover:shadow-sm transition-all text-left"
+                    >
+                      <FolderOpen className="w-10 h-10" style={{ color: sf.color || undefined }} />
+                      <span className="text-xs font-medium text-foreground text-center truncate w-full">{sf.name}</span>
+                      {(counts[sf.id] ?? 0) > 0 && (
+                        <span className="text-xs text-muted-foreground">{counts[sf.id]} fichier{counts[sf.id] !== 1 ? "s" : ""}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {isLoading ? (
               <div className={cn(
                 viewMode === "grid"
@@ -511,7 +544,7 @@ export default function Resources() {
                   )} />
                 ))}
               </div>
-            ) : filtered.length === 0 ? (
+            ) : filtered.length === 0 && subFolders.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-center gap-3">
                 <FolderOpen className="w-16 h-16 text-muted-foreground/30" />
                 <p className="text-muted-foreground">
@@ -523,7 +556,8 @@ export default function Resources() {
                   </Button>
                 )}
               </div>
-            ) : viewMode === "grid" ? (
+            ) : filtered.length === 0 ? null
+            : viewMode === "grid" ? (
               // ── Grid view ──────────────────────────────────────────────────
               <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {filtered.map((resource: any) => {
