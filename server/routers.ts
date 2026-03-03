@@ -1127,7 +1127,7 @@ export const appRouter = router({
     moveToFolder: adminProcedure
       .input(z.object({ id: z.number(), folderId: z.number().nullable() }))
       .mutation(async ({ input }) => {
-        const { db: drizzleDb } = await import("./db");
+        const drizzleDb = await db.getDb();
         const { resources } = await import("../drizzle/schema");
         const { eq } = await import("drizzle-orm");
         await drizzleDb.update(resources).set({ folderId: input.folderId }).where(eq(resources.id, input.id));
@@ -1138,7 +1138,7 @@ export const appRouter = router({
     listByFolder: protectedProcedure
       .input(z.object({ folderId: z.number().nullable().optional() }))
       .query(async ({ input }) => {
-        const { db: drizzleDb } = await import("./db");
+        const drizzleDb = await db.getDb();
         const { resources } = await import("../drizzle/schema");
         const { eq, isNull } = await import("drizzle-orm");
         if (input.folderId === null || input.folderId === undefined) {
@@ -1153,7 +1153,7 @@ export const appRouter = router({
   // ============================================
   mediaFolders: router({
     list: protectedProcedure.query(async () => {
-      const { db: drizzleDb } = await import("./db");
+      const drizzleDb = await db.getDb();
       const { mediaFolders } = await import("../drizzle/schema");
       const { asc } = await import("drizzle-orm");
       return await drizzleDb.select().from(mediaFolders).orderBy(asc(mediaFolders.sortOrder), asc(mediaFolders.name));
@@ -1169,7 +1169,7 @@ export const appRouter = router({
         sortOrder: z.number().optional().default(0),
       }))
       .mutation(async ({ input, ctx }) => {
-        const { db: drizzleDb } = await import("./db");
+        const drizzleDb = await db.getDb();
         const { mediaFolders } = await import("../drizzle/schema");
         const slug = input.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Date.now();
         const [result] = await drizzleDb.insert(mediaFolders).values({
@@ -1196,7 +1196,7 @@ export const appRouter = router({
         sortOrder: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
-        const { db: drizzleDb } = await import("./db");
+        const drizzleDb = await db.getDb();
         const { mediaFolders } = await import("../drizzle/schema");
         const { eq } = await import("drizzle-orm");
         const { id, ...data } = input;
@@ -1214,7 +1214,7 @@ export const appRouter = router({
     delete: adminProcedure
       .input(z.object({ id: z.number(), moveFilesToParent: z.boolean().optional().default(true) }))
       .mutation(async ({ input }) => {
-        const { db: drizzleDb } = await import("./db");
+        const drizzleDb = await db.getDb();
         const { mediaFolders, resources } = await import("../drizzle/schema");
         const { eq } = await import("drizzle-orm");
         // Move files to parent folder or unclassified
