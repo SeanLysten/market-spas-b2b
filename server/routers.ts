@@ -183,7 +183,7 @@ export const appRouter = router({
         await db.setPasswordResetToken(user.id, resetToken, resetExpires);
 
         // Send password reset email
-        const resetUrl = `${ENV.siteUrl}/reset-password?token=${resetToken}`;
+        const resetUrl = `${process.env.SITE_URL || 'https://marketspas.pro'}/reset-password?token=${resetToken}`;
         const emailResult = await sendPasswordResetEmail(user.email, resetToken, resetUrl);
         
         if (!emailResult.success) {

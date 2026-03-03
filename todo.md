@@ -2134,3 +2134,7 @@
 - [x] Widget "Événements à venir" du dashboard utilisateur connecté aux données réelles
 - [x] 5 types d'événements : Promotion, Événement, Annonce, Formation, Webinaire
 - [x] 8 événements existants affichés (2 à venir, 6 passés)
+
+## Bug fix: page mot de passe oublié (session 2026-03-03 #13)
+- [x] Corriger le bouton Envoyer invisible (bg-info remplacé par bg-blue-600 text-white)
+- [x] Corriger l'erreur "env is not defined" (ENV.siteUrl remplacé par process.env.SITE_URL)
