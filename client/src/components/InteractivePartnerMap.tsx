@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Navigation, MapPin, X, Ruler, Route, GripVertical, ExternalLink, Trash2, Plus, Car, Clock, RotateCcw, Save, FolderOpen, Bookmark, Loader2, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { Navigation, MapPin, X, Ruler, Route, GripVertical, ExternalLink, Trash2, Plus, Car, Clock, RotateCcw, Save, FolderOpen, Bookmark, Loader2, ChevronDown, ChevronUp, FileText, Zap } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
 
@@ -242,6 +242,10 @@ export default function InteractivePartnerMap({
       onRefresh?.();
     },
   });
+
+  // Optimization
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizationGain, setOptimizationGain] = useState<number | null>(null);
 
   // Saved routes
   const [showSavedRoutes, setShowSavedRoutes] = useState(false);
@@ -588,8 +592,74 @@ export default function InteractivePartnerMap({
     routePointsRef.current = [];
     setRoutePoints([]);
     setRouteResult(null);
+    setOptimizationGain(null);
     clearRouteFromMap();
   }, []);
+
+  // Nearest-neighbor optimization algorithm
+  const optimizeTour = useCallback(async () => {
+    const points = routePointsRef.current;
+    if (points.length < 3) {
+      toast.error('La tournée doit contenir au moins 3 étapes pour être optimisée');
+      return;
+    }
+    setIsOptimizing(true);
+
+    // Separate fixed start (user location or first point) from the rest
+    const hasUserLocation = points[0].isUserLocation;
+    const startPoint = points[0];
+    const toOptimize = points.slice(1);
+
+    // Nearest-neighbor greedy algorithm
+    const visited = new Array(toOptimize.length).fill(false);
+    const ordered: RoutePoint[] = [];
+    let current = startPoint;
+
+    for (let i = 0; i < toOptimize.length; i++) {
+      let nearestIdx = -1;
+      let nearestDist = Infinity;
+      for (let j = 0; j < toOptimize.length; j++) {
+        if (!visited[j]) {
+          const d = calculateDistance(current.lat, current.lng, toOptimize[j].lat, toOptimize[j].lng);
+          if (d < nearestDist) {
+            nearestDist = d;
+            nearestIdx = j;
+          }
+        }
+      }
+      if (nearestIdx !== -1) {
+        visited[nearestIdx] = true;
+        ordered.push(toOptimize[nearestIdx]);
+        current = toOptimize[nearestIdx];
+      }
+    }
+
+    const optimizedPoints = [startPoint, ...ordered];
+
+    // Calculate distance before and after
+    const distanceBefore = points.reduce((sum, p, i) => {
+      if (i === 0) return 0;
+      return sum + calculateDistance(points[i - 1].lat, points[i - 1].lng, p.lat, p.lng);
+    }, 0);
+    const distanceAfter = optimizedPoints.reduce((sum, p, i) => {
+      if (i === 0) return 0;
+      return sum + calculateDistance(optimizedPoints[i - 1].lat, optimizedPoints[i - 1].lng, p.lat, p.lng);
+    }, 0);
+
+    const gain = Math.round(((distanceBefore - distanceAfter) / distanceBefore) * 100);
+    setOptimizationGain(gain > 0 ? gain : 0);
+
+    routePointsRef.current = optimizedPoints;
+    setRoutePoints(optimizedPoints);
+    await calculateRoute(optimizedPoints);
+    setIsOptimizing(false);
+
+    if (gain > 0) {
+      toast.success(`Tournée optimisée ! Économie estimée : ${gain}% de distance`);
+    } else {
+      toast.success('Tournée déjà optimale !');
+    }
+  }, [calculateRoute]);
 
   const handleToggleRouteMode = (mode: 'simple' | 'tour') => {
     if (routeMode === mode) {
@@ -1006,6 +1076,35 @@ export default function InteractivePartnerMap({
                       </button>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Optimize button - only in tour mode with 3+ points */}
+              {routeMode === 'tour' && routePoints.length >= 3 && (
+                <div className="mt-3">
+                  <Button
+                    onClick={optimizeTour}
+                    disabled={isOptimizing || isCalculating}
+                    size="sm"
+                    className="w-full text-xs bg-amber-500 hover:bg-amber-600 text-white"
+                  >
+                    {isOptimizing ? (
+                      <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Optimisation...</>
+                    ) : (
+                      <><Zap className="w-3.5 h-3.5 mr-1" /> Optimiser l'ordre des étapes</>
+                    )}
+                  </Button>
+                  {optimizationGain !== null && (
+                    <div className={`mt-2 text-center text-xs font-medium px-3 py-1.5 rounded-lg ${
+                      optimizationGain > 0
+                        ? 'bg-green-50 text-green-700'
+                        : 'bg-gray-50 text-gray-600'
+                    }`}>
+                      {optimizationGain > 0
+                        ? `⚡ Tournée optimisée — économie d'environ ${optimizationGain}% de distance`
+                        : '✓ Tournée déjà dans l\'ordre optimal'}
+                    </div>
+                  )}
                 </div>
               )}
 

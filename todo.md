@@ -2170,3 +2170,9 @@
 - [x] Panneau "Mes itinéraires" avec liste, badges type, distance/durée, étapes
 - [x] Rechargement d'un itinéraire sauvegardé sur la carte avec recalcul OSRM
 - [x] Suppression d'itinéraires sauvegardés avec confirmation
+
+## Optimisation automatique de tournée (session 2026-03-03 #19)
+- [x] Algorithme d'optimisation (plus proche voisin) pour minimiser la distance totale
+- [x] Bouton "Optimiser l'ordre des étapes" visible en mode Tournée avec ≥ 3 étapes
+- [x] Recalcul OSRM automatique après optimisation
+- [x] Indicateur visuel de l'amélioration (% de distance économé ou "déjà optimal")
