@@ -2228,3 +2228,11 @@
 - [x] Barre de progression d'upload
 - [x] Aperçu (image, vidéo, PDF)
 - [x] Barre de statut en bas
+
+## Médiathèque utilisateur: cohérence avec admin (session 2026-03-03 #27)
+- [x] Sidebar avec dossiers dynamiques (même structure que admin)
+- [x] Vue grille / vue liste
+- [x] Sélection multiple + téléchargement groupé
+- [x] Navigation dans les sous-dossiers
+- [x] Barre de statut en bas
+- [x] Pillules mobiles pour les dossiers (version mobile)

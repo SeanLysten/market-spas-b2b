@@ -1,0 +1,18 @@
+{
+  "query": "SHOW COLUMNS FROM resources LIKE '%folder%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SHOW COLUMNS FROM resources LIKE '%folder%';",
+  "rows": [
+    {
+      "Field": "folderId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nfolderId\tint\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

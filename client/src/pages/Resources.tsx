@@ -22,48 +22,36 @@ import {
   File,
   FileImage,
   FileVideo,
-  Package,
-  BookOpen,
-  Wrench,
-  Shield,
-  Award,
   X,
+  ChevronDown,
 } from "lucide-react";
 import { Link } from "wouter";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type SortField = "title" | "fileSize" | "createdAt" | "downloadCount";
+type SortField = "title" | "fileSize" | "createdAt";
 type SortDir = "asc" | "desc";
 type ViewMode = "grid" | "list";
 
-// ─── Category config ──────────────────────────────────────────────────────────
+type MediaFolder = {
+  id: number;
+  name: string;
+  slug: string;
+  icon?: string | null;
+  color?: string | null;
+  parentId?: number | null;
+  sortOrder?: number | null;
+};
 
-const CATEGORIES = [
-  { value: "ALL", label: "Tous les fichiers", icon: FolderOpen, color: "text-primary" },
-  { value: "CATALOG", label: "Catalogues", icon: BookOpen, color: "text-emerald-600" },
-  { value: "MARKETING_IMAGE", label: "Marketing & PLV", icon: ImageIcon, color: "text-pink-600" },
-  { value: "VIDEO_TUTORIAL", label: "Vidéos tutoriels", icon: Video, color: "text-purple-600" },
-  { value: "TECHNICAL_DOC", label: "Documentation", icon: FileText, color: "text-blue-600" },
-  { value: "SALES_GUIDE", label: "Guides de vente", icon: BookOpen, color: "text-amber-600" },
-  { value: "INSTALLATION", label: "Installation", icon: Wrench, color: "text-orange-600" },
-  { value: "TROUBLESHOOTING", label: "Dépannage", icon: Wrench, color: "text-red-600" },
-  { value: "WARRANTY", label: "Garanties", icon: Shield, color: "text-teal-600" },
-  { value: "CERTIFICATE", label: "Certificats", icon: Award, color: "text-yellow-600" },
-  { value: "PLV", label: "PLV", icon: Package, color: "text-indigo-600" },
-];
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const getCatConfig = (value: string) =>
-  CATEGORIES.find((c) => c.value === value) ?? CATEGORIES[0];
-
-const getFileIcon = (fileType: string, category: string) => {
+const getFileIcon = (fileType: string) => {
   if (fileType.includes("image")) return FileImage;
   if (fileType.includes("video")) return FileVideo;
-  if (category === "VIDEO_TUTORIAL") return FileVideo;
+  if (fileType.includes("pdf") || fileType.includes("text")) return FileText;
   return File;
 };
 
@@ -76,11 +64,77 @@ const formatSize = (bytes: number) => {
 const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
 
+// ─── Sidebar folder tree ──────────────────────────────────────────────────────
+
+function FolderItem({
+  folder,
+  allFolders,
+  activeId,
+  onSelect,
+  depth = 0,
+}: {
+  folder: MediaFolder;
+  allFolders: MediaFolder[];
+  activeId: number | null | "all" | "unclassified";
+  onSelect: (id: number | null | "all" | "unclassified") => void;
+  depth?: number;
+}) {
+  const children = allFolders.filter((f) => f.parentId === folder.id);
+  const [expanded, setExpanded] = useState(true);
+  const isActive = activeId === folder.id;
+
+  return (
+    <div>
+      <div
+        className={cn(
+          "flex items-center gap-1.5 px-2 py-1.5 rounded-md text-sm cursor-pointer transition-colors select-none",
+          isActive ? "bg-primary text-primary-foreground" : "hover:bg-accent text-foreground"
+        )}
+        style={{ paddingLeft: `${8 + depth * 14}px` }}
+        onClick={() => onSelect(folder.id)}
+      >
+        {children.length > 0 ? (
+          <button
+            className="shrink-0 p-0.5 rounded hover:bg-black/10"
+            onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
+          >
+            <ChevronDown className={cn("w-3 h-3 transition-transform", !expanded && "-rotate-90")} />
+          </button>
+        ) : (
+          <span className="w-4 shrink-0" />
+        )}
+        {isActive ? (
+          <FolderOpen className="w-4 h-4 shrink-0" style={{ color: folder.color ?? "#6b7280" }} />
+        ) : (
+          <Folder className="w-4 h-4 shrink-0" style={{ color: folder.color ?? "#6b7280" }} />
+        )}
+        <span className="flex-1 truncate">{folder.name}</span>
+      </div>
+      {expanded && children.length > 0 && (
+        <div>
+          {children
+            .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name))
+            .map((child) => (
+              <FolderItem
+                key={child.id}
+                folder={child}
+                allFolders={allFolders}
+                activeId={activeId}
+                onSelect={onSelect}
+                depth={depth + 1}
+              />
+            ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Resources() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("ALL");
+  const [activeFolderId, setActiveFolderId] = useState<number | null | "all" | "unclassified">("all");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [sortField, setSortField] = useState<SortField>("title");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -89,17 +143,61 @@ export default function Resources() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [downloadingAll, setDownloadingAll] = useState(false);
 
-  const { data: resources, isLoading } = trpc.resources.list.useQuery({
-    category: activeCategory === "ALL" ? undefined : activeCategory,
-    limit: 200,
-  });
+  // ─── Data ───────────────────────────────────────────────────────────────────
+
+  const { data: folders = [] } = trpc.mediaFolders.list.useQuery();
+
+  // Fetch resources based on active folder
+  const folderQueryId = activeFolderId === "all"
+    ? undefined
+    : activeFolderId === "unclassified"
+    ? null
+    : activeFolderId;
+
+  const { data: folderResources, isLoading: folderLoading } = trpc.resources.listByFolder.useQuery(
+    { folderId: folderQueryId },
+    { enabled: activeFolderId !== "all" }
+  );
+
+  const { data: allResources, isLoading: allLoading } = trpc.resources.list.useQuery(
+    { limit: 500 },
+    { enabled: activeFolderId === "all" }
+  );
+
+  const isLoading = activeFolderId === "all" ? allLoading : folderLoading;
+  const rawResources = activeFolderId === "all" ? (allResources ?? []) : (folderResources ?? []);
 
   const downloadMutation = trpc.resources.download.useMutation();
 
-  // ─── Filtering & sorting ────────────────────────────────────────────────────
+  // ─── Root folders ────────────────────────────────────────────────────────────
+
+  const rootFolders = useMemo(
+    () =>
+      (folders as MediaFolder[])
+        .filter((f) => !f.parentId)
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name)),
+    [folders]
+  );
+
+  // ─── Counts ──────────────────────────────────────────────────────────────────
+
+  const { data: allForCounts } = trpc.resources.list.useQuery({ limit: 1000 });
+  const counts = useMemo(() => {
+    const all = allForCounts ?? [];
+    const map: Record<string | number, number> = {
+      all: all.length,
+      unclassified: all.filter((r: any) => !r.folderId).length,
+    };
+    (folders as MediaFolder[]).forEach((f) => {
+      map[f.id] = all.filter((r: any) => r.folderId === f.id).length;
+    });
+    return map;
+  }, [allForCounts, folders]);
+
+  // ─── Filtering & sorting ─────────────────────────────────────────────────────
 
   const filtered = useMemo(() => {
-    let list = resources ?? [];
+    let list = rawResources as any[];
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       list = list.filter(
@@ -112,26 +210,14 @@ export default function Resources() {
       let cmp = 0;
       if (sortField === "title") cmp = a.title.localeCompare(b.title);
       else if (sortField === "fileSize") cmp = a.fileSize - b.fileSize;
-      else if (sortField === "downloadCount") cmp = a.downloadCount - b.downloadCount;
       else if (sortField === "createdAt")
         cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       return sortDir === "asc" ? cmp : -cmp;
     });
     return list;
-  }, [resources, searchQuery, sortField, sortDir]);
+  }, [rawResources, searchQuery, sortField, sortDir]);
 
-  // ─── Counts per category ────────────────────────────────────────────────────
-
-  const counts = useMemo(() => {
-    const all = resources ?? [];
-    const map: Record<string, number> = { ALL: all.length };
-    all.forEach((r) => {
-      map[r.category] = (map[r.category] ?? 0) + 1;
-    });
-    return map;
-  }, [resources]);
-
-  // ─── Selection helpers ──────────────────────────────────────────────────────
+  // ─── Selection helpers ────────────────────────────────────────────────────────
 
   const toggleSelect = (id: number) => {
     setSelected((prev) => {
@@ -151,7 +237,12 @@ export default function Resources() {
 
   const clearSelection = () => setSelected(new Set());
 
-  // ─── Download helpers ───────────────────────────────────────────────────────
+  const handleFolderSelect = (id: number | null | "all" | "unclassified") => {
+    setActiveFolderId(id);
+    clearSelection();
+  };
+
+  // ─── Download helpers ─────────────────────────────────────────────────────────
 
   const handleDownload = async (id: number, fileUrl: string, title: string) => {
     try {
@@ -193,7 +284,16 @@ export default function Resources() {
 
   const SortIcon = sortDir === "asc" ? SortAsc : SortDesc;
 
-  // ─── Render ─────────────────────────────────────────────────────────────────
+  // ─── Active folder label ──────────────────────────────────────────────────────
+
+  const activeFolderLabel = useMemo(() => {
+    if (activeFolderId === "all") return "Tous les fichiers";
+    if (activeFolderId === "unclassified") return "Non classés";
+    const f = (folders as MediaFolder[]).find((f) => f.id === activeFolderId);
+    return f?.name ?? "Dossier";
+  }, [activeFolderId, folders]);
+
+  // ─── Render ───────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -242,31 +342,55 @@ export default function Resources() {
           <p className="px-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Médiathèque
           </p>
-          {CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            const isActive = activeCategory === cat.value;
-            const count = counts[cat.value] ?? 0;
-            return (
-              <button
-                key={cat.value}
-                onClick={() => { setActiveCategory(cat.value); clearSelection(); }}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 mx-1 rounded-md text-sm transition-colors text-left",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-accent text-foreground"
-                )}
-              >
-                <Icon className={cn("w-4 h-4 shrink-0", isActive ? "text-primary-foreground" : cat.color)} />
-                <span className="flex-1 truncate">{cat.label}</span>
-                {count > 0 && (
-                  <span className={cn("text-xs tabular-nums", isActive ? "text-primary-foreground/70" : "text-muted-foreground")}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+
+          {/* All files */}
+          <button
+            onClick={() => handleFolderSelect("all")}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 mx-1 rounded-md text-sm transition-colors text-left",
+              activeFolderId === "all"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-accent text-foreground"
+            )}
+          >
+            <FolderOpen className={cn("w-4 h-4 shrink-0", activeFolderId === "all" ? "text-primary-foreground" : "text-primary")} />
+            <span className="flex-1 truncate">Tous les fichiers</span>
+            {(counts["all"] ?? 0) > 0 && (
+              <span className={cn("text-xs tabular-nums", activeFolderId === "all" ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                {counts["all"]}
+              </span>
+            )}
+          </button>
+
+          {/* Dynamic folders */}
+          {rootFolders.map((folder) => (
+            <FolderItem
+              key={folder.id}
+              folder={folder}
+              allFolders={folders as MediaFolder[]}
+              activeId={activeFolderId}
+              onSelect={handleFolderSelect}
+            />
+          ))}
+
+          {/* Unclassified */}
+          {(counts["unclassified"] ?? 0) > 0 && (
+            <button
+              onClick={() => handleFolderSelect("unclassified")}
+              className={cn(
+                "flex items-center gap-2 px-3 py-1.5 mx-1 rounded-md text-sm transition-colors text-left",
+                activeFolderId === "unclassified"
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-accent text-foreground"
+              )}
+            >
+              <Folder className={cn("w-4 h-4 shrink-0", activeFolderId === "unclassified" ? "text-primary-foreground" : "text-muted-foreground")} />
+              <span className="flex-1 truncate">Non classés</span>
+              <span className={cn("text-xs tabular-nums", activeFolderId === "unclassified" ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                {counts["unclassified"]}
+              </span>
+            </button>
+          )}
         </aside>
 
         {/* Main content */}
@@ -275,9 +399,7 @@ export default function Resources() {
           <div className="border-b bg-card/50 px-4 py-2 flex items-center gap-2 flex-wrap">
             {/* Breadcrumb */}
             <div className="flex items-center gap-1 text-sm text-muted-foreground flex-1 min-w-0">
-              <span className="font-medium text-foreground truncate">
-                {getCatConfig(activeCategory).label}
-              </span>
+              <span className="font-medium text-foreground truncate">{activeFolderLabel}</span>
               <ChevronRight className="w-3 h-3 shrink-0" />
               <span className="text-xs">{filtered.length} fichier{filtered.length !== 1 ? "s" : ""}</span>
             </div>
@@ -341,29 +463,37 @@ export default function Resources() {
             </div>
           )}
 
-          {/* Mobile category pills */}
+          {/* Mobile folder pills */}
           <div className="md:hidden flex gap-2 px-4 py-2 overflow-x-auto border-b">
-            {CATEGORIES.map((cat) => {
-              const Icon = cat.icon;
-              return (
-                <button
-                  key={cat.value}
-                  onClick={() => { setActiveCategory(cat.value); clearSelection(); }}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap border transition-colors",
-                    activeCategory === cat.value
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background border-border text-foreground"
-                  )}
-                >
-                  <Icon className="w-3 h-3" />
-                  {cat.label}
-                  {(counts[cat.value] ?? 0) > 0 && (
-                    <span className="opacity-70">{counts[cat.value]}</span>
-                  )}
-                </button>
-              );
-            })}
+            <button
+              onClick={() => handleFolderSelect("all")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap border transition-colors",
+                activeFolderId === "all"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background border-border text-foreground"
+              )}
+            >
+              <FolderOpen className="w-3 h-3" />
+              Tous
+              {(counts["all"] ?? 0) > 0 && <span className="opacity-70">{counts["all"]}</span>}
+            </button>
+            {(folders as MediaFolder[]).map((folder) => (
+              <button
+                key={folder.id}
+                onClick={() => handleFolderSelect(folder.id)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap border transition-colors",
+                  activeFolderId === folder.id
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background border-border text-foreground"
+                )}
+              >
+                <Folder className="w-3 h-3" />
+                {folder.name}
+                {(counts[folder.id] ?? 0) > 0 && <span className="opacity-70">{counts[folder.id]}</span>}
+              </button>
+            ))}
           </div>
 
           {/* File area */}
@@ -396,9 +526,8 @@ export default function Resources() {
             ) : viewMode === "grid" ? (
               // ── Grid view ──────────────────────────────────────────────────
               <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {filtered.map((resource) => {
-                  const Icon = getFileIcon(resource.fileType, resource.category);
-                  const catCfg = getCatConfig(resource.category);
+                {filtered.map((resource: any) => {
+                  const Icon = getFileIcon(resource.fileType);
                   const isSelected = selected.has(resource.id);
                   const isImage = resource.fileType.includes("image");
                   return (
@@ -439,7 +568,7 @@ export default function Resources() {
                           />
                         ) : (
                           <div className="flex flex-col items-center gap-2 p-4">
-                            <Icon className={cn("w-10 h-10", catCfg.color)} />
+                            <Icon className="w-10 h-10 text-muted-foreground" />
                             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                               {resource.fileType.split("/")[1]?.toUpperCase() || "FILE"}
                             </span>
@@ -487,9 +616,8 @@ export default function Resources() {
                   <span className="w-28 text-right hidden md:block">Date</span>
                   <span className="w-16 text-right">Actions</span>
                 </div>
-                {filtered.map((resource, idx) => {
-                  const Icon = getFileIcon(resource.fileType, resource.category);
-                  const catCfg = getCatConfig(resource.category);
+                {filtered.map((resource: any, idx: number) => {
+                  const Icon = getFileIcon(resource.fileType);
                   const isSelected = selected.has(resource.id);
                   return (
                     <div
@@ -513,11 +641,11 @@ export default function Resources() {
 
                       {/* Name + icon */}
                       <div className="flex items-center gap-2 min-w-0">
-                        <Icon className={cn("w-4 h-4 shrink-0", catCfg.color)} />
+                        <Icon className="w-4 h-4 shrink-0 text-muted-foreground" />
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">{resource.title}</p>
                           <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                            {catCfg.label}
+                            {formatSize(resource.fileSize)}
                           </p>
                         </div>
                       </div>

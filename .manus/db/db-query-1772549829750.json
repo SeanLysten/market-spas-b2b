@@ -1,0 +1,162 @@
+{
+  "query": "DESCRIBE resources;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute DESCRIBE resources;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "title",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "description",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "category",
+      "Type": "enum('TECHNICAL_DOC','VIDEO_TUTORIAL','TROUBLESHOOTING','MARKETING_IMAGE','CATALOG','PLV','SALES_GUIDE','INSTALLATION','WARRANTY','CERTIFICATE')",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "fileUrl",
+      "Type": "varchar(500)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "fileType",
+      "Type": "varchar(50)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "fileSize",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "thumbnailUrl",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "isPublic",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "requiredPartnerLevel",
+      "Type": "enum('BRONZE','SILVER','GOLD','PLATINUM','VIP')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tags",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "language",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "fr",
+      "Extra": ""
+    },
+    {
+      "Field": "downloadCount",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "viewCount",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "isActive",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "MUL",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "uploadedById",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "folderId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\ntitle\tvarchar(255)\tNO\t\tNULL\t\ndescription\ttext\tYES\t\tNULL\t\ncategory\tenum('TECHNICAL_DOC','VIDEO_TUTORIAL','TROUBLESHOOTING','MARKETING_IMAGE','CATALOG','PLV','SALES_GUIDE','INSTALLATION','WARRANTY','CERTIFICATE')\tNO\tMUL\tNULL\t\nfileUrl\tvarchar(500)\tNO\t\tNULL\t\nfileType\tvarchar(50)\tNO\t\tNULL\t\nfileSize\tint\tNO\t\tNULL\t\nthumbnailUrl\tvarchar(500)\tYES\t\tNULL\t\nisPublic\ttinyint(1)\tYES\t\t0\t\nrequiredPartnerLevel\tenum('BRONZE','SILVER','GOLD','PLATINUM','VIP')\tYES\t\tNULL\t\ntags\ttext\tYES\t\tNULL\t\nlanguage\tvarchar(10)\tYES\t\tfr\t\ndownloadCount\tint\tYES\t\t0\t\nviewCount\tint\tYES\t\t0\t\nisActive\ttinyint(1)\tYES\tMUL\t1\t\nuploadedById\tint\tYES\t\tNULL\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\nfolderId\tint\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}
