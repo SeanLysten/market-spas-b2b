@@ -2248,3 +2248,11 @@
 - [x] Mettre à jour AdminResources.tsx pour utiliser fetch+FormData au lieu de base64
 - [x] Limite de 500 MB par fichier, 20 fichiers max simultanément
 - [x] Message d'erreur explicite si fichier trop volumineux (413)
+
+## Import contacts carte réseau + responsive mobile (session 2026-03-04 #30)
+- [x] Lire et analyser le fichier Excel des contacts (92 contacts)
+- [x] Importer les 92 contacts en BDD (upsert: 91 mis à jour, 1 nouveau, 0 doublon)
+- [x] Responsive mobile: filtre pleine largeur sur mobile
+- [x] Responsive mobile: hauteur carte adaptée (400px mobile, 500px tablette, 700px desktop)
+- [x] Responsive mobile: popups Leaflet adaptés (max-width dynamique, border-radius)
+- [x] Responsive mobile: marqueurs avec touch targets plus grands (36px min)

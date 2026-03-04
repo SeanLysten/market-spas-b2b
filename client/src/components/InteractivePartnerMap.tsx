@@ -346,6 +346,28 @@ export default function InteractivePartnerMap({
         @keyframes ping-visited {
           75%, 100% { transform: scale(2); opacity: 0; }
         }
+        /* Mobile responsive popups */
+        @media (max-width: 640px) {
+          .leaflet-popup-content-wrapper {
+            border-radius: 12px !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18) !important;
+          }
+          .leaflet-popup-content {
+            margin: 10px 12px !important;
+            width: calc(100vw - 80px) !important;
+            max-width: 300px !important;
+          }
+          .custom-popup .leaflet-popup-content {
+            min-width: unset !important;
+          }
+        }
+        /* Larger touch targets on mobile */
+        @media (max-width: 640px) {
+          .custom-marker div {
+            min-width: 36px !important;
+            min-height: 36px !important;
+          }
+        }
       `;
       document.head.appendChild(style);
     }
@@ -763,8 +785,9 @@ export default function InteractivePartnerMap({
         .map(([key, label]) => `<button data-action="status" data-candidate-id="${c.id}" data-status="${key}" style="padding: 4px 10px; border-radius: 8px; font-size: 11px; border: 1px solid ${c.status === key ? '#16a34a' : '#e5e7eb'}; background: ${c.status === key ? '#dcfce7' : 'white'}; color: ${c.status === key ? '#16a34a' : '#374151'}; cursor: pointer; font-weight: ${c.status === key ? '600' : '400'};">${label}</button>`)
         .join('');
 
+      const isMobile = window.innerWidth < 640;
       const popupContent = `
-        <div style="min-width: 280px; max-width: 360px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+        <div style="min-width: ${isMobile ? '220px' : '280px'}; max-width: ${isMobile ? '280px' : '360px'}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
           <div style="margin-bottom: 12px;">
             <h3 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">${c.companyName}</h3>
             <p style="font-size: 13px; color: #6b7280; margin: 0;">${c.fullName} — ${c.city}</p>
