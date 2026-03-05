@@ -4,18 +4,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
 import {
-  TrendingUp, Users, Eye, MousePointer, Clock, Wifi, WifiOff,
+  TrendingUp, TrendingDown, Users, Eye, MousePointer, Clock, Wifi, WifiOff,
   RefreshCw, ExternalLink, Monitor, Smartphone, Tablet,
-  BarChart2, Globe
+  BarChart2, Globe, CalendarIcon, Minus
 } from "lucide-react";
 import { toast } from "sonner";
-import { useLocation } from "wouter";
+import { format, subDays, startOfDay } from "date-fns";
+import { fr } from "date-fns/locale";
+// DateRange est défini dans react-day-picker/dist/cjs/types/shared mais pas réexporté depuis l'index
+// On utilise une définition locale compatible
+type DateRange = { from?: Date; to?: Date };
 
+// ── Couleurs ─────────────────────────────────────────────────────────────────
 const DEVICE_COLORS: Record<string, string> = {
   desktop: "#3b82f6",
   mobile: "#10b981",
@@ -27,6 +34,7 @@ const SOURCE_COLORS = [
   "#06b6d4", "#ec4899", "#84cc16", "#f97316", "#6366f1",
 ];
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${Math.round(seconds)}s`;
   const m = Math.floor(seconds / 60);
@@ -40,23 +48,82 @@ function formatNumber(n: number): string {
   return n.toString();
 }
 
-const PERIOD_OPTIONS = [
-  { label: "7 derniers jours", value: 7 },
-  { label: "30 derniers jours", value: 30 },
-  { label: "90 derniers jours", value: 90 },
+function toIsoDate(d: Date): string {
+  return d.toISOString().split("T")[0];
+}
+
+function deltaPercent(current: number, previous: number): number | null {
+  if (previous === 0) return null;
+  return ((current - previous) / previous) * 100;
+}
+
+// ── Composant delta ───────────────────────────────────────────────────────────
+function DeltaBadge({ current, previous }: { current: number; previous: number }) {
+  const delta = deltaPercent(current, previous);
+  if (delta === null) return null;
+  const isPositive = delta >= 0;
+  const Icon = delta === 0 ? Minus : isPositive ? TrendingUp : TrendingDown;
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 text-xs font-medium ${
+        isPositive ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"
+      }`}
+    >
+      <Icon className="h-3 w-3" />
+      {Math.abs(delta).toFixed(1)}%
+    </span>
+  );
+}
+
+// ── Préréglages de période ────────────────────────────────────────────────────
+type PresetKey = "7" | "14" | "30" | "90" | "custom";
+
+const PRESETS: { label: string; value: PresetKey; days?: number }[] = [
+  { label: "7 derniers jours", value: "7", days: 7 },
+  { label: "14 derniers jours", value: "14", days: 14 },
+  { label: "30 derniers jours", value: "30", days: 30 },
+  { label: "90 derniers jours", value: "90", days: 90 },
+  { label: "Période personnalisée", value: "custom" },
 ];
 
+// ── Props ─────────────────────────────────────────────────────────────────────
 interface AdminGoogleAnalyticsProps {
-  /** Called when OAuth callback code is detected in the URL */
+  /** Appelé quand le code OAuth GA4 est détecté et traité */
   onCallbackHandled?: () => void;
 }
 
+// ── Composant principal ───────────────────────────────────────────────────────
 export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleAnalyticsProps) {
-  const [, setLocation] = useLocation();
-  const [days, setDays] = useState(30);
   const [isConnecting, setIsConnecting] = useState(false);
 
-  // Detect OAuth callback in URL
+  // ── Sélecteur de période ──────────────────────────────────────────────────
+  const [preset, setPreset] = useState<PresetKey>("30");
+  const [customRange, setCustomRange] = useState<DateRange | undefined>(undefined);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  // Calculer les dates effectives
+  const today = startOfDay(new Date());
+  const effectiveDates = (() => {
+    if (preset !== "custom") {
+      const days = Number(preset);
+      return {
+        startDate: toIsoDate(subDays(today, days)),
+        endDate: toIsoDate(today),
+        days,
+      };
+    }
+    if (customRange?.from && customRange?.to) {
+      return {
+        startDate: toIsoDate(customRange.from),
+        endDate: toIsoDate(customRange.to),
+        days: undefined,
+      };
+    }
+    // Fallback si plage personnalisée incomplète
+    return { startDate: toIsoDate(subDays(today, 30)), endDate: toIsoDate(today), days: 30 };
+  })();
+
+  // ── Détection du callback OAuth GA4 ──────────────────────────────────────
   const urlParams = new URLSearchParams(window.location.search);
   const ga4Code = urlParams.get("code");
   const isGa4Callback = urlParams.get("ga4") === "true";
@@ -66,29 +133,31 @@ export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleA
     { state: "ga4_connect" },
     { enabled: false }
   );
-
   const handleCallbackMutation = trpc.googleAnalytics.handleCallback.useMutation();
   const disconnectMutation = trpc.googleAnalytics.disconnectAccount.useMutation();
 
   const reportQuery = trpc.googleAnalytics.getReport.useQuery(
-    { days },
+    {
+      startDate: effectiveDates.startDate,
+      endDate: effectiveDates.endDate,
+      ...(effectiveDates.days ? { days: effectiveDates.days } : {}),
+    },
     { retry: false, refetchOnWindowFocus: false }
   );
 
-  // Handle OAuth error in URL
+  // ── Gestion des erreurs OAuth ─────────────────────────────────────────────
   useEffect(() => {
     if (ga4Error) {
       toast.error("Erreur de connexion Google Analytics", {
         description: decodeURIComponent(ga4Error),
       });
-      // Clean URL
       const clean = new URL(window.location.href);
       clean.searchParams.delete("ga4_error");
       window.history.replaceState({}, "", clean.toString());
     }
   }, [ga4Error]);
 
-  // Handle OAuth callback code
+  // ── Traitement du code OAuth ──────────────────────────────────────────────
   useEffect(() => {
     if (!ga4Code || !isGa4Callback || handleCallbackMutation.isPending) return;
 
@@ -105,16 +174,14 @@ export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleA
         onSuccess: (data) => {
           setIsConnecting(false);
           toast.success("Google Analytics connecté", {
-            description: `Propriété "${data.propertyName}" (${data.websiteUrl || data.propertyId}) connectée avec succès.`,
+            description: `Propriété "${data.propertyName}" connectée avec succès.`,
           });
           reportQuery.refetch();
           onCallbackHandled?.();
         },
         onError: (err) => {
           setIsConnecting(false);
-          toast.error("Erreur de connexion GA4", {
-            description: err.message,
-          });
+          toast.error("Erreur de connexion GA4", { description: err.message });
         },
       }
     );
@@ -122,12 +189,10 @@ export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleA
 
   const handleConnect = async () => {
     const result = await oauthUrlQuery.refetch();
-    if (result.data?.url) {
-      window.location.href = result.data.url;
-    }
+    if (result.data?.url) window.location.href = result.data.url;
   };
 
-  const handleDisconnect = async () => {
+  const handleDisconnect = () => {
     const data = reportQuery.data;
     if (!data?.connected || !data.account) return;
     disconnectMutation.mutate(
@@ -141,14 +206,14 @@ export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleA
     );
   };
 
-  // ── Not connected state ──────────────────────────────────────────────────
+  // ── État non connecté ─────────────────────────────────────────────────────
   if (!reportQuery.data?.connected && !reportQuery.isLoading) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart2 className="h-5 w-5 text-orange-500" />
-            Google Analytics 4
+            Google Analytics 4 — marketspas.com
           </CardTitle>
           <CardDescription>
             Connectez votre propriété GA4 pour afficher les métriques de trafic de marketspas.com
@@ -162,21 +227,14 @@ export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleA
             Aucune propriété Google Analytics 4 connectée. Cliquez sur le bouton ci-dessous pour
             autoriser l'accès à votre compte Google Analytics.
           </p>
-          <Button
-            onClick={handleConnect}
-            disabled={isConnecting || oauthUrlQuery.isFetching}
-            className="gap-2"
-          >
-            {isConnecting ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <BarChart2 className="h-4 w-4" />
-            )}
+          <Button onClick={handleConnect} disabled={isConnecting || oauthUrlQuery.isFetching} className="gap-2">
+            {isConnecting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <BarChart2 className="h-4 w-4" />}
             {isConnecting ? "Connexion en cours…" : "Connecter Google Analytics"}
           </Button>
           <p className="text-xs text-muted-foreground text-center max-w-xs">
-            Assurez-vous que les APIs <strong>Google Analytics Data</strong> et <strong>Google Analytics Admin</strong> sont activées dans votre projet Google Cloud.
-            L'URI de redirection utilisée est la même que Google Ads :{" "}
+            Assurez-vous que les APIs <strong>Google Analytics Data</strong> et{" "}
+            <strong>Google Analytics Admin</strong> sont activées dans votre projet Google Cloud.
+            L'URI de redirection est la même que Google Ads :{" "}
             <code className="bg-muted px-1 rounded text-xs">
               {window.location.origin}/api/google-ads/callback
             </code>{" "}
@@ -187,7 +245,7 @@ export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleA
     );
   }
 
-  // ── Loading state ────────────────────────────────────────────────────────
+  // ── Chargement ────────────────────────────────────────────────────────────
   if (reportQuery.isLoading || isConnecting) {
     return (
       <Card>
@@ -204,7 +262,7 @@ export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleA
     );
   }
 
-  // ── Error state ──────────────────────────────────────────────────────────
+  // ── Erreur ────────────────────────────────────────────────────────────────
   if (reportQuery.isError) {
     return (
       <Card className="border-red-200 dark:border-red-800">
@@ -229,16 +287,25 @@ export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleA
     );
   }
 
-  const { account, report } = reportQuery.data!;
+  const { account, report, compareReport, period, comparePeriod } = reportQuery.data!;
   const { overview, dailyTrend, topPages, trafficSources, deviceCategories } = report!;
+  const cmpOverview = compareReport?.overview;
 
-  // ── Connected & data loaded ──────────────────────────────────────────────
+  // ── Données du graphique combiné (période actuelle + précédente) ──────────
+  const combinedTrend = dailyTrend.map((d, i) => ({
+    ...d,
+    prevSessions: compareReport?.dailyTrend[i]?.sessions ?? null,
+    prevUsers: compareReport?.dailyTrend[i]?.users ?? null,
+  }));
+
+  // ── Rendu principal ───────────────────────────────────────────────────────
   return (
     <div className="space-y-4">
-      {/* Header card */}
+      {/* ── En-tête + sélecteur de période ─────────────────────────────── */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Infos compte */}
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-green-100 dark:bg-green-900/20 p-2">
                 <Wifi className="h-5 w-5 text-green-600" />
@@ -269,66 +336,159 @@ export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleA
                 </CardDescription>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Select
-                value={String(days)}
-                onValueChange={(v) => setDays(Number(v))}
-              >
-                <SelectTrigger className="w-44 h-8 text-sm">
+
+            {/* Sélecteur de période */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={preset} onValueChange={(v) => setPreset(v as PresetKey)}>
+                <SelectTrigger className="w-48 h-8 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {PERIOD_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={String(o.value)}>
-                      {o.label}
-                    </SelectItem>
+                  {PRESETS.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+
+              {/* Calendrier pour plage personnalisée */}
+              {preset === "custom" && (
+                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 gap-2 text-sm">
+                      <CalendarIcon className="h-4 w-4" />
+                      {customRange?.from && customRange?.to
+                        ? `${format(customRange.from, "d MMM", { locale: fr })} – ${format(customRange.to, "d MMM yyyy", { locale: fr })}`
+                        : "Choisir les dates"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar
+                      mode="range"
+                      selected={customRange}
+                      onSelect={(range) => {
+                        setCustomRange(range);
+                        if (range?.from && range?.to) setCalendarOpen(false);
+                      }}
+                      disabled={[{ after: today }]}
+                      numberOfMonths={2}
+                      locale={fr}
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
+
+              {/* Bouton rafraîchir */}
               <Button
                 variant="outline"
                 size="sm"
+                className="h-8"
                 onClick={() => reportQuery.refetch()}
                 disabled={reportQuery.isFetching}
               >
                 <RefreshCw className={`h-4 w-4 ${reportQuery.isFetching ? "animate-spin" : ""}`} />
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleDisconnect} className="text-muted-foreground">
+
+              <Button variant="ghost" size="sm" className="h-8 text-muted-foreground" onClick={handleDisconnect}>
                 Déconnecter
               </Button>
             </div>
           </div>
+
+          {/* Bandeau de période */}
+          {period && (
+            <div className="flex flex-wrap gap-2 mt-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
+                Période : {format(new Date(period.startDate), "d MMM yyyy", { locale: fr })} –{" "}
+                {format(new Date(period.endDate), "d MMM yyyy", { locale: fr })}
+              </span>
+              {comparePeriod && (
+                <span className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-200 inline-block" />
+                  Comparaison : {format(new Date(comparePeriod.startDate), "d MMM yyyy", { locale: fr })} –{" "}
+                  {format(new Date(comparePeriod.endDate), "d MMM yyyy", { locale: fr })}
+                </span>
+              )}
+            </div>
+          )}
         </CardHeader>
       </Card>
 
-      {/* KPI Cards */}
+      {/* ── KPI Cards avec delta ────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: "Sessions", value: formatNumber(overview.sessions), icon: Globe, color: "text-blue-500" },
-          { label: "Utilisateurs", value: formatNumber(overview.totalUsers), icon: Users, color: "text-green-500" },
-          { label: "Nouveaux", value: formatNumber(overview.newUsers), icon: TrendingUp, color: "text-purple-500" },
-          { label: "Pages vues", value: formatNumber(overview.pageviews), icon: Eye, color: "text-orange-500" },
-          { label: "Durée moy.", value: formatDuration(overview.avgSessionDuration), icon: Clock, color: "text-cyan-500" },
-          { label: "Engagement", value: `${overview.engagementRate.toFixed(1)}%`, icon: MousePointer, color: "text-pink-500" },
+          {
+            label: "Sessions",
+            value: formatNumber(overview.sessions),
+            raw: overview.sessions,
+            prev: cmpOverview?.sessions ?? 0,
+            icon: Globe,
+            color: "text-blue-500",
+          },
+          {
+            label: "Utilisateurs",
+            value: formatNumber(overview.totalUsers),
+            raw: overview.totalUsers,
+            prev: cmpOverview?.totalUsers ?? 0,
+            icon: Users,
+            color: "text-green-500",
+          },
+          {
+            label: "Nouveaux",
+            value: formatNumber(overview.newUsers),
+            raw: overview.newUsers,
+            prev: cmpOverview?.newUsers ?? 0,
+            icon: TrendingUp,
+            color: "text-purple-500",
+          },
+          {
+            label: "Pages vues",
+            value: formatNumber(overview.pageviews),
+            raw: overview.pageviews,
+            prev: cmpOverview?.pageviews ?? 0,
+            icon: Eye,
+            color: "text-orange-500",
+          },
+          {
+            label: "Durée moy.",
+            value: formatDuration(overview.avgSessionDuration),
+            raw: overview.avgSessionDuration,
+            prev: cmpOverview?.avgSessionDuration ?? 0,
+            icon: Clock,
+            color: "text-cyan-500",
+          },
+          {
+            label: "Engagement",
+            value: `${overview.engagementRate.toFixed(1)}%`,
+            raw: overview.engagementRate,
+            prev: cmpOverview?.engagementRate ?? 0,
+            icon: MousePointer,
+            color: "text-pink-500",
+          },
         ].map((kpi) => (
           <Card key={kpi.label} className="p-3">
             <div className="flex items-center gap-2 mb-1">
               <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
               <span className="text-xs text-muted-foreground">{kpi.label}</span>
             </div>
-            <p className="text-xl font-bold">{kpi.value}</p>
+            <p className="text-xl font-bold leading-tight">{kpi.value}</p>
+            {cmpOverview && (
+              <div className="mt-0.5">
+                <DeltaBadge current={kpi.raw} previous={kpi.prev} />
+              </div>
+            )}
           </Card>
         ))}
       </div>
 
-      {/* Daily Trend Chart */}
+      {/* ── Graphique d'évolution (période actuelle + précédente) ───────── */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">Évolution du trafic</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={dailyTrend} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={combinedTrend} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis
                 dataKey="date"
@@ -341,23 +501,46 @@ export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleA
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip
                 labelFormatter={(v: string) => new Date(v).toLocaleDateString("fr-FR")}
-                formatter={(value: number, name: string) => [
-                  formatNumber(value),
-                  name === "sessions" ? "Sessions" : name === "users" ? "Utilisateurs" : "Pages vues",
-                ]}
+                formatter={(value: number, name: string) => {
+                  const labels: Record<string, string> = {
+                    sessions: "Sessions",
+                    users: "Utilisateurs",
+                    pageviews: "Pages vues",
+                    prevSessions: "Sessions (période préc.)",
+                    prevUsers: "Utilisateurs (période préc.)",
+                  };
+                  return [formatNumber(value), labels[name] || name];
+                }}
               />
-              <Legend formatter={(v) => v === "sessions" ? "Sessions" : v === "users" ? "Utilisateurs" : "Pages vues"} />
+              <Legend
+                formatter={(v) => {
+                  const labels: Record<string, string> = {
+                    sessions: "Sessions",
+                    users: "Utilisateurs",
+                    pageviews: "Pages vues",
+                    prevSessions: "Sessions préc.",
+                    prevUsers: "Utilisateurs préc.",
+                  };
+                  return labels[v] || v;
+                }}
+              />
               <Line type="monotone" dataKey="sessions" stroke="#3b82f6" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="users" stroke="#10b981" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="pageviews" stroke="#f59e0b" strokeWidth={2} dot={false} strokeDasharray="4 2" />
+              <Line type="monotone" dataKey="pageviews" stroke="#f59e0b" strokeWidth={1.5} dot={false} strokeDasharray="4 2" />
+              {compareReport && (
+                <>
+                  <Line type="monotone" dataKey="prevSessions" stroke="#93c5fd" strokeWidth={1.5} dot={false} strokeDasharray="3 3" />
+                  <Line type="monotone" dataKey="prevUsers" stroke="#6ee7b7" strokeWidth={1.5} dot={false} strokeDasharray="3 3" />
+                </>
+              )}
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      {/* Bottom row: Sources + Devices + Top Pages */}
+      {/* ── Sources + Appareils + Top pages ────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Traffic Sources */}
+        {/* Sources de trafic */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Sources de trafic</CardTitle>
@@ -389,7 +572,7 @@ export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleA
           </CardContent>
         </Card>
 
-        {/* Device Categories */}
+        {/* Appareils */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Appareils</CardTitle>
@@ -407,15 +590,10 @@ export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleA
                   innerRadius={30}
                 >
                   {deviceCategories.map((entry, i) => (
-                    <Cell
-                      key={i}
-                      fill={DEVICE_COLORS[entry.deviceCategory] || SOURCE_COLORS[i]}
-                    />
+                    <Cell key={i} fill={DEVICE_COLORS[entry.deviceCategory] || SOURCE_COLORS[i]} />
                   ))}
                 </Pie>
-                <Tooltip
-                  formatter={(v: number, name: string) => [formatNumber(v), name]}
-                />
+                <Tooltip formatter={(v: number, name: string) => [formatNumber(v), name]} />
               </PieChart>
             </ResponsiveContainer>
             <div className="flex flex-wrap justify-center gap-3 text-xs">
@@ -438,7 +616,7 @@ export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleA
           </CardContent>
         </Card>
 
-        {/* Top Pages */}
+        {/* Top pages */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Top pages</CardTitle>

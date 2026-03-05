@@ -138,12 +138,12 @@ async function startServer() {
 
     if (error) {
       console.error(`[GA4 OAuth] Error: ${error} - ${errorDescription}`);
-      res.redirect(302, `/admin/dashboard?ga4_error=${encodeURIComponent(errorDescription || error)}`);
+      res.redirect(302, `/admin/leads?ga4_error=${encodeURIComponent(errorDescription || error)}`);
       return;
     }
 
     if (!code) {
-      res.redirect(302, "/admin/dashboard?ga4_error=no_code");
+      res.redirect(302, "/admin/leads?ga4_error=no_code");
       return;
     }
 
@@ -151,7 +151,7 @@ async function startServer() {
     params.set("code", code);
     params.set("ga4", "true");
     if (state) params.set("state", state);
-    res.redirect(302, `/admin/dashboard?${params.toString()}`);
+    res.redirect(302, `/admin/leads?${params.toString()}`);
   });
 
   // Google Ads / Google Analytics 4 OAuth Callback
@@ -173,7 +173,7 @@ async function startServer() {
     if (error) {
       console.error(`${logPrefix} Error: ${error} - ${errorDescription}`);
       if (isGa4Callback) {
-        res.redirect(302, `/admin?ga4_error=${encodeURIComponent(errorDescription || error)}`);
+        res.redirect(302, `/admin/leads?ga4_error=${encodeURIComponent(errorDescription || error)}`);
       } else {
         res.redirect(302, `/admin/leads?google_error=${encodeURIComponent(errorDescription || error)}`);
       }
@@ -183,7 +183,7 @@ async function startServer() {
     if (!code) {
       console.warn(`${logPrefix} No code received. State: ${state}. All query params:`, req.query);
       if (isGa4Callback) {
-        res.redirect(302, "/admin?ga4_error=no_code");
+        res.redirect(302, "/admin/leads?ga4_error=no_code");
       } else if (state) {
         res.redirect(302, `/admin/leads?state=${encodeURIComponent(state)}&google_error=no_code_received`);
       } else {
@@ -197,12 +197,12 @@ async function startServer() {
     const params = new URLSearchParams();
     params.set("code", code);
     if (isGa4Callback) {
-      // Flux GA4 : rediriger vers le dashboard admin avec flag ga4=true
+      // Flux GA4 : rediriger vers la page leads avec flag ga4=true
       params.set("ga4", "true");
       // Transmettre le state sans le préfixe "ga4:"
       const cleanState = state.slice(4); // retire "ga4:"
       if (cleanState) params.set("state", cleanState);
-      res.redirect(302, `/admin?${params.toString()}`);
+      res.redirect(302, `/admin/leads?${params.toString()}`);
     } else {
       // Flux Google Ads : rediriger vers la page leads
       params.set("google_ads", "true");

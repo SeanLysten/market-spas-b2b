@@ -2292,3 +2292,24 @@
 - [x] Mettre à jour /api/google-ads/callback dans index.ts pour distinguer GA4 vs Ads via state (préfixe "ga4:")
 - [x] Mettre à jour le message d'aide dans AdminGoogleAnalytics.tsx (affiche /api/google-ads/callback)
 - [x] Corriger le test vitest pour vérifier la nouvelle URI (9 tests passés)
+
+## GA4: sélecteur de période personnalisé + comparaison (session 2026-03-05 #34)
+- [x] Mettre à jour le routeur tRPC getReport pour accepter startDate, endDate, compareStartDate, compareEndDate
+- [x] Mettre à jour google-analytics-api.ts pour exécuter deux rapports en parallèle (période + comparaison)
+- [x] Ajouter un sélecteur de période dans AdminGoogleAnalytics.tsx (7j, 14j, 30j, 90j, personnalisé)
+- [x] Afficher les KPIs avec delta % vs période précédente (flèche haut/bas colorée)
+- [x] Afficher les deux courbes sur le graphique de tendance (période actuelle vs précédente)
+- [x] Responsive mobile: sélecteur compact sur petits écrans (flex-wrap)
+- [x] 9 tests vitest passés
+
+## GA4: onglet dans AdminLeads + sélecteur de période (session 2026-03-05 #35)
+- [x] Analyser la structure des onglets existants dans AdminLeads (Google Ads, Meta Ads)
+- [x] Mettre à jour le routeur tRPC getReport pour accepter startDate/endDate personnalisés + période de comparaison
+- [x] Mettre à jour google-analytics-api.ts pour exécuter deux rapports en parallèle (période + comparaison)
+- [x] Ajouter l'onglet "Analytics" dans AdminLeads (3ème sous-onglet, grid-cols-3)
+- [x] Gérer le callback OAuth GA4 depuis AdminLeads (paramètre ga4=true, bascule automatique vers onglet analytics)
+- [x] Implémenter le sélecteur de période dans AdminGoogleAnalytics (7j, 14j, 30j, 90j + calendrier react-day-picker v9)
+- [x] Afficher les KPIs avec delta % vs période précédente (DeltaBadge avec flèche colorée)
+- [x] Afficher les deux courbes sur le graphique de tendance (lignes pleines + pointillées)
+- [x] Retirer le bloc GA4 du AdminDashboard (remplacé par un lien vers la page Leads)
+- [x] Corriger toutes les redirections OAuth GA4 vers /admin/leads (index.ts)

@@ -4443,28 +4443,66 @@ export const appRouter = router({
 
     getReport: adminProcedure
       .input(z.object({
-        days: z.number().min(7).max(365).default(30),
+        // Mode 1 : nombre de jours (ex. 7, 30, 90)
+        days: z.number().min(1).max(365).optional(),
+        // Mode 2 : plage personnalisée
+        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        // Période de comparaison (optionnelle)
+        compareStartDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        compareEndDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       }))
       .query(async ({ input }) => {
         const accounts = await db.getConnectedGa4Accounts();
         if (accounts.length === 0) return { connected: false, accounts: [] };
 
         const account = accounts[0];
-        const endDate = new Date().toISOString().split("T")[0];
-        const startDate = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0];
+
+        // Résoudre la plage principale
+        const resolvedEndDate = input.endDate || new Date().toISOString().split("T")[0];
+        const resolvedDays = input.days ?? 30;
+        const resolvedStartDate = input.startDate || new Date(Date.now() - resolvedDays * 24 * 60 * 60 * 1000)
+          .toISOString().split("T")[0];
+
+        // Résoudre la période de comparaison (par défaut : même durée, période précédente)
+        let resolvedCompareStartDate: string | undefined;
+        let resolvedCompareEndDate: string | undefined;
+        if (input.compareStartDate && input.compareEndDate) {
+          resolvedCompareStartDate = input.compareStartDate;
+          resolvedCompareEndDate = input.compareEndDate;
+        } else {
+          // Calcul automatique : même durée, juste avant la période principale
+          const mainStart = new Date(resolvedStartDate);
+          const mainEnd = new Date(resolvedEndDate);
+          const durationMs = mainEnd.getTime() - mainStart.getTime();
+          const compEnd = new Date(mainStart.getTime() - 24 * 60 * 60 * 1000);
+          const compStart = new Date(compEnd.getTime() - durationMs);
+          resolvedCompareStartDate = compStart.toISOString().split("T")[0];
+          resolvedCompareEndDate = compEnd.toISOString().split("T")[0];
+        }
 
         try {
           const ga4Api = await import("./google-analytics-api");
-          const report = await ga4Api.getGa4FullReport(
-            account.propertyId,
-            account.accessToken,
-            account.refreshToken || "",
-            account.tokenExpiresAt,
-            startDate,
-            endDate
-          );
+
+          // Exécuter les deux rapports en parallèle
+          const [report, compareReport] = await Promise.all([
+            ga4Api.getGa4FullReport(
+              account.propertyId,
+              account.accessToken,
+              account.refreshToken || "",
+              account.tokenExpiresAt,
+              resolvedStartDate,
+              resolvedEndDate
+            ),
+            ga4Api.getGa4FullReport(
+              account.propertyId,
+              account.accessToken,
+              account.refreshToken || "",
+              account.tokenExpiresAt,
+              resolvedCompareStartDate,
+              resolvedCompareEndDate
+            ),
+          ]);
 
           await db.updateGa4AccountLastSynced(account.id);
 
@@ -4479,6 +4517,9 @@ export const appRouter = router({
               lastSyncedAt: account.lastSyncedAt,
             },
             report,
+            compareReport,
+            period: { startDate: resolvedStartDate, endDate: resolvedEndDate },
+            comparePeriod: { startDate: resolvedCompareStartDate, endDate: resolvedCompareEndDate },
           };
         } catch (err: any) {
           console.error("[GA4] getReport error:", err);
