@@ -1,0 +1,58 @@
+{
+  "query": "SELECT column_name FROM information_schema.columns WHERE table_name = 'google_ad_accounts' ORDER BY ordinal_position;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT column_name FROM information_schema.columns WHERE table_name = 'google_ad_accounts' ORDER BY ordinal_position;",
+  "rows": [
+    {
+      "column_name": "id"
+    },
+    {
+      "column_name": "googleUserId"
+    },
+    {
+      "column_name": "googleUserEmail"
+    },
+    {
+      "column_name": "customerId"
+    },
+    {
+      "column_name": "customerName"
+    },
+    {
+      "column_name": "currency"
+    },
+    {
+      "column_name": "timezone"
+    },
+    {
+      "column_name": "accessToken"
+    },
+    {
+      "column_name": "refreshToken"
+    },
+    {
+      "column_name": "tokenExpiresAt"
+    },
+    {
+      "column_name": "connectedBy"
+    },
+    {
+      "column_name": "isActive"
+    },
+    {
+      "column_name": "lastSyncedAt"
+    },
+    {
+      "column_name": "syncError"
+    },
+    {
+      "column_name": "createdAt"
+    },
+    {
+      "column_name": "updatedAt"
+    }
+  ],
+  "messages": [],
+  "stdout": "column_name\nid\ngoogleUserId\ngoogleUserEmail\ncustomerId\ncustomerName\ncurrency\ntimezone\naccessToken\nrefreshToken\ntokenExpiresAt\nconnectedBy\nisActive\nlastSyncedAt\nsyncError\ncreatedAt\nupdatedAt\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

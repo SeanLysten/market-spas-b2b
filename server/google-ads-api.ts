@@ -1,6 +1,6 @@
 import { refreshGoogleAdsAccessToken } from './google-ads-oauth';
 
-const GOOGLE_ADS_API_VERSION = 'v17';
+const GOOGLE_ADS_API_VERSION = 'v23';
 const GOOGLE_ADS_BASE_URL = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}`;
 
 /**
@@ -32,7 +32,6 @@ async function googleAdsRequest(
 
   const fullUrl = `${GOOGLE_ADS_BASE_URL}${endpoint}`;
   console.log(`[Google Ads API] Request: ${options.method || 'GET'} ${fullUrl}`);
-  console.log(`[Google Ads API] Headers:`, { ...headers, 'Authorization': 'Bearer ***', 'developer-token': '***' });
   
   const response = await fetch(fullUrl, {
     method: options.method || 'GET',
@@ -41,7 +40,13 @@ async function googleAdsRequest(
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: response.statusText }));
+    const errorText = await response.text();
+    let errorData: any;
+    try {
+      errorData = JSON.parse(errorText);
+    } catch {
+      errorData = { error: errorText.substring(0, 200) };
+    }
     console.error(`[Google Ads API] Error ${response.status}:`, JSON.stringify(errorData).substring(0, 500));
     throw new Error(`Google Ads API error ${response.status}: ${JSON.stringify(errorData?.error?.message || errorData?.error?.status || response.statusText)}`);
   }
@@ -67,33 +72,36 @@ export async function listAccessibleCustomers(accessToken: string): Promise<stri
 }
 
 /**
- * Get customer account details
+ * Get customer account details, including whether it's a manager (MCC) account
  */
 export async function getCustomerDetails(
   accessToken: string,
-  customerId: string
-): Promise<{ id: string; name: string; currency: string; timezone: string } | null> {
+  customerId: string,
+  loginCustomerId?: string
+): Promise<{ id: string; name: string; currency: string; timezone: string; isManager: boolean } | null> {
   try {
     const cleanId = customerId.replace(/-/g, '');
     const data = await googleAdsRequest(
-      `/customers/${cleanId}/googleAds:searchStream`,
+      `/customers/${cleanId}/googleAds:search`,
       accessToken,
       {
         method: 'POST',
+        loginCustomerId: loginCustomerId || cleanId,
         body: {
-          query: `SELECT customer.id, customer.descriptive_name, customer.currency_code, customer.time_zone FROM customer LIMIT 1`
+          query: `SELECT customer.id, customer.descriptive_name, customer.currency_code, customer.time_zone, customer.manager FROM customer LIMIT 1`
         }
       }
     );
 
-    const results = data?.[0]?.results;
+    const results = data?.results;
     if (results && results.length > 0) {
       const customer = results[0].customer;
       return {
-        id: customer.id,
-        name: customer.descriptiveName || `Compte ${customer.id}`,
+        id: customer.id?.toString() || cleanId,
+        name: customer.descriptiveName || `Compte ${cleanId}`,
         currency: customer.currencyCode || 'EUR',
-        timezone: customer.timeZone || 'Europe/Brussels',
+        timezone: customer.timeZone || 'Europe/Paris',
+        isManager: customer.manager === true,
       };
     }
     return null;
@@ -104,13 +112,52 @@ export async function getCustomerDetails(
 }
 
 /**
+ * Get all accessible accounts with their details, filtering out MCC accounts
+ * Returns only direct advertising accounts (non-manager accounts)
+ */
+export async function getAccessibleAccounts(refreshToken: string) {
+  try {
+    const tokens = await refreshGoogleAdsAccessToken(refreshToken);
+    if (!tokens || !tokens.accessToken) {
+      throw new Error('Failed to refresh access token');
+    }
+
+    const customerIds = await listAccessibleCustomers(tokens.accessToken);
+    console.log('[Google Ads API] All accessible customer IDs:', customerIds);
+    
+    const accounts: Array<{
+      id: string;
+      name: string;
+      currency: string;
+      timezone: string;
+      isManager: boolean;
+    }> = [];
+
+    for (const customerId of customerIds) {
+      const details = await getCustomerDetails(tokens.accessToken, customerId, customerId);
+      if (details) {
+        accounts.push(details);
+        console.log(`[Google Ads API] Account ${customerId}: ${details.name} (manager: ${details.isManager})`);
+      }
+    }
+
+    return accounts;
+  } catch (error) {
+    console.error('[Google Ads API] Error fetching accessible accounts:', error);
+    return [];
+  }
+}
+
+/**
  * Récupère les campagnes avec leurs insights (statistiques)
+ * loginCustomerId: ID du compte MCC parent (si applicable)
  */
 export async function getCampaignsWithInsights(
   refreshToken: string,
   customerId: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  loginCustomerId?: string
 ) {
   try {
     // Refresh the access token
@@ -120,15 +167,19 @@ export async function getCampaignsWithInsights(
     }
 
     const cleanId = customerId.replace(/-/g, '');
-    console.log(`[Google Ads API] Fetching campaigns for customer ID: ${cleanId} (original: ${customerId})`);
+    console.log(`[Google Ads API] Fetching campaigns for customer ID: ${cleanId}`);
     console.log(`[Google Ads API] Date range: ${startDate} to ${endDate}`);
+    if (loginCustomerId) {
+      console.log(`[Google Ads API] Using login-customer-id: ${loginCustomerId}`);
+    }
 
-    // Query GAQL via searchStream REST endpoint
+    // Use the non-streaming search endpoint (more reliable)
     const data = await googleAdsRequest(
-      `/customers/${cleanId}/googleAds:searchStream`,
+      `/customers/${cleanId}/googleAds:search`,
       tokens.accessToken,
       {
         method: 'POST',
+        loginCustomerId: loginCustomerId || cleanId,
         body: {
           query: `
             SELECT
@@ -155,15 +206,7 @@ export async function getCampaignsWithInsights(
       }
     );
 
-    // searchStream returns an array of batches
-    const allResults: any[] = [];
-    if (Array.isArray(data)) {
-      for (const batch of data) {
-        if (batch.results) {
-          allResults.push(...batch.results);
-        }
-      }
-    }
+    const allResults: any[] = data?.results || [];
 
     const formattedCampaigns = allResults.map((row: any) => {
       const campaign = row.campaign || {};
@@ -206,7 +249,8 @@ export async function getDailyInsights(
   refreshToken: string,
   customerId: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  loginCustomerId?: string
 ) {
   try {
     const tokens = await refreshGoogleAdsAccessToken(refreshToken);
@@ -217,10 +261,11 @@ export async function getDailyInsights(
     const cleanId = customerId.replace(/-/g, '');
 
     const data = await googleAdsRequest(
-      `/customers/${cleanId}/googleAds:searchStream`,
+      `/customers/${cleanId}/googleAds:search`,
       tokens.accessToken,
       {
         method: 'POST',
+        loginCustomerId: loginCustomerId || cleanId,
         body: {
           query: `
             SELECT
@@ -241,74 +286,36 @@ export async function getDailyInsights(
 
     // Aggregate metrics by day
     const dailyData: Record<string, any> = {};
+    const results = data?.results || [];
 
-    if (Array.isArray(data)) {
-      for (const batch of data) {
-        if (batch.results) {
-          for (const row of batch.results) {
-            const date = row.segments?.date;
-            const metrics = row.metrics || {};
+    for (const row of results) {
+      const date = row.segments?.date;
+      const metrics = row.metrics || {};
 
-            if (!date) continue;
+      if (!date) continue;
 
-            if (!dailyData[date]) {
-              dailyData[date] = {
-                date,
-                impressions: 0,
-                clicks: 0,
-                spend: 0,
-                conversions: 0,
-                conversions_value: 0,
-              };
-            }
-
-            dailyData[date].impressions += Number(metrics.impressions || 0);
-            dailyData[date].clicks += Number(metrics.clicks || 0);
-            dailyData[date].spend += Number(metrics.costMicros || 0) / 1_000_000;
-            dailyData[date].conversions += Number(metrics.conversions || 0);
-            dailyData[date].conversions_value += Number(metrics.conversionsValue || 0);
-          }
-        }
+      if (!dailyData[date]) {
+        dailyData[date] = {
+          date,
+          impressions: 0,
+          clicks: 0,
+          spend: 0,
+          conversions: 0,
+          conversions_value: 0,
+        };
       }
+
+      dailyData[date].impressions += Number(metrics.impressions || 0);
+      dailyData[date].clicks += Number(metrics.clicks || 0);
+      dailyData[date].spend += Number(metrics.costMicros || 0) / 1_000_000;
+      dailyData[date].conversions += Number(metrics.conversions || 0);
+      dailyData[date].conversions_value += Number(metrics.conversionsValue || 0);
     }
 
     return Object.values(dailyData);
   } catch (error) {
     console.error('[Google Ads API] Error fetching daily insights:', error);
     throw error;
-  }
-}
-
-/**
- * Récupère les comptes publicitaires accessibles
- */
-export async function getAccessibleAccounts(refreshToken: string) {
-  try {
-    const tokens = await refreshGoogleAdsAccessToken(refreshToken);
-    if (!tokens || !tokens.accessToken) {
-      throw new Error('Failed to refresh access token');
-    }
-
-    const customerIds = await listAccessibleCustomers(tokens.accessToken);
-    
-    const accounts: Array<{
-      id: string;
-      name: string;
-      currency: string;
-      timezone: string;
-    }> = [];
-
-    for (const customerId of customerIds) {
-      const details = await getCustomerDetails(tokens.accessToken, customerId);
-      if (details) {
-        accounts.push(details);
-      }
-    }
-
-    return accounts;
-  } catch (error) {
-    console.error('[Google Ads API] Error fetching accessible accounts:', error);
-    return [];
   }
 }
 

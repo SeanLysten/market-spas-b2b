@@ -2256,3 +2256,14 @@
 - [x] Responsive mobile: hauteur carte adaptée (400px mobile, 500px tablette, 700px desktop)
 - [x] Responsive mobile: popups Leaflet adaptés (max-width dynamique, border-radius)
 - [x] Responsive mobile: marqueurs avec touch targets plus grands (36px min)
+
+## Google Ads: correction version API v23 + gestion MCC (session 2026-03-05 #31)
+- [x] Identifier la cause du 404: API v17/v18 obsolètes, version actuelle est v23
+- [x] Mettre à jour GOOGLE_ADS_API_VERSION de v17 à v23 dans google-ads-api.ts
+- [x] Identifier la structure des comptes: 4733991927 "Market" est un compte MCC (Manager)
+- [x] Identifier les comptes directs: 2277674380 "Market Spas" (29 campagnes actives)
+- [x] Mettre à jour la BDD: customerId = 2277674380, customerName = "Market Spas"
+- [x] Corriger la logique handleCallback pour préférer les comptes non-MCC (isManager: false)
+- [x] Remplacer searchStream par search (endpoint non-streaming, plus fiable)
+- [x] Ajouter le paramètre isManager dans getCustomerDetails
+- [x] Valider: 29 campagnes affichées dans le dashboard avec métriques complètes

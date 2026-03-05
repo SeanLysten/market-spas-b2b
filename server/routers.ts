@@ -3965,23 +3965,31 @@ export const appRouter = router({
         console.log(`[Google Ads OAuth] Account saved to database with ID ${result.id}`);
         
         // Try to fetch accessible customer IDs and update the account
+        // Prefer non-MCC (direct advertising) accounts over manager accounts
         try {
           const googleAdsApi = await import('./google-ads-api');
           const customerIds = await googleAdsApi.listAccessibleCustomers(tokens.accessToken);
           console.log(`[Google Ads OAuth] Accessible customers: ${customerIds.join(', ')}`);
           
           if (customerIds.length > 0) {
-            // Get details of the first customer
-            const details = await googleAdsApi.getCustomerDetails(tokens.accessToken, customerIds[0]);
-            if (details) {
-              // Update the account with real customer ID and name
+            // Fetch details for all customers to find non-MCC accounts
+            const allDetails = await Promise.all(
+              customerIds.map(cid => googleAdsApi.getCustomerDetails(tokens.accessToken, cid, cid).catch(() => null))
+            );
+            const validDetails = allDetails.filter(Boolean) as Array<{id: string; name: string; currency: string; timezone: string; isManager: boolean}>;
+            
+            // Prefer non-manager accounts (direct advertising accounts)
+            const nonManagerAccounts = validDetails.filter(d => !d.isManager);
+            const selectedAccount = nonManagerAccounts.length > 0 ? nonManagerAccounts[0] : validDetails[0];
+            
+            if (selectedAccount) {
               await db.updateGoogleAdAccountCustomer(result.id, {
-                customerId: details.id,
-                customerName: details.name,
-                currency: details.currency,
-                timezone: details.timezone,
+                customerId: selectedAccount.id,
+                customerName: selectedAccount.name,
+                currency: selectedAccount.currency,
+                timezone: selectedAccount.timezone,
               });
-              console.log(`[Google Ads OAuth] Updated account with customer: ${details.name} (${details.id})`);
+              console.log(`[Google Ads OAuth] Updated account with customer: ${selectedAccount.name} (${selectedAccount.id}) - manager: ${selectedAccount.isManager}`);
             }
           }
         } catch (custError: any) {
