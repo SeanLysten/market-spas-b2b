@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like, lte, gte, asc, ne, gt, lt, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts, partnerTerritories, scheduledNewsletters, savedRoutes } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts, ga4Accounts, partnerTerritories, scheduledNewsletters, savedRoutes } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -5295,4 +5295,110 @@ export async function deleteSavedRoute(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(savedRoutes).where(and(eq(savedRoutes.id, id), eq(savedRoutes.userId, userId)));
+}
+
+// ============================================
+// GOOGLE ANALYTICS 4 ACCOUNTS
+// ============================================
+
+export async function connectGa4Account(data: {
+  googleUserId: string;
+  googleUserEmail: string | null;
+  propertyId: string;
+  propertyName: string | null;
+  websiteUrl?: string | null;
+  accessToken: string;
+  refreshToken?: string | null;
+  tokenExpiresAt?: Date | null;
+  connectedBy: number;
+}): Promise<{ id: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await db
+    .select()
+    .from(ga4Accounts)
+    .where(eq(ga4Accounts.propertyId, data.propertyId));
+
+  if (existing.length > 0) {
+    await db
+      .update(ga4Accounts)
+      .set({
+        googleUserId: data.googleUserId,
+        googleUserEmail: data.googleUserEmail,
+        propertyName: data.propertyName,
+        websiteUrl: data.websiteUrl,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        tokenExpiresAt: data.tokenExpiresAt,
+        isActive: true,
+        syncError: null,
+        connectedBy: data.connectedBy,
+      })
+      .where(eq(ga4Accounts.propertyId, data.propertyId));
+    return { id: existing[0].id };
+  }
+
+  const insertResult = await db.insert(ga4Accounts).values({
+    googleUserId: data.googleUserId,
+    googleUserEmail: data.googleUserEmail,
+    propertyId: data.propertyId,
+    propertyName: data.propertyName,
+    websiteUrl: data.websiteUrl,
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+    tokenExpiresAt: data.tokenExpiresAt,
+    connectedBy: data.connectedBy,
+    isActive: true,
+  });
+
+  const result = insertResult[0];
+  const insertId = (result as any).insertId ?? 0;
+  return { id: insertId };
+}
+
+export async function disconnectGa4Account(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(ga4Accounts)
+    .set({ isActive: false, accessToken: "", refreshToken: null })
+    .where(eq(ga4Accounts.id, id));
+}
+
+export async function getConnectedGa4Accounts() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(ga4Accounts).where(eq(ga4Accounts.isActive, true));
+}
+
+export async function updateGa4AccountLastSynced(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(ga4Accounts)
+    .set({ lastSyncedAt: new Date(), syncError: null })
+    .where(eq(ga4Accounts.id, id));
+}
+
+export async function updateGa4AccountSyncError(id: number, error: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(ga4Accounts)
+    .set({ syncError: error })
+    .where(eq(ga4Accounts.id, id));
+}
+
+export async function updateGa4AccountTokens(
+  id: number,
+  accessToken: string,
+  tokenExpiresAt: Date | null
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(ga4Accounts)
+    .set({ accessToken, tokenExpiresAt })
+    .where(eq(ga4Accounts.id, id));
 }

@@ -1,4 +1,5 @@
 import { AdminLayout } from "@/components/AdminLayout";
+import AdminGoogleAnalytics from "@/components/AdminGoogleAnalytics";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -375,6 +376,20 @@ export default function AdminDashboard() {
               </CardDescription>
             </CardHeader>
           </Card>
+        </div>
+
+        {/* Google Analytics 4 */}
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <svg viewBox="0 0 192 192" className="h-5 w-5" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="192" height="192" rx="96" fill="#F9AB00"/>
+              <path d="M130 29v134a14 14 0 0 0 28 0V29a14 14 0 0 0-28 0z" fill="#E37400"/>
+              <path d="M82 96v67a14 14 0 0 0 28 0V96a14 14 0 0 0-28 0z" fill="white"/>
+              <circle cx="48" cy="163" r="14" fill="white"/>
+            </svg>
+            Trafic Web — marketspas.com
+          </h2>
+          <AdminGoogleAnalytics />
         </div>
       </div>
     </AdminLayout>

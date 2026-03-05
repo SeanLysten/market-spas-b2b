@@ -4338,6 +4338,171 @@ export const appRouter = router({
       } finally { await conn.end(); }
     }),
   }),
+
+  // ============================================
+  // GOOGLE ANALYTICS 4
+  // ============================================
+  googleAnalytics: router({
+    getOAuthUrl: adminProcedure
+      .input(z.object({ state: z.string().optional() }))
+      .query(async ({ input }) => {
+        const ga4OAuth = await import("./google-analytics-oauth");
+        const url = ga4OAuth.getGa4AuthUrl(input.state);
+        if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Google Analytics OAuth non configuré" });
+        return { url };
+      }),
+
+    handleCallback: adminProcedure
+      .input(z.object({ code: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const ga4OAuth = await import("./google-analytics-oauth");
+        const tokens = await ga4OAuth.exchangeGa4CodeForTokens(input.code);
+        const userInfo = await ga4OAuth.getGoogleUserInfoForGa4(tokens.accessToken);
+
+        // List accessible GA4 properties
+        const ga4Api = await import("./google-analytics-api");
+        let properties: Array<{ propertyId: string; displayName: string; websiteUrl: string | null }> = [];
+        try {
+          properties = await ga4Api.listGa4Properties(
+            tokens.accessToken,
+            tokens.refreshToken || "",
+            tokens.expiresAt
+          );
+        } catch (err) {
+          console.error("[GA4] Failed to list properties:", err);
+        }
+
+        // Pick the property for marketspas.com if available, otherwise first one
+        let selectedProperty = properties.find(
+          (p) => p.websiteUrl && p.websiteUrl.includes("marketspas")
+        ) || properties[0];
+
+        if (!selectedProperty && properties.length === 0) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Aucune propriété GA4 accessible" });
+        }
+
+        const result = await db.connectGa4Account({
+          googleUserId: userInfo.googleUserId,
+          googleUserEmail: userInfo.googleUserEmail,
+          propertyId: selectedProperty.propertyId,
+          propertyName: selectedProperty.displayName,
+          websiteUrl: selectedProperty.websiteUrl,
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          tokenExpiresAt: tokens.expiresAt,
+          connectedBy: ctx.user.id,
+        });
+
+        return {
+          success: true,
+          accountId: result.id,
+          propertyId: selectedProperty.propertyId,
+          propertyName: selectedProperty.displayName,
+          websiteUrl: selectedProperty.websiteUrl,
+          email: userInfo.googleUserEmail,
+          availableProperties: properties,
+        };
+      }),
+
+    selectProperty: adminProcedure
+      .input(z.object({ accountId: z.number(), propertyId: z.string() }))
+      .mutation(async ({ input }) => {
+        const accounts = await db.getConnectedGa4Accounts();
+        const account = accounts.find((a) => a.id === input.accountId);
+        if (!account) throw new TRPCError({ code: "NOT_FOUND", message: "Compte GA4 non trouvé" });
+
+        const ga4Api = await import("./google-analytics-api");
+        const properties = await ga4Api.listGa4Properties(
+          account.accessToken,
+          account.refreshToken || "",
+          account.tokenExpiresAt
+        );
+        const prop = properties.find((p) => p.propertyId === input.propertyId);
+        if (!prop) throw new TRPCError({ code: "NOT_FOUND", message: "Propriété GA4 non trouvée" });
+
+        await db.connectGa4Account({
+          googleUserId: account.googleUserId,
+          googleUserEmail: account.googleUserEmail,
+          propertyId: prop.propertyId,
+          propertyName: prop.displayName,
+          websiteUrl: prop.websiteUrl,
+          accessToken: account.accessToken,
+          refreshToken: account.refreshToken,
+          tokenExpiresAt: account.tokenExpiresAt,
+          connectedBy: account.connectedBy,
+        });
+        return { success: true };
+      }),
+
+    disconnectAccount: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.disconnectGa4Account(input.id);
+        return { success: true };
+      }),
+
+    getReport: adminProcedure
+      .input(z.object({
+        days: z.number().min(7).max(365).default(30),
+      }))
+      .query(async ({ input }) => {
+        const accounts = await db.getConnectedGa4Accounts();
+        if (accounts.length === 0) return { connected: false, accounts: [] };
+
+        const account = accounts[0];
+        const endDate = new Date().toISOString().split("T")[0];
+        const startDate = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0];
+
+        try {
+          const ga4Api = await import("./google-analytics-api");
+          const report = await ga4Api.getGa4FullReport(
+            account.propertyId,
+            account.accessToken,
+            account.refreshToken || "",
+            account.tokenExpiresAt,
+            startDate,
+            endDate
+          );
+
+          await db.updateGa4AccountLastSynced(account.id);
+
+          return {
+            connected: true,
+            account: {
+              id: account.id,
+              propertyId: account.propertyId,
+              propertyName: account.propertyName,
+              websiteUrl: account.websiteUrl,
+              email: account.googleUserEmail,
+              lastSyncedAt: account.lastSyncedAt,
+            },
+            report,
+          };
+        } catch (err: any) {
+          console.error("[GA4] getReport error:", err);
+          await db.updateGa4AccountSyncError(account.id, err.message || "Unknown error");
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: err.message || "Erreur lors de la récupération des données GA4",
+          });
+        }
+      }),
+
+    getConnectedAccounts: adminProcedure.query(async () => {
+      const accounts = await db.getConnectedGa4Accounts();
+      return accounts.map((a) => ({
+        id: a.id,
+        propertyId: a.propertyId,
+        propertyName: a.propertyName,
+        websiteUrl: a.websiteUrl,
+        email: a.googleUserEmail,
+        lastSyncedAt: a.lastSyncedAt,
+        syncError: a.syncError,
+      }));
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

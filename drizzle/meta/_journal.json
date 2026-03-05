@@ -218,6 +218,13 @@
       "when": 1772548547760,
       "tag": "0030_magenta_wendell_vaughn",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "5",
+      "when": 1772714806347,
+      "tag": "0031_jittery_mister_sinister",
+      "breakpoints": true
     }
   ]
 }

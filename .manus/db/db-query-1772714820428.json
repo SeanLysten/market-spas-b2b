@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `ga4_accounts` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `googleUserId` varchar(100) NOT NULL,\n  `googleUserEmail` varchar(255),\n  `propertyId` varchar(100) NOT NULL,\n  `propertyName` varchar(255),\n  `websiteUrl` varchar(500),\n  `accessToken` text NOT NULL,\n  `refreshToken` text,\n  `tokenExpiresAt` timestamp,\n  `connectedBy` int NOT NULL,\n  `isActive` boolean DEFAULT true,\n  `lastSyncedAt` timestamp,\n  `syncError` text,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  `updatedAt` timestamp DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `ga4_accounts_id` PRIMARY KEY(`id`),\n  INDEX `ga4_propertyId_idx` (`propertyId`),\n  INDEX `ga4_connectedBy_idx` (`connectedBy`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute CREATE TABLE IF NOT EXISTS `ga4_accounts` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `googleUserId` varchar(100) NOT NULL,\n  `googleUserEmail` varchar(255),\n  `propertyId` varchar(100) NOT NULL,\n  `propertyName` varchar(255),\n  `websiteUrl` varchar(500),\n  `accessToken` text NOT NULL,\n  `refreshToken` text,\n  `tokenExpiresAt` timestamp,\n  `connectedBy` int NOT NULL,\n  `isActive` boolean DEFAULT true,\n  `lastSyncedAt` timestamp,\n  `syncError` text,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  `updatedAt` timestamp DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `ga4_accounts_id` PRIMARY KEY(`id`),\n  INDEX `ga4_propertyId_idx` (`propertyId`),\n  INDEX `ga4_connectedBy_idx` (`connectedBy`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 149
+}

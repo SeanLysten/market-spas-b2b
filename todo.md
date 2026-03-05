@@ -2267,3 +2267,22 @@
 - [x] Remplacer searchStream par search (endpoint non-streaming, plus fiable)
 - [x] Ajouter le paramètre isManager dans getCustomerDetails
 - [x] Valider: 29 campagnes affichées dans le dashboard avec métriques complètes
+
+## Google Analytics 4: intégration métriques marketspas.com (session 2026-03-05 #32)
+- [x] Analyser l'architecture OAuth existante (Google Ads) pour réutiliser le pattern
+- [x] Créer la table ga4_accounts en BDD (propertyId, refreshToken, etc.)
+- [x] Créer server/google-analytics-oauth.ts (OAuth2 GA4)
+- [x] Créer server/google-analytics-api.ts avec Data API v1 (5 rapports: overview, daily, pages, sources, devices)
+- [x] Fonctions CRUD GA4 dans db.ts (connectGa4Account, disconnectGa4Account, etc.)
+- [x] Créer les routes tRPC googleAnalytics (getOAuthUrl, handleCallback, selectProperty, disconnectAccount, getReport, getConnectedAccounts)
+- [x] Ajouter le callback OAuth /api/google-analytics/callback dans index.ts
+- [x] Créer le composant AdminGoogleAnalytics.tsx avec métriques complètes
+- [x] Intégrer le composant dans AdminDashboard.tsx (section "Trafic Web — marketspas.com")
+- [x] Graphiques: évolution du trafic (LineChart), sources (BarChart), appareils (PieChart), top pages
+- [x] 9 tests vitest GA4 passés
+
+## À faire: configuration GA4 dans Google Cloud Console
+- [ ] Activer l'API Google Analytics Data dans le projet GCP
+- [ ] Activer l'API Google Analytics Admin dans le projet GCP
+- [ ] Ajouter l'URI de redirection: https://marketspas.pro/api/google-analytics/callback
+- [ ] Connecter la propriété GA4 de marketspas.com via le dashboard admin (/admin)

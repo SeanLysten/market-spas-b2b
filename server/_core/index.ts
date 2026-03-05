@@ -128,6 +128,32 @@ async function startServer() {
     res.redirect(302, `/admin/leads?${params.toString()}`);
   });
 
+  // Google Analytics 4 OAuth Callback
+  app.get("/api/google-analytics/callback", (req, res) => {
+    console.log(`[GA4 OAuth Callback] Full URL: ${req.originalUrl}`);
+    const code = req.query.code as string;
+    const state = req.query.state as string;
+    const error = req.query.error as string;
+    const errorDescription = req.query.error_description as string;
+
+    if (error) {
+      console.error(`[GA4 OAuth] Error: ${error} - ${errorDescription}`);
+      res.redirect(302, `/admin/dashboard?ga4_error=${encodeURIComponent(errorDescription || error)}`);
+      return;
+    }
+
+    if (!code) {
+      res.redirect(302, "/admin/dashboard?ga4_error=no_code");
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.set("code", code);
+    params.set("ga4", "true");
+    if (state) params.set("state", state);
+    res.redirect(302, `/admin/dashboard?${params.toString()}`);
+  });
+
   // Google Ads OAuth Callback - Redirects to frontend with code parameter
   app.get("/api/google-ads/callback", (req, res) => {
     console.log(`[Google Ads OAuth Callback] Full URL: ${req.originalUrl}`);

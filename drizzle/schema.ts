@@ -2508,3 +2508,41 @@ export const mediaFolders = mysqlTable(
 
 export type MediaFolder = typeof mediaFolders.$inferSelect;
 export type InsertMediaFolder = typeof mediaFolders.$inferInsert;
+
+// ============================================
+// GOOGLE ANALYTICS 4 ACCOUNTS
+// ============================================
+export const ga4Accounts = mysqlTable(
+  "ga4_accounts",
+  {
+    id: int("id").autoincrement().primaryKey(),
+
+    // Google identifiers
+    googleUserId: varchar("googleUserId", { length: 100 }).notNull(),
+    googleUserEmail: varchar("googleUserEmail", { length: 255 }),
+    propertyId: varchar("propertyId", { length: 100 }).notNull(), // GA4 Property ID (e.g. 123456789)
+    propertyName: varchar("propertyName", { length: 255 }),
+    websiteUrl: varchar("websiteUrl", { length: 500 }),
+
+    // OAuth tokens
+    accessToken: text("accessToken").notNull(),
+    refreshToken: text("refreshToken"),
+    tokenExpiresAt: timestamp("tokenExpiresAt"),
+
+    // Connection info
+    connectedBy: int("connectedBy").notNull(),
+    isActive: boolean("isActive").default(true),
+    lastSyncedAt: timestamp("lastSyncedAt"),
+    syncError: text("syncError"),
+
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+  },
+  (table) => ({
+    propertyIdIdx: index("ga4_propertyId_idx").on(table.propertyId),
+    connectedByIdx: index("ga4_connectedBy_idx").on(table.connectedBy),
+  })
+);
+
+export type Ga4Account = typeof ga4Accounts.$inferSelect;
+export type InsertGa4Account = typeof ga4Accounts.$inferInsert;
