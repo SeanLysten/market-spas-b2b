@@ -5402,3 +5402,63 @@ export async function updateGa4AccountTokens(
     .set({ accessToken, tokenExpiresAt })
     .where(eq(ga4Accounts.id, id));
 }
+
+
+// ============================================
+// SHOPIFY ACCOUNTS QUERIES
+// ============================================
+
+export interface ShopifyAccountRow {
+  id: number;
+  userId: number;
+  shopDomain: string;
+  accessToken: string;
+  scope: string | null;
+  shopName: string | null;
+  shopEmail: string | null;
+  currency: string | null;
+  connectedAt: Date;
+  updatedAt: Date;
+}
+
+export async function getShopifyAccount(userId: number): Promise<ShopifyAccountRow | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const [row] = await db.execute(
+    `SELECT id, user_id as userId, shop_domain as shopDomain, access_token as accessToken, scope, shop_name as shopName, shop_email as shopEmail, currency, connected_at as connectedAt, updated_at as updatedAt FROM shopify_accounts WHERE user_id = ? LIMIT 1`,
+    [userId]
+  ) as [ShopifyAccountRow[], unknown];
+  return row || null;
+}
+
+export async function upsertShopifyAccount(
+  userId: number,
+  shopDomain: string,
+  accessToken: string,
+  scope: string,
+  shopName?: string,
+  shopEmail?: string,
+  currency?: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.execute(
+    `INSERT INTO shopify_accounts (user_id, shop_domain, access_token, scope, shop_name, shop_email, currency)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE
+       shop_domain = VALUES(shop_domain),
+       access_token = VALUES(access_token),
+       scope = VALUES(scope),
+       shop_name = COALESCE(VALUES(shop_name), shop_name),
+       shop_email = COALESCE(VALUES(shop_email), shop_email),
+       currency = COALESCE(VALUES(currency), currency),
+       updated_at = CURRENT_TIMESTAMP`,
+    [userId, shopDomain, accessToken, scope, shopName || null, shopEmail || null, currency || 'EUR']
+  );
+}
+
+export async function deleteShopifyAccount(userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.execute(`DELETE FROM shopify_accounts WHERE user_id = ?`, [userId]);
+}

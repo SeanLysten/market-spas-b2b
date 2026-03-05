@@ -211,6 +211,79 @@ async function startServer() {
     }
   });
 
+  // Shopify OAuth Callback
+  app.get("/api/shopify/callback", async (req, res) => {
+    const code = req.query.code as string;
+    const state = req.query.state as string;
+    const hmac = req.query.hmac as string;
+    const shop = req.query.shop as string;
+    const error = req.query.error as string;
+
+    console.log("[Shopify OAuth Callback] Query params:", JSON.stringify(req.query));
+
+    if (error) {
+      console.error("[Shopify OAuth Callback] Error:", error);
+      res.redirect(302, `/admin/leads?shopify_error=${encodeURIComponent(error)}`);
+      return;
+    }
+
+    if (!code || !shop) {
+      console.warn("[Shopify OAuth Callback] Missing code or shop");
+      res.redirect(302, "/admin/leads?shopify_error=missing_code");
+      return;
+    }
+
+    try {
+      // Importer les modules nécessaires
+      const { exchangeShopifyCode, getShopInfo } = await import("../shopify-api");
+      const { upsertShopifyAccount } = await import("../db");
+
+      const clientId = process.env.SHOPIFY_CLIENT_ID || '';
+      const clientSecret = process.env.SHOPIFY_CLIENT_SECRET || '';
+
+      if (!clientId || !clientSecret) {
+        throw new Error('SHOPIFY_CLIENT_ID ou SHOPIFY_CLIENT_SECRET non configuré');
+      }
+
+      // Échanger le code contre un token
+      const tokenData = await exchangeShopifyCode(shop, code, clientId, clientSecret);
+      console.log("[Shopify OAuth Callback] Token obtained, scope:", tokenData.scope);
+
+      // Récupérer les infos de la boutique
+      let shopInfo: { name?: string; email?: string; currencyCode?: string } = {};
+      try {
+        shopInfo = await getShopInfo(shop, tokenData.access_token);
+      } catch (e) {
+        console.warn("[Shopify OAuth Callback] Could not fetch shop info:", e);
+      }
+
+      // Extraire l'userId du state (format: "shopify:userId")
+      let userId = 1; // fallback admin
+      if (state && state.startsWith('shopify:')) {
+        const parsed = parseInt(state.slice(8), 10);
+        if (!isNaN(parsed)) userId = parsed;
+      }
+
+      // Sauvegarder en BDD
+      await upsertShopifyAccount(
+        userId,
+        shop,
+        tokenData.access_token,
+        tokenData.scope,
+        shopInfo.name,
+        shopInfo.email,
+        shopInfo.currencyCode
+      );
+
+      console.log(`[Shopify OAuth Callback] Account saved for user ${userId}, shop: ${shop}`);
+      res.redirect(302, "/admin/leads?shopify=true");
+    } catch (err) {
+      console.error("[Shopify OAuth Callback] Error:", err);
+      const msg = err instanceof Error ? err.message : 'unknown_error';
+      res.redirect(302, `/admin/leads?shopify_error=${encodeURIComponent(msg)}`);
+    }
+  });
+
   // Meta Lead Ads Webhook
   // GET - Vérification du webhook par Meta
   app.get("/api/webhooks/meta-leads", (req, res) => {

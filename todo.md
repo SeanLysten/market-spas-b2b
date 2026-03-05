@@ -2313,3 +2313,16 @@
 - [x] Afficher les deux courbes sur le graphique de tendance (lignes pleines + pointillées)
 - [x] Retirer le bloc GA4 du AdminDashboard (remplacé par un lien vers la page Leads)
 - [x] Corriger toutes les redirections OAuth GA4 vers /admin/leads (index.ts)
+
+## Shopify: onglet Analytics dans AdminLeads (session 2026-03-05 #36)
+- [x] Credentials Shopify configurés (SHOPIFY_CLIENT_ID, SHOPIFY_CLIENT_SECRET, SHOPIFY_STORE_DOMAIN)
+- [x] Table shopify_accounts créée en BDD (shop_domain, access_token, scope, shop_name, currency)
+- [x] Module server/shopify-api.ts (OAuth, échange de code, GraphQL Admin API v2026-01)
+- [x] Fonctions CRUD Shopify dans db.ts (getShopifyAccount, upsertShopifyAccount, deleteShopifyAccount)
+- [x] Routeur tRPC shopify dans routers.ts (getOAuthUrl, getConnectedAccount, disconnectAccount, getReport)
+- [x] Callback OAuth /api/shopify/callback dans index.ts (redirige vers /admin/leads?shopify=true)
+- [x] Composant AdminShopify.tsx (KPIs: CA, commandes, panier moyen, clients; graphiques CA/jour, commandes/jour, top produits, statuts)
+- [x] Sélecteur de période (7j/14j/30j/90j + calendrier personnalisé + comparaison avec delta %)
+- [x] 4ème onglet "Shopify" ajouté dans AdminLeads (grid-cols-4, logo Shopify SVG)
+- [x] Détection du callback ?shopify=true pour basculer automatiquement vers l'onglet Shopify
+- [x] 11 tests vitest Shopify passés

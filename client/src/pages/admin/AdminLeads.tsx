@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import AdminGoogleAnalytics from "@/components/AdminGoogleAnalytics";
+import AdminShopify from "@/components/AdminShopify";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { AdminLayout } from "@/components/AdminLayout";
@@ -138,8 +139,9 @@ export default function AdminLeads() {
   const urlParams = new URLSearchParams(window.location.search);
   const hasOAuthCode = urlParams.has('code');
   const hasGa4Code = urlParams.get("ga4") === "true";
-  const [activeTab, setActiveTab] = useState(hasOAuthCode ? 'campaigns' : 'leads');
-  const [adsTab, setAdsTab] = useState<'meta' | 'google' | 'analytics'>(hasGa4Code ? 'analytics' : 'meta'); // Sous-onglet pour Meta/Google Ads/Analytics
+  const hasShopifyCode = urlParams.get("shopify") === "true";
+  const [activeTab, setActiveTab] = useState(hasOAuthCode || hasShopifyCode ? 'campaigns' : 'leads');
+  const [adsTab, setAdsTab] = useState<'meta' | 'google' | 'analytics' | 'shopify'>(hasShopifyCode ? 'shopify' : hasGa4Code ? 'analytics' : 'meta'); // Sous-onglet pour Meta/Google Ads/Analytics/Shopify
   const [campaignStatusFilter, setCampaignStatusFilter] = useState<string>("all");
   const [campaignPriorityFilter, setCampaignPriorityFilter] = useState<string>("all");
   const [customDateFrom, setCustomDateFrom] = useState<string>("");
@@ -967,8 +969,8 @@ export default function AdminLeads() {
           {/* Onglet Campagnes */}
           <TabsContent value="campaigns" className="space-y-4">
             {/* Sous-onglets Meta Ads / Google Ads / Analytics */}
-            <Tabs value={adsTab} onValueChange={(v) => setAdsTab(v as 'meta' | 'google' | 'analytics')} className="space-y-4">
-              <TabsList className="grid w-full max-w-xl grid-cols-3">
+            <Tabs value={adsTab} onValueChange={(v) => setAdsTab(v as 'meta' | 'google' | 'analytics' | 'shopify')} className="space-y-4">
+              <TabsList className="grid w-full max-w-2xl grid-cols-4">
                 <TabsTrigger value="meta">
                   <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                   Meta Ads
@@ -984,6 +986,14 @@ export default function AdminLeads() {
                     <rect x="136" y="24" width="32" height="144" rx="4" fill="#F9AB00"/>
                   </svg>
                   Analytics
+                </TabsTrigger>
+                <TabsTrigger value="shopify">
+                  <svg className="w-4 h-4 mr-2" viewBox="0 0 109.5 124.5" fill="currentColor">
+                    <path d="M74.7 14.8s-.3 0-.9.1c-.1-.4-.3-.8-.5-1.2-1.5-2.9-4.2-4.4-7.1-4.4-.2 0-.4 0-.7.1-.1-.1-.2-.2-.3-.3-1.3-1.4-3-2.1-5-2-3.9.1-7.8 2.9-10.9 7.9-2.2 3.5-3.9 7.9-4.4 11.3l-9.5 2.9c-2.8.9-2.9 1-3.2 3.6-.3 2-7.6 58.6-7.6 58.6l57.4 9.9V14.6c-.5 0-.9.1-1.3.2zm-12.4 3.8c-2.6.8-5.4 1.7-8.2 2.5.8-3.1 2.3-6.1 4.1-8.1.7-.7 1.6-1.5 2.7-2 1.1 2.2 1.5 5.2 1.4 7.6zm-5.2-10.1c.9 0 1.6.2 2.3.6-1 .5-2 1.3-2.9 2.2-2.4 2.6-4.2 6.6-5 10.5l-6.7 2.1c1.3-6.3 6.4-15.2 12.3-15.4zm2.5 52.2c.3 4.8-12.9 5.6-13.3.8-.4-4.8 3-9 7.2-9.3 4.2-.3 5.8 3.7 6.1 8.5zm14.4-45.5c-1-.1-2-.1-3.1-.1-.1-2.7-.5-6.5-1.8-9.7 4.5.9 6.7 6 4.9 9.8z" fill="#96BF48"/>
+                    <path d="M75.6 14.9c-.4 0-.9.1-1.3.2V115l33.8-7.3S89.3 19.5 89 17.9c-.3-1.6-1.6-2.7-3.2-2.9l-10.2-.1z" fill="#5E8E3E"/>
+                    <path d="M62.3 43.6l-4.2 12.5s-3.7-2-8.2-1.7c-6.5.4-6.6 4.5-6.5 5.5.4 6.4 17.2 7.8 18.1 22.9.7 11.8-6.3 19.9-16.4 20.5-12.2.8-18.9-6.4-18.9-6.4l2.6-11s6.7 5 12 4.7c3.5-.2 4.8-3.1 4.7-5.1-.5-8.4-14.2-7.9-15-21.9-.7-11.7 7-23.6 24-24.6 6.6-.4 9.8 1.6 9.8 1.6z" fill="#fff"/>
+                  </svg>
+                  Shopify
                 </TabsTrigger>
               </TabsList>
 
@@ -1692,6 +1702,11 @@ export default function AdminLeads() {
                     window.history.replaceState({}, "", window.location.pathname);
                   }}
                 />
+              </TabsContent>
+
+              {/* Onglet Shopify */}
+              <TabsContent value="shopify" className="space-y-4">
+                <AdminShopify />
               </TabsContent>
             </Tabs>
           </TabsContent>

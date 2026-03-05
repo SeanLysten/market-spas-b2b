@@ -15,6 +15,7 @@ import * as metaOAuth from "./meta-oauth";
 import * as candidatesDb from "./candidates-db";
 import { reclassifyExistingPartnerLeads } from "./meta-leads";
 import * as savDb from "./sav-db";
+import * as shopifyApi from "./shopify-api";
 import { analyzeWarranty, COMPONENTS_BY_BRAND, DEFECT_TYPES_BY_COMPONENT, PRODUCT_LINES_BY_BRAND, COMPONENT_TO_SPARE_CATEGORY, generateTrackingUrl, type WarrantyInput, type SavBrand, type UsageType } from "./warranty-engine";
 
 export const appRouter = router({
@@ -4544,6 +4545,70 @@ export const appRouter = router({
       }));
     }),
   }),
-});
 
+  shopify: router({
+    getOAuthUrl: adminProcedure
+      .input(z.object({ shopDomain: z.string().optional() }))
+      .query(async ({ input, ctx }) => {
+        const clientId = process.env.SHOPIFY_CLIENT_ID || '';
+        const shopDomain = input.shopDomain || process.env.SHOPIFY_STORE_DOMAIN || '';
+        if (!clientId || !shopDomain) {
+          throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'SHOPIFY_CLIENT_ID ou SHOPIFY_STORE_DOMAIN non configuré' });
+        }
+        const redirectUri = `${process.env.SITE_URL || 'https://marketspas.pro'}/api/shopify/callback`;
+        const state = `shopify:${ctx.user.id}`;
+        const url = shopifyApi.getShopifyOAuthUrl(shopDomain, clientId, redirectUri, state);
+        return { url, shopDomain };
+      }),
+
+    getConnectedAccount: adminProcedure.query(async ({ ctx }) => {
+      const account = await db.getShopifyAccount(ctx.user.id);
+      if (!account) return null;
+      return {
+        shopDomain: account.shopDomain,
+        shopName: account.shopName,
+        shopEmail: account.shopEmail,
+        currency: account.currency,
+        connectedAt: account.connectedAt,
+      };
+    }),
+
+    disconnectAccount: adminProcedure.mutation(async ({ ctx }) => {
+      await db.deleteShopifyAccount(ctx.user.id);
+      return { success: true };
+    }),
+
+    getReport: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        compareStartDate: z.string().optional(),
+        compareEndDate: z.string().optional(),
+      }))
+      .query(async ({ input, ctx }) => {
+        const account = await db.getShopifyAccount(ctx.user.id);
+        if (!account) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Aucun compte Shopify connecté' });
+        }
+
+        const now = new Date();
+        const end = input.endDate || now.toISOString().split('T')[0];
+        const start = input.startDate || new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        const report = await shopifyApi.getShopifyReport(account.shopDomain, account.accessToken, start, end);
+
+        let compareReport = undefined;
+        if (input.compareStartDate && input.compareEndDate) {
+          try {
+            const cr = await shopifyApi.getShopifyReport(account.shopDomain, account.accessToken, input.compareStartDate, input.compareEndDate);
+            compareReport = cr.overview;
+          } catch (e) {
+            console.warn('[Shopify] Compare report error:', e);
+          }
+        }
+
+        return { ...report, compareOverview: compareReport };
+      }),
+  }),
+});
 export type AppRouter = typeof appRouter;
