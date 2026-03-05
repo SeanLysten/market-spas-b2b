@@ -38,14 +38,17 @@ describe("Google Analytics 4 OAuth", () => {
     expect(url).toContain("test-state");
   });
 
-  it("getGa4AuthUrl includes the correct redirect URI", async () => {
+  it("getGa4AuthUrl includes the correct redirect URI (shared with Google Ads)", async () => {
     vi.resetModules();
     process.env.GOOGLE_ADS_CLIENT_ID = "test-client-id";
     process.env.GOOGLE_ADS_CLIENT_SECRET = "test-client-secret";
     process.env.SITE_URL = "https://marketspas.example.com";
     const { getGa4AuthUrl } = await import("./google-analytics-oauth");
     const url = getGa4AuthUrl();
-    expect(url).toContain("google-analytics%2Fcallback");
+    // GA4 réutilise la même URI de redirection que Google Ads
+    expect(url).toContain("google-ads%2Fcallback");
+    // Le state doit avoir le préfixe "ga4:"
+    expect(url).toContain("ga4%3A");
   });
 });
 

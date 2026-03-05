@@ -154,25 +154,37 @@ async function startServer() {
     res.redirect(302, `/admin/dashboard?${params.toString()}`);
   });
 
-  // Google Ads OAuth Callback - Redirects to frontend with code parameter
+  // Google Ads / Google Analytics 4 OAuth Callback
+  // Les deux flux partagent la même URI de redirection pour éviter d'en ajouter une nouvelle dans la console OAuth.
+  // Le flux GA4 est distingué par le préfixe "ga4:" dans le paramètre `state`.
   app.get("/api/google-ads/callback", (req, res) => {
-    console.log(`[Google Ads OAuth Callback] Full URL: ${req.originalUrl}`);
-    console.log(`[Google Ads OAuth Callback] Query params:`, JSON.stringify(req.query));
-    
     const code = req.query.code as string;
     const state = req.query.state as string;
     const error = req.query.error as string;
     const errorDescription = req.query.error_description as string;
 
+    // Déterminer si c'est un callback GA4 ou Google Ads
+    const isGa4Callback = state && state.startsWith("ga4:");
+    const logPrefix = isGa4Callback ? "[GA4 OAuth Callback]" : "[Google Ads OAuth Callback]";
+
+    console.log(`${logPrefix} Full URL: ${req.originalUrl}`);
+    console.log(`${logPrefix} Query params:`, JSON.stringify(req.query));
+
     if (error) {
-      console.error(`[Google Ads OAuth] Error: ${error} - ${errorDescription}`);
-      res.redirect(302, `/admin/leads?google_error=${encodeURIComponent(errorDescription || error)}`);
+      console.error(`${logPrefix} Error: ${error} - ${errorDescription}`);
+      if (isGa4Callback) {
+        res.redirect(302, `/admin?ga4_error=${encodeURIComponent(errorDescription || error)}`);
+      } else {
+        res.redirect(302, `/admin/leads?google_error=${encodeURIComponent(errorDescription || error)}`);
+      }
       return;
     }
 
     if (!code) {
-      console.warn(`[Google Ads OAuth] No code received. State: ${state}. All query params:`, req.query);
-      if (state) {
+      console.warn(`${logPrefix} No code received. State: ${state}. All query params:`, req.query);
+      if (isGa4Callback) {
+        res.redirect(302, "/admin?ga4_error=no_code");
+      } else if (state) {
         res.redirect(302, `/admin/leads?state=${encodeURIComponent(state)}&google_error=no_code_received`);
       } else {
         res.redirect(302, "/admin/leads?google_error=no_code");
@@ -180,13 +192,23 @@ async function startServer() {
       return;
     }
 
-    console.log(`[Google Ads OAuth] Code received (length: ${code.length}), redirecting to frontend`);
-    // Redirect to frontend with code and state
+    console.log(`${logPrefix} Code received (length: ${code.length}), redirecting to frontend`);
+
     const params = new URLSearchParams();
     params.set("code", code);
-    params.set("google_ads", "true"); // Flag to indicate Google Ads callback
-    if (state) params.set("state", state);
-    res.redirect(302, `/admin/leads?${params.toString()}`);
+    if (isGa4Callback) {
+      // Flux GA4 : rediriger vers le dashboard admin avec flag ga4=true
+      params.set("ga4", "true");
+      // Transmettre le state sans le préfixe "ga4:"
+      const cleanState = state.slice(4); // retire "ga4:"
+      if (cleanState) params.set("state", cleanState);
+      res.redirect(302, `/admin?${params.toString()}`);
+    } else {
+      // Flux Google Ads : rediriger vers la page leads
+      params.set("google_ads", "true");
+      if (state) params.set("state", state);
+      res.redirect(302, `/admin/leads?${params.toString()}`);
+    }
   });
 
   // Meta Lead Ads Webhook

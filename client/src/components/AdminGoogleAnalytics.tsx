@@ -175,12 +175,12 @@ export default function AdminGoogleAnalytics({ onCallbackHandled }: AdminGoogleA
             {isConnecting ? "Connexion en cours…" : "Connecter Google Analytics"}
           </Button>
           <p className="text-xs text-muted-foreground text-center max-w-xs">
-            Assurez-vous que l'API Google Analytics Data est activée dans votre projet Google Cloud
-            et que l'URI de redirection{" "}
+            Assurez-vous que les APIs <strong>Google Analytics Data</strong> et <strong>Google Analytics Admin</strong> sont activées dans votre projet Google Cloud.
+            L'URI de redirection utilisée est la même que Google Ads :{" "}
             <code className="bg-muted px-1 rounded text-xs">
-              {window.location.origin}/api/google-analytics/callback
+              {window.location.origin}/api/google-ads/callback
             </code>{" "}
-            est autorisée dans la console OAuth.
+            (déjà autorisée dans la console OAuth).
           </p>
         </CardContent>
       </Card>

@@ -2284,5 +2284,11 @@
 ## À faire: configuration GA4 dans Google Cloud Console
 - [ ] Activer l'API Google Analytics Data dans le projet GCP
 - [ ] Activer l'API Google Analytics Admin dans le projet GCP
-- [ ] Ajouter l'URI de redirection: https://marketspas.pro/api/google-analytics/callback
+- [x] URI de redirection: https://marketspas.pro/api/google-ads/callback (déjà autorisée, partagée avec Google Ads)
 - [ ] Connecter la propriété GA4 de marketspas.com via le dashboard admin (/admin)
+
+## GA4: aligner URI de redirection sur Google Ads (session 2026-03-05 #33)
+- [x] Modifier google-analytics-oauth.ts pour utiliser /api/google-ads/callback
+- [x] Mettre à jour /api/google-ads/callback dans index.ts pour distinguer GA4 vs Ads via state (préfixe "ga4:")
+- [x] Mettre à jour le message d'aide dans AdminGoogleAnalytics.tsx (affiche /api/google-ads/callback)
+- [x] Corriger le test vitest pour vérifier la nouvelle URI (9 tests passés)

@@ -7,12 +7,15 @@ import { google } from "googleapis";
  *  - analytics.readonly  → lire les rapports GA4 via la Data API
  *  - userinfo.email / userinfo.profile → identifier le compte Google
  *
- * Redirect URI à ajouter dans la Google Cloud Console :
- *  - http://localhost:3000/api/google-analytics/callback  (dev)
- *  - https://votre-domaine.com/api/google-analytics/callback  (prod)
+ * Redirect URI : utilise la MÊME URI que Google Ads (/api/google-ads/callback)
+ * pour éviter d'avoir à ajouter une nouvelle URI dans la console Google Cloud.
+ * Le flux GA4 est distingué du flux Google Ads via le paramètre `state` (préfixe "ga4:").
  *
- * Le même Client ID / Secret que Google Ads peut être réutilisé si les
- * scopes Analytics sont activés sur le même projet GCP.
+ * URI déjà autorisée dans la console OAuth :
+ *  - http://localhost:3000/api/google-ads/callback  (dev)
+ *  - https://marketspas.pro/api/google-ads/callback  (prod)
+ *
+ * Le même Client ID / Secret que Google Ads est réutilisé.
  */
 
 const GA4_SCOPES = [
@@ -24,9 +27,10 @@ const GA4_SCOPES = [
 export function getGa4OAuthClient() {
   const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
+  // Réutilise la même URI de redirection que Google Ads (déjà autorisée dans la console OAuth)
   const redirectUri = process.env.SITE_URL
-    ? `${process.env.SITE_URL}/api/google-analytics/callback`
-    : "http://localhost:3000/api/google-analytics/callback";
+    ? `${process.env.SITE_URL}/api/google-ads/callback`
+    : "http://localhost:3000/api/google-ads/callback";
 
   if (!clientId || !clientSecret) return null;
 
@@ -37,10 +41,14 @@ export function getGa4AuthUrl(state?: string) {
   const client = getGa4OAuthClient();
   if (!client) return null;
 
+  // Préfixe "ga4:" dans le state pour distinguer ce flux du flux Google Ads
+  // dans le callback partagé /api/google-ads/callback
+  const stateWithPrefix = `ga4:${state || ""}`;
+
   return client.generateAuthUrl({
     access_type: "offline",
     scope: GA4_SCOPES,
-    state: state || "",
+    state: stateWithPrefix,
     prompt: "consent",
   });
 }
