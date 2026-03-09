@@ -49,6 +49,25 @@ export interface ShopifyReport {
   compareOverview?: ShopifyOverview;
 }
 
+export interface ShopifyTrafficSource {
+  source: string;
+  sessions: number;
+  conversionRate: number;
+}
+
+export interface ShopifyDailySession {
+  date: string;
+  sessions: number;
+}
+
+export interface ShopifyTrafficReport {
+  totalSessions: number;
+  conversionRate: number;
+  cartAbandonmentRate: number;
+  dailySessions: ShopifyDailySession[];
+  trafficSources: ShopifyTrafficSource[];
+}
+
 async function shopifyGraphQL(
   shopDomain: string,
   accessToken: string,
@@ -293,6 +312,150 @@ export async function getShopifyReport(
     dailyRevenue,
     topProducts,
     orderStatuses,
+  };
+}
+
+/**
+ * Récupère les statistiques de trafic et visites via ShopifyQL
+ */
+export async function getShopifyTrafficReport(
+  shopDomain: string,
+  accessToken: string,
+  startDate: string,
+  endDate: string
+): Promise<ShopifyTrafficReport> {
+  // Requête ShopifyQL pour les sessions totales et taux de conversion par jour
+  const dailySessionsQuery = `
+    mutation {
+      shopifyqlQuery(query: "FROM sessions SHOW sessions, conversion_rate, cart_abandonment_rate TIMESERIES day SINCE ${startDate} UNTIL ${endDate}") {
+        __typename
+        ... on TableResponse {
+          tableData {
+            rowData
+            columns {
+              name
+              dataType
+              displayName
+            }
+          }
+        }
+        ... on ParseErrorResponse {
+          parseErrors {
+            code
+            message
+            range {
+              start { line column }
+              end { line column }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  // Requête ShopifyQL pour les sessions par source de trafic
+  const trafficSourceQuery = `
+    mutation {
+      shopifyqlQuery(query: "FROM sessions SHOW sessions, conversion_rate GROUP BY traffic_source SINCE ${startDate} UNTIL ${endDate} ORDER BY sessions DESC") {
+        __typename
+        ... on TableResponse {
+          tableData {
+            rowData
+            columns {
+              name
+              dataType
+              displayName
+            }
+          }
+        }
+        ... on ParseErrorResponse {
+          parseErrors {
+            code
+            message
+            range {
+              start { line column }
+              end { line column }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  type ShopifyQLResponse = {
+    shopifyqlQuery: {
+      __typename: string;
+      tableData?: {
+        rowData: string[][];
+        columns: Array<{ name: string; dataType: string; displayName: string }>;
+      };
+      parseErrors?: Array<{ code: string; message: string }>;
+    };
+  };
+
+  const [dailyData, trafficData] = await Promise.all([
+    shopifyGraphQL(shopDomain, accessToken, dailySessionsQuery) as Promise<ShopifyQLResponse>,
+    shopifyGraphQL(shopDomain, accessToken, trafficSourceQuery) as Promise<ShopifyQLResponse>,
+  ]);
+
+  // Parser les sessions journalières
+  const dailySessions: ShopifyDailySession[] = [];
+  let totalSessions = 0;
+  let totalConversionRate = 0;
+  let totalCartAbandonmentRate = 0;
+  let dayCount = 0;
+
+  if (dailyData?.shopifyqlQuery?.tableData) {
+    const { rowData, columns } = dailyData.shopifyqlQuery.tableData;
+    const dayIdx = columns.findIndex((c) => c.name === 'day');
+    const sessionsIdx = columns.findIndex((c) => c.name === 'sessions');
+    const conversionIdx = columns.findIndex((c) => c.name === 'conversion_rate');
+    const cartAbandonIdx = columns.findIndex((c) => c.name === 'cart_abandonment_rate');
+
+    for (const row of rowData) {
+      const date = dayIdx >= 0 ? row[dayIdx] : '';
+      const sessions = sessionsIdx >= 0 ? parseFloat(row[sessionsIdx] || '0') : 0;
+      const convRate = conversionIdx >= 0 ? parseFloat(row[conversionIdx] || '0') : 0;
+      const cartAbandon = cartAbandonIdx >= 0 ? parseFloat(row[cartAbandonIdx] || '0') : 0;
+
+      if (date) {
+        dailySessions.push({ date: date.split('T')[0], sessions: Math.round(sessions) });
+        totalSessions += sessions;
+        totalConversionRate += convRate;
+        totalCartAbandonmentRate += cartAbandon;
+        dayCount++;
+      }
+    }
+  }
+
+  // Parser les sources de trafic
+  const trafficSources: ShopifyTrafficSource[] = [];
+
+  if (trafficData?.shopifyqlQuery?.tableData) {
+    const { rowData, columns } = trafficData.shopifyqlQuery.tableData;
+    const sourceIdx = columns.findIndex((c) => c.name === 'traffic_source');
+    const sessionsIdx = columns.findIndex((c) => c.name === 'sessions');
+    const conversionIdx = columns.findIndex((c) => c.name === 'conversion_rate');
+
+    for (const row of rowData) {
+      const source = sourceIdx >= 0 ? (row[sourceIdx] || 'Inconnu') : 'Inconnu';
+      const sessions = sessionsIdx >= 0 ? parseFloat(row[sessionsIdx] || '0') : 0;
+      const convRate = conversionIdx >= 0 ? parseFloat(row[conversionIdx] || '0') : 0;
+
+      trafficSources.push({
+        source,
+        sessions: Math.round(sessions),
+        conversionRate: Math.round(convRate * 100) / 100,
+      });
+    }
+  }
+
+  return {
+    totalSessions: Math.round(totalSessions),
+    conversionRate: dayCount > 0 ? Math.round((totalConversionRate / dayCount) * 100) / 100 : 0,
+    cartAbandonmentRate: dayCount > 0 ? Math.round((totalCartAbandonmentRate / dayCount) * 100) / 100 : 0,
+    dailySessions,
+    trafficSources,
   };
 }
 

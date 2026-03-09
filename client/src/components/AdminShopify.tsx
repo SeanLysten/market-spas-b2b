@@ -8,14 +8,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
 import {
-  ShoppingBag, TrendingUp, TrendingDown, Users, Package,
+  ShoppingBag, TrendingUp, Users, Package,
   CalendarIcon, RefreshCw, Unlink, ShoppingCart, Euro,
-  ArrowUpRight, ArrowDownRight, Minus,
+  ArrowUpRight, ArrowDownRight, Globe, MousePointerClick, ShoppingBasket,
 } from "lucide-react";
 
 // ─── Types locaux ────────────────────────────────────────────────────────────
@@ -133,6 +134,10 @@ export default function AdminShopify() {
     },
     { enabled: !!accountQuery.data, retry: false }
   );
+  const trafficQuery = trpc.shopify.getTrafficReport.useQuery(
+    { startDate, endDate },
+    { enabled: !!accountQuery.data, retry: false }
+  );
   const disconnectMutation = trpc.shopify.disconnectAccount.useMutation({
     onSuccess: () => {
       toast.success("Boutique Shopify déconnectée");
@@ -219,6 +224,7 @@ export default function AdminShopify() {
   const report = reportQuery.data;
   const overview = report?.overview;
   const compareOverview = report?.compareOverview;
+  const traffic = trafficQuery.data;
 
   // ── Sélecteur de période ─────────────────────────────────────────────────
   const PeriodSelector = (
@@ -282,7 +288,7 @@ export default function AdminShopify() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* En-tête */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -291,7 +297,7 @@ export default function AdminShopify() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">Ventes Shopify</h2>
+              <h2 className="text-lg font-semibold">Shopify Analytics</h2>
               <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-200 bg-emerald-50">
                 {account.shopName || account.shopDomain}
               </Badge>
@@ -316,218 +322,307 @@ export default function AdminShopify() {
         </div>
       </div>
 
-      {/* Chargement */}
-      {reportQuery.isLoading && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}><CardContent className="pt-4 pb-3"><div className="h-16 bg-muted animate-pulse rounded" /></CardContent></Card>
-          ))}
-        </div>
-      )}
+      {/* Onglets */}
+      <Tabs defaultValue="sales">
+        <TabsList className="grid w-full grid-cols-2 max-w-xs">
+          <TabsTrigger value="sales" className="text-xs gap-1.5">
+            <ShoppingCart className="h-3.5 w-3.5" />
+            Ventes
+          </TabsTrigger>
+          <TabsTrigger value="traffic" className="text-xs gap-1.5">
+            <Globe className="h-3.5 w-3.5" />
+            Trafic
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Erreur */}
-      {reportQuery.error && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-4 text-sm text-red-600">
-            Erreur : {reportQuery.error.message}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* KPIs */}
-      {overview && (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <KpiCard
-              title="Chiffre d'affaires"
-              value={fmt(overview.totalRevenue, overview.currency)}
-              icon={Euro}
-              color="emerald"
-              compare={compareOverview?.totalRevenue}
-            />
-            <KpiCard
-              title="Commandes"
-              value={fmtNum(overview.totalOrders)}
-              icon={ShoppingCart}
-              color="blue"
-              compare={compareOverview?.totalOrders}
-            />
-            <KpiCard
-              title="Panier moyen"
-              value={fmt(overview.averageOrderValue, overview.currency)}
-              icon={TrendingUp}
-              color="amber"
-              compare={compareOverview?.averageOrderValue}
-            />
-            <KpiCard
-              title="Clients uniques"
-              value={fmtNum(overview.totalCustomers)}
-              subValue={`${overview.newCustomers} nouveaux · ${overview.returningCustomers} récurrents`}
-              icon={Users}
-              color="violet"
-              compare={compareOverview?.totalCustomers}
-            />
-          </div>
-
-          {/* Graphique CA journalier */}
-          {report.dailyRevenue && report.dailyRevenue.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Évolution du chiffre d'affaires</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={report.dailyRevenue} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 10 }}
-                      tickFormatter={(v) => {
-                        const d = new Date(v);
-                        return `${d.getDate()}/${d.getMonth() + 1}`;
-                      }}
-                    />
-                    <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}€`} />
-                    <Tooltip
-                      formatter={(v: number) => [fmt(v, overview.currency), "CA"]}
-                      labelFormatter={(l) => format(new Date(l), "dd MMMM yyyy", { locale: fr })}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="revenue"
-                      name="CA (€)"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      dot={false}
-                      activeDot={{ r: 4 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+        {/* ── Onglet Ventes ─────────────────────────────────────────────── */}
+        <TabsContent value="sales" className="space-y-4 mt-4">
+          {reportQuery.isLoading && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i}><CardContent className="pt-4 pb-3"><div className="h-16 bg-muted animate-pulse rounded" /></CardContent></Card>
+              ))}
+            </div>
+          )}
+          {reportQuery.error && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-4 text-sm text-red-600">
+                Erreur : {reportQuery.error.message}
               </CardContent>
             </Card>
           )}
-
-          {/* Commandes par jour */}
-          {report.dailyRevenue && report.dailyRevenue.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Commandes par jour</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={report.dailyRevenue} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 10 }}
-                      tickFormatter={(v) => {
-                        const d = new Date(v);
-                        return `${d.getDate()}/${d.getMonth() + 1}`;
-                      }}
-                    />
-                    <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                    <Tooltip
-                      formatter={(v: number) => [v, "Commandes"]}
-                      labelFormatter={(l) => format(new Date(l), "dd MMMM yyyy", { locale: fr })}
-                    />
-                    <Bar dataKey="orders" name="Commandes" fill="#3b82f6" radius={[2, 2, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Top produits + Statuts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Top produits */}
-            {report.topProducts && report.topProducts.length > 0 && (
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Package className="h-4 w-4 text-amber-500" />
-                    Top 10 produits
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {report.topProducts.slice(0, 10).map((p, i) => (
-                      <div key={p.id} className="flex items-center justify-between gap-2 text-sm">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-xs text-muted-foreground w-4 shrink-0">{i + 1}</span>
-                          {p.imageUrl && (
-                            <img src={p.imageUrl} alt={p.title} className="w-7 h-7 rounded object-cover shrink-0" />
-                          )}
-                          <span className="truncate text-xs">{p.title}</span>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div className="text-xs font-medium">{fmt(p.totalRevenue, overview.currency)}</div>
-                          <div className="text-xs text-muted-foreground">{p.totalSold} vendus</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Statuts des commandes */}
-            {report.orderStatuses && report.orderStatuses.length > 0 && (
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <ShoppingCart className="h-4 w-4 text-blue-500" />
-                    Statuts des commandes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={180}>
-                    <PieChart>
-                      <Pie
-                        data={report.orderStatuses}
-                        dataKey="count"
-                        nameKey="status"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={70}
-                        label={({ status, percent }) =>
-                          `${status} ${(percent * 100).toFixed(0)}%`
-                        }
-                        labelLine={false}
-                      >
-                        {report.orderStatuses.map((_, i) => (
-                          <Cell key={i} fill={COLORS[i % COLORS.length]} />
+          {overview && (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <KpiCard title="Chiffre d'affaires" value={fmt(overview.totalRevenue, overview.currency)} icon={Euro} color="emerald" compare={compareOverview?.totalRevenue} />
+                <KpiCard title="Commandes" value={fmtNum(overview.totalOrders)} icon={ShoppingCart} color="blue" compare={compareOverview?.totalOrders} />
+                <KpiCard title="Panier moyen" value={fmt(overview.averageOrderValue, overview.currency)} icon={TrendingUp} color="amber" compare={compareOverview?.averageOrderValue} />
+                <KpiCard title="Clients uniques" value={fmtNum(overview.totalCustomers)} subValue={`${overview.newCustomers} nouveaux · ${overview.returningCustomers} récurrents`} icon={Users} color="violet" compare={compareOverview?.totalCustomers} />
+              </div>
+              {report.dailyRevenue && report.dailyRevenue.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Évolution du chiffre d'affaires</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <LineChart data={report.dailyRevenue} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(v) => { const d = new Date(v); return `${d.getDate()}/${d.getMonth() + 1}`; }} />
+                        <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}€`} />
+                        <Tooltip formatter={(v: number) => [fmt(v, overview.currency), "CA"]} labelFormatter={(l) => format(new Date(l), "dd MMMM yyyy", { locale: fr })} />
+                        <Legend />
+                        <Line type="monotone" dataKey="revenue" name="CA (€)" stroke="#10b981" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+              {report.dailyRevenue && report.dailyRevenue.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Commandes par jour</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={160}>
+                      <BarChart data={report.dailyRevenue} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(v) => { const d = new Date(v); return `${d.getDate()}/${d.getMonth() + 1}`; }} />
+                        <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                        <Tooltip formatter={(v: number) => [v, "Commandes"]} labelFormatter={(l) => format(new Date(l), "dd MMMM yyyy", { locale: fr })} />
+                        <Bar dataKey="orders" name="Commandes" fill="#3b82f6" radius={[2, 2, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {report.topProducts && report.topProducts.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Package className="h-4 w-4 text-amber-500" />
+                        Top 10 produits
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {report.topProducts.slice(0, 10).map((p, i) => (
+                          <div key={p.id} className="flex items-center justify-between gap-2 text-sm">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-xs text-muted-foreground w-4 shrink-0">{i + 1}</span>
+                              {p.imageUrl && <img src={p.imageUrl} alt={p.title} className="w-7 h-7 rounded object-cover shrink-0" />}
+                              <span className="truncate text-xs">{p.title}</span>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <div className="text-xs font-medium">{fmt(p.totalRevenue, overview.currency)}</div>
+                              <div className="text-xs text-muted-foreground">{p.totalSold} vendus</div>
+                            </div>
+                          </div>
                         ))}
-                      </Pie>
-                      <Tooltip formatter={(v: number, name: string) => [v, name]} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="mt-2 space-y-1">
-                    {report.orderStatuses.map((s, i) => (
-                      <div key={s.status} className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                          <span>{s.status}</span>
-                        </div>
-                        <span className="font-medium">{s.count}</span>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                    </CardContent>
+                  </Card>
+                )}
+                {report.orderStatuses && report.orderStatuses.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <ShoppingCart className="h-4 w-4 text-blue-500" />
+                        Statuts des commandes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={180}>
+                        <PieChart>
+                          <Pie data={report.orderStatuses} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={70} label={({ status, percent }) => `${status} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                            {report.orderStatuses.map((_, i) => (<Cell key={i} fill={COLORS[i % COLORS.length]} />))}
+                          </Pie>
+                          <Tooltip formatter={(v: number, name: string) => [v, name]} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="mt-2 space-y-1">
+                        {report.orderStatuses.map((s, i) => (
+                          <div key={s.status} className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                              <span>{s.status}</span>
+                            </div>
+                            <span className="font-medium">{s.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+              {overview.totalOrders === 0 && (
+                <Card className="border-dashed">
+                  <CardContent className="pt-6 pb-6 text-center text-sm text-muted-foreground">
+                    Aucune commande payée sur cette période.
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
+        </TabsContent>
 
-          {/* Message si aucune commande */}
-          {overview.totalOrders === 0 && (
-            <Card className="border-dashed">
-              <CardContent className="pt-6 pb-6 text-center text-sm text-muted-foreground">
-                Aucune commande payée sur cette période.
+        {/* ── Onglet Trafic ─────────────────────────────────────────────── */}
+        <TabsContent value="traffic" className="space-y-4 mt-4">
+          {trafficQuery.isLoading && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {[...Array(3)].map((_, i) => (
+                <Card key={i}><CardContent className="pt-4 pb-3"><div className="h-16 bg-muted animate-pulse rounded" /></CardContent></Card>
+              ))}
+            </div>
+          )}
+          {trafficQuery.error && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-4 text-sm text-red-600">
+                Erreur trafic : {trafficQuery.error.message}
               </CardContent>
             </Card>
           )}
-        </>
-      )}
+          {traffic && (
+            <>
+              {/* KPIs trafic */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <KpiCard
+                  title="Sessions totales"
+                  value={fmtNum(traffic.totalSessions)}
+                  icon={Globe}
+                  color="blue"
+                />
+                <KpiCard
+                  title="Taux de conversion"
+                  value={`${traffic.conversionRate.toFixed(2)}%`}
+                  icon={MousePointerClick}
+                  color="emerald"
+                />
+                <KpiCard
+                  title="Abandon panier"
+                  value={`${traffic.cartAbandonmentRate.toFixed(2)}%`}
+                  icon={ShoppingBasket}
+                  color="amber"
+                />
+              </div>
+
+              {/* Graphique sessions journalières */}
+              {traffic.dailySessions && traffic.dailySessions.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Sessions par jour</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart data={traffic.dailySessions} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(v) => { const d = new Date(v); return `${d.getDate()}/${d.getMonth() + 1}`; }} />
+                        <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                        <Tooltip formatter={(v: number) => [fmtNum(v), "Sessions"]} labelFormatter={(l) => format(new Date(l), "dd MMMM yyyy", { locale: fr })} />
+                        <Bar dataKey="sessions" name="Sessions" fill="#3b82f6" radius={[2, 2, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Sources de trafic */}
+              {traffic.trafficSources && traffic.trafficSources.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Camembert sources */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-blue-500" />
+                        Répartition des sources
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <PieChart>
+                          <Pie
+                            data={traffic.trafficSources}
+                            dataKey="sessions"
+                            nameKey="source"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={75}
+                            label={({ source, percent }) => percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''}
+                            labelLine={false}
+                          >
+                            {traffic.trafficSources.map((_, i) => (<Cell key={i} fill={COLORS[i % COLORS.length]} />))}
+                          </Pie>
+                          <Tooltip formatter={(v: number, name: string) => [fmtNum(v) + " sessions", name]} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="mt-2 space-y-1">
+                        {traffic.trafficSources.map((s, i) => (
+                          <div key={s.source} className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                              <span className="capitalize">{s.source || 'Direct'}</span>
+                            </div>
+                            <span className="font-medium">{fmtNum(s.sessions)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Tableau détaillé */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <MousePointerClick className="h-4 w-4 text-emerald-500" />
+                        Détail par source
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {traffic.trafficSources.map((s, i) => {
+                          const totalSess = traffic.trafficSources.reduce((acc, x) => acc + x.sessions, 0);
+                          const pct = totalSess > 0 ? (s.sessions / totalSess) * 100 : 0;
+                          return (
+                            <div key={s.source} className="space-y-0.5">
+                              <div className="flex items-center justify-between text-xs">
+                                <div className="flex items-center gap-1.5">
+                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                                  <span className="capitalize font-medium">{s.source || 'Direct'}</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-muted-foreground">
+                                  <span>{fmtNum(s.sessions)} sess.</span>
+                                  <span className="text-emerald-600">{s.conversionRate.toFixed(1)}% conv.</span>
+                                </div>
+                              </div>
+                              <div className="w-full bg-muted rounded-full h-1.5">
+                                <div
+                                  className="h-1.5 rounded-full"
+                                  style={{ width: `${pct}%`, backgroundColor: COLORS[i % COLORS.length] }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                !trafficQuery.isLoading && (
+                  <Card className="border-dashed">
+                    <CardContent className="pt-6 pb-6 text-center text-sm text-muted-foreground">
+                      <Globe className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p>Aucune donnée de trafic disponible pour cette période.</p>
+                      <p className="text-xs mt-1">Les données de sessions nécessitent le scope <code>read_analytics</code> dans votre application Shopify.</p>
+                    </CardContent>
+                  </Card>
+                )
+              )}
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

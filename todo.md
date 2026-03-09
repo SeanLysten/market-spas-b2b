@@ -2330,3 +2330,13 @@
 ## Shopify: correction erreur INSERT (session 2026-03-05 #37)
 - [ ] Diagnostiquer l'erreur SQL INSERT dans shopify_accounts
 - [ ] Corriger la requête upsertShopifyAccount dans db.ts
+
+## Shopify Analytics - Trafic & Visites
+- [x] Ajouter la fonction getShopifyTrafficReport dans shopify-api.ts (ShopifyQL API)
+- [x] Ajouter la route tRPC shopify.getTrafficReport dans routers.ts
+- [x] Créer l'onglet "Trafic" dans AdminShopify.tsx avec KPIs sessions/conversion/abandon panier
+- [x] Graphique sessions par jour (BarChart)
+- [x] Camembert répartition sources de trafic (PieChart)
+- [x] Tableau détaillé par source avec barres de progression et taux de conversion
+- [x] Corriger l'erreur "fetch failed" (getShopifyAccount retournait [] au lieu de null)
+- [x] Corriger exchangeShopifyCode pour ajouter Accept: application/json

@@ -4609,6 +4609,34 @@ export const appRouter = router({
 
         return { ...report, compareOverview: compareReport };
       }),
+    getTrafficReport: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }))
+      .query(async ({ input, ctx }) => {
+        const account = await db.getShopifyAccount(ctx.user.id);
+        if (!account) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Aucun compte Shopify connecté' });
+        }
+        const now = new Date();
+        const end = input.endDate || now.toISOString().split('T')[0];
+        const start = input.startDate || new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        try {
+          const trafficReport = await shopifyApi.getShopifyTrafficReport(account.shopDomain, account.accessToken, start, end);
+          return trafficReport;
+        } catch (e) {
+          console.warn('[Shopify] Traffic report error:', e);
+          // Retourner des données vides si l'API ShopifyQL n'est pas disponible
+          return {
+            totalSessions: 0,
+            conversionRate: 0,
+            cartAbandonmentRate: 0,
+            dailySessions: [] as Array<{ date: string; sessions: number }>,
+            trafficSources: [] as Array<{ source: string; sessions: number; conversionRate: number }>,
+          };
+        }
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;
