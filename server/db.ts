@@ -5424,10 +5424,10 @@ export interface ShopifyAccountRow {
 export async function getShopifyAccount(userId: number): Promise<ShopifyAccountRow | null> {
   const db = await getDb();
   if (!db) return null;
-  const rows = await db.execute(
+  const [rows] = await db.execute(
     sql`SELECT id, user_id as userId, shop_domain as shopDomain, access_token as accessToken, scope, shop_name as shopName, shop_email as shopEmail, currency, connected_at as connectedAt, updated_at as updatedAt FROM shopify_accounts WHERE user_id = ${userId} LIMIT 1`
-  ) as unknown as ShopifyAccountRow[];
-  return rows[0] || null;
+  ) as any;
+  return (rows as ShopifyAccountRow[])[0] || null;
 }
 
 export async function upsertShopifyAccount(
