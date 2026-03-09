@@ -2367,3 +2367,9 @@
 - [x] Ajouter KPI durée moyenne de session
 - [x] Ajouter tableau pages d'atterrissage avec taux de rebond et durée
 - [x] Tests vitest mis à jour et passants (2 tests)
+
+## Carte Partenaire Admin - Bugs & Améliorations
+- [x] Bug : popup d'un point sur la carte ne peut plus être réouvert après fermeture (fix : bindPopup + popupopen event)
+- [x] Actualisation automatique des leads de partenariat toutes les 30s (refetchInterval)
+- [x] Scoring calculé depuis les customFields du lead et affiché dans le tableau + cartes mobiles
+- [x] Bouton "Ajouter à la carte" pour convertir un lead en candidat avec score auto-calculé

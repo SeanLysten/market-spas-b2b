@@ -893,10 +893,61 @@ function StatsTab({ candidates }: { candidates: any[] }) {
 // ============================================
 
 function PartnershipLeadsTab() {
-  const { data: partnershipLeads, isLoading } = trpc.admin.leads.partnershipLeads.useQuery();
+  const { data: partnershipLeads, isLoading, refetch: refetchLeads } = trpc.admin.leads.partnershipLeads.useQuery(
+    undefined,
+    { refetchInterval: 30000, refetchIntervalInBackground: false }
+  );
   const [searchTerm, setSearchTerm] = useState('');
+  const [convertingId, setConvertingId] = useState<number | null>(null);
+
+  const createCandidateMutation = trpc.admin.candidates.create.useMutation({
+    onSuccess: () => {
+      toast.success('Converti en candidat sur la carte !');
+      setConvertingId(null);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+      setConvertingId(null);
+    },
+  });
 
   const leads = (partnershipLeads || []).map((item: any) => item.leads || item);
+
+  // Calcule le score de priorité à partir des customFields d'un lead
+  const calcLeadScore = (customFields: string | null): { score: number; showroom: string; vendSpa: string; autreMarque: string; domaineSimilaire: string } => {
+    let customData: Record<string, string> = {};
+    try { customData = JSON.parse(customFields || '{}'); } catch { /* ignore */ }
+    const showroom = normalizeYesNoForBadge(customData['possédez-vous_un_showroom_?_']) ? 'oui' : 'non';
+    const vendSpa = normalizeYesNoForBadge(customData['travaillez-vous_déjà_dans_la_vente_de_spa_?_']) ? 'oui' : 'non';
+    const autreMarque = normalizeYesNoForBadge(customData['vendez-vous_actuellement_une_autre_marque_?']) ? 'oui' : 'non';
+    const domaineSimilaire = normalizeYesNoForBadge(customData['travaillez-vous_dans_un_domaine_similaire_?_']) ? 'oui' : 'non';
+    let score = 1;
+    if (showroom === 'oui') score += 2;
+    if (vendSpa === 'oui') score += 3;
+    if (autreMarque === 'oui') score += 1;
+    if (domaineSimilaire === 'oui') score += 1;
+    return { score, showroom, vendSpa, autreMarque, domaineSimilaire };
+  };
+
+  const handleConvertToCandidate = (lead: any) => {
+    let customData: Record<string, string> = {};
+    try { customData = JSON.parse(lead.customFields || '{}'); } catch { /* ignore */ }
+    const { score, showroom, vendSpa, autreMarque, domaineSimilaire } = calcLeadScore(lead.customFields);
+    setConvertingId(lead.id);
+    createCandidateMutation.mutate({
+      companyName: customData.company_name || `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || 'Inconnu',
+      fullName: `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || 'Inconnu',
+      city: lead.city || '',
+      phoneNumber: lead.phone || '',
+      email: lead.email || '',
+      priorityScore: score,
+      showroom,
+      vendSpa,
+      autreMarque,
+      domaineSimilaire,
+      notes: lead.message || null,
+    });
+  };
 
   const filtered = leads.filter((lead: any) => {
     if (!searchTerm) return true;
@@ -983,13 +1034,19 @@ function PartnershipLeadsTab() {
           filtered.map((lead: any) => {
             let customData: Record<string, string> = {};
             try { customData = JSON.parse(lead.customFields || '{}'); } catch (e) { /* ignore */ }
+            const { score: leadScore } = calcLeadScore(lead.customFields);
             return (
               <Card key={lead.id} className="p-4">
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-medium text-sm">{lead.firstName} {lead.lastName}</p>
-                      <p className="text-xs text-muted-foreground">{customData.company_name || '-'}</p>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${PRIORITY_COLORS[leadScore] || 'bg-gray-300'}`}>
+                        {leadScore}
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{lead.firstName} {lead.lastName}</p>
+                        <p className="text-xs text-muted-foreground">{customData.company_name || '-'}</p>
+                      </div>
                     </div>
                     <Badge variant="outline" className="text-xs">
                       {new Date(lead.receivedAt || lead.createdAt).toLocaleDateString('fr-FR')}
@@ -1000,14 +1057,14 @@ function PartnershipLeadsTab() {
                     {lead.country && <Badge variant="secondary" className="text-xs">{lead.country}</Badge>}
                   </div>
                   <div className="flex flex-wrap gap-1 text-xs">
-                    {customData['poss\u00e9dez-vous_un_showroom_?_'] && (
-                      <Badge variant={normalizeYesNoForBadge(customData['poss\u00e9dez-vous_un_showroom_?_']) ? 'default' : 'outline'} className="text-[10px]">
-                        Showroom: {normalizeYesNoForBadge(customData['poss\u00e9dez-vous_un_showroom_?_']) ? 'Oui' : 'Non'}
+                    {customData['possédez-vous_un_showroom_?_'] && (
+                      <Badge variant={normalizeYesNoForBadge(customData['possédez-vous_un_showroom_?_']) ? 'default' : 'outline'} className="text-[10px]">
+                        Showroom: {normalizeYesNoForBadge(customData['possédez-vous_un_showroom_?_']) ? 'Oui' : 'Non'}
                       </Badge>
                     )}
-                    {customData['travaillez-vous_d\u00e9j\u00e0_dans_la_vente_de_spa_?_'] && (
-                      <Badge variant={normalizeYesNoForBadge(customData['travaillez-vous_d\u00e9j\u00e0_dans_la_vente_de_spa_?_']) ? 'default' : 'outline'} className="text-[10px]">
-                        Vend Spa: {normalizeYesNoForBadge(customData['travaillez-vous_d\u00e9j\u00e0_dans_la_vente_de_spa_?_']) ? 'Oui' : 'Non'}
+                    {customData['travaillez-vous_déjà_dans_la_vente_de_spa_?_'] && (
+                      <Badge variant={normalizeYesNoForBadge(customData['travaillez-vous_déjà_dans_la_vente_de_spa_?_']) ? 'default' : 'outline'} className="text-[10px]">
+                        Vend Spa: {normalizeYesNoForBadge(customData['travaillez-vous_déjà_dans_la_vente_de_spa_?_']) ? 'Oui' : 'Non'}
                       </Badge>
                     )}
                   </div>
@@ -1026,6 +1083,20 @@ function PartnershipLeadsTab() {
                         </Button>
                       </a>
                     )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs text-purple-600 hover:text-purple-700"
+                      onClick={() => handleConvertToCandidate(lead)}
+                      disabled={convertingId === lead.id}
+                    >
+                      {convertingId === lead.id ? (
+                        <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                      ) : (
+                        <MapPin className="w-3 h-3 mr-1" />
+                      )}
+                      Carte
+                    </Button>
                   </div>
                 </div>
               </Card>
@@ -1045,6 +1116,7 @@ function PartnershipLeadsTab() {
               <TableHead>Ville / Pays</TableHead>
               <TableHead>Téléphone</TableHead>
               <TableHead>Critères</TableHead>
+              <TableHead>Score</TableHead>
               <TableHead>Source</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -1052,7 +1124,7 @@ function PartnershipLeadsTab() {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   <Handshake className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   Aucune demande de partenariat
                 </TableCell>
@@ -1061,10 +1133,11 @@ function PartnershipLeadsTab() {
               filtered.map((lead: any) => {
                 let customData: Record<string, string> = {};
                 try { customData = JSON.parse(lead.customFields || '{}'); } catch (e) { /* ignore */ }
-                const showroom = normalizeYesNoForBadge(customData['poss\u00e9dez-vous_un_showroom_?_']);
-                const vendSpa = normalizeYesNoForBadge(customData['travaillez-vous_d\u00e9j\u00e0_dans_la_vente_de_spa_?_']);
+                const showroom = normalizeYesNoForBadge(customData['possédez-vous_un_showroom_?_']);
+                const vendSpa = normalizeYesNoForBadge(customData['travaillez-vous_déjà_dans_la_vente_de_spa_?_']);
                 const autreMarque = normalizeYesNoForBadge(customData['vendez-vous_actuellement_une_autre_marque_?']);
                 const domaineSimilaire = normalizeYesNoForBadge(customData['travaillez-vous_dans_un_domaine_similaire_?_']);
+                const { score: leadScore } = calcLeadScore(lead.customFields);
 
                 return (
                   <TableRow key={lead.id}>
@@ -1097,6 +1170,11 @@ function PartnershipLeadsTab() {
                       </div>
                     </TableCell>
                     <TableCell>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${PRIORITY_COLORS[leadScore] || 'bg-gray-300'}`}>
+                        {leadScore}
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <Badge variant="secondary" className="text-xs">
                         {lead.source === 'META_ADS' ? 'Meta Ads' : lead.source === 'EMAIL' ? 'Email' : lead.source}
                       </Badge>
@@ -1117,6 +1195,20 @@ function PartnershipLeadsTab() {
                             </Button>
                           </a>
                         )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                          onClick={() => handleConvertToCandidate(lead)}
+                          disabled={convertingId === lead.id}
+                          title="Ajouter à la carte partenaire"
+                        >
+                          {convertingId === lead.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <MapPin className="w-3.5 h-3.5" />
+                          )}
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

@@ -817,17 +817,9 @@ export default function InteractivePartnerMap({
         </div>
       `;
 
-      const popup = L.popup({
-        maxWidth: 380,
-        className: 'custom-popup',
-        closeButton: true,
-        autoPan: true,
-        autoPanPadding: L.point(60, 60),
-      }).setContent(popupContent);
-
-      // Attach event listeners after popup opens
-      popup.on('add', () => {
-        const container = popup.getElement();
+      // Helper to attach event listeners to popup DOM after it opens
+      const attachPopupListeners = (popupInstance: L.Popup) => {
+        const container = popupInstance.getElement();
         if (!container) return;
 
         container.querySelectorAll<HTMLButtonElement>('[data-action="status"]').forEach(btn => {
@@ -848,25 +840,36 @@ export default function InteractivePartnerMap({
           });
         });
 
-        // Call button: open tel: link AND count +1
         container.querySelectorAll<HTMLAnchorElement>('[data-action="call-phone"]').forEach(link => {
           link.addEventListener('click', (e) => {
             e.stopPropagation();
             const candidateId = parseInt(link.dataset.candidateId || '0');
             incrementPhoneMutationRef.current.mutate({ candidateId });
-            // tel: link opens naturally via href
           });
         });
 
-        // Email button: open mailto: link AND count +1
         container.querySelectorAll<HTMLAnchorElement>('[data-action="send-email"]').forEach(link => {
           link.addEventListener('click', (e) => {
             e.stopPropagation();
             const candidateId = parseInt(link.dataset.candidateId || '0');
             incrementEmailMutationRef.current.mutate({ candidateId });
-            // mailto: link opens naturally via href
           });
         });
+      };
+
+      // FIX: bind popup directly to marker so Leaflet manages open/close state correctly.
+      // Recreate a fresh popup each time the marker is clicked to avoid stale DOM state
+      // that prevents re-opening after the first close.
+      marker.bindPopup(popupContent, {
+        maxWidth: 380,
+        className: 'custom-popup',
+        closeButton: true,
+        autoPan: true,
+        autoPanPadding: L.point(60, 60),
+      });
+
+      marker.on('popupopen', (e) => {
+        attachPopupListeners(e.popup);
       });
 
       marker.on('click', () => {
@@ -874,7 +877,7 @@ export default function InteractivePartnerMap({
         if (currentMode !== 'off') {
           addRoutePoint({ id: item.id, name: c.companyName, lat: item.lat, lng: item.lng });
         } else {
-          marker.bindPopup(popup).openPopup();
+          marker.openPopup();
         }
       });
 
