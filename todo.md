@@ -2350,3 +2350,8 @@
 - [x] Graphique sessions par jour (30 derniers jours)
 - [x] Tableau sources de trafic avec sessions, utilisateurs, pages vues, taux de rebond
 - [x] Ajouter le Property ID GA4 comme variable d'environnement (GA4_PROPERTY_ID)
+
+## Simplification Analytics / Shopify
+- [ ] Retirer l'onglet Trafic de AdminShopify (garder uniquement les ventes)
+- [ ] Corriger le flux OAuth GA4 dans AdminGoogleAnalytics (connexion non persistante)
+- [ ] Diagnostiquer pourquoi getReport retourne connected: false après connexion

@@ -370,6 +370,8 @@ export default function AdminLeads() {
   const { data: googleOAuthUrl } = trpc.googleAds.getOAuthUrl.useQuery(undefined, { retry: false });
   const { data: googleConnectedAccounts, refetch: refetchGoogleAccounts } = trpc.googleAds.getConnectedAccounts.useQuery();
   const googleCallbackMutation = trpc.googleAds.handleCallback.useMutation();
+  const ga4CallbackMutation = trpc.googleAnalytics.handleCallback.useMutation();
+  const utils = trpc.useUtils();
   const { data: googleCampaignsData, isLoading: googleCampaignsLoading, refetch: refetchGoogleCampaigns } = trpc.googleAds.getCampaigns.useQuery(
     { datePreset: googleDatePreset },
     { enabled: !!googleConnectedAccounts && googleConnectedAccounts.length > 0, retry: false }
@@ -429,13 +431,28 @@ export default function AdminLeads() {
       return;
     }
     
-    // Handle GA4 callback — le composant AdminGoogleAnalytics gère lui-même l'échange du code
+    // Handle GA4 callback — traiter le code ici directement (AdminGoogleAnalytics n'est pas encore monté)
     const isGa4 = urlParams.get("ga4") === "true";
     if (code && isGa4) {
-      console.log("[GA4 OAuth] Code found, switching to analytics tab");
+      console.log("[GA4 OAuth] Code found, exchanging tokens directly in AdminLeads");
+      // Nettoyer l'URL immédiatement pour éviter le double traitement
+      window.history.replaceState({}, "", window.location.pathname);
       setActiveTab('campaigns');
       setAdsTab('analytics');
-      // Ne pas nettoyer l'URL ici : AdminGoogleAnalytics s'en charge
+      ga4CallbackMutation.mutate(
+        { code },
+        {
+          onSuccess: (data: any) => {
+            toast.success("Google Analytics connecté", {
+              description: `Propriété "${data.propertyName}" connectée avec succès.`,
+            });
+            utils.googleAnalytics.getReport.invalidate();
+          },
+          onError: (err: any) => {
+            toast.error("Erreur de connexion GA4", { description: err.message });
+          },
+        }
+      );
       return;
     }
 
