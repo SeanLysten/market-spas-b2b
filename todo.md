@@ -2326,3 +2326,7 @@
 - [x] 4ème onglet "Shopify" ajouté dans AdminLeads (grid-cols-4, logo Shopify SVG)
 - [x] Détection du callback ?shopify=true pour basculer automatiquement vers l'onglet Shopify
 - [x] 11 tests vitest Shopify passés
+
+## Shopify: correction erreur INSERT (session 2026-03-05 #37)
+- [ ] Diagnostiquer l'erreur SQL INSERT dans shopify_accounts
+- [ ] Corriger la requête upsertShopifyAccount dans db.ts

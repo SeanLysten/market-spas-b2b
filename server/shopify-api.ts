@@ -308,7 +308,7 @@ export async function exchangeShopifyCode(
   const url = `https://${shopDomain}/admin/oauth/access_token`;
   const response = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify({
       client_id: clientId,
       client_secret: clientSecret,
@@ -317,8 +317,15 @@ export async function exchangeShopifyCode(
   });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Shopify token exchange error ${response.status}: ${text}`);
+    let errorMsg = `Shopify token exchange error ${response.status}`;
+    try {
+      const json = await response.json() as { error?: string; error_description?: string };
+      errorMsg += `: ${json.error_description || json.error || 'Unknown error'}`;
+    } catch {
+      const text = await response.text();
+      errorMsg += `: ${text.substring(0, 200)}`;
+    }
+    throw new Error(errorMsg);
   }
 
   return response.json() as Promise<{ access_token: string; scope: string }>;

@@ -5424,11 +5424,10 @@ export interface ShopifyAccountRow {
 export async function getShopifyAccount(userId: number): Promise<ShopifyAccountRow | null> {
   const db = await getDb();
   if (!db) return null;
-  const [row] = await db.execute(
-    `SELECT id, user_id as userId, shop_domain as shopDomain, access_token as accessToken, scope, shop_name as shopName, shop_email as shopEmail, currency, connected_at as connectedAt, updated_at as updatedAt FROM shopify_accounts WHERE user_id = ? LIMIT 1`,
-    [userId]
-  ) as [ShopifyAccountRow[], unknown];
-  return row || null;
+  const rows = await db.execute(
+    sql`SELECT id, user_id as userId, shop_domain as shopDomain, access_token as accessToken, scope, shop_name as shopName, shop_email as shopEmail, currency, connected_at as connectedAt, updated_at as updatedAt FROM shopify_accounts WHERE user_id = ${userId} LIMIT 1`
+  ) as unknown as ShopifyAccountRow[];
+  return rows[0] || null;
 }
 
 export async function upsertShopifyAccount(
@@ -5442,9 +5441,12 @@ export async function upsertShopifyAccount(
 ): Promise<void> {
   const db = await getDb();
   if (!db) return;
+  const shopNameVal = shopName || null;
+  const shopEmailVal = shopEmail || null;
+  const currencyVal = currency || 'EUR';
   await db.execute(
-    `INSERT INTO shopify_accounts (user_id, shop_domain, access_token, scope, shop_name, shop_email, currency)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
+    sql`INSERT INTO shopify_accounts (user_id, shop_domain, access_token, scope, shop_name, shop_email, currency)
+     VALUES (${userId}, ${shopDomain}, ${accessToken}, ${scope}, ${shopNameVal}, ${shopEmailVal}, ${currencyVal})
      ON DUPLICATE KEY UPDATE
        shop_domain = VALUES(shop_domain),
        access_token = VALUES(access_token),
@@ -5452,13 +5454,12 @@ export async function upsertShopifyAccount(
        shop_name = COALESCE(VALUES(shop_name), shop_name),
        shop_email = COALESCE(VALUES(shop_email), shop_email),
        currency = COALESCE(VALUES(currency), currency),
-       updated_at = CURRENT_TIMESTAMP`,
-    [userId, shopDomain, accessToken, scope, shopName || null, shopEmail || null, currency || 'EUR']
+       updated_at = CURRENT_TIMESTAMP`
   );
 }
 
 export async function deleteShopifyAccount(userId: number): Promise<void> {
   const db = await getDb();
   if (!db) return;
-  await db.execute(`DELETE FROM shopify_accounts WHERE user_id = ?`, [userId]);
+  await db.execute(sql`DELETE FROM shopify_accounts WHERE user_id = ${userId}`);
 }
