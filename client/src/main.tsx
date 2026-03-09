@@ -26,7 +26,17 @@ queryClient.getQueryCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.query.state.error;
     redirectToLoginIfUnauthorized(error);
-    console.error("[API Query Error]", error);
+    // Ignorer les erreurs d'abort (React StrictMode / navigation)
+    if (error instanceof TRPCClientError && 
+        (error.message?.includes('aborted') || error.cause?.name === 'AbortError')) {
+      return;
+    }
+    // Ignorer les erreurs 429 (rate limit) - elles se résoudront automatiquement
+    if (error instanceof TRPCClientError && 
+        (error.data?.code === 'TOO_MANY_REQUESTS' || error.message?.includes('Too many requests'))) {
+      return;
+    }
+    console.error("[API Query Error]", error, "QueryKey:", event.query.queryKey);
   }
 });
 

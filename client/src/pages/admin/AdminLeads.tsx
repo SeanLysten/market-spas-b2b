@@ -158,7 +158,7 @@ export default function AdminLeads() {
     status: statusFilter !== "all" ? statusFilter : undefined,
     partnerId: partnerFilter !== "all" ? parseInt(partnerFilter) : undefined,
   }, {
-    refetchInterval: 10000, // Polling toutes les 10 secondes
+    refetchInterval: 30000, // Polling toutes les 30 secondes (WebSocket gère les mises à jour en temps réel)
     refetchIntervalInBackground: false, // Pas de polling quand l'onglet est en arrière-plan
   });
 

@@ -64,13 +64,17 @@ async function startServer() {
     legacyHeaders: false,
   });
 
-  // Rate limiting for API endpoints (200 requests per minute)
+  // Rate limiting for API endpoints (1000 requests per minute)
   const apiLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
-    max: 200, // 200 requests per window
-    message: "Too many requests, please try again later.",
+    max: 1000, // 1000 requests per window (augmenté pour éviter les faux positifs avec le polling)
     standardHeaders: true,
     legacyHeaders: false,
+    handler: (_req, res) => {
+      res.status(429).json({
+        error: { json: { message: "Too many requests, please try again later.", code: -32000, data: { code: "TOO_MANY_REQUESTS", httpStatus: 429 } } }
+      });
+    },
   });
 
   // Apply rate limiting to auth routes
