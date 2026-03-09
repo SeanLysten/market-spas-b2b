@@ -16,6 +16,7 @@ import * as candidatesDb from "./candidates-db";
 import { reclassifyExistingPartnerLeads } from "./meta-leads";
 import * as savDb from "./sav-db";
 import * as shopifyApi from "./shopify-api";
+import * as ga4Api from "./ga4-api";
 import { analyzeWarranty, COMPONENTS_BY_BRAND, DEFECT_TYPES_BY_COMPONENT, PRODUCT_LINES_BY_BRAND, COMPONENT_TO_SPARE_CATEGORY, generateTrackingUrl, type WarrantyInput, type SavBrand, type UsageType } from "./warranty-engine";
 
 export const appRouter = router({
@@ -2412,6 +2413,24 @@ export const appRouter = router({
         .input(z.object({ limit: z.number().default(10) }).optional())
         .query(async ({ input }) => {
           return await db.getPartnerPerformance(input?.limit || 10);
+        }),
+
+      // GA4 Traffic Report
+      getGA4Report: adminProcedure
+        .input(z.object({
+          startDate: z.string().optional(),
+          endDate: z.string().optional(),
+        }))
+        .query(async ({ input }) => {
+          const now = new Date();
+          const end = input.endDate || now.toISOString().split('T')[0];
+          const start = input.startDate || new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          try {
+            return await ga4Api.getGA4TrafficReport(start, end);
+          } catch (e) {
+            console.warn('[GA4] Traffic report error:', e);
+            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `Erreur GA4 : ${(e as Error).message}` });
+          }
         }),
     }),
 

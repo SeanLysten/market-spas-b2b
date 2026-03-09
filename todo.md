@@ -2340,3 +2340,13 @@
 - [x] Tableau détaillé par source avec barres de progression et taux de conversion
 - [x] Corriger l'erreur "fetch failed" (getShopifyAccount retournait [] au lieu de null)
 - [x] Corriger exchangeShopifyCode pour ajouter Accept: application/json
+
+## Google Analytics 4 - Intégration trafic
+- [x] Créer le fichier server/ga4-api.ts avec la fonction getGA4TrafficReport
+- [x] Stocker la clé JSON GA4 comme secret d'environnement (GA4_SERVICE_ACCOUNT_KEY)
+- [x] Ajouter la route tRPC admin.analytics.getGA4Report dans routers.ts
+- [x] Remplacer l'onglet Trafic Shopify par un onglet Analytics GA4 dans AdminShopify.tsx
+- [x] Afficher : sessions totales, utilisateurs actifs, pages vues, taux de rebond
+- [x] Graphique sessions par jour (30 derniers jours)
+- [x] Tableau sources de trafic avec sessions, utilisateurs, pages vues, taux de rebond
+- [x] Ajouter le Property ID GA4 comme variable d'environnement (GA4_PROPERTY_ID)

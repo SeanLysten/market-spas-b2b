@@ -17,6 +17,7 @@ import {
   ShoppingBag, TrendingUp, Users, Package,
   CalendarIcon, RefreshCw, Unlink, ShoppingCart, Euro,
   ArrowUpRight, ArrowDownRight, Globe, MousePointerClick, ShoppingBasket,
+  Eye, UserCheck, FileText, Activity,
 } from "lucide-react";
 
 // ─── Types locaux ────────────────────────────────────────────────────────────
@@ -134,9 +135,10 @@ export default function AdminShopify() {
     },
     { enabled: !!accountQuery.data, retry: false }
   );
-  const trafficQuery = trpc.shopify.getTrafficReport.useQuery(
+  // GA4 Traffic Report (indépendant de la connexion Shopify)
+  const ga4Query = trpc.admin.analytics.getGA4Report.useQuery(
     { startDate, endDate },
-    { enabled: !!accountQuery.data, retry: false }
+    { retry: false }
   );
   const disconnectMutation = trpc.shopify.disconnectAccount.useMutation({
     onSuccess: () => {
@@ -224,7 +226,7 @@ export default function AdminShopify() {
   const report = reportQuery.data;
   const overview = report?.overview;
   const compareOverview = report?.compareOverview;
-  const traffic = trafficQuery.data;
+  const ga4 = ga4Query.data;
 
   // ── Sélecteur de période ─────────────────────────────────────────────────
   const PeriodSelector = (
@@ -467,60 +469,57 @@ export default function AdminShopify() {
           )}
         </TabsContent>
 
-        {/* ── Onglet Trafic ─────────────────────────────────────────────── */}
+        {/* ── Onglet Trafic GA4 ─────────────────────────────────────────── */}
         <TabsContent value="traffic" className="space-y-4 mt-4">
-          {trafficQuery.isLoading && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
+          {/* Badge source */}
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs gap-1 border-blue-200 text-blue-700 bg-blue-50">
+              <Activity className="h-3 w-3" />
+              Google Analytics 4
+            </Badge>
+            <span className="text-xs text-muted-foreground">Données réelles de votre boutique</span>
+          </div>
+
+          {ga4Query.isLoading && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
                 <Card key={i}><CardContent className="pt-4 pb-3"><div className="h-16 bg-muted animate-pulse rounded" /></CardContent></Card>
               ))}
             </div>
           )}
-          {trafficQuery.error && (
+          {ga4Query.error && (
             <Card className="border-red-200 bg-red-50">
               <CardContent className="pt-4 text-sm text-red-600">
-                Erreur trafic : {trafficQuery.error.message}
+                Erreur GA4 : {ga4Query.error.message}
               </CardContent>
             </Card>
           )}
-          {traffic && (
+          {ga4 && (
             <>
-              {/* KPIs trafic */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <KpiCard
-                  title="Sessions totales"
-                  value={fmtNum(traffic.totalSessions)}
-                  icon={Globe}
-                  color="blue"
-                />
-                <KpiCard
-                  title="Taux de conversion"
-                  value={`${traffic.conversionRate.toFixed(2)}%`}
-                  icon={MousePointerClick}
-                  color="emerald"
-                />
-                <KpiCard
-                  title="Abandon panier"
-                  value={`${traffic.cartAbandonmentRate.toFixed(2)}%`}
-                  icon={ShoppingBasket}
-                  color="amber"
-                />
+              {/* KPIs GA4 */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <KpiCard title="Sessions" value={fmtNum(ga4.totalSessions)} icon={Globe} color="blue" />
+                <KpiCard title="Utilisateurs" value={fmtNum(ga4.totalUsers)} icon={UserCheck} color="emerald" />
+                <KpiCard title="Pages vues" value={fmtNum(ga4.totalPageViews)} icon={Eye} color="purple" />
+                <KpiCard title="Taux de rebond" value={`${ga4.avgBounceRate.toFixed(1)}%`} icon={Activity} color="amber" />
               </div>
 
-              {/* Graphique sessions journalières */}
-              {traffic.dailySessions && traffic.dailySessions.length > 0 && (
+              {/* Graphique sessions + utilisateurs par jour */}
+              {ga4.dailySessions && ga4.dailySessions.length > 0 && (
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Sessions par jour</CardTitle>
+                    <CardTitle className="text-sm font-medium">Sessions & utilisateurs par jour</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={traffic.dailySessions} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <BarChart data={ga4.dailySessions} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                        <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(v) => { const d = new Date(v); return `${d.getDate()}/${d.getMonth() + 1}`; }} />
+                        <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(v) => { const d = new Date(v + 'T12:00:00'); return `${d.getDate()}/${d.getMonth() + 1}`; }} />
                         <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                        <Tooltip formatter={(v: number) => [fmtNum(v), "Sessions"]} labelFormatter={(l) => format(new Date(l), "dd MMMM yyyy", { locale: fr })} />
-                        <Bar dataKey="sessions" name="Sessions" fill="#3b82f6" radius={[2, 2, 0, 0]} />
+                        <Tooltip formatter={(v: number, name: string) => [fmtNum(v), name === 'sessions' ? 'Sessions' : 'Utilisateurs']} labelFormatter={(l) => { const d = new Date(l + 'T12:00:00'); return format(d, 'dd MMMM yyyy', { locale: fr }); }} />
+                        <Legend formatter={(v) => v === 'sessions' ? 'Sessions' : 'Utilisateurs'} />
+                        <Bar dataKey="sessions" name="sessions" fill="#3b82f6" radius={[2, 2, 0, 0]} />
+                        <Bar dataKey="users" name="users" fill="#10b981" radius={[2, 2, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -528,40 +527,39 @@ export default function AdminShopify() {
               )}
 
               {/* Sources de trafic */}
-              {traffic.trafficSources && traffic.trafficSources.length > 0 ? (
+              {ga4.trafficSources && ga4.trafficSources.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Camembert sources */}
+                  {/* Camembert canaux */}
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
                         <Globe className="h-4 w-4 text-blue-500" />
-                        Répartition des sources
+                        Canaux d'acquisition
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <ResponsiveContainer width="100%" height={200}>
                         <PieChart>
                           <Pie
-                            data={traffic.trafficSources}
+                            data={ga4.trafficSources}
                             dataKey="sessions"
-                            nameKey="source"
-                            cx="50%"
-                            cy="50%"
+                            nameKey="channel"
+                            cx="50%" cy="50%"
                             outerRadius={75}
-                            label={({ source, percent }) => percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''}
+                            label={({ percent }) => percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''}
                             labelLine={false}
                           >
-                            {traffic.trafficSources.map((_, i) => (<Cell key={i} fill={COLORS[i % COLORS.length]} />))}
+                            {ga4.trafficSources.map((_, i) => (<Cell key={i} fill={COLORS[i % COLORS.length]} />))}
                           </Pie>
-                          <Tooltip formatter={(v: number, name: string) => [fmtNum(v) + " sessions", name]} />
+                          <Tooltip formatter={(v: number, name: string) => [fmtNum(v) + ' sessions', name]} />
                         </PieChart>
                       </ResponsiveContainer>
                       <div className="mt-2 space-y-1">
-                        {traffic.trafficSources.map((s, i) => (
-                          <div key={s.source} className="flex items-center justify-between text-xs">
+                        {ga4.trafficSources.map((s, i) => (
+                          <div key={s.channel} className="flex items-center justify-between text-xs">
                             <div className="flex items-center gap-1.5">
                               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                              <span className="capitalize">{s.source || 'Direct'}</span>
+                              <span>{s.channel}</span>
                             </div>
                             <span className="font-medium">{fmtNum(s.sessions)}</span>
                           </div>
@@ -570,36 +568,34 @@ export default function AdminShopify() {
                     </CardContent>
                   </Card>
 
-                  {/* Tableau détaillé */}
+                  {/* Tableau détaillé canaux */}
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
                         <MousePointerClick className="h-4 w-4 text-emerald-500" />
-                        Détail par source
+                        Détail par canal
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
-                        {traffic.trafficSources.map((s, i) => {
-                          const totalSess = traffic.trafficSources.reduce((acc, x) => acc + x.sessions, 0);
-                          const pct = totalSess > 0 ? (s.sessions / totalSess) * 100 : 0;
+                        {ga4.trafficSources.map((s, i) => {
+                          const total = ga4.trafficSources.reduce((acc, x) => acc + x.sessions, 0);
+                          const pct = total > 0 ? (s.sessions / total) * 100 : 0;
                           return (
-                            <div key={s.source} className="space-y-0.5">
+                            <div key={s.channel} className="space-y-0.5">
                               <div className="flex items-center justify-between text-xs">
                                 <div className="flex items-center gap-1.5">
                                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                                  <span className="capitalize font-medium">{s.source || 'Direct'}</span>
+                                  <span className="font-medium">{s.channel}</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-muted-foreground">
                                   <span>{fmtNum(s.sessions)} sess.</span>
-                                  <span className="text-emerald-600">{s.conversionRate.toFixed(1)}% conv.</span>
+                                  <span>{fmtNum(s.users)} util.</span>
+                                  <span className="text-orange-600">{s.bounceRate.toFixed(0)}% rebond</span>
                                 </div>
                               </div>
                               <div className="w-full bg-muted rounded-full h-1.5">
-                                <div
-                                  className="h-1.5 rounded-full"
-                                  style={{ width: `${pct}%`, backgroundColor: COLORS[i % COLORS.length] }}
-                                />
+                                <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, backgroundColor: COLORS[i % COLORS.length] }} />
                               </div>
                             </div>
                           );
@@ -608,16 +604,40 @@ export default function AdminShopify() {
                     </CardContent>
                   </Card>
                 </div>
-              ) : (
-                !trafficQuery.isLoading && (
-                  <Card className="border-dashed">
-                    <CardContent className="pt-6 pb-6 text-center text-sm text-muted-foreground">
-                      <Globe className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                      <p>Aucune donnée de trafic disponible pour cette période.</p>
-                      <p className="text-xs mt-1">Les données de sessions nécessitent le scope <code>read_analytics</code> dans votre application Shopify.</p>
-                    </CardContent>
-                  </Card>
-                )
+              )}
+
+              {/* Top pages */}
+              {ga4.topPages && ga4.topPages.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-purple-500" />
+                      Pages les plus visitées
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-1.5">
+                      {ga4.topPages.slice(0, 8).map((p, i) => {
+                        const maxViews = ga4.topPages[0]?.views || 1;
+                        const pct = (p.views / maxViews) * 100;
+                        return (
+                          <div key={p.page} className="space-y-0.5">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-mono text-muted-foreground truncate max-w-[60%]">{p.page}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="font-medium">{fmtNum(p.views)} vues</span>
+                                <span className="text-muted-foreground">{fmtNum(p.users)} util.</span>
+                              </div>
+                            </div>
+                            <div className="w-full bg-muted rounded-full h-1">
+                              <div className="h-1 rounded-full bg-purple-400" style={{ width: `${pct}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
               )}
             </>
           )}
