@@ -2355,3 +2355,15 @@
 - [ ] Retirer l'onglet Trafic de AdminShopify (garder uniquement les ventes)
 - [ ] Corriger le flux OAuth GA4 dans AdminGoogleAnalytics (connexion non persistante)
 - [ ] Diagnostiquer pourquoi getReport retourne connected: false après connexion
+
+## GA4 - Données enrichies (géo, appareils, langues)
+- [x] Ajouter données géographiques : top pays avec sessions/utilisateurs
+- [x] Ajouter données villes : top 10 villes avec sessions
+- [x] Ajouter données appareils : desktop/mobile/tablet
+- [x] Ajouter données langues de l'audience
+- [x] Afficher tableau pays avec drapeaux et barres de progression
+- [x] Section "Audience" avec tableau pays + BarChart horizontal + PieChart appareils
+- [x] Section "Villes" avec tableau détaillé + section landing pages
+- [x] Ajouter KPI durée moyenne de session
+- [x] Ajouter tableau pages d'atterrissage avec taux de rebond et durée
+- [x] Tests vitest mis à jour et passants (2 tests)

@@ -17,6 +17,8 @@ export function getGA4PropertyId(): string {
   return id;
 }
 
+// ── Interfaces ────────────────────────────────────────────────────────────────
+
 export interface GA4TrafficSource {
   channel: string;
   sessions: number;
@@ -31,18 +33,93 @@ export interface GA4DailySession {
   users: number;
 }
 
+export interface GA4GeoCountry {
+  country: string;
+  countryCode: string;
+  sessions: number;
+  users: number;
+  pageViews: number;
+  bounceRate: number;
+}
+
+export interface GA4GeoCity {
+  city: string;
+  country: string;
+  sessions: number;
+  users: number;
+}
+
+export interface GA4DeviceCategory {
+  device: string;
+  sessions: number;
+  users: number;
+  bounceRate: number;
+}
+
+export interface GA4Language {
+  language: string;
+  sessions: number;
+  users: number;
+}
+
+export interface GA4LandingPage {
+  page: string;
+  sessions: number;
+  bounceRate: number;
+  avgSessionDuration: number;
+}
+
 export interface GA4TrafficReport {
   totalSessions: number;
   totalUsers: number;
   totalPageViews: number;
   avgBounceRate: number;
+  avgSessionDuration: number;
   dailySessions: GA4DailySession[];
   trafficSources: GA4TrafficSource[];
   topPages: Array<{ page: string; views: number; users: number }>;
+  // Nouvelles dimensions
+  geoCountries: GA4GeoCountry[];
+  geoCities: GA4GeoCity[];
+  devices: GA4DeviceCategory[];
+  languages: GA4Language[];
+  landingPages: GA4LandingPage[];
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function intVal(row: any, idx: number): number {
+  return parseInt(row.metricValues?.[idx]?.value || '0', 10);
+}
+function floatVal(row: any, idx: number): number {
+  return parseFloat(row.metricValues?.[idx]?.value || '0');
+}
+function dimVal(row: any, idx: number): string {
+  return row.dimensionValues?.[idx]?.value || '';
+}
+function formatDate(rawDate: string): string {
+  return rawDate.length === 8
+    ? `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}`
+    : rawDate;
+}
+
+// Mapping ISO alpha-2 codes depuis les noms de pays GA4
+// GA4 retourne les noms en anglais, on les garde tels quels pour le display
+// et on utilise une table de correspondance pour les codes ISO
+const COUNTRY_TO_ISO: Record<string, string> = {
+  'France': 'FR', 'Belgium': 'BE', 'Switzerland': 'CH', 'Luxembourg': 'LU',
+  'Germany': 'DE', 'Netherlands': 'NL', 'Spain': 'ES', 'Italy': 'IT',
+  'United Kingdom': 'GB', 'United States': 'US', 'Canada': 'CA',
+  'Australia': 'AU', 'Japan': 'JP', 'China': 'CN', 'Brazil': 'BR',
+  'Mexico': 'MX', 'Portugal': 'PT', 'Austria': 'AT', 'Sweden': 'SE',
+  'Denmark': 'DK', 'Norway': 'NO', 'Finland': 'FI', 'Poland': 'PL',
+  'Czech Republic': 'CZ', 'Romania': 'RO', 'Hungary': 'HU', 'Morocco': 'MA',
+  'Algeria': 'DZ', 'Tunisia': 'TN', 'Senegal': 'SN', 'Ivory Coast': "CI",
+  'United Arab Emirates': 'AE', 'Saudi Arabia': 'SA', 'Qatar': 'QA',
+};
+
 /**
- * Récupère les statistiques de trafic depuis Google Analytics 4
+ * Récupère les statistiques de trafic complètes depuis Google Analytics 4
  */
 export async function getGA4TrafficReport(
   startDate: string,
@@ -51,46 +128,95 @@ export async function getGA4TrafficReport(
   const client = getGA4Client();
   const propertyId = getGA4PropertyId();
 
-  // Requête 1 : sessions par canal de trafic
-  const [channelResponse] = await client.runReport({
-    property: `properties/${propertyId}`,
-    dateRanges: [{ startDate, endDate }],
-    metrics: [
-      { name: 'sessions' },
-      { name: 'activeUsers' },
-      { name: 'screenPageViews' },
-      { name: 'bounceRate' },
-    ],
-    dimensions: [{ name: 'sessionDefaultChannelGroup' }],
-    orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-  });
+  const property = `properties/${propertyId}`;
+  const dateRanges = [{ startDate, endDate }];
 
-  // Requête 2 : sessions par jour
-  const [dailyResponse] = await client.runReport({
-    property: `properties/${propertyId}`,
-    dateRanges: [{ startDate, endDate }],
-    metrics: [
-      { name: 'sessions' },
-      { name: 'activeUsers' },
-    ],
-    dimensions: [{ name: 'date' }],
-    orderBys: [{ dimension: { dimensionName: 'date' }, desc: false }],
-  });
+  // Lancer toutes les requêtes en parallèle pour la performance
+  const [
+    [channelResponse],
+    [dailyResponse],
+    [pagesResponse],
+    [countriesResponse],
+    [citiesResponse],
+    [devicesResponse],
+    [languagesResponse],
+    [landingPagesResponse],
+  ] = await Promise.all([
+    // 1. Sources de trafic par canal
+    client.runReport({
+      property, dateRanges,
+      metrics: [
+        { name: 'sessions' }, { name: 'activeUsers' },
+        { name: 'screenPageViews' }, { name: 'bounceRate' },
+      ],
+      dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+    }),
+    // 2. Sessions par jour
+    client.runReport({
+      property, dateRanges,
+      metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+      dimensions: [{ name: 'date' }],
+      orderBys: [{ dimension: { dimensionName: 'date' }, desc: false }],
+    }),
+    // 3. Top pages vues
+    client.runReport({
+      property, dateRanges,
+      metrics: [{ name: 'screenPageViews' }, { name: 'activeUsers' }],
+      dimensions: [{ name: 'pagePath' }],
+      orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+      limit: 10,
+    }),
+    // 4. Géographie : pays
+    client.runReport({
+      property, dateRanges,
+      metrics: [
+        { name: 'sessions' }, { name: 'activeUsers' },
+        { name: 'screenPageViews' }, { name: 'bounceRate' },
+      ],
+      dimensions: [{ name: 'country' }],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      limit: 20,
+    }),
+    // 5. Géographie : villes
+    client.runReport({
+      property, dateRanges,
+      metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+      dimensions: [{ name: 'city' }, { name: 'country' }],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      limit: 15,
+    }),
+    // 6. Appareils
+    client.runReport({
+      property, dateRanges,
+      metrics: [
+        { name: 'sessions' }, { name: 'activeUsers' }, { name: 'bounceRate' },
+      ],
+      dimensions: [{ name: 'deviceCategory' }],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+    }),
+    // 7. Langues
+    client.runReport({
+      property, dateRanges,
+      metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+      dimensions: [{ name: 'language' }],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      limit: 10,
+    }),
+    // 8. Pages d'atterrissage (landing pages)
+    client.runReport({
+      property, dateRanges,
+      metrics: [
+        { name: 'sessions' }, { name: 'bounceRate' },
+        { name: 'averageSessionDuration' },
+      ],
+      dimensions: [{ name: 'landingPage' }],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      limit: 10,
+    }),
+  ]);
 
-  // Requête 3 : top pages
-  const [pagesResponse] = await client.runReport({
-    property: `properties/${propertyId}`,
-    dateRanges: [{ startDate, endDate }],
-    metrics: [
-      { name: 'screenPageViews' },
-      { name: 'activeUsers' },
-    ],
-    dimensions: [{ name: 'pagePath' }],
-    orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
-    limit: 10,
-  });
-
-  // Parser les sources de trafic
+  // ── Parser les sources de trafic ─────────────────────────────────────────
   const trafficSources: GA4TrafficSource[] = [];
   let totalSessions = 0;
   let totalUsers = 0;
@@ -99,12 +225,11 @@ export async function getGA4TrafficReport(
   let channelCount = 0;
 
   for (const row of channelResponse.rows || []) {
-    const channel = row.dimensionValues?.[0]?.value || 'Inconnu';
-    const sessions = parseInt(row.metricValues?.[0]?.value || '0', 10);
-    const users = parseInt(row.metricValues?.[1]?.value || '0', 10);
-    const pageViews = parseInt(row.metricValues?.[2]?.value || '0', 10);
-    const bounceRate = parseFloat(row.metricValues?.[3]?.value || '0') * 100;
-
+    const channel = dimVal(row, 0);
+    const sessions = intVal(row, 0);
+    const users = intVal(row, 1);
+    const pageViews = intVal(row, 2);
+    const bounceRate = floatVal(row, 3) * 100;
     trafficSources.push({ channel, sessions, users, pageViews, bounceRate: Math.round(bounceRate * 10) / 10 });
     totalSessions += sessions;
     totalUsers += users;
@@ -113,34 +238,93 @@ export async function getGA4TrafficReport(
     channelCount++;
   }
 
-  // Parser les sessions journalières
-  const dailySessions: GA4DailySession[] = [];
-  for (const row of dailyResponse.rows || []) {
-    const rawDate = row.dimensionValues?.[0]?.value || '';
-    // Format GA4: YYYYMMDD → YYYY-MM-DD
-    const date = rawDate.length === 8
-      ? `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}`
-      : rawDate;
-    const sessions = parseInt(row.metricValues?.[0]?.value || '0', 10);
-    const users = parseInt(row.metricValues?.[1]?.value || '0', 10);
-    dailySessions.push({ date, sessions, users });
-  }
-
-  // Parser les top pages
-  const topPages = (pagesResponse.rows || []).map((row) => ({
-    page: row.dimensionValues?.[0]?.value || '/',
-    views: parseInt(row.metricValues?.[0]?.value || '0', 10),
-    users: parseInt(row.metricValues?.[1]?.value || '0', 10),
+  // ── Parser les sessions journalières ─────────────────────────────────────
+  const dailySessions: GA4DailySession[] = (dailyResponse.rows || []).map((row) => ({
+    date: formatDate(dimVal(row, 0)),
+    sessions: intVal(row, 0),
+    users: intVal(row, 1),
   }));
+
+  // ── Parser les top pages ──────────────────────────────────────────────────
+  const topPages = (pagesResponse.rows || []).map((row) => ({
+    page: dimVal(row, 0),
+    views: intVal(row, 0),
+    users: intVal(row, 1),
+  }));
+
+  // ── Parser les pays ───────────────────────────────────────────────────────
+  const geoCountries: GA4GeoCountry[] = (countriesResponse.rows || [])
+    .filter((row) => dimVal(row, 0) !== '(not set)')
+    .map((row) => {
+      const country = dimVal(row, 0);
+      return {
+        country,
+        countryCode: COUNTRY_TO_ISO[country] || country.slice(0, 2).toUpperCase(),
+        sessions: intVal(row, 0),
+        users: intVal(row, 1),
+        pageViews: intVal(row, 2),
+        bounceRate: Math.round(floatVal(row, 3) * 1000) / 10,
+      };
+    });
+
+  // ── Parser les villes ─────────────────────────────────────────────────────
+  const geoCities: GA4GeoCity[] = (citiesResponse.rows || [])
+    .filter((row) => dimVal(row, 0) !== '(not set)')
+    .map((row) => ({
+      city: dimVal(row, 0),
+      country: dimVal(row, 1),
+      sessions: intVal(row, 0),
+      users: intVal(row, 1),
+    }));
+
+  // ── Parser les appareils ──────────────────────────────────────────────────
+  const devices: GA4DeviceCategory[] = (devicesResponse.rows || []).map((row) => ({
+    device: dimVal(row, 0),
+    sessions: intVal(row, 0),
+    users: intVal(row, 1),
+    bounceRate: Math.round(floatVal(row, 2) * 1000) / 10,
+  }));
+
+  // ── Parser les langues ────────────────────────────────────────────────────
+  const languages: GA4Language[] = (languagesResponse.rows || [])
+    .filter((row) => dimVal(row, 0) !== '(not set)')
+    .map((row) => ({
+      language: dimVal(row, 0),
+      sessions: intVal(row, 0),
+      users: intVal(row, 1),
+    }));
+
+  // ── Parser les landing pages ──────────────────────────────────────────────
+  const landingPages: GA4LandingPage[] = (landingPagesResponse.rows || [])
+    .filter((row) => dimVal(row, 0) !== '(not set)')
+    .map((row) => ({
+      page: dimVal(row, 0),
+      sessions: intVal(row, 0),
+      bounceRate: Math.round(floatVal(row, 1) * 1000) / 10,
+      avgSessionDuration: Math.round(floatVal(row, 2)),
+    }));
+
+  // ── Durée moyenne de session globale ─────────────────────────────────────
+  // Calculée comme moyenne pondérée des landing pages
+  const totalLandingSessions = landingPages.reduce((s, p) => s + p.sessions, 0);
+  const avgSessionDuration = totalLandingSessions > 0
+    ? Math.round(landingPages.reduce((s, p) => s + p.avgSessionDuration * p.sessions, 0) / totalLandingSessions)
+    : 0;
 
   return {
     totalSessions,
     totalUsers,
     totalPageViews,
     avgBounceRate: channelCount > 0 ? Math.round((totalBounceRateSum / channelCount) * 10) / 10 : 0,
+    avgSessionDuration,
     dailySessions,
     trafficSources,
     topPages,
+    geoCountries,
+    geoCities,
+    devices,
+    languages,
+    landingPages,
   };
 }
 
