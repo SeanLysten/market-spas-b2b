@@ -2397,3 +2397,14 @@
 - [x] Indicateur "Sur la carte" (badge vert) par lead déjà converti
 - [x] Détection par metaLeadId ET par email pour éviter les doublons
 - [x] Fond vert sur les lignes/cartes des leads déjà sur la carte
+
+## Vérification complète carte partenaire réseau
+- [x] Bug : boutons popup (valider, en cours, visiter, archiver) - corrigé avec event delegation + popup recréé à chaque clic
+- [x] Les points archivés disparaissent de la carte (filtre excludeArchived dans InteractivePartnerMap)
+- [x] Logo partenaire affiché sur les points validés (icône verte Market Spas)
+- [x] Ajout manuel d'un candidat : refetch immédiat après create
+- [x] Synchronisation automatique des leads partenariat vers la carte (bouton Tout synchroniser + auto-conversion webhook)
+- [x] Tableau : affichage correct des statuts avec badges couleur + filtre par statut
+- [x] Onglet Demandes : 98 leads visibles avec badge "Sur la carte" + polling 30s
+- [x] Filtre carte : Tous (hors archivés), Non contactés, En cours, Partenaires validés, Archivés, Visités, Non visités, Score 1-8
+- [x] Vérification complète de bout en bout : tous les scénarios testés avec succès

@@ -1540,8 +1540,11 @@ export default function AdminPartnerMap() {
                         position="popper"
                         sideOffset={4}
                       >
-                        <SelectItem value="all">Tous les candidats</SelectItem>
+                        <SelectItem value="all">Tous (hors archivés)</SelectItem>
+                        <SelectItem value="non_contacte">Non contactés</SelectItem>
+                        <SelectItem value="en_cours">En cours</SelectItem>
                         <SelectItem value="valide">Partenaires validés</SelectItem>
+                        <SelectItem value="archive">Archivés</SelectItem>
                         <SelectItem value="visited">✓ Visités</SelectItem>
                         <SelectItem value="not_visited">○ Non visités</SelectItem>
                         <SelectItem value="score_8">Score 8</SelectItem>

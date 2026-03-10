@@ -408,8 +408,13 @@ export default function InteractivePartnerMap({
       const coordsToSave: { id: number; latitude: string; longitude: string }[] = [];
 
       const filtered = candidates.filter(c => {
+        // Toujours exclure les archivés de la carte sauf si filtre 'archive' explicite
+        if (combinedFilter !== 'archive' && c.status === 'archive') return false;
         if (combinedFilter === 'all') return true;
         if (combinedFilter === 'valide') return c.status === 'valide';
+        if (combinedFilter === 'en_cours') return c.status === 'en_cours';
+        if (combinedFilter === 'non_contacte') return c.status === 'non_contacte';
+        if (combinedFilter === 'archive') return c.status === 'archive';
         if (combinedFilter === 'visited') return c.visited > 0;
         if (combinedFilter === 'not_visited') return c.visited === 0;
         if (combinedFilter.startsWith('score_')) {
@@ -818,67 +823,81 @@ export default function InteractivePartnerMap({
       `;
 
       // Helper to attach event listeners to popup DOM after it opens
+      // Uses event delegation on the popup container for reliability across open/close cycles
       const attachPopupListeners = (popupInstance: L.Popup) => {
-        const container = popupInstance.getElement();
-        if (!container) return;
+        const tryAttach = () => {
+          const container = popupInstance.getElement();
+          if (!container) {
+            // DOM not ready yet, retry
+            setTimeout(tryAttach, 50);
+            return;
+          }
 
-        container.querySelectorAll<HTMLButtonElement>('[data-action="status"]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const candidateId = parseInt(btn.dataset.candidateId || '0');
-            const newStatus = btn.dataset.status || 'non_contacte';
-            updateMutationRef.current.mutate({ id: candidateId, updates: { status: newStatus as any } });
-          });
-        });
+          // Use event delegation on the container to handle all clicks
+          // This avoids issues with stale references when popup DOM is recreated
+          const handler = (e: Event) => {
+            const target = e.target as HTMLElement;
+            // Find the closest element with a data-action attribute
+            const actionEl = target.closest('[data-action]') as HTMLElement | null;
+            if (!actionEl) return;
 
-        container.querySelectorAll<HTMLButtonElement>('[data-action="toggle-visited"]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const candidateId = parseInt(btn.dataset.candidateId || '0');
-            const currentlyVisited = btn.dataset.visited === '1';
-            toggleVisitedMutationRef.current.mutate({ candidateId, visited: !currentlyVisited });
-          });
-        });
+            const action = actionEl.dataset.action;
+            const candidateId = parseInt(actionEl.dataset.candidateId || '0');
 
-        container.querySelectorAll<HTMLAnchorElement>('[data-action="call-phone"]').forEach(link => {
-          link.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const candidateId = parseInt(link.dataset.candidateId || '0');
-            incrementPhoneMutationRef.current.mutate({ candidateId });
-          });
-        });
+            if (action === 'status') {
+              e.stopPropagation();
+              e.preventDefault();
+              const newStatus = actionEl.dataset.status || 'non_contacte';
+              updateMutationRef.current.mutate({ id: candidateId, updates: { status: newStatus as any } });
+            } else if (action === 'toggle-visited') {
+              e.stopPropagation();
+              e.preventDefault();
+              const currentlyVisited = actionEl.dataset.visited === '1';
+              toggleVisitedMutationRef.current.mutate({ candidateId, visited: !currentlyVisited });
+            } else if (action === 'call-phone') {
+              // Don't prevent default - let the tel: link work
+              e.stopPropagation();
+              incrementPhoneMutationRef.current.mutate({ candidateId });
+            } else if (action === 'send-email') {
+              // Don't prevent default - let the mailto: link work
+              e.stopPropagation();
+              incrementEmailMutationRef.current.mutate({ candidateId });
+            }
+          };
 
-        container.querySelectorAll<HTMLAnchorElement>('[data-action="send-email"]').forEach(link => {
-          link.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const candidateId = parseInt(link.dataset.candidateId || '0');
-            incrementEmailMutationRef.current.mutate({ candidateId });
-          });
-        });
+          // Remove any previous handler to avoid duplicates
+          container.removeEventListener('click', (container as any).__popupHandler);
+          (container as any).__popupHandler = handler;
+          container.addEventListener('click', handler);
+        };
+        // Small delay to ensure Leaflet has fully rendered the popup DOM
+        setTimeout(tryAttach, 30);
       };
 
-      // FIX: bind popup directly to marker so Leaflet manages open/close state correctly.
-      // Recreate a fresh popup each time the marker is clicked to avoid stale DOM state
-      // that prevents re-opening after the first close.
-      marker.bindPopup(popupContent, {
-        maxWidth: 380,
-        className: 'custom-popup',
-        closeButton: true,
-        autoPan: true,
-        autoPanPadding: L.point(60, 60),
-      });
-
-      marker.on('popupopen', (e) => {
-        attachPopupListeners(e.popup);
-      });
-
+      // Create a fresh popup each time the marker is clicked
+      // This ensures the DOM is always fresh and listeners work correctly
       marker.on('click', () => {
         const currentMode = routeModeRef.current;
         if (currentMode !== 'off') {
           addRoutePoint({ id: item.id, name: c.companyName, lat: item.lat, lng: item.lng });
-        } else {
-          marker.openPopup();
+          return;
         }
+
+        // Unbind any existing popup and create a fresh one
+        marker.unbindPopup();
+        const popup = L.popup({
+          maxWidth: 380,
+          className: 'custom-popup',
+          closeButton: true,
+          autoPan: true,
+          autoPanPadding: L.point(60, 60),
+        }).setContent(popupContent);
+
+        marker.bindPopup(popup);
+        marker.openPopup();
+
+        // Attach listeners after popup is in the DOM
+        attachPopupListeners(popup);
       });
 
       markersRef.current.push(marker);
