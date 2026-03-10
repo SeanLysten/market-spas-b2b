@@ -2373,3 +2373,6 @@
 - [x] Actualisation automatique des leads de partenariat toutes les 30s (refetchInterval)
 - [x] Scoring calculé depuis les customFields du lead et affiché dans le tableau + cartes mobiles
 - [x] Bouton "Ajouter à la carte" pour convertir un lead en candidat avec score auto-calculé
+
+## Carte Partenaire - Bug z-index Dialog
+- [x] Bug : le popup de création manuelle de contact passe derrière la carte Leaflet (z-index) - fix : DialogOverlay z-[9999] + DialogContent z-[10000]
