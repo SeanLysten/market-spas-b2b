@@ -2376,3 +2376,11 @@
 
 ## Carte Partenaire - Bug z-index Dialog
 - [x] Bug : le popup de création manuelle de contact passe derrière la carte Leaflet (z-index) - fix : DialogOverlay z-[9999] + DialogContent z-[10000]
+
+## Formulaire Ajout Manuel Candidat Partenaire
+- [x] Remplacer les Select Oui/Non par des toggle buttons (plus de problème de z-index)
+- [x] Score calculé en temps réel pendant la saisie des critères
+- [x] Curseur de score manuel (1-8) avec réinitialisation au score auto
+- [x] Champ pays ajouté
+- [x] Sélecteur de statut initial (non contacté, en cours, validé, archivé)
+- [x] Réinitialisation du formulaire à la fermeture du dialog

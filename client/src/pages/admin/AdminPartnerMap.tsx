@@ -109,29 +109,40 @@ function AddCandidateForm({ onSuccess }: { onSuccess: () => void }) {
     companyName: '',
     fullName: '',
     city: '',
+    country: '',
     phoneNumber: '',
     email: '',
-    showroom: 'non',
-    vendSpa: 'non',
-    autreMarque: 'non',
-    domaineSimilaire: 'non',
+    showroom: 'non' as 'oui' | 'non',
+    vendSpa: 'non' as 'oui' | 'non',
+    autreMarque: 'non' as 'oui' | 'non',
+    domaineSimilaire: 'non' as 'oui' | 'non',
     notes: '',
+    status: 'non_contacte' as 'non_contacte' | 'en_cours' | 'valide' | 'archive',
   });
+  const [manualScore, setManualScore] = useState<number | null>(null);
 
-  const priorityScore = useMemo(() => {
-    let score = 1; // Score minimum de 1
-    if (form.showroom === 'oui') score += 2;        // +2 si showroom
-    if (form.vendSpa === 'oui') score += 3;          // +3 si vend déjà des spas
-    if (form.autreMarque === 'oui') score += 1;      // +1 si autre marque
-    if (form.domaineSimilaire === 'oui') score += 1; // +1 si domaine similaire
-    return score;
+  const autoScore = useMemo(() => {
+    let score = 1;
+    if (form.showroom === 'oui') score += 2;
+    if (form.vendSpa === 'oui') score += 3;
+    if (form.autreMarque === 'oui') score += 1;
+    if (form.domaineSimilaire === 'oui') score += 1;
+    return Math.min(score, 8);
   }, [form.showroom, form.vendSpa, form.autreMarque, form.domaineSimilaire]);
+
+  // Sync manual score with auto score when criteria change
+  const priorityScore = manualScore !== null ? manualScore : autoScore;
+
+  const resetForm = () => {
+    setForm({ companyName: '', fullName: '', city: '', country: '', phoneNumber: '', email: '', showroom: 'non', vendSpa: 'non', autreMarque: 'non', domaineSimilaire: 'non', notes: '', status: 'non_contacte' });
+    setManualScore(null);
+  };
 
   const createMutation = trpc.admin.candidates.create.useMutation({
     onSuccess: () => {
       toast.success('Candidat ajouté avec succès');
       setOpen(false);
-      setForm({ companyName: '', fullName: '', city: '', phoneNumber: '', email: '', showroom: 'non', vendSpa: 'non', autreMarque: 'non', domaineSimilaire: 'non', notes: '' });
+      resetForm();
       onSuccess();
     },
     onError: (err) => {
@@ -142,91 +153,200 @@ function AddCandidateForm({ onSuccess }: { onSuccess: () => void }) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createMutation.mutate({
-      ...form,
-      priorityScore,
+      companyName: form.companyName,
+      fullName: form.fullName,
+      city: form.city,
+      phoneNumber: form.phoneNumber,
+      email: form.email,
+      showroom: form.showroom,
+      vendSpa: form.vendSpa,
+      autreMarque: form.autreMarque,
+      domaineSimilaire: form.domaineSimilaire,
       notes: form.notes || null,
+      status: form.status,
+      priorityScore,
     });
   };
 
+  const toggleCriteria = (key: 'showroom' | 'vendSpa' | 'autreMarque' | 'domaineSimilaire') => {
+    setForm(f => ({ ...f, [key]: f[key] === 'oui' ? 'non' : 'oui' }));
+    setManualScore(null); // reset manual override when criteria change
+  };
+
+  const criteriaList = [
+    { key: 'showroom' as const, label: 'Possède un showroom', points: 2, icon: '🏪' },
+    { key: 'vendSpa' as const, label: 'Vend déjà des spas', points: 3, icon: '🛁' },
+    { key: 'autreMarque' as const, label: 'Vend une autre marque', points: 1, icon: '🏷️' },
+    { key: 'domaineSimilaire' as const, label: 'Domaine similaire (piscine, bien-être...)', points: 1, icon: '🌊' },
+  ];
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="w-4 h-4 mr-2" />
           Ajouter un candidat
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nouveau candidat partenaire</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Entreprise *</Label>
-              <Input value={form.companyName} onChange={e => setForm(f => ({ ...f, companyName: e.target.value }))} required />
+        <form onSubmit={handleSubmit} className="space-y-5">
+
+          {/* Informations de contact */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Informations</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Entreprise *</Label>
+                <Input placeholder="Ex: Spa Paradis SARL" value={form.companyName} onChange={e => setForm(f => ({ ...f, companyName: e.target.value }))} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Nom du contact *</Label>
+                <Input placeholder="Ex: Jean Dupont" value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Ville *</Label>
+                <Input placeholder="Ex: Lyon" value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Pays</Label>
+                <Input placeholder="Ex: France" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Téléphone *</Label>
+                <Input placeholder="Ex: +33 6 12 34 56 78" value={form.phoneNumber} onChange={e => setForm(f => ({ ...f, phoneNumber: e.target.value }))} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Email *</Label>
+                <Input type="email" placeholder="contact@entreprise.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Nom complet *</Label>
-              <Input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} required />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Ville *</Label>
-              <Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} required />
-            </div>
-            <div className="space-y-2">
-              <Label>Téléphone *</Label>
-              <Input value={form.phoneNumber} onChange={e => setForm(f => ({ ...f, phoneNumber: e.target.value }))} required />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Email *</Label>
-            <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
           </div>
 
-          <div className="border rounded-lg p-4 space-y-3 bg-muted/50 dark:bg-muted/30">
-            <h4 className="font-semibold text-sm flex items-center gap-2">
-              <Star className="w-4 h-4 text-amber-500" />
-              Score de priorité : <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold ${PRIORITY_COLORS[priorityScore] || 'bg-gray-300'}`}>{priorityScore}</span>
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Critères de scoring */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Critères de qualification</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {criteriaList.map(({ key, label, points, icon }) => {
+                const isOui = form[key] === 'oui';
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => toggleCriteria(key)}
+                    className={`flex items-center justify-between p-3 rounded-lg border-2 text-left transition-all ${
+                      isOui
+                        ? 'border-green-500 bg-green-50 dark:bg-green-950/30'
+                        : 'border-border bg-background hover:border-muted-foreground/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">{icon}</span>
+                      <div>
+                        <p className="text-sm font-medium leading-tight">{label}</p>
+                        <p className="text-xs text-muted-foreground">+{points} pt{points > 1 ? 's' : ''}</p>
+                      </div>
+                    </div>
+                    <div className={`w-8 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                      isOui ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {isOui ? 'OUI' : 'NON'}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Score de priorité */}
+          <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <Star className="w-4 h-4 text-amber-500" />
+                Score de priorité
+              </h4>
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-base font-bold ${PRIORITY_COLORS[priorityScore] || 'bg-gray-300'}`}>
+                  {priorityScore}
+                </span>
+                {manualScore !== null && (
+                  <span className="text-xs text-amber-600 font-medium">(modifié)</span>
+                )}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Ajuster manuellement</span>
+                <span>{autoScore !== priorityScore ? `Auto: ${autoScore}` : 'Calcul automatique'}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-mono w-4 text-center">1</span>
+                <input
+                  type="range"
+                  min={1}
+                  max={8}
+                  value={priorityScore}
+                  onChange={e => setManualScore(Number(e.target.value))}
+                  className="flex-1 h-2 rounded-full accent-primary cursor-pointer"
+                />
+                <span className="text-xs font-mono w-4 text-center">8</span>
+              </div>
+              {manualScore !== null && (
+                <button
+                  type="button"
+                  onClick={() => setManualScore(null)}
+                  className="text-xs text-muted-foreground underline hover:text-foreground"
+                >
+                  Réinitialiser au score auto ({autoScore})
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Statut initial */}
+          <div className="space-y-1.5">
+            <Label>Statut initial</Label>
+            <div className="flex flex-wrap gap-2">
               {[
-                { key: 'showroom', label: 'A un showroom ?', points: '+2' },
-                { key: 'vendSpa', label: 'Vend déjà des spas ?', points: '+3' },
-                { key: 'autreMarque', label: 'Autre marque de spa ?', points: '+1' },
-                { key: 'domaineSimilaire', label: 'Domaine similaire ?', points: '+1' },
-              ].map(({ key, label, points }) => (
-                <div key={key} className="flex items-center justify-between p-2 bg-white rounded-lg border">
-                  <div>
-                    <p className="text-sm font-medium">{label}</p>
-                    <p className="text-xs text-muted-foreground">{points} pts</p>
-                  </div>
-                  <Select value={(form as any)[key]} onValueChange={v => setForm(f => ({ ...f, [key]: v }))}>
-                    <SelectTrigger className="w-20 h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="oui">Oui</SelectItem>
-                      <SelectItem value="non">Non</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                { value: 'non_contacte', label: 'Non contacté', color: 'bg-muted text-muted-foreground' },
+                { value: 'en_cours', label: 'En cours', color: 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400' },
+                { value: 'valide', label: 'Validé', color: 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400' },
+                { value: 'archive', label: 'Archivé', color: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' },
+              ].map(({ value, label, color }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, status: value as any }))}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border-2 transition-all ${
+                    form.status === value
+                      ? `${color} border-current`
+                      : 'border-transparent bg-muted/50 text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  {label}
+                </button>
               ))}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Notes</Label>
-            <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} />
+          {/* Notes */}
+          <div className="space-y-1.5">
+            <Label>Notes (optionnel)</Label>
+            <Textarea
+              placeholder="Informations complémentaires, contexte de la rencontre..."
+              value={form.notes}
+              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+              rows={3}
+            />
           </div>
 
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+            <Button type="button" variant="outline" onClick={() => { setOpen(false); resetForm(); }}>Annuler</Button>
             <Button type="submit" disabled={createMutation.isPending}>
               {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Ajouter
+              Ajouter le candidat
             </Button>
           </DialogFooter>
         </form>
