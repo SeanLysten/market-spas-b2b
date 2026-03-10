@@ -2384,3 +2384,8 @@
 - [x] Champ pays ajouté
 - [x] Sélecteur de statut initial (non contacté, en cours, validé, archivé)
 - [x] Réinitialisation du formulaire à la fermeture du dialog
+
+## Synchronisation Leads Partenariat ↔ Carte
+- [x] Corriger la synchronisation entre l'onglet Demandes et les candidats sur la carte
+- [x] Passer onCandidateAdded comme prop à PartnershipLeadsTab
+- [x] Refetch croisé : quand un candidat est ajouté depuis Demandes, refetchCandidates() est appelé immédiatement

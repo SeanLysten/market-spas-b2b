@@ -1012,7 +1012,7 @@ function StatsTab({ candidates }: { candidates: any[] }) {
 // PARTNERSHIP LEADS TAB
 // ============================================
 
-function PartnershipLeadsTab() {
+function PartnershipLeadsTab({ onCandidateAdded }: { onCandidateAdded: () => void }) {
   const { data: partnershipLeads, isLoading, refetch: refetchLeads } = trpc.admin.leads.partnershipLeads.useQuery(
     undefined,
     { refetchInterval: 30000, refetchIntervalInBackground: false }
@@ -1024,6 +1024,7 @@ function PartnershipLeadsTab() {
     onSuccess: () => {
       toast.success('Converti en candidat sur la carte !');
       setConvertingId(null);
+      onCandidateAdded(); // Rafraîchit la liste des candidats sur la carte
     },
     onError: (err) => {
       toast.error(err.message);
@@ -1616,7 +1617,7 @@ export default function AdminPartnerMap() {
                 </p>
               </CardHeader>
               <CardContent>
-                <PartnershipLeadsTab />
+                <PartnershipLeadsTab onCandidateAdded={() => refetchCandidates()} />
               </CardContent>
             </Card>
           </TabsContent>
