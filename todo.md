@@ -2389,3 +2389,11 @@
 - [x] Corriger la synchronisation entre l'onglet Demandes et les candidats sur la carte
 - [x] Passer onCandidateAdded comme prop à PartnershipLeadsTab
 - [x] Refetch croisé : quand un candidat est ajouté depuis Demandes, refetchCandidates() est appelé immédiatement
+
+## Auto-affichage des leads partenariat sur la carte
+- [x] Tous les leads de demande de partenariat doivent apparaître automatiquement sur la carte sans action manuelle
+- [x] Amélioration de reclassifyExistingPartnerLeads pour couvrir TOUS les leads PARTENARIAT (pas seulement ceux avec company_name)
+- [x] Bouton "Tout synchroniser sur la carte" dans l'onglet Demandes
+- [x] Indicateur "Sur la carte" (badge vert) par lead déjà converti
+- [x] Détection par metaLeadId ET par email pour éviter les doublons
+- [x] Fond vert sur les lignes/cartes des leads déjà sur la carte

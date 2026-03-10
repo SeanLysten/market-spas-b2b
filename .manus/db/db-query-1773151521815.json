@@ -1,0 +1,58 @@
+{
+  "query": "SELECT COUNT(*) as total_partenariat_leads FROM leads WHERE leadType = 'PARTENARIAT';\nSELECT COUNT(*) as total_candidates FROM partner_candidates;\nSELECT COUNT(*) as leads_sans_candidat FROM leads l WHERE l.leadType = 'PARTENARIAT' AND NOT EXISTS (SELECT 1 FROM partner_candidates pc WHERE pc.metaLeadId = l.id);\nSELECT l.id, l.firstName, l.lastName, l.email, l.city FROM leads l WHERE l.leadType = 'PARTENARIAT' AND NOT EXISTS (SELECT 1 FROM partner_candidates pc WHERE pc.metaLeadId = l.id) LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT COUNT(*) as total_partenariat_leads FROM leads WHERE leadType = 'PARTENARIAT';\nSELECT COUNT(*) as total_candidates FROM partner_candidates;\nSELECT COUNT(*) as leads_sans_candidat FROM leads l WHERE l.leadType = 'PARTENARIAT' AND NOT EXISTS (SELECT 1 FROM partner_candidates pc WHERE pc.metaLeadId = l.id);\nSELECT l.id, l.firstName, l.lastName, l.email, l.city FROM leads l WHERE l.leadType = 'PARTENARIAT' AND NOT EXISTS (SELECT 1 FROM partner_candidates pc WHERE pc.metaLeadId = l.id) LIMIT 10;",
+  "rows": [
+    {
+      "total_partenariat_leads": "98"
+    },
+    {
+      "total_partenariat_leads": "total_candidates"
+    },
+    {
+      "total_partenariat_leads": "96"
+    },
+    {
+      "total_partenariat_leads": "leads_sans_candidat"
+    },
+    {
+      "total_partenariat_leads": "10"
+    },
+    {
+      "total_partenariat_leads": "id\tfirstName\tlastName\temail\tcity"
+    },
+    {
+      "total_partenariat_leads": "120023\tERCAN\tErgun\tergun.ercan558@gmail.com\tRevigny-sur-Ornain"
+    },
+    {
+      "total_partenariat_leads": "570001\tYalcin\tVurgun\tent.vurgunpro@gmail.com\tMazamet"
+    },
+    {
+      "total_partenariat_leads": "810004\tJef\tFrançois\tjefanduze@hotmail.fr\tAlès"
+    },
+    {
+      "total_partenariat_leads": "810005\tCevlik\tfunda\tBbm67@live.fr\tStrasbourg"
+    },
+    {
+      "total_partenariat_leads": "1110001\tJean\tChristophe Berto\tjeanchristophe.berto@iCloud.com\tDraguignan"
+    },
+    {
+      "total_partenariat_leads": "1170001\tAntoine\tTabareau\tatabareau@attraitconcept.com\tBilly-Montigny"
+    },
+    {
+      "total_partenariat_leads": "1230002\tBertrand\tramiarisoa\tNinisy.miary@gmail.com\tToulouse"
+    },
+    {
+      "total_partenariat_leads": "1260001\tDjamel\tRenov\tconceptrenovationfrance@gmail.com\tJarrie"
+    },
+    {
+      "total_partenariat_leads": "1320002\tValentin\tThr\tvalentin.thiri@hotmail.fr\tGallardon"
+    },
+    {
+      "total_partenariat_leads": "1350002\tAlban\tMastrosimone\tam.baltik@gmail.com\tSaint-Genest-Malifaux"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_partenariat_leads\n98\ntotal_candidates\n96\nleads_sans_candidat\n10\nid\tfirstName\tlastName\temail\tcity\n120023\tERCAN\tErgun\tergun.ercan558@gmail.com\tRevigny-sur-Ornain\n570001\tYalcin\tVurgun\tent.vurgunpro@gmail.com\tMazamet\n810004\tJef\tFrançois\tjefanduze@hotmail.fr\tAlès\n810005\tCevlik\tfunda\tBbm67@live.fr\tStrasbourg\n1110001\tJean\tChristophe Berto\tjeanchristophe.berto@iCloud.com\tDraguignan\n1170001\tAntoine\tTabareau\tatabareau@attraitconcept.com\tBilly-Montigny\n1230002\tBertrand\tramiarisoa\tNinisy.miary@gmail.com\tToulouse\n1260001\tDjamel\tRenov\tconceptrenovationfrance@gmail.com\tJarrie\n1320002\tValentin\tThr\tvalentin.thiri@hotmail.fr\tGallardon\n1350002\tAlban\tMastrosimone\tam.baltik@gmail.com\tSaint-Genest-Malifaux\n",
+  "stderr": "",
+  "execution_time_ms": 915
+}

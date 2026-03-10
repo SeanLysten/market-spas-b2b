@@ -190,10 +190,11 @@ async function createPartnerCandidateFromLead(
   if (!db) throw new Error("Database not available");
 
   const email = fields.email || "";
-  const companyName = fields.company_name || fields.city || "Non renseigné";
   const fullName = fields.full_name || "";
   const city = fields.city || "";
-  const phoneNumber = fields.phone_number || "";
+  const phoneNumber = fields.phone_number || fields.phone || "";
+  // Utiliser le nom complet comme nom d'entreprise si company_name absent
+  const companyName = fields.company_name || fields.nom_entreprise || fields.entreprise || fullName || city || "Non renseigné";
 
   // Vérifier si un candidat avec le même email existe déjà
   if (email) {
@@ -710,10 +711,14 @@ export async function reclassifyExistingPartnerLeads(): Promise<{
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
+  // Récupérer TOUS les leads de type PARTENARIAT (y compris ceux sans company_name)
+  // ainsi que les leads avec customFields contenant des indicateurs de partenariat
   const allLeads = await db
     .select()
     .from(leads)
-    .where(sql`customFields LIKE '%company_name%'`);
+    .where(
+      sql`leadType = 'PARTENARIAT' OR customFields LIKE '%company_name%' OR customFields LIKE '%showroom%' OR customFields LIKE '%devenir_partenaire%' OR customFields LIKE '%partenaire%'`
+    );
 
   let processed = 0;
   let created = 0;

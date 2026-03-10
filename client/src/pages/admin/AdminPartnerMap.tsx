@@ -1024,7 +1024,7 @@ function PartnershipLeadsTab({ onCandidateAdded }: { onCandidateAdded: () => voi
     onSuccess: () => {
       toast.success('Converti en candidat sur la carte !');
       setConvertingId(null);
-      onCandidateAdded(); // Rafraîchit la liste des candidats sur la carte
+      onCandidateAdded();
     },
     onError: (err) => {
       toast.error(err.message);
@@ -1032,7 +1032,24 @@ function PartnershipLeadsTab({ onCandidateAdded }: { onCandidateAdded: () => voi
     },
   });
 
+  // Mutation pour synchroniser TOUS les leads partenariat vers la carte
+  const syncAllMutation = trpc.admin.candidates.reclassifyPartnerLeads.useMutation({
+    onSuccess: (result) => {
+      toast.success(`Synchronisation terminée : ${result.created} nouveau${result.created !== 1 ? 'x' : ''} candidat${result.created !== 1 ? 's' : ''} ajouté${result.created !== 1 ? 's' : ''} sur la carte (${result.alreadyExists} déjà présent${result.alreadyExists !== 1 ? 's' : ''})`);
+      onCandidateAdded();
+      refetchLeads();
+    },
+    onError: (err) => {
+      toast.error('Erreur lors de la synchronisation : ' + err.message);
+    },
+  });
+
   const leads = (partnershipLeads || []).map((item: any) => item.leads || item);
+
+  // Ensemble des emails déjà sur la carte (pour détecter les leads déjà convertis)
+  const { data: allCandidates } = trpc.admin.candidates.list.useQuery();
+  const candidateEmailSet = new Set((allCandidates || []).map((c: any) => (c.email || '').toLowerCase()));
+  const candidateLeadIdSet = new Set((allCandidates || []).map((c: any) => c.metaLeadId).filter(Boolean));
 
   // Calcule le score de priorité à partir des customFields d'un lead
   const calcLeadScore = (customFields: string | null): { score: number; showroom: string; vendSpa: string; autreMarque: string; domaineSimilaire: string } => {
@@ -1130,9 +1147,9 @@ function PartnershipLeadsTab({ onCandidateAdded }: { onCandidateAdded: () => voi
         </Card>
       </div>
 
-      {/* Search */}
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1 max-w-sm">
+      {/* Search + Sync */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Rechercher par nom, email, ville..."
@@ -1142,6 +1159,21 @@ function PartnershipLeadsTab({ onCandidateAdded }: { onCandidateAdded: () => voi
           />
         </div>
         <Badge variant="outline">{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</Badge>
+        <Button
+          variant="outline"
+          size="sm"
+          className="ml-auto gap-2 text-purple-600 border-purple-200 hover:bg-purple-50"
+          onClick={() => syncAllMutation.mutate()}
+          disabled={syncAllMutation.isPending}
+          title="Synchroniser tous les leads partenariat vers la carte"
+        >
+          {syncAllMutation.isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <MapPin className="w-4 h-4" />
+          )}
+          Tout synchroniser sur la carte
+        </Button>
       </div>
 
       {/* Mobile cards */}
@@ -1156,8 +1188,9 @@ function PartnershipLeadsTab({ onCandidateAdded }: { onCandidateAdded: () => voi
             let customData: Record<string, string> = {};
             try { customData = JSON.parse(lead.customFields || '{}'); } catch (e) { /* ignore */ }
             const { score: leadScore } = calcLeadScore(lead.customFields);
+            const isOnMap = candidateLeadIdSet.has(lead.id) || (lead.email && candidateEmailSet.has((lead.email || '').toLowerCase()));
             return (
-              <Card key={lead.id} className="p-4">
+              <Card key={lead.id} className={`p-4 ${isOnMap ? 'border-green-300 bg-green-50/30 dark:bg-green-950/20' : ''}`}>
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
@@ -1204,20 +1237,26 @@ function PartnershipLeadsTab({ onCandidateAdded }: { onCandidateAdded: () => voi
                         </Button>
                       </a>
                     )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 px-2 text-xs text-purple-600 hover:text-purple-700"
-                      onClick={() => handleConvertToCandidate(lead)}
-                      disabled={convertingId === lead.id}
-                    >
-                      {convertingId === lead.id ? (
-                        <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                      ) : (
-                        <MapPin className="w-3 h-3 mr-1" />
-                      )}
-                      Carte
-                    </Button>
+                    {isOnMap ? (
+                      <Badge variant="outline" className="text-xs text-green-600 border-green-300 bg-green-50 gap-1">
+                        <MapPin className="w-3 h-3" />✓ Sur la carte
+                      </Badge>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs text-purple-600 hover:text-purple-700"
+                        onClick={() => handleConvertToCandidate(lead)}
+                        disabled={convertingId === lead.id}
+                      >
+                        {convertingId === lead.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                        ) : (
+                          <MapPin className="w-3 h-3 mr-1" />
+                        )}
+                        Ajouter à la carte
+                      </Button>
+                    )}
                   </div>
                 </div>
               </Card>
@@ -1260,8 +1299,9 @@ function PartnershipLeadsTab({ onCandidateAdded }: { onCandidateAdded: () => voi
                 const domaineSimilaire = normalizeYesNoForBadge(customData['travaillez-vous_dans_un_domaine_similaire_?_']);
                 const { score: leadScore } = calcLeadScore(lead.customFields);
 
+                const isOnMap = candidateLeadIdSet.has(lead.id) || (lead.email && candidateEmailSet.has((lead.email || '').toLowerCase()));
                 return (
-                  <TableRow key={lead.id}>
+                  <TableRow key={lead.id} className={isOnMap ? 'bg-green-50/50 dark:bg-green-950/20' : ''}>
                     <TableCell className="text-sm whitespace-nowrap">
                       {new Date(lead.receivedAt || lead.createdAt).toLocaleDateString('fr-FR')}
                     </TableCell>
@@ -1316,20 +1356,26 @@ function PartnershipLeadsTab({ onCandidateAdded }: { onCandidateAdded: () => voi
                             </Button>
                           </a>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-2 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                          onClick={() => handleConvertToCandidate(lead)}
-                          disabled={convertingId === lead.id}
-                          title="Ajouter à la carte partenaire"
-                        >
-                          {convertingId === lead.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <MapPin className="w-3.5 h-3.5" />
-                          )}
-                        </Button>
+                        {isOnMap ? (
+                          <Badge variant="outline" className="text-xs text-green-600 border-green-300 bg-green-50 gap-1">
+                            <MapPin className="w-3 h-3" />✓ Carte
+                          </Badge>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                            onClick={() => handleConvertToCandidate(lead)}
+                            disabled={convertingId === lead.id}
+                            title="Ajouter à la carte partenaire"
+                          >
+                            {convertingId === lead.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <MapPin className="w-3.5 h-3.5" />
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
