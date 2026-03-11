@@ -2499,3 +2499,8 @@
 - [x] ADMIN_FULL / SUPER_ADMIN : Dashboard complet existant (tous les widgets)
 - [x] ADMIN_CUSTOM : Afficher uniquement les widgets correspondant aux modules autorisés
 - [x] Message de bienvenue adapté au rôle avec description du périmètre
+
+## Corrections invitation + Manus + lien Users/Partners
+- [x] Fix : lien d'invitation redirige vers manus.im/register au lieu du SITE_URL → 404
+- [x] Fix : supprimer/remplacer TOUTE référence visible à "Manus" dans le logiciel (emails, UI, etc.)
+- [x] Lier la gestion Utilisateurs (admin) et Partenaires : ce sont les mêmes entités, afficher le partenaire associé dans la liste users et vice versa

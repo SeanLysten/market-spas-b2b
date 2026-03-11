@@ -237,7 +237,7 @@ export async function processDepositReminders(hoursThreshold: number = 48) {
 
     console.log(`[Alerts] Found ${pendingOrders.length} orders pending deposit reminder`);
 
-    const portalUrl = process.env.VITE_APP_URL || 'https://market-spas-b2b.manus.space';
+    const portalUrl = process.env.SITE_URL || process.env.VITE_APP_URL || 'https://marketspas.pro';
     let sentCount = 0;
     const results: Array<{ orderId: number; orderNumber: string; success: boolean; error?: string }> = [];
 

@@ -327,14 +327,21 @@ export default function AdminUsers() {
   const { data: invitationsData, isLoading: invitationsLoading, refetch: refetchInvitations } = trpc.admin.users.listInvitations.useQuery();
   const invitations = useSafeQuery(invitationsData);
   
+  const { data: partnersData } = trpc.admin.partners.list.useQuery({});
+  const partnersList = useSafeQuery(partnersData);
+
   const inviteMutation = trpc.admin.users.invite.useMutation();
   const toggleActiveMutation = trpc.admin.users.toggleActive.useMutation();
   const updateRoleMutation = trpc.admin.users.updateRole.useMutation();
   const cancelInvitationMutation = trpc.admin.users.cancelInvitation.useMutation();
   const resendInvitationMutation = trpc.admin.users.resendInvitation.useMutation();
+  const linkPartnerMutation = trpc.admin.users.linkPartner.useMutation();
   
   const [permDialogOpen, setPermDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkingUser, setLinkingUser] = useState<any>(null);
+  const [selectedPartnerId, setSelectedPartnerId] = useState<string>("");
 
   // Auto-refresh invitations every 30 seconds
   useEffect(() => {
@@ -354,6 +361,8 @@ export default function AdminUsers() {
         email: formData.email,
         firstName: formData.firstName || undefined,
         lastName: formData.lastName || undefined,
+        partnerId: formData.partnerId && formData.partnerId !== 'none' ? parseInt(formData.partnerId) : undefined,
+        role: formData.role === 'ADMIN' ? 'ADMIN' : 'PARTNER',
       });
 
       toast.success("Invitation envoyée avec succès");
@@ -535,6 +544,39 @@ export default function AdminUsers() {
                       />
                     </div>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label>Type de compte</Label>
+                    <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v as any })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USER">Partenaire</SelectItem>
+                        {isSuperAdmin && <SelectItem value="ADMIN">Administrateur</SelectItem>}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {formData.role === "USER" && (
+                    <div className="space-y-2">
+                      <Label>Associer à un partenaire</Label>
+                      <Select value={formData.partnerId} onValueChange={(v) => setFormData({ ...formData, partnerId: v })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un partenaire (optionnel)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Aucun partenaire</SelectItem>
+                          {(partnersList || []).map((p: any) => (
+                            <SelectItem key={p.id} value={String(p.id)}>
+                              {p.companyName} ({p.vatNumber})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">L'utilisateur sera automatiquement lié à cette fiche partenaire lors de son inscription</p>
+                    </div>
+                  )}
                 </div>
 
                 <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -767,7 +809,22 @@ export default function AdminUsers() {
                                 <TableCell>
                                   <Badge className={badge.color}>{badge.label}</Badge>
                                 </TableCell>
-                                <TableCell>{user.partnerId || "—"}</TableCell>
+                                <TableCell>
+                                {user.partnerCompanyName ? (
+                                  <div className="flex items-center gap-1">
+                                    <a href={`/admin/partners`} className="text-emerald-700 dark:text-emerald-400 hover:underline font-medium">
+                                      {user.partnerCompanyName}
+                                    </a>
+                                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" title="Changer le partenaire" onClick={() => { setLinkingUser(user); setSelectedPartnerId(String(user.partnerId || '')); setLinkDialogOpen(true); }}>
+                                      <Edit className="w-3 h-3 text-muted-foreground" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-emerald-700" onClick={() => { setLinkingUser(user); setSelectedPartnerId(''); setLinkDialogOpen(true); }}>
+                                    + Associer
+                                  </Button>
+                                )}
+                              </TableCell>
                                 <TableCell>
                                   {user.isActive ? (
                                     <Badge className="bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400">Actif</Badge>
@@ -979,6 +1036,56 @@ export default function AdminUsers() {
             onSave={handleSavePermissions}
           />
         )}
+
+        {/* Link Partner Dialog */}
+        <Dialog open={linkDialogOpen} onOpenChange={(open) => { setLinkDialogOpen(open); if (!open) setLinkingUser(null); }}>
+          <DialogContent className="max-w-md w-[95vw] sm:w-full">
+            <DialogHeader>
+              <DialogTitle>Associer un partenaire</DialogTitle>
+              <DialogDescription>
+                {linkingUser ? `Associer ${linkingUser.name || linkingUser.email} à une fiche partenaire` : ''}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Partenaire</Label>
+                <Select value={selectedPartnerId} onValueChange={setSelectedPartnerId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un partenaire" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Aucun (dissocier)</SelectItem>
+                    {(partnersList || []).map((p: any) => (
+                      <SelectItem key={p.id} value={String(p.id)}>
+                        {p.companyName} ({p.vatNumber})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={() => setLinkDialogOpen(false)}>Annuler</Button>
+              <Button onClick={async () => {
+                if (!linkingUser) return;
+                try {
+                  await linkPartnerMutation.mutateAsync({
+                    userId: linkingUser.id,
+                    partnerId: selectedPartnerId && selectedPartnerId !== 'none' ? parseInt(selectedPartnerId) : null,
+                  });
+                  toast.success('Partenaire associé avec succès');
+                  setLinkDialogOpen(false);
+                  setLinkingUser(null);
+                  refetch();
+                } catch (error: any) {
+                  toast.error(error.message || 'Erreur lors de l\'association');
+                }
+              }} disabled={linkPartnerMutation.isPending}>
+                {linkPartnerMutation.isPending ? 'Association...' : 'Associer'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

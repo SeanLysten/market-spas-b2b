@@ -625,6 +625,9 @@ export default function AdminPartners() {
                             <Mail className="w-3 h-3" />
                             {partner.primaryContactEmail}
                           </p>
+                          <a href="/admin/users" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
+                            Voir le compte utilisateur
+                          </a>
                         </div>
                       </TableCell>
                       <TableCell>

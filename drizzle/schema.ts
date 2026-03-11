@@ -241,6 +241,8 @@ export const invitationTokens = mysqlTable(
     lastName: varchar("lastName", { length: 100 }),
     token: varchar("token", { length: 255 }).notNull().unique(),
     invitedBy: int("invitedBy").notNull(), // Admin user ID who sent the invitation
+    partnerId: int("partnerId"), // Partner to associate with the invited user
+    role: varchar("role", { length: 50 }), // Role to assign: PARTNER, ADMIN, etc.
     expiresAt: timestamp("expiresAt").notNull(),
     usedAt: timestamp("usedAt"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),

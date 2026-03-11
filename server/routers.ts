@@ -140,9 +140,23 @@ export const appRouter = router({
           throw new TRPCError({ code: 'CONFLICT', message: 'Un compte existe déjà avec cet email' });
         }
 
+        // Get invitation token data to retrieve partnerId and role
+        let invitationPartnerId: number | null = null;
+        let invitationRole: string | null = null;
+        if (input.invitationToken) {
+          const tokenData = await db.getInvitationTokenByToken(input.invitationToken);
+          if (tokenData) {
+            invitationPartnerId = tokenData.partnerId || null;
+            invitationRole = tokenData.role || null;
+          }
+        }
+
         // Hash password
         const bcrypt = await import('bcryptjs');
         const passwordHash = await bcrypt.hash(input.password, 10);
+
+        // Determine role from invitation
+        const userRole = invitationRole || 'PARTNER';
 
         // Create user
         const crypto = await import('crypto');
@@ -157,6 +171,8 @@ export const appRouter = router({
           name: `${input.firstName} ${input.lastName}`,
           phone: input.phone,
           loginMethod: 'local',
+          role: userRole,
+          partnerId: invitationPartnerId,
         });
 
         // Mark invitation token as used
@@ -1339,6 +1355,8 @@ export const appRouter = router({
             email: z.string().email(),
             firstName: z.string().optional(),
             lastName: z.string().optional(),
+            partnerId: z.number().optional(),
+            role: z.string().optional(),
           })
         )
         .mutation(async ({ input, ctx }) => {
@@ -1357,7 +1375,9 @@ export const appRouter = router({
             ctx.user.id,
             7,
             input.firstName,
-            input.lastName
+            input.lastName,
+            input.partnerId,
+            input.role
           );
 
           if (!tokenData) {
@@ -1368,7 +1388,7 @@ export const appRouter = router({
           }
 
           // Generate invitation link
-          const invitationUrl = `${process.env.VITE_OAUTH_PORTAL_URL || 'http://localhost:3000'}/register?token=${tokenData.token}`;
+          const invitationUrl = `${process.env.SITE_URL || 'https://marketspas.pro'}/register?token=${tokenData.token}`;
 
           // Send invitation email
           try {
@@ -1457,6 +1477,19 @@ export const appRouter = router({
           return { success: true, message: 'Permissions mises à jour avec succès' };
         }),
 
+      // Link user to partner
+      linkPartner: adminProcedure
+        .input(
+          z.object({
+            userId: z.number(),
+            partnerId: z.number().nullable(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          await db.linkUserToPartner(input.userId, input.partnerId);
+          return { success: true, message: 'Partenaire associ\u00e9 avec succ\u00e8s' };
+        }),
+
       // List all invitations
       listInvitations: adminProcedure
         .query(async () => {
@@ -1485,7 +1518,7 @@ export const appRouter = router({
           }
 
           // Generate invitation link
-          const invitationUrl = `${process.env.VITE_OAUTH_PORTAL_URL || 'http://localhost:3000'}/register?token=${invitation.token}`;
+          const invitationUrl = `${process.env.SITE_URL || 'https://marketspas.pro'}/register?token=${invitation.token}`;
 
           // Resend invitation email
           try {

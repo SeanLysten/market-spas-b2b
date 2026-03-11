@@ -505,7 +505,7 @@ export default function Profile() {
                       <div>
                         <h4 className="font-medium">Authentification</h4>
                         <p className="text-xs md:text-sm text-muted-foreground">
-                          Vous êtes connecté via Manus OAuth
+                          Vous êtes connecté via authentification sécurisée
                         </p>
                       </div>
                       <span className="px-3 py-1 bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 rounded-full text-sm">

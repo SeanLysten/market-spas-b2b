@@ -552,7 +552,33 @@ export async function getAllUsers() {
   const db = await getDb();
   if (!db) return [];
 
-  return await db.select().from(users).orderBy(desc(users.createdAt));
+  const result = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      email: users.email,
+      role: users.role,
+      partnerId: users.partnerId,
+      loginMethod: users.loginMethod,
+      adminPermissions: users.adminPermissions,
+      adminRolePreset: users.adminRolePreset,
+      isActive: users.isActive,
+      lastLoginAt: users.lastLoginAt,
+      lastSignedIn: users.lastSignedIn,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      partnerCompanyName: partners.companyName,
+      partnerStatus: partners.status,
+      partnerLevel: partners.level,
+      partnerVatNumber: partners.vatNumber,
+    })
+    .from(users)
+    .leftJoin(partners, eq(users.partnerId, partners.id))
+    .orderBy(desc(users.createdAt));
+
+  return result;
 }
 
 export async function updateUserStatus(userId: number, isActive: boolean) {
@@ -4431,15 +4457,19 @@ export async function createLocalUser(data: {
   name: string;
   phone?: string;
   loginMethod: string;
+  role?: string;
+  partnerId?: number | null;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
+  const { role, partnerId, ...rest } = data;
   const [result] = await db
     .insert(users)
     .values({
-      ...data,
-      role: 'PARTNER_USER',
+      ...rest,
+      role: role || 'PARTNER_USER',
+      partnerId: partnerId || null,
       isActive: true,
       emailVerified: null,
       createdAt: new Date(),
@@ -4448,6 +4478,12 @@ export async function createLocalUser(data: {
     .$returningId();
   
   return { id: result.id };
+}
+
+export async function linkUserToPartner(userId: number, partnerId: number | null) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ partnerId, updatedAt: new Date() }).where(eq(users.id, userId));
 }
 
 export async function updateUserLastLogin(userId: number, ip: string) {
@@ -4549,7 +4585,9 @@ export async function createInvitationToken(
   invitedBy: number,
   expiresInDays: number = 7,
   firstName?: string,
-  lastName?: string
+  lastName?: string,
+  partnerId?: number,
+  role?: string
 ) {
   const db = await getDb();
   if (!db) return undefined;
@@ -4568,6 +4606,8 @@ export async function createInvitationToken(
     lastName,
     token,
     invitedBy,
+    partnerId: partnerId || null,
+    role: role || null,
     expiresAt,
   });
 

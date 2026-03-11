@@ -1,19 +1,12 @@
-import { db } from './server/db.ts';
+import mysql from 'mysql2/promise';
 
-async function checkUsers() {
-  const users = await db.getAllUsers();
-  console.log('Nombre total d utilisateurs:', users.length);
-  
-  for (const user of users.slice(0, 5)) {
-    console.log('---');
-    console.log('ID:', user.id);
-    console.log('Email:', user.email);
-    console.log('Nom:', user.firstName, user.lastName);
-    console.log('passwordHash present:', !!user.passwordHash);
-    console.log('passwordHash longueur:', user.passwordHash?.length || 0);
-    console.log('isActive:', user.isActive);
-  }
-  process.exit(0);
-}
+const conn = await mysql.createConnection(process.env.DATABASE_URL);
+const [rows] = await conn.execute(
+  "SELECT id, name, email, role, partnerId FROM users WHERE role IN ('PARTNER', 'PARTNER_ADMIN', 'PARTNER_USER')"
+);
+console.log("Partner users:", JSON.stringify(rows, null, 2));
 
-checkUsers().catch(console.error);
+const [partners] = await conn.execute("SELECT id, companyName FROM partners LIMIT 5");
+console.log("Partners:", JSON.stringify(partners, null, 2));
+
+await conn.end();

@@ -1,0 +1,16 @@
+{
+  "query": "SELECT CONCAT(id, '|', COALESCE(name,'NULL'), '|', COALESCE(email,'NULL'), '|', role, '|', COALESCE(CAST(partnerId AS CHAR),'NULL')) as info FROM users WHERE role IN ('PARTNER', 'PARTNER_ADMIN', 'PARTNER_USER');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT CONCAT(id, '|', COALESCE(name,'NULL'), '|', COALESCE(email,'NULL'), '|', role, '|', COALESCE(CAST(partnerId AS CHAR),'NULL')) as info FROM users WHERE role IN ('PARTNER', 'PARTNER_ADMIN', 'PARTNER_USER');",
+  "rows": [
+    {
+      "info": "1110034|Test Partenaire|test@marketspas.com|PARTNER_USER|NULL"
+    },
+    {
+      "info": "1380046|Miguel Donoso|miguel.df1990@gmail.com|PARTNER|NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "info\n1110034|Test Partenaire|test@marketspas.com|PARTNER_USER|NULL\n1380046|Miguel Donoso|miguel.df1990@gmail.com|PARTNER|NULL\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}
