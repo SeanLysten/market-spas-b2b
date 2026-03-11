@@ -2408,3 +2408,13 @@
 - [x] Onglet Demandes : 98 leads visibles avec badge "Sur la carte" + polling 30s
 - [x] Filtre carte : Tous (hors archivés), Non contactés, En cours, Partenaires validés, Archivés, Visités, Non visités, Score 1-8
 - [x] Vérification complète de bout en bout : tous les scénarios testés avec succès
+
+## Dédoublonnage automatique des candidats partenaires
+- [x] Route backend : détection des doublons par email, téléphone et nom d'entreprise (detectDuplicates)
+- [x] Route backend : fusion de deux fiches candidats (mergeCandidates - meilleur score, combine notes, conserve GPS)
+- [x] Détection automatique lors de la synchronisation des leads (empêcher la création de doublons)
+- [x] Interface admin : onglet "Doublons" dans la carte partenaire
+- [x] Interface admin : comparaison côte à côte des fiches en double (tableau desktop + cartes mobile)
+- [x] Interface admin : bouton de fusion par groupe + "Tout fusionner automatiquement"
+- [x] Interface admin : responsive mobile (cartes dépliables)
+- [x] Tests vitest pour la logique de détection et fusion (19 tests passants)

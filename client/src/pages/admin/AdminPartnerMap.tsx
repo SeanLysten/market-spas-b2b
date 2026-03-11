@@ -57,6 +57,11 @@ import {
   Edit,
   Handshake,
   ExternalLink,
+  Copy,
+  Merge,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -1394,6 +1399,285 @@ function normalizeYesNoForBadge(value: string | undefined): boolean {
   return value.toLowerCase().trim().replace(/_/g, ' ').startsWith('oui');
 }
 
+// ============================================
+// DUPLICATES TAB
+// ============================================
+
+function DuplicatesTab({ onMerged }: { onMerged: () => void }) {
+  const { data: duplicateGroups, isLoading, refetch } = trpc.admin.candidates.detectDuplicates.useQuery();
+  const mergeMutation = trpc.admin.candidates.mergeDuplicates.useMutation({
+    onSuccess: () => {
+      toast.success('Fiches fusionnées avec succès');
+      refetch();
+      onMerged();
+    },
+    onError: (err: any) => toast.error(`Erreur: ${err.message}`),
+  });
+  const autoMergeMutation = trpc.admin.candidates.autoMergeAll.useMutation({
+    onSuccess: (data: any) => {
+      toast.success(`${data.groupsMerged} groupes fusionnés, ${data.candidatesRemoved} doublons supprimés`);
+      refetch();
+      onMerged();
+    },
+    onError: (err: any) => toast.error(`Erreur: ${err.message}`),
+  });
+
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+  const [selectedPrimary, setSelectedPrimary] = useState<Record<string, number>>({});
+
+  const groups = duplicateGroups || [];
+  const totalDuplicates = groups.reduce((sum: number, g: any) => sum + g.candidates.length - 1, 0);
+
+  const matchTypeLabels: Record<string, { label: string; color: string; icon: any }> = {
+    email: { label: 'Email identique', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', icon: Mail },
+    phone: { label: 'Téléphone identique', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400', icon: Phone },
+    company_city: { label: 'Entreprise + Ville', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', icon: MapPin },
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-muted-foreground">Analyse des doublons en cours...</span>
+      </div>
+    );
+  }
+
+  if (groups.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <CheckCircle2 className="w-12 h-12 mx-auto text-emerald-500 mb-3" />
+        <h3 className="text-lg font-semibold">Aucun doublon détecté</h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Tous les candidats sont uniques. La détection se fait par email, téléphone et nom d'entreprise + ville.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header with stats and auto-merge button */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-500" />
+            <span className="font-semibold text-lg">{groups.length} groupe{groups.length > 1 ? 's' : ''} de doublons</span>
+          </div>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {totalDuplicates} fiche{totalDuplicates > 1 ? 's' : ''} en double détectée{totalDuplicates > 1 ? 's' : ''}
+          </p>
+        </div>
+        <Button
+          onClick={() => {
+            if (confirm(`Fusionner automatiquement ${groups.length} groupes de doublons ? La fiche avec le meilleur score sera conservée.`)) {
+              autoMergeMutation.mutate();
+            }
+          }}
+          disabled={autoMergeMutation.isPending}
+          variant="destructive"
+          size="sm"
+        >
+          {autoMergeMutation.isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          ) : (
+            <Merge className="w-4 h-4 mr-2" />
+          )}
+          Tout fusionner automatiquement
+        </Button>
+      </div>
+
+      {/* Duplicate groups */}
+      <div className="space-y-3">
+        {groups.map((group: any) => {
+          const isExpanded = expandedGroup === group.key;
+          const matchInfo = matchTypeLabels[group.matchType] || matchTypeLabels.email;
+          const MatchIcon = matchInfo.icon;
+          const primary = selectedPrimary[group.key] || group.candidates[0]?.id;
+
+          return (
+            <Card key={group.key} className="overflow-hidden">
+              {/* Group header */}
+              <button
+                onClick={() => setExpandedGroup(isExpanded ? null : group.key)}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Badge className={matchInfo.color}>
+                    <MatchIcon className="w-3 h-3 mr-1" />
+                    {matchInfo.label}
+                  </Badge>
+                  <span className="text-sm font-medium">
+                    {group.candidates.length} fiches
+                  </span>
+                  <span className="text-xs text-muted-foreground hidden sm:inline">
+                    {group.candidates.map((c: any) => c.companyName || c.fullName).join(' / ')}
+                  </span>
+                </div>
+                {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+
+              {/* Expanded content */}
+              {isExpanded && (
+                <CardContent className="pt-0 pb-4">
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Sélectionnez la fiche à conserver (les données des autres seront fusionnées dedans) :
+                  </p>
+
+                  {/* Desktop table */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-12">Garder</TableHead>
+                          <TableHead>Entreprise</TableHead>
+                          <TableHead>Contact</TableHead>
+                          <TableHead>Ville</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Téléphone</TableHead>
+                          <TableHead>Score</TableHead>
+                          <TableHead>Statut</TableHead>
+                          <TableHead>Source</TableHead>
+                          <TableHead>Interactions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {group.candidates.map((c: any) => {
+                          const isPrimary = c.id === primary;
+                          return (
+                            <TableRow
+                              key={c.id}
+                              className={isPrimary ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'opacity-70'}
+                            >
+                              <TableCell>
+                                <input
+                                  type="radio"
+                                  name={`primary-${group.key}`}
+                                  checked={isPrimary}
+                                  onChange={() => setSelectedPrimary(prev => ({ ...prev, [group.key]: c.id }))}
+                                  className="w-4 h-4 accent-emerald-600"
+                                />
+                              </TableCell>
+                              <TableCell className="font-medium">{c.companyName}</TableCell>
+                              <TableCell>{c.fullName}</TableCell>
+                              <TableCell>{c.city}</TableCell>
+                              <TableCell className="text-xs">{c.email}</TableCell>
+                              <TableCell className="text-xs">{c.phoneNumber}</TableCell>
+                              <TableCell>
+                                <Badge className={PRIORITY_COLORS[c.priorityScore] || PRIORITY_COLORS[0]}>
+                                  {c.priorityScore}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge className={STATUS_COLORS[c.status] || ''}>
+                                  {STATUS_LABELS[c.status] || c.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-xs">
+                                  {c.source === 'meta_lead' ? 'Meta' : c.source === 'csv_import' ? 'CSV' : 'Manuel'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                {c.phoneCallsCount > 0 && <span>{c.phoneCallsCount} appel{c.phoneCallsCount > 1 ? 's' : ''}</span>}
+                                {c.emailsSentCount > 0 && <span className="ml-1">{c.emailsSentCount} email{c.emailsSentCount > 1 ? 's' : ''}</span>}
+                                {c.visited > 0 && <span className="ml-1 text-emerald-600">Visité</span>}
+                                {!c.phoneCallsCount && !c.emailsSentCount && !c.visited && <span className="text-muted-foreground">Aucune</span>}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile cards */}
+                  <div className="md:hidden space-y-2">
+                    {group.candidates.map((c: any) => {
+                      const isPrimary = c.id === primary;
+                      return (
+                        <div
+                          key={c.id}
+                          onClick={() => setSelectedPrimary(prev => ({ ...prev, [group.key]: c.id }))}
+                          className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                            isPrimary ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-border hover:bg-muted/50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="radio"
+                                name={`primary-mobile-${group.key}`}
+                                checked={isPrimary}
+                                readOnly
+                                className="w-4 h-4 accent-emerald-600"
+                              />
+                              <span className="font-medium text-sm">{c.companyName}</span>
+                            </div>
+                            <Badge className={PRIORITY_COLORS[c.priorityScore] || PRIORITY_COLORS[0]}>
+                              {c.priorityScore}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
+                            <span>{c.fullName}</span>
+                            <span>{c.city}</span>
+                            <span className="truncate">{c.email}</span>
+                            <span>{c.phoneNumber}</span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge className={STATUS_COLORS[c.status] || ''} >
+                              {STATUS_LABELS[c.status] || c.status}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {c.source === 'meta_lead' ? 'Meta' : c.source === 'csv_import' ? 'CSV' : 'Manuel'}
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Merge button */}
+                  <div className="flex justify-end mt-3">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const secondaries = group.candidates
+                          .filter((c: any) => c.id !== primary)
+                          .map((c: any) => c.id);
+                        // Merge all secondaries into primary one by one
+                        const mergeSequentially = async () => {
+                          for (const secId of secondaries) {
+                            await mergeMutation.mutateAsync({ primaryId: primary, secondaryId: secId });
+                          }
+                        };
+                        mergeSequentially();
+                      }}
+                      disabled={mergeMutation.isPending}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    >
+                      {mergeMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <Merge className="w-4 h-4 mr-2" />
+                      )}
+                      Fusionner ce groupe
+                    </Button>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// MAIN COMPONENT
+// ============================================
+
 export default function AdminPartnerMap() {
   const [activeTab, setActiveTab] = useState('carte');
   const [candidateFilter, setCandidateFilter] = useState('all');
@@ -1516,7 +1800,13 @@ export default function AdminPartnerMap() {
             <TabsTrigger value="demandes" className="flex items-center gap-1.5">
               <Handshake className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Demandes</span>
-              <span className="sm:hidden">Dem.</span>           </TabsTrigger>
+              <span className="sm:hidden">Dem.</span>
+            </TabsTrigger>
+            <TabsTrigger value="doublons" className="flex items-center gap-1.5">
+              <Copy className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Doublons</span>
+              <span className="sm:hidden">Doub.</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* CARTE TAB */}
@@ -1667,6 +1957,24 @@ export default function AdminPartnerMap() {
               </CardHeader>
               <CardContent>
                 <PartnershipLeadsTab onCandidateAdded={() => refetchCandidates()} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* DOUBLONS TAB */}
+          <TabsContent value="doublons">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Copy className="w-5 h-5" />
+                  Dédoublonnage des Candidats
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Détection automatique des fiches en double par email, téléphone ou nom d'entreprise + ville. Sélectionnez la fiche à conserver et fusionnez.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <DuplicatesTab onMerged={() => refetchCandidates()} />
               </CardContent>
             </Card>
           </TabsContent>

@@ -2351,6 +2351,26 @@ export const appRouter = router({
           return await reclassifyExistingPartnerLeads();
         }),
 
+      // Deduplication
+      detectDuplicates: adminProcedure
+        .query(async () => {
+          return await candidatesDb.detectDuplicates();
+        }),
+
+      mergeDuplicates: adminProcedure
+        .input(z.object({
+          primaryId: z.number(),
+          secondaryId: z.number(),
+        }))
+        .mutation(async ({ input }) => {
+          return await candidatesDb.mergeCandidates(input.primaryId, input.secondaryId);
+        }),
+
+      autoMergeAll: adminProcedure
+        .mutation(async () => {
+          return await candidatesDb.autoMergeAllDuplicates();
+        }),
+
       importCSV: adminProcedure
         .input(z.object({
           candidates: z.array(z.object({
