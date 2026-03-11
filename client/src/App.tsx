@@ -20,7 +20,6 @@ import AdminLeads from "@/pages/admin/AdminLeads";
 import AdminAfterSales from "@/pages/admin/AdminAfterSales";
 import AdminPartnerMap from "@/pages/admin/AdminPartnerMap";
 import AdminSpareParts from "@/pages/admin/AdminSpareParts";
-import AdminSpaModels from "@/pages/admin/AdminSpaModels";
 import AdminNewsletter from "@/pages/admin/AdminNewsletter";
 import AdminCalendar from "@/pages/admin/AdminCalendar";
 
@@ -108,7 +107,6 @@ function Router() {
       <Route path="/admin/after-sales" component={AdminAfterSales} />
       <Route path="/admin/partner-map" component={AdminPartnerMap} />
       <Route path="/admin/spare-parts" component={AdminSpareParts} />
-      <Route path="/admin/spa-models" component={AdminSpaModels} />
       <Route path="/admin/newsletter" component={AdminNewsletter} />
       <Route path="/admin/calendar" component={AdminCalendar} />
 

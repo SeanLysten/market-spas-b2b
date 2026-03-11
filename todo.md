@@ -2433,3 +2433,9 @@
 - [x] Responsive mobile pour toutes les pages (cartes adaptatives)
 - [x] Navigation : lien "Modèles de Spa" dans admin + "Pièces Détachées" dans menu utilisateur
 - [x] Tests vitest : 7 tests passants (spa-models.test.ts)
+
+## Fusion Modèles de Spa dans Pièces Détachées
+- [x] Intégrer AdminSpaModels comme onglet "Modèles de Spa" dans la page AdminSpareParts
+- [x] Retirer le lien "Modèles de Spa" séparé du menu admin (AdminLayout)
+- [x] Retirer la route /admin/spa-models séparée de App.tsx
+- [x] Supprimer le fichier AdminSpaModels.tsx devenu inutile
