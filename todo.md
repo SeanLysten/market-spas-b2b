@@ -2542,3 +2542,10 @@
 - [x] Créer les fonctions db deactivateUsersByPartnerId et reactivateUsersByPartnerId
 - [x] Cascade appliquée dans les 3 routes : partners.update (x2) + partners.delete + partners.approve
 - [x] 46 tests vitest passants (dont 12 nouveaux pour la cascade)
+
+## Confirmation visuelle suppression partenaire
+- [x] Ajouter une route backend admin.partners.deleteImpact pour compter les utilisateurs, territoires, leads, membres d'équipe et invitations
+- [x] Ajouter un dialog de confirmation avant suppression avec grille d'impact visuelle (4 cartes colorées)
+- [x] Afficher le détail des comptes utilisateurs impactés (nom, email, statut actif/inactif)
+- [x] Afficher le nombre de territoires et leads qui seront réassignés
+- [x] 46 tests vitest passants

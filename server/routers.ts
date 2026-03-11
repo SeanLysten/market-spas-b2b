@@ -1872,6 +1872,40 @@ export const appRouter = router({
           return await db.getAllPartners(input);
         }),
 
+      // Preview the impact of deleting a partner
+      deleteImpact: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .query(async ({ input }) => {
+          const drizzleDb = await db.getDb();
+          const { users, leads, partnerTerritories, partners, teamMembers, teamInvitations } = await import("../drizzle/schema");
+          const { eq, and } = await import("drizzle-orm");
+
+          const [partner] = await drizzleDb.select({ companyName: partners.companyName }).from(partners).where(eq(partners.id, input.id));
+          const linkedUsers = await drizzleDb.select({ id: users.id, name: users.name, email: users.email, isActive: users.isActive }).from(users).where(eq(users.partnerId, input.id));
+          const territories = await drizzleDb.select({ id: partnerTerritories.id }).from(partnerTerritories).where(eq(partnerTerritories.partnerId, input.id));
+          const assignedLeads = await drizzleDb.select({ id: leads.id }).from(leads).where(eq(leads.assignedPartnerId, input.id));
+          const members = await drizzleDb.select({ id: teamMembers.id }).from(teamMembers).where(eq(teamMembers.partnerId, input.id));
+          let pendingInvitationsCount = 0;
+          try {
+            const invitations = await drizzleDb.select({ id: teamInvitations.id }).from(teamInvitations).where(and(eq(teamInvitations.partnerId, input.id), eq(teamInvitations.status, 'PENDING')));
+            pendingInvitationsCount = invitations.length;
+          } catch (e) {
+            // Table may not have the expected columns yet
+            console.log('[deleteImpact] Could not query team_invitations:', e);
+          }
+
+          return {
+            partnerName: partner?.companyName || 'Inconnu',
+            usersCount: linkedUsers.length,
+            activeUsersCount: linkedUsers.filter(u => u.isActive).length,
+            users: linkedUsers.map(u => ({ name: u.name || u.email || 'Sans nom', email: u.email, isActive: u.isActive })),
+            territoriesCount: territories.length,
+            leadsCount: assignedLeads.length,
+            teamMembersCount: members.length,
+            pendingInvitationsCount,
+          };
+        }),
+
       create: adminProcedure
         .input(
           z.object({

@@ -47,6 +47,13 @@ import {
   Users,
   TrendingUp,
   Award,
+  AlertTriangle,
+  Loader2,
+  UserX,
+  Map,
+  Target,
+  UsersRound,
+  MailX,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -87,6 +94,8 @@ export default function AdminPartners() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<any>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [partnerToDelete, setPartnerToDelete] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     companyName: "",
@@ -242,8 +251,15 @@ export default function AdminPartners() {
   };
 
   const handleDeletePartner = (partnerId: number) => {
-    if (confirm("Êtes-vous sûr de vouloir supprimer ce partenaire ?")) {
-      deletePartnerMutation.mutate({ id: partnerId });
+    setPartnerToDelete(partnerId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (partnerToDelete) {
+      deletePartnerMutation.mutate({ id: partnerToDelete });
+      setDeleteConfirmOpen(false);
+      setPartnerToDelete(null);
     }
   };
 
@@ -718,7 +734,199 @@ export default function AdminPartners() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog with Impact Preview */}
+        <DeleteConfirmDialog
+          open={deleteConfirmOpen}
+          onOpenChange={(open) => {
+            setDeleteConfirmOpen(open);
+            if (!open) setPartnerToDelete(null);
+          }}
+          partnerId={partnerToDelete}
+          onConfirm={confirmDelete}
+          isDeleting={deletePartnerMutation.isPending}
+        />
       </div>
     </AdminLayout>
+  );
+}
+
+// ============================================
+// DELETE CONFIRMATION DIALOG WITH IMPACT PREVIEW
+// ============================================
+
+function DeleteConfirmDialog({
+  open,
+  onOpenChange,
+  partnerId,
+  onConfirm,
+  isDeleting,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  partnerId: number | null;
+  onConfirm: () => void;
+  isDeleting: boolean;
+}) {
+  const { data: impact, isLoading } = trpc.admin.partners.deleteImpact.useQuery(
+    { id: partnerId! },
+    { enabled: open && !!partnerId }
+  );
+
+  const totalImpact = impact
+    ? impact.usersCount + impact.territoriesCount + impact.leadsCount + impact.teamMembersCount + impact.pendingInvitationsCount
+    : 0;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg w-[95vw] sm:w-full">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="w-5 h-5" />
+            Supprimer le partenaire
+          </DialogTitle>
+          <DialogDescription>
+            Cette action est irréversible. Veuillez vérifier les éléments impactés ci-dessous.
+          </DialogDescription>
+        </DialogHeader>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">Analyse de l'impact...</span>
+          </div>
+        ) : impact ? (
+          <div className="space-y-4 py-2">
+            {/* Partner name */}
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+              <p className="font-semibold text-lg">{impact.partnerName}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {totalImpact === 0
+                  ? "Aucun élément ne sera impacté par cette suppression."
+                  : `${totalImpact} élément(s) seront impacté(s) par cette suppression.`}
+              </p>
+            </div>
+
+            {/* Impact grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <ImpactCard
+                icon={<UserX className="w-4 h-4" />}
+                label="Utilisateurs désactivés"
+                count={impact.activeUsersCount}
+                total={impact.usersCount}
+                color="text-red-600 dark:text-red-400"
+                bgColor="bg-red-50 dark:bg-red-950/30"
+              />
+              <ImpactCard
+                icon={<Map className="w-4 h-4" />}
+                label="Territoires réassignés"
+                count={impact.territoriesCount}
+                color="text-blue-600 dark:text-blue-400"
+                bgColor="bg-blue-50 dark:bg-blue-950/30"
+              />
+              <ImpactCard
+                icon={<Target className="w-4 h-4" />}
+                label="Leads réassignés"
+                count={impact.leadsCount}
+                color="text-amber-600 dark:text-amber-400"
+                bgColor="bg-amber-50 dark:bg-amber-950/30"
+              />
+              <ImpactCard
+                icon={<UsersRound className="w-4 h-4" />}
+                label="Membres d'équipe"
+                count={impact.teamMembersCount}
+                color="text-purple-600 dark:text-purple-400"
+                bgColor="bg-purple-50 dark:bg-purple-950/30"
+              />
+            </div>
+
+            {/* Users detail list */}
+            {impact.users.length > 0 && (
+              <div className="border rounded-lg p-3">
+                <p className="text-sm font-medium mb-2 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5" />
+                  Comptes utilisateurs impactés
+                </p>
+                <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                  {impact.users.map((u: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between text-sm">
+                      <span className="truncate">{u.name}</span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-xs text-muted-foreground truncate max-w-[150px]">{u.email}</span>
+                        {u.isActive ? (
+                          <Badge className="bg-emerald-500/15 text-emerald-800 dark:text-emerald-400 text-[10px]">Actif</Badge>
+                        ) : (
+                          <Badge className="bg-muted text-gray-600 text-[10px]">Inactif</Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {impact.pendingInvitationsCount > 0 && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+                <MailX className="w-4 h-4 flex-shrink-0" />
+                <span>{impact.pendingInvitationsCount} invitation(s) en attente seront annulée(s)</span>
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
+            Annuler
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={onConfirm}
+            disabled={isLoading || isDeleting}
+            className="w-full sm:w-auto gap-2"
+          >
+            {isDeleting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Suppression...
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-4 h-4" />
+                Supprimer définitivement
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ImpactCard({
+  icon,
+  label,
+  count,
+  total,
+  color,
+  bgColor,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  count: number;
+  total?: number;
+  color: string;
+  bgColor: string;
+}) {
+  return (
+    <div className={`rounded-lg p-3 ${bgColor}`}>
+      <div className={`flex items-center gap-1.5 ${color}`}>
+        {icon}
+        <span className="text-2xl font-bold">{count}</span>
+      </div>
+      <p className="text-xs text-muted-foreground mt-1">
+        {label}
+        {total !== undefined && total !== count && ` (${total} total)`}
+      </p>
+    </div>
   );
 }
