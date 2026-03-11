@@ -47,6 +47,7 @@ import ForumNewTopic from "./pages/ForumNewTopic";
 import ForumTopicDetail from "./pages/ForumTopicDetail";
 import AcceptInvitation from "./pages/AcceptInvitation";
 import NotificationPreferences from "./pages/NotificationPreferences";
+import TeamManagement from "./pages/TeamManagement";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -92,6 +93,7 @@ function Router() {
       <Route path="/technical-resources/forum/:id" component={ForumTopicDetail} />
       <Route path="/accept-invitation" component={AcceptInvitation} />
       <Route path="/notification-preferences" component={NotificationPreferences} />
+      <Route path="/team" component={TeamManagement} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/resources" component={AdminResources} />
       <Route path="/admin/users" component={AdminUsers} />

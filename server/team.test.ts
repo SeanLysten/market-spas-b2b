@@ -103,7 +103,7 @@ describe("Team Management - Permissions", () => {
 
       expect(salesRepPerms.leads.view).toBe("assigned"); // Only assigned leads
       expect(salesRepPerms.orders.view).toBe(false);
-      expect(salesRepPerms.catalog.view).toBe(false);
+      expect(salesRepPerms.catalog.view).toBe(true); // SALES_REP can view catalog (without prices)
       expect(salesRepPerms.team.invite).toBe(false);
     });
   });

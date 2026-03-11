@@ -2443,3 +2443,24 @@
 ## Corrections formulaire Modèles de Spa
 - [x] Fix : le sélecteur de marque ne permet pas de changer la marque lors de la création d'un modèle
 - [x] Ajout : drag & drop d'image directement dans le formulaire de création/édition de modèle (upload S3)
+
+## Système de Rôles et Permissions
+### Admin - Rôles avec permissions par module
+- [x] Ajouter champ adminPermissions (JSON) sur table users pour les admins
+- [x] Créer le fichier admin-permissions.ts avec les modules : dashboard, produits, stock, commandes, partenaires, marketing, leads, sav, pièces_détachées, newsletter, calendrier, utilisateurs, ressources, paramètres
+- [x] Modifier adminProcedure pour vérifier les permissions par module (pas juste ADMIN/SUPER_ADMIN)
+- [x] Créer des middlewares spécialisés par module (stockAdminProcedure, savAdminProcedure, etc.)
+- [x] Protéger chaque route admin backend avec le bon middleware de permission
+- [x] Interface admin : page de gestion des rôles admin (SUPER_ADMIN uniquement) dans AdminUsers
+- [x] Interface admin : sélecteur de permissions par module lors de la création/modification d'un admin
+- [x] Interface admin : masquer les menus non autorisés dans AdminLayout
+- [x] SUPER_ADMIN peut ajouter/supprimer des admins, les ADMIN ne peuvent pas
+### Partenaire - Sous-accès internes avec rôles configurables
+- [x] Enrichir TeamPermissions avec modules SAV, pièces détachées, commande de spas (configurable)
+- [x] Ajouter permission spas.order (booléen) contrôlée par le propriétaire du compte
+- [x] Créer la page /team côté utilisateur pour gérer les sous-accès
+- [x] Interface utilisateur : invitation de membres d'équipe avec sélection du rôle
+- [x] Interface utilisateur : modification des permissions par membre
+- [x] Interface utilisateur : suppression de membres d'équipe
+- [x] Protéger les pages utilisateur selon les permissions du membre d'équipe
+- [x] Tests vitest pour les permissions admin et partenaire (27 tests)

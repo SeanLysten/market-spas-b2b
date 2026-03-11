@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -29,12 +29,283 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
 import { useSafeQuery } from "@/hooks/useSafeQuery";
 import { TableSkeleton } from "@/components/TableSkeleton";
-import { Plus, Mail, UserCheck, UserX, Edit, RotateCw, X, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, Mail, UserCheck, UserX, Edit, RotateCw, X, Clock, CheckCircle2, AlertCircle, Shield, ShieldCheck, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminLayout } from "@/components/AdminLayout";
+
+// ============================================
+// ADMIN PERMISSIONS TYPES (mirrored from server)
+// ============================================
+
+const ADMIN_MODULES: Record<string, string> = {
+  dashboard: "Dashboard",
+  products: "Produits & Catalogue",
+  stock: "Gestion du Stock",
+  orders: "Commandes",
+  partners: "Partenaires",
+  marketing: "Marketing & Leads",
+  territories: "Territoires",
+  sav: "Service Après-Vente",
+  spare_parts: "Pièces Détachées",
+  resources: "Ressources Médias",
+  technical_resources: "Ressources Techniques",
+  newsletter: "Newsletter",
+  calendar: "Agenda",
+  users: "Gestion Utilisateurs",
+  settings: "Paramètres",
+  reports: "Rapports",
+  partner_map: "Carte du Réseau",
+};
+
+type AdminModule = keyof typeof ADMIN_MODULES;
+
+interface ModulePermission {
+  view: boolean;
+  edit: boolean;
+}
+
+interface AdminPermissions {
+  modules: Record<string, ModulePermission>;
+}
+
+const ADMIN_ROLE_PRESETS: Record<string, { label: string; description: string }> = {
+  SUPER_ADMIN: { label: "Super Administrateur", description: "Accès total + gestion des administrateurs" },
+  ADMIN_FULL: { label: "Administrateur Complet", description: "Accès à tous les modules sauf gestion des utilisateurs admin" },
+  ADMIN_STOCK: { label: "Gestionnaire Stock", description: "Produits, stock, prévisions, pièces détachées" },
+  ADMIN_SAV: { label: "Gestionnaire SAV", description: "Service après-vente, pièces détachées, ressources techniques" },
+  ADMIN_MARKETING: { label: "Gestionnaire Marketing", description: "Marketing, leads, territoires, newsletter, agenda, carte réseau" },
+  ADMIN_ORDERS: { label: "Gestionnaire Commandes", description: "Commandes, partenaires, rapports" },
+  ADMIN_CUSTOM: { label: "Personnalisé", description: "Permissions personnalisées par module" },
+};
+
+function allModulesAccess(view: boolean, edit: boolean): Record<string, ModulePermission> {
+  const modules: Record<string, ModulePermission> = {};
+  for (const key of Object.keys(ADMIN_MODULES)) {
+    modules[key] = { view, edit };
+  }
+  return modules;
+}
+
+function getPresetPermissions(preset: string): AdminPermissions {
+  switch (preset) {
+    case "SUPER_ADMIN":
+      return { modules: allModulesAccess(true, true) };
+    case "ADMIN_FULL": {
+      const m = allModulesAccess(true, true);
+      m.users = { view: true, edit: false };
+      return { modules: m };
+    }
+    case "ADMIN_STOCK":
+      return { modules: { ...allModulesAccess(false, false), dashboard: { view: true, edit: false }, products: { view: true, edit: true }, stock: { view: true, edit: true }, spare_parts: { view: true, edit: true }, orders: { view: true, edit: false } } };
+    case "ADMIN_SAV":
+      return { modules: { ...allModulesAccess(false, false), dashboard: { view: true, edit: false }, sav: { view: true, edit: true }, spare_parts: { view: true, edit: true }, technical_resources: { view: true, edit: true }, partners: { view: true, edit: false } } };
+    case "ADMIN_MARKETING":
+      return { modules: { ...allModulesAccess(false, false), dashboard: { view: true, edit: false }, marketing: { view: true, edit: true }, territories: { view: true, edit: true }, newsletter: { view: true, edit: true }, calendar: { view: true, edit: true }, resources: { view: true, edit: true }, partner_map: { view: true, edit: true }, partners: { view: true, edit: false } } };
+    case "ADMIN_ORDERS":
+      return { modules: { ...allModulesAccess(false, false), dashboard: { view: true, edit: false }, orders: { view: true, edit: true }, partners: { view: true, edit: true }, reports: { view: true, edit: true }, products: { view: true, edit: false } } };
+    default:
+      return { modules: allModulesAccess(false, false) };
+  }
+}
+
+// ============================================
+// ROLE PERMISSIONS DIALOG
+// ============================================
+
+function RolePermissionsDialog({
+  userId,
+  userName,
+  currentRole,
+  currentPreset,
+  currentPermissions,
+  open,
+  onOpenChange,
+  onSave,
+}: {
+  userId: number;
+  userName: string;
+  currentRole: string;
+  currentPreset: string | null;
+  currentPermissions: AdminPermissions | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (userId: number, role: string, preset: string, permissions: AdminPermissions) => void;
+}) {
+  const [selectedRole, setSelectedRole] = useState(currentRole);
+  const [selectedPreset, setSelectedPreset] = useState(currentPreset || "ADMIN_FULL");
+  const [permissions, setPermissions] = useState<AdminPermissions>(
+    currentPermissions || getPresetPermissions("ADMIN_FULL")
+  );
+
+  useEffect(() => {
+    if (open) {
+      setSelectedRole(currentRole);
+      setSelectedPreset(currentPreset || (currentRole === "SUPER_ADMIN" ? "SUPER_ADMIN" : "ADMIN_FULL"));
+      setPermissions(currentPermissions || getPresetPermissions(currentRole === "SUPER_ADMIN" ? "SUPER_ADMIN" : "ADMIN_FULL"));
+    }
+  }, [open, currentRole, currentPreset, currentPermissions]);
+
+  const handlePresetChange = (preset: string) => {
+    setSelectedPreset(preset);
+    if (preset !== "ADMIN_CUSTOM") {
+      setPermissions(getPresetPermissions(preset));
+    }
+    if (preset === "SUPER_ADMIN") {
+      setSelectedRole("SUPER_ADMIN");
+    } else {
+      setSelectedRole("ADMIN");
+    }
+  };
+
+  const handleModuleToggle = (module: string, field: "view" | "edit", value: boolean) => {
+    setSelectedPreset("ADMIN_CUSTOM");
+    setPermissions((prev) => ({
+      modules: {
+        ...prev.modules,
+        [module]: {
+          ...prev.modules[module],
+          [field]: value,
+          ...(field === "edit" && value ? { view: true } : {}),
+          ...(field === "view" && !value ? { edit: false } : {}),
+        },
+      },
+    }));
+  };
+
+  const handleSave = () => {
+    onSave(userId, selectedRole, selectedPreset, permissions);
+    onOpenChange(false);
+  };
+
+  const isAdmin = selectedRole === "ADMIN" || selectedRole === "SUPER_ADMIN";
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl w-[95vw] max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Shield className="w-5 h-5" />
+            Permissions de {userName}
+          </DialogTitle>
+          <DialogDescription>
+            Configurez le rôle et les permissions d'accès au dashboard admin
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6 py-4">
+          {/* Role selection */}
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold">Type de compte</Label>
+            <Select value={isAdmin ? "admin" : "partner"} onValueChange={(v) => {
+              if (v === "partner") {
+                setSelectedRole("PARTNER");
+                setSelectedPreset("");
+              } else {
+                setSelectedRole("ADMIN");
+                setSelectedPreset("ADMIN_FULL");
+                setPermissions(getPresetPermissions("ADMIN_FULL"));
+              }
+            }}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="partner">Partenaire / Utilisateur</SelectItem>
+                <SelectItem value="admin">Administrateur</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {isAdmin && (
+            <>
+              <Separator />
+              {/* Preset selection */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Profil de permissions</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {Object.entries(ADMIN_ROLE_PRESETS).map(([key, preset]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => handlePresetChange(key)}
+                      className={`text-left p-3 rounded-lg border-2 transition-all ${
+                        selectedPreset === key
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/30"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {key === "SUPER_ADMIN" ? (
+                          <ShieldCheck className="w-4 h-4 text-destructive flex-shrink-0" />
+                        ) : (
+                          <Shield className="w-4 h-4 text-primary flex-shrink-0" />
+                        )}
+                        <span className="font-medium text-sm">{preset.label}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{preset.description}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Module permissions grid */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold">Permissions par module</Label>
+                  <div className="flex gap-8 text-xs text-muted-foreground">
+                    <span>Voir</span>
+                    <span>Modifier</span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  {Object.entries(ADMIN_MODULES).map(([key, label]) => {
+                    const perm = permissions.modules[key] || { view: false, edit: false };
+                    return (
+                      <div key={key} className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-muted/50">
+                        <span className="text-sm">{label}</span>
+                        <div className="flex gap-8">
+                          <Switch
+                            checked={perm.view}
+                            onCheckedChange={(v) => handleModuleToggle(key, "view", v)}
+                            disabled={selectedPreset === "SUPER_ADMIN"}
+                          />
+                          <Switch
+                            checked={perm.edit}
+                            onCheckedChange={(v) => handleModuleToggle(key, "edit", v)}
+                            disabled={selectedPreset === "SUPER_ADMIN"}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Annuler
+          </Button>
+          <Button onClick={handleSave}>
+            <ShieldCheck className="w-4 h-4 mr-2" />
+            Enregistrer les permissions
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============================================
+// MAIN COMPONENT
+// ============================================
 
 export default function AdminUsers() {
   const [open, setOpen] = useState(false);
@@ -46,6 +317,9 @@ export default function AdminUsers() {
     role: "USER" as const,
     partnerId: "",
   });
+
+  const { data: meData } = trpc.auth.me.useQuery();
+  const isSuperAdmin = meData?.role === "SUPER_ADMIN";
 
   const { data: usersData, isLoading, refetch } = trpc.admin.users.list.useQuery();
   const users = useSafeQuery(usersData);
@@ -59,8 +333,8 @@ export default function AdminUsers() {
   const cancelInvitationMutation = trpc.admin.users.cancelInvitation.useMutation();
   const resendInvitationMutation = trpc.admin.users.resendInvitation.useMutation();
   
-  const [editingUserId, setEditingUserId] = useState<number | null>(null);
-  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [permDialogOpen, setPermDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
 
   // Auto-refresh invitations every 30 seconds
   useEffect(() => {
@@ -111,14 +385,15 @@ export default function AdminUsers() {
     }
   };
 
-  const handleUpdateRole = async (userId: number, newRole: string) => {
+  const handleSavePermissions = async (userId: number, role: string, preset: string, permissions: AdminPermissions) => {
     try {
       await updateRoleMutation.mutateAsync({
         userId,
-        role: newRole as 'SUPER_ADMIN' | 'ADMIN' | 'PARTNER',
+        role: role as any,
+        adminRolePreset: preset,
+        adminPermissions: JSON.stringify(permissions),
       });
-      toast.success("Rôle mis à jour avec succès");
-      setEditingUserId(null);
+      toast.success("Rôle et permissions mis à jour avec succès");
       refetch();
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la modification du rôle");
@@ -145,14 +420,26 @@ export default function AdminUsers() {
     }
   };
 
-  const getRoleBadge = (role: string) => {
+  const getRoleBadge = (role: string, preset?: string | null) => {
     const colors: Record<string, string> = {
       SUPER_ADMIN: "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive",
       ADMIN: "bg-orange-500/15 dark:bg-orange-500/25 text-orange-800 dark:text-orange-400",
       PARTNER: "bg-info/15 dark:bg-info-light text-info dark:text-info-dark",
+      PARTNER_ADMIN: "bg-purple-500/15 dark:bg-purple-500/25 text-purple-800 dark:text-purple-400",
+      PARTNER_USER: "bg-blue-500/15 dark:bg-blue-500/25 text-blue-800 dark:text-blue-400",
       USER: "bg-muted dark:bg-muted/50 text-gray-800",
     };
-    return colors[role] || colors.USER;
+    const roleLabels: Record<string, string> = {
+      SUPER_ADMIN: "Super Admin",
+      ADMIN: preset && ADMIN_ROLE_PRESETS[preset] ? ADMIN_ROLE_PRESETS[preset].label : "Admin",
+      PARTNER: "Partenaire",
+      PARTNER_ADMIN: "Admin Partenaire",
+      PARTNER_USER: "Utilisateur",
+    };
+    return {
+      color: colors[role] || colors.USER,
+      label: roleLabels[role] || role?.replace("_", " ") || "USER",
+    };
   };
 
   const getStatusBadge = (status: string) => {
@@ -182,6 +469,10 @@ export default function AdminUsers() {
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
+
+  // Separate admin and partner users
+  const adminUsers = useMemo(() => users?.filter((u: any) => u.role === "SUPER_ADMIN" || u.role === "ADMIN") || [], [users]);
+  const partnerUsers = useMemo(() => users?.filter((u: any) => u.role !== "SUPER_ADMIN" && u.role !== "ADMIN") || [], [users]);
 
   return (
     <AdminLayout>
@@ -271,156 +562,260 @@ export default function AdminUsers() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
+          <TabsList className="flex-wrap h-auto">
+            <TabsTrigger value="admins" className="gap-1">
+              <Shield className="w-3.5 h-3.5" />
+              Admins ({adminUsers.length})
+            </TabsTrigger>
             <TabsTrigger value="users">
-              Utilisateurs ({users?.length || 0})
+              Partenaires ({partnerUsers.length})
             </TabsTrigger>
             <TabsTrigger value="invitations">
               Invitations ({invitations?.filter((inv: any) => inv.status === 'PENDING').length || 0})
             </TabsTrigger>
           </TabsList>
 
-          {/* Users Tab */}
+          {/* Admins Tab */}
+          <TabsContent value="admins">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  Équipe administrative
+                </CardTitle>
+                <CardDescription>
+                  {adminUsers.length} administrateur(s) avec accès au dashboard
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <TableSkeleton rows={4} columns={5} />
+                ) : adminUsers.length > 0 ? (
+                  <>
+                    {/* Mobile */}
+                    <div className="md:hidden space-y-3">
+                      {adminUsers.map((user: any) => {
+                        const badge = getRoleBadge(user.role, user.adminRolePreset);
+                        return (
+                          <Card key={user.id} className="p-4">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="font-semibold text-sm truncate">{user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || '—'}</p>
+                                <p className="text-xs text-muted-foreground truncate">{user.email || '—'}</p>
+                              </div>
+                              {isSuperAdmin && (
+                                <Button variant="ghost" size="sm" onClick={() => { setEditingUser(user); setPermDialogOpen(true); }}>
+                                  <Settings2 className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              <Badge className={badge.color + ' text-[10px]'}>{badge.label}</Badge>
+                              {user.isActive ? <Badge className="bg-emerald-500/15 text-emerald-800 text-[10px]">Actif</Badge> : <Badge className="bg-muted text-gray-800 text-[10px]">Inactif</Badge>}
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                    {/* Desktop */}
+                    <div className="hidden md:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Utilisateur</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Rôle Admin</TableHead>
+                            <TableHead>Statut</TableHead>
+                            <TableHead>Dernière connexion</TableHead>
+                            {isSuperAdmin && <TableHead className="text-right">Actions</TableHead>}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {adminUsers.map((user: any) => {
+                            const badge = getRoleBadge(user.role, user.adminRolePreset);
+                            return (
+                              <TableRow key={user.id}>
+                                <TableCell className="font-medium">
+                                  {user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim() || "—"}
+                                </TableCell>
+                                <TableCell>{user.email || "—"}</TableCell>
+                                <TableCell>
+                                  <Badge className={badge.color}>{badge.label}</Badge>
+                                </TableCell>
+                                <TableCell>
+                                  {user.isActive ? (
+                                    <Badge className="bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400">Actif</Badge>
+                                  ) : (
+                                    <Badge className="bg-muted dark:bg-muted/50 text-gray-800">Inactif</Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {user.lastSignedIn
+                                    ? new Date(user.lastSignedIn).toLocaleDateString("fr-FR")
+                                    : "Jamais"}
+                                </TableCell>
+                                {isSuperAdmin && (
+                                  <TableCell className="text-right">
+                                    <div className="flex justify-end gap-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => { setEditingUser(user); setPermDialogOpen(true); }}
+                                        title="Gérer les permissions"
+                                      >
+                                        <Settings2 className="w-4 h-4 text-info dark:text-info-dark" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleToggleActive(user.id, user.isActive || false)}
+                                        disabled={toggleActiveMutation.isPending}
+                                      >
+                                        {user.isActive ? (
+                                          <UserX className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                                        ) : (
+                                          <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                )}
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-12">
+                    <Shield className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground">Aucun administrateur</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Partner Users Tab */}
           <TabsContent value="users">
             <Card>
               <CardHeader>
-                <CardTitle>Liste des utilisateurs</CardTitle>
+                <CardTitle>Partenaires & Utilisateurs</CardTitle>
                 <CardDescription>
-                  {users?.length || 0} utilisateur(s) enregistré(s)
+                  {partnerUsers.length} utilisateur(s) partenaire(s)
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <TableSkeleton rows={8} columns={7} />
-                ) : users && users.length > 0 ? (
+                ) : partnerUsers.length > 0 ? (
                   <>
-                  <div className="md:hidden space-y-3 p-3">
-                    {users.map((user) => (
-                      <Card key={user.id} className="p-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="font-semibold text-sm truncate">{user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || '—'}</p>
-                            <p className="text-xs text-muted-foreground truncate">{user.email || '—'}</p>
-                          </div>
-                          <div className="flex gap-1 flex-shrink-0">
-                            <Button variant="ghost" size="sm" onClick={() => { setEditingUserId(user.id); setSelectedRole(user.role || 'PARTNER'); }}><Edit className="w-3 h-3" /></Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleToggleActive(user.id, user.isActive || false)}>
-                              {user.isActive ? <UserX className="w-3 h-3 text-orange-600" /> : <UserCheck className="w-3 h-3 text-emerald-600" />}
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5 mt-2">
-                          <Badge className={getRoleBadge(user.role || 'USER') + ' text-[10px]'}>{user.role?.replace('_', ' ') || 'USER'}</Badge>
-                          {user.isActive ? <Badge className="bg-emerald-500/15 text-emerald-800 text-[10px]">Actif</Badge> : <Badge className="bg-muted text-gray-800 text-[10px]">Inactif</Badge>}
-                        </div>
-                        {editingUserId === user.id && (
-                          <div className="mt-2">
-                            <Select value={selectedRole} onValueChange={(value) => { setSelectedRole(value); handleUpdateRole(user.id, value); }}>
-                              <SelectTrigger className="w-full h-8 text-sm"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="PARTNER">Partenaire</SelectItem>
-                                <SelectItem value="ADMIN">Administrateur</SelectItem>
-                                <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-                      </Card>
-                    ))}
-                  </div>
-                  <div className="hidden md:block">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Utilisateur</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Rôle</TableHead>
-                        <TableHead>Partenaire</TableHead>
-                        <TableHead>Statut</TableHead>
-                        <TableHead>Dernière connexion</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">
-                            {user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim() || "—"}
-                          </TableCell>
-                          <TableCell>{user.email || "—"}</TableCell>
-                          <TableCell>
-                            {editingUserId === user.id ? (
-                              <Select
-                                value={selectedRole}
-                                onValueChange={(value) => {
-                                  setSelectedRole(value);
-                                  handleUpdateRole(user.id, value);
-                                }}
-                              >
-                                <SelectTrigger className="w-[180px]">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="PARTNER">Partenaire</SelectItem>
-                                  <SelectItem value="ADMIN">Administrateur</SelectItem>
-                                  <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <Badge className={getRoleBadge(user.role || "USER")}>
-                                {user.role?.replace("_", " ") || "USER"}
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>{user.partnerId || "—"}</TableCell>
-                          <TableCell>
-                            {user.isActive ? (
-                              <Badge className="bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400">Actif</Badge>
-                            ) : (
-                              <Badge className="bg-muted dark:bg-muted/50 text-gray-800">Inactif</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {user.lastSignedIn
-                              ? new Date(user.lastSignedIn).toLocaleDateString("fr-FR")
-                              : "Jamais"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setEditingUserId(user.id);
-                                  setSelectedRole(user.role || "PARTNER");
-                                }}
-                                title="Modifier le rôle"
-                              >
-                                <Edit className="w-4 h-4 text-info dark:text-info-dark" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleToggleActive(user.id, user.isActive || false)}
-                                disabled={toggleActiveMutation.isPending}
-                              >
-                                {user.isActive ? (
-                                  <UserX className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                                ) : (
-                                  <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    {/* Mobile */}
+                    <div className="md:hidden space-y-3">
+                      {partnerUsers.map((user: any) => {
+                        const badge = getRoleBadge(user.role, user.adminRolePreset);
+                        return (
+                          <Card key={user.id} className="p-4">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="font-semibold text-sm truncate">{user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || '—'}</p>
+                                <p className="text-xs text-muted-foreground truncate">{user.email || '—'}</p>
+                              </div>
+                              <div className="flex gap-1 flex-shrink-0">
+                                {isSuperAdmin && (
+                                  <Button variant="ghost" size="sm" onClick={() => { setEditingUser(user); setPermDialogOpen(true); }}>
+                                    <Edit className="w-3 h-3" />
+                                  </Button>
                                 )}
-                              </Button>
+                                <Button variant="ghost" size="sm" onClick={() => handleToggleActive(user.id, user.isActive || false)}>
+                                  {user.isActive ? <UserX className="w-3 h-3 text-orange-600" /> : <UserCheck className="w-3 h-3 text-emerald-600" />}
+                                </Button>
+                              </div>
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  </div>
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              <Badge className={badge.color + ' text-[10px]'}>{badge.label}</Badge>
+                              {user.isActive ? <Badge className="bg-emerald-500/15 text-emerald-800 text-[10px]">Actif</Badge> : <Badge className="bg-muted text-gray-800 text-[10px]">Inactif</Badge>}
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                    {/* Desktop */}
+                    <div className="hidden md:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Utilisateur</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Rôle</TableHead>
+                            <TableHead>Partenaire</TableHead>
+                            <TableHead>Statut</TableHead>
+                            <TableHead>Dernière connexion</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {partnerUsers.map((user: any) => {
+                            const badge = getRoleBadge(user.role, user.adminRolePreset);
+                            return (
+                              <TableRow key={user.id}>
+                                <TableCell className="font-medium">
+                                  {user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim() || "—"}
+                                </TableCell>
+                                <TableCell>{user.email || "—"}</TableCell>
+                                <TableCell>
+                                  <Badge className={badge.color}>{badge.label}</Badge>
+                                </TableCell>
+                                <TableCell>{user.partnerId || "—"}</TableCell>
+                                <TableCell>
+                                  {user.isActive ? (
+                                    <Badge className="bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400">Actif</Badge>
+                                  ) : (
+                                    <Badge className="bg-muted dark:bg-muted/50 text-gray-800">Inactif</Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {user.lastSignedIn
+                                    ? new Date(user.lastSignedIn).toLocaleDateString("fr-FR")
+                                    : "Jamais"}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    {isSuperAdmin && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => { setEditingUser(user); setPermDialogOpen(true); }}
+                                        title="Modifier le rôle"
+                                      >
+                                        <Edit className="w-4 h-4 text-info dark:text-info-dark" />
+                                      </Button>
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleToggleActive(user.id, user.isActive || false)}
+                                      disabled={toggleActiveMutation.isPending}
+                                    >
+                                      {user.isActive ? (
+                                        <UserX className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                                      ) : (
+                                        <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                      )}
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </>
                 ) : (
                   <div className="text-center py-12">
-                    <p className="text-muted-foreground">Aucun utilisateur trouvé</p>
+                    <p className="text-muted-foreground">Aucun utilisateur partenaire</p>
                   </div>
                 )}
               </CardContent>
@@ -441,115 +836,118 @@ export default function AdminUsers() {
                   <TableSkeleton rows={5} columns={6} />
                 ) : invitations && invitations.length > 0 ? (
                   <>
-                  <div className="md:hidden space-y-3 p-3">
-                    {invitations.map((invitation: any) => (
-                      <Card key={invitation.id} className="p-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="font-semibold text-sm truncate">{invitation.email}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {invitation.firstName || invitation.lastName ? `${invitation.firstName || ''} ${invitation.lastName || ''}`.trim() : '—'}
-                            </p>
-                          </div>
-                          {getStatusBadge(invitation.status)}
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
-                          <p>Envoyé le {new Date(invitation.createdAt).toLocaleDateString('fr-FR')}</p>
-                          <p>Expire le {new Date(invitation.expiresAt).toLocaleDateString('fr-FR')}</p>
-                        </div>
-                        {invitation.status === 'PENDING' && (
-                          <div className="flex gap-2 mt-3">
-                            <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => handleResendInvitation(invitation.id)} disabled={resendInvitationMutation.isPending}><RotateCw className="w-3 h-3 mr-1" />Renvoyer</Button>
-                            <Button variant="outline" size="sm" className="flex-1 text-xs text-destructive" onClick={() => handleCancelInvitation(invitation.id)} disabled={cancelInvitationMutation.isPending}><X className="w-3 h-3 mr-1" />Annuler</Button>
-                          </div>
-                        )}
-                        {invitation.status === 'EXPIRED' && (
-                          <Button variant="outline" size="sm" className="w-full mt-3 text-xs" onClick={() => handleResendInvitation(invitation.id)} disabled={resendInvitationMutation.isPending}><RotateCw className="w-3 h-3 mr-1" />Renvoyer</Button>
-                        )}
-                      </Card>
-                    ))}
-                  </div>
-                  <div className="hidden md:block">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Nom</TableHead>
-                        <TableHead>Invité par</TableHead>
-                        <TableHead>Date d'envoi</TableHead>
-                        <TableHead>Expire le</TableHead>
-                        <TableHead>Statut</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                    {/* Mobile */}
+                    <div className="md:hidden space-y-3">
                       {invitations.map((invitation: any) => (
-                        <TableRow key={invitation.id}>
-                          <TableCell className="font-medium">{invitation.email}</TableCell>
-                          <TableCell>
-                            {invitation.firstName || invitation.lastName
-                              ? `${invitation.firstName || ""} ${invitation.lastName || ""}`.trim()
-                              : "—"}
-                          </TableCell>
-                          <TableCell>
-                            {invitation.inviterName || invitation.inviterEmail || "—"}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(invitation.createdAt).toLocaleDateString("fr-FR", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(invitation.expiresAt).toLocaleDateString("fr-FR", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                            })}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(invitation.status)}</TableCell>
-                          <TableCell className="text-right">
-                            {invitation.status === 'PENDING' && (
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleResendInvitation(invitation.id)}
-                                  disabled={resendInvitationMutation.isPending}
-                                  title="Renvoyer l'invitation"
-                                >
-                                  <RotateCw className="w-4 h-4 text-info dark:text-info-dark" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleCancelInvitation(invitation.id)}
-                                  disabled={cancelInvitationMutation.isPending}
-                                  title="Annuler l'invitation"
-                                >
-                                  <X className="w-4 h-4 text-destructive dark:text-destructive" />
-                                </Button>
-                              </div>
-                            )}
-                            {invitation.status === 'EXPIRED' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleResendInvitation(invitation.id)}
-                                disabled={resendInvitationMutation.isPending}
-                                title="Renvoyer l'invitation"
-                              >
-                                <RotateCw className="w-4 h-4 text-info dark:text-info-dark" />
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}                    </TableBody>
-                  </Table>
-                  </div>
+                        <Card key={invitation.id} className="p-4">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="font-semibold text-sm truncate">{invitation.email}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {invitation.firstName || invitation.lastName ? `${invitation.firstName || ''} ${invitation.lastName || ''}`.trim() : '—'}
+                              </p>
+                            </div>
+                            {getStatusBadge(invitation.status)}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
+                            <p>Envoyé le {new Date(invitation.createdAt).toLocaleDateString('fr-FR')}</p>
+                            <p>Expire le {new Date(invitation.expiresAt).toLocaleDateString('fr-FR')}</p>
+                          </div>
+                          {invitation.status === 'PENDING' && (
+                            <div className="flex gap-2 mt-3">
+                              <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => handleResendInvitation(invitation.id)} disabled={resendInvitationMutation.isPending}><RotateCw className="w-3 h-3 mr-1" />Renvoyer</Button>
+                              <Button variant="outline" size="sm" className="flex-1 text-xs text-destructive" onClick={() => handleCancelInvitation(invitation.id)} disabled={cancelInvitationMutation.isPending}><X className="w-3 h-3 mr-1" />Annuler</Button>
+                            </div>
+                          )}
+                          {invitation.status === 'EXPIRED' && (
+                            <Button variant="outline" size="sm" className="w-full mt-3 text-xs" onClick={() => handleResendInvitation(invitation.id)} disabled={resendInvitationMutation.isPending}><RotateCw className="w-3 h-3 mr-1" />Renvoyer</Button>
+                          )}
+                        </Card>
+                      ))}
+                    </div>
+                    {/* Desktop */}
+                    <div className="hidden md:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Nom</TableHead>
+                            <TableHead>Invité par</TableHead>
+                            <TableHead>Date d'envoi</TableHead>
+                            <TableHead>Expire le</TableHead>
+                            <TableHead>Statut</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {invitations.map((invitation: any) => (
+                            <TableRow key={invitation.id}>
+                              <TableCell className="font-medium">{invitation.email}</TableCell>
+                              <TableCell>
+                                {invitation.firstName || invitation.lastName
+                                  ? `${invitation.firstName || ""} ${invitation.lastName || ""}`.trim()
+                                  : "—"}
+                              </TableCell>
+                              <TableCell>
+                                {invitation.inviterName || invitation.inviterEmail || "—"}
+                              </TableCell>
+                              <TableCell>
+                                {new Date(invitation.createdAt).toLocaleDateString("fr-FR", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </TableCell>
+                              <TableCell>
+                                {new Date(invitation.expiresAt).toLocaleDateString("fr-FR", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                })}
+                              </TableCell>
+                              <TableCell>{getStatusBadge(invitation.status)}</TableCell>
+                              <TableCell className="text-right">
+                                {invitation.status === 'PENDING' && (
+                                  <div className="flex justify-end gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleResendInvitation(invitation.id)}
+                                      disabled={resendInvitationMutation.isPending}
+                                      title="Renvoyer l'invitation"
+                                    >
+                                      <RotateCw className="w-4 h-4 text-info dark:text-info-dark" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleCancelInvitation(invitation.id)}
+                                      disabled={cancelInvitationMutation.isPending}
+                                      title="Annuler l'invitation"
+                                    >
+                                      <X className="w-4 h-4 text-destructive dark:text-destructive" />
+                                    </Button>
+                                  </div>
+                                )}
+                                {invitation.status === 'EXPIRED' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleResendInvitation(invitation.id)}
+                                    disabled={resendInvitationMutation.isPending}
+                                    title="Renvoyer l'invitation"
+                                  >
+                                    <RotateCw className="w-4 h-4 text-info dark:text-info-dark" />
+                                  </Button>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </>
                 ) : (
                   <div className="text-center py-12">
@@ -564,6 +962,23 @@ export default function AdminUsers() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Permissions Dialog */}
+        {editingUser && (
+          <RolePermissionsDialog
+            userId={editingUser.id}
+            userName={editingUser.name || editingUser.email || "Utilisateur"}
+            currentRole={editingUser.role || "PARTNER"}
+            currentPreset={editingUser.adminRolePreset}
+            currentPermissions={editingUser.adminPermissions ? (typeof editingUser.adminPermissions === 'string' ? JSON.parse(editingUser.adminPermissions) : editingUser.adminPermissions) : null}
+            open={permDialogOpen}
+            onOpenChange={(open) => {
+              setPermDialogOpen(open);
+              if (!open) setEditingUser(null);
+            }}
+            onSave={handleSavePermissions}
+          />
+        )}
       </div>
     </AdminLayout>
   );

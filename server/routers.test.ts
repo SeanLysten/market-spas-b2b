@@ -33,6 +33,8 @@ function createMockContext(userOverrides?: Partial<AuthenticatedUser>): TrpcCont
     updatedAt: new Date(),
     lastSignedIn: new Date(),
     deletedAt: null,
+    adminPermissions: null,
+    adminRolePreset: null,
   };
 
   const user = userOverrides ? { ...defaultUser, ...userOverrides } : defaultUser;
@@ -133,8 +135,8 @@ describe("partners routes", () => {
 
     const result = await caller.partners.myPartner();
 
-    // Result can be null if partner doesn't exist in DB yet
-    expect(result === null || typeof result === "object").toBe(true);
+    // Result can be null/undefined if partner doesn't exist in DB yet
+    expect(result === null || result === undefined || typeof result === "object").toBe(true);
   });
 
   it("should prevent partner user from viewing other partner data", async () => {

@@ -151,6 +151,11 @@ export const users = mysqlTable(
     partnerId: int("partnerId"),
     loginMethod: varchar("loginMethod", { length: 64 }),
 
+    // Admin permissions (JSON) - granular module access for ADMIN role users
+    adminPermissions: text("adminPermissions"),
+    // Admin role preset for quick identification
+    adminRolePreset: varchar("adminRolePreset", { length: 50 }),
+
     // Security
     twoFactorEnabled: boolean("twoFactorEnabled").default(false),
     twoFactorSecret: varchar("twoFactorSecret", { length: 255 }),

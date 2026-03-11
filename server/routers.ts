@@ -3,7 +3,8 @@ import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, adminProcedure, superAdminProcedure, createModuleAdminProcedure, router } from "./_core/trpc";
+import { getAdminPermissions, type AdminPermissions, type AdminRolePreset } from "./admin-permissions";
 import * as db from "./db";
 import * as territoriesDb from "./territories-db";
 import { storagePut } from "./storage";
@@ -1404,16 +1405,56 @@ export const appRouter = router({
           return { success: true };
         }),
 
-      updateRole: adminProcedure
+      updateRole: superAdminProcedure
         .input(
           z.object({
             userId: z.number(),
-            role: z.enum(['SUPER_ADMIN', 'ADMIN', 'PARTNER']),
+            role: z.enum(['SUPER_ADMIN', 'ADMIN', 'PARTNER', 'PARTNER_ADMIN', 'PARTNER_USER']),
+            adminRolePreset: z.string().optional(),
+            adminPermissions: z.string().optional(),
           })
         )
         .mutation(async ({ input }) => {
-          await db.updateUserRole(input.userId, input.role);
+          // If setting to ADMIN, also set admin permissions
+          if (input.role === 'ADMIN' || input.role === 'SUPER_ADMIN') {
+            const preset = input.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : (input.adminRolePreset || 'ADMIN_FULL');
+            let permsJson = input.adminPermissions;
+            if (!permsJson) {
+              const perms = getAdminPermissions(preset as AdminRolePreset);
+              permsJson = JSON.stringify(perms);
+            }
+            await db.updateUserRoleWithPermissions(input.userId, input.role, preset, permsJson);
+          } else {
+            await db.updateUserRoleWithPermissions(input.userId, input.role, null, null);
+          }
           return { success: true, message: 'Rôle mis à jour avec succès' };
+        }),
+
+      // Get admin permissions for a user
+      getAdminPermissions: superAdminProcedure
+        .input(z.object({ userId: z.number() }))
+        .query(async ({ input }) => {
+          const user = await db.getUserById(input.userId);
+          if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'Utilisateur non trouvé' });
+          return {
+            role: user.role,
+            adminRolePreset: user.adminRolePreset,
+            adminPermissions: user.adminPermissions ? JSON.parse(user.adminPermissions) : null,
+          };
+        }),
+
+      // Update admin permissions
+      updateAdminPermissions: superAdminProcedure
+        .input(
+          z.object({
+            userId: z.number(),
+            adminRolePreset: z.string(),
+            adminPermissions: z.string(),
+          })
+        )
+        .mutation(async ({ input }) => {
+          await db.updateUserAdminPermissions(input.userId, input.adminRolePreset, input.adminPermissions);
+          return { success: true, message: 'Permissions mises à jour avec succès' };
         }),
 
       // List all invitations

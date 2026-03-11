@@ -43,6 +43,7 @@ interface NavItem {
   name: string;
   href: string;
   icon: any;
+  module?: string; // admin permission module key
 }
 
 interface NavGroup {
@@ -55,6 +56,44 @@ type NavEntry = NavItem | NavGroup;
 
 function isGroup(entry: NavEntry): entry is NavGroup {
   return 'items' in entry;
+}
+
+// Map admin routes to permission modules
+const ROUTE_MODULE_MAP: Record<string, string> = {
+  '/admin': 'dashboard',
+  '/admin/products': 'products',
+  '/admin/forecast': 'stock',
+  '/admin/orders': 'orders',
+  '/admin/partners': 'partners',
+  '/admin/reports': 'reports',
+  '/admin/territories': 'territories',
+  '/admin/leads': 'marketing',
+  '/admin/partner-map': 'partner_map',
+  '/admin/resources': 'resources',
+  '/admin/technical-resources': 'technical_resources',
+  '/admin/after-sales': 'sav',
+  '/admin/spare-parts': 'spare_parts',
+  '/admin/calendar': 'calendar',
+  '/admin/newsletter': 'newsletter',
+  '/admin/users': 'users',
+  '/admin/settings': 'settings',
+};
+
+function hasModuleAccess(user: any, module: string): boolean {
+  // Super admin has access to everything
+  if (user?.role === 'SUPER_ADMIN') return true;
+  // Admin without permissions set = full access (backward compat)
+  if (user?.role === 'ADMIN' && !user?.adminPermissions) return true;
+  // Check parsed permissions
+  try {
+    const perms = typeof user?.adminPermissions === 'string' 
+      ? JSON.parse(user.adminPermissions) 
+      : user?.adminPermissions;
+    if (!perms?.modules) return true; // no modules defined = full access
+    return perms.modules[module]?.view === true;
+  } catch {
+    return true;
+  }
 }
 
 const STORAGE_KEY = 'admin-sidebar-expanded';
@@ -80,7 +119,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>(getInitialExpanded);
   const logoutMutation = trpc.auth.logout.useMutation();
 
-  const navigation: NavEntry[] = [
+  // Build navigation filtered by user permissions
+  const allNavigation: NavEntry[] = [
     {
       name: "Dashboard",
       href: "/admin",
@@ -143,6 +183,25 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       icon: Settings,
     },
   ];
+
+  // Filter navigation based on admin permissions
+  const navigation = allNavigation.reduce<NavEntry[]>((acc, entry) => {
+    if (isGroup(entry)) {
+      const filteredItems = entry.items.filter((item) => {
+        const module = ROUTE_MODULE_MAP[item.href];
+        return !module || hasModuleAccess(user, module);
+      });
+      if (filteredItems.length > 0) {
+        acc.push({ ...entry, items: filteredItems });
+      }
+    } else {
+      const module = ROUTE_MODULE_MAP[entry.href];
+      if (!module || hasModuleAccess(user, module)) {
+        acc.push(entry);
+      }
+    }
+    return acc;
+  }, []);
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
