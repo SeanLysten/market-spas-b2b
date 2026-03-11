@@ -2467,3 +2467,19 @@
 
 ## Bouton accès rapide Équipe
 - [x] Ajouter un bouton "Mon Équipe" dans le header du dashboard à côté du bouton Admin
+
+## Dashboard adapté aux rôles
+### Admin
+- [x] Filtrer les KPIs/widgets du dashboard admin selon les permissions de l'utilisateur
+- [x] Masquer les stats commandes si pas accès module commandes
+- [x] Masquer les stats partenaires si pas accès module partenaires
+- [x] Masquer les stats marketing/leads si pas accès module marketing
+- [x] Masquer les stats stock si pas accès module stock
+- [x] Masquer les stats SAV si pas accès module SAV
+- [x] Afficher uniquement les accès rapides vers les modules autorisés
+### Utilisateur (partenaire)
+- [x] Filtrer les accès rapides du dashboard utilisateur selon les permissions team
+- [x] Masquer les leads si pas accès leads
+- [x] Masquer les commandes si pas accès commandes
+- [x] Masquer le catalogue si pas accès catalogue
+- [x] Masquer le SAV si pas accès SAV

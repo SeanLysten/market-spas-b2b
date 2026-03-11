@@ -25,6 +25,7 @@ import {
   MessageSquare,
   Target,
   UserCog,
+  Receipt,
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -36,7 +37,122 @@ export default function Dashboard() {
   const { data: upcomingEventsData } = trpc.events.upcoming.useQuery({ limit: 5 });
   const upcomingEvents = upcomingEventsData || [];
 
+  // Get team permissions for the current user
+  const { data: myPerms } = trpc.team.myPermissions.useQuery();
+  const perms = myPerms?.permissions;
+  const isOwner = myPerms?.isOwner ?? true;
+
   const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN";
+
+  // Permission helpers
+  const canCatalog = perms?.catalog?.view !== false;
+  const canResources = perms?.resources?.view !== false;
+  const canSav = perms?.sav?.view !== false;
+  const canLeads = perms?.leads?.view !== "none" && perms?.leads?.view !== false;
+  const canOrders = perms?.orders?.view !== false;
+  const canSpareParts = perms?.spareParts?.view !== false;
+  const canInvoices = perms?.invoices?.view !== false;
+  const canTeam = perms?.team?.manage !== false || perms?.team?.invite !== false;
+
+  // Build quick access cards dynamically
+  const quickAccessCards = [];
+
+  if (canCatalog) {
+    quickAccessCards.push({
+      href: "/catalog",
+      icon: Package,
+      title: "Catalogue Produits",
+      description: "Stock en temps réel et arrivages programmés",
+      color: "bg-primary/10",
+      iconColor: "text-primary",
+    });
+  }
+
+  if (canResources) {
+    quickAccessCards.push({
+      href: "/resources",
+      icon: FileText,
+      title: "Ressources Médias",
+      description: "PLV, catalogues et supports marketing",
+      color: "bg-purple-500/10",
+      iconColor: "text-purple-500",
+    });
+  }
+
+  if (canResources) {
+    quickAccessCards.push({
+      href: "/technical-resources",
+      icon: Wrench,
+      title: "Ressources Techniques",
+      description: "Guides de réparation et vidéos tutoriels",
+      color: "bg-orange-500/10",
+      iconColor: "text-orange-500",
+    });
+  }
+
+  if (canResources) {
+    quickAccessCards.push({
+      href: "/technical-resources?tab=forum",
+      icon: MessageSquare,
+      title: "Forum d'entraide",
+      description: "Posez vos questions et partagez vos solutions",
+      color: "bg-blue-500/10",
+      iconColor: "text-blue-500",
+    });
+  }
+
+  if (canSav) {
+    quickAccessCards.push({
+      href: "/after-sales",
+      icon: AlertCircle,
+      title: "Service Après-Vente",
+      description: "Déclarez et suivez vos tickets SAV",
+      color: "bg-red-500/10",
+      iconColor: "text-red-500",
+    });
+  }
+
+  // Build secondary actions dynamically
+  const secondaryActions = [];
+
+  if (canOrders) {
+    secondaryActions.push({
+      href: "/orders",
+      icon: ShoppingCart,
+      title: "Mes commandes",
+      description: "Historique et suivi",
+      color: "text-primary",
+    });
+  }
+
+  if (canOrders || canCatalog) {
+    secondaryActions.push({
+      href: "/cart",
+      icon: ShoppingCart,
+      title: "Mon panier",
+      description: "Articles en cours",
+      color: "text-primary",
+    });
+  }
+
+  if (canCatalog) {
+    secondaryActions.push({
+      href: "/favorites",
+      icon: Heart,
+      title: "Mes favoris",
+      description: "Produits sauvegardés",
+      color: "text-red-500",
+    });
+  }
+
+  // Profile is always accessible
+  secondaryActions.push({
+    href: "/profile",
+    icon: Users,
+    title: "Mon profil",
+    description: "Paramètres du compte",
+    color: "text-primary",
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -48,6 +164,15 @@ export default function Dashboard() {
               <h1 className="text-xl md:text-2xl text-display font-bold">Tableau de bord</h1>
               <p className="text-xs md:text-sm text-muted-foreground">
                 Bienvenue, {user?.firstName || user?.name || "Partenaire"}
+                {myPerms?.role && !isOwner && (
+                  <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                    {myPerms.role === "SALES_REP" ? "Commercial" :
+                     myPerms.role === "ORDER_MANAGER" ? "Gestionnaire Commandes" :
+                     myPerms.role === "ACCOUNTANT" ? "Comptable" :
+                     myPerms.role === "FULL_MANAGER" ? "Gestionnaire Complet" :
+                     myPerms.role}
+                  </span>
+                )}
               </p>
             </div>
             {/* Boutons empilés sur mobile */}
@@ -61,12 +186,14 @@ export default function Dashboard() {
                   </span>
                 )}
               </Button>
-              <Link href="/team">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <UserCog className="w-4 h-4" />
-                  <span className="hidden sm:inline">Mon Équipe</span>
-                </Button>
-              </Link>
+              {(isOwner || canTeam) && (
+                <Link href="/team">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <UserCog className="w-4 h-4" />
+                    <span className="hidden sm:inline">Mon Équipe</span>
+                  </Button>
+                </Link>
+              )}
               {isAdmin && (
                 <Link href="/admin">
                   <Button variant="outline" size="sm" className="gap-2">
@@ -81,98 +208,49 @@ export default function Dashboard() {
       </header>
 
       <div className="container py-8 space-y-8">
-        {/* Accès rapides principaux */}
-        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <Link href="/catalog">
-            <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
-              <CardContent className="pt-6 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Package className="w-8 h-8 text-primary" />
+        {/* Accès rapides principaux - filtered by permissions */}
+        {quickAccessCards.length > 0 && (
+          <div className={`grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-${Math.min(quickAccessCards.length, 5)}`}>
+            {quickAccessCards.map((card) => {
+              const Icon = card.icon;
+              return (
+                <Link key={card.href} href={card.href}>
+                  <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
+                    <CardContent className="pt-6 text-center">
+                      <div className={`w-16 h-16 mx-auto mb-4 rounded-full ${card.color} flex items-center justify-center`}>
+                        <Icon className={`w-8 h-8 ${card.iconColor}`} />
+                      </div>
+                      <h3 className="font-semibold text-lg mb-2">{card.title}</h3>
+                      <p className="text-sm text-muted-foreground">{card.description}</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Section Leads - only if leads access */}
+        {canLeads && (
+          <Link href="/leads">
+            <Card className="card-hover cursor-pointer hover:border-primary/50 transition-all bg-gradient-to-r from-blue-500/5 to-purple-500/5">
+              <CardContent className="py-6">
+                <div className="flex items-center gap-4 md:gap-6">
+                  <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                    <Target className="w-8 h-8 text-blue-500" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg mb-1">Mes Leads</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Gérez les prospects de votre zone et suivez vos opportunités commerciales
+                    </p>
+                  </div>
+                  <ArrowUpRight className="w-6 h-6 text-muted-foreground" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">Catalogue Produits</h3>
-                <p className="text-sm text-muted-foreground">
-                  Stock en temps réel et arrivages programmés
-                </p>
               </CardContent>
             </Card>
           </Link>
-
-          <Link href="/resources">
-            <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
-              <CardContent className="pt-6 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-500/10 flex items-center justify-center">
-                  <FileText className="w-8 h-8 text-purple-500" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">Ressources Médias</h3>
-                <p className="text-sm text-muted-foreground">
-                  PLV, catalogues et supports marketing
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/technical-resources">
-            <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
-              <CardContent className="pt-6 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-500/10 flex items-center justify-center">
-                  <Wrench className="w-8 h-8 text-orange-500" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">Ressources Techniques</h3>
-                <p className="text-sm text-muted-foreground">
-                  Guides de réparation et vidéos tutoriels
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/technical-resources?tab=forum">
-            <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
-              <CardContent className="pt-6 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <MessageSquare className="w-8 h-8 text-blue-500" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">Forum d'entraide</h3>
-                <p className="text-sm text-muted-foreground">
-                  Posez vos questions et partagez vos solutions
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/after-sales">
-            <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
-              <CardContent className="pt-6 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
-                  <AlertCircle className="w-8 h-8 text-red-500" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">Service Après-Vente</h3>
-                <p className="text-sm text-muted-foreground">
-                  Déclarez et suivez vos tickets SAV
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-
-        {/* Section Leads (si disponible) */}
-        <Link href="/leads">
-          <Card className="card-hover cursor-pointer hover:border-primary/50 transition-all bg-gradient-to-r from-blue-500/5 to-purple-500/5">
-            <CardContent className="py-6">
-              <div className="flex items-center gap-4 md:gap-6">
-                <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                  <Target className="w-8 h-8 text-blue-500" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-1">Mes Leads</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Gérez les prospects de votre zone et suivez vos opportunités commerciales
-                  </p>
-                </div>
-                <ArrowUpRight className="w-6 h-6 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+        )}
 
         <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2">
           {/* Événements à venir */}
@@ -308,48 +386,31 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Actions secondaires */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Autres accès</CardTitle>
-            <CardDescription>Gérez vos commandes et favoris</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <Link href="/orders">
-                <Button variant="outline" className="w-full h-auto py-6 flex-col gap-2">
-                  <ShoppingCart className="w-8 h-8 text-primary" />
-                  <span className="font-semibold">Mes commandes</span>
-                  <span className="text-xs text-muted-foreground">Historique et suivi</span>
-                </Button>
-              </Link>
-
-              <Link href="/cart">
-                <Button variant="outline" className="w-full h-auto py-6 flex-col gap-2">
-                  <ShoppingCart className="w-8 h-8 text-primary" />
-                  <span className="font-semibold">Mon panier</span>
-                  <span className="text-xs text-muted-foreground">Articles en cours</span>
-                </Button>
-              </Link>
-
-              <Link href="/favorites">
-                <Button variant="outline" className="w-full h-auto py-6 flex-col gap-2">
-                  <Heart className="w-8 h-8 text-red-500" />
-                  <span className="font-semibold">Mes favoris</span>
-                  <span className="text-xs text-muted-foreground">Produits sauvegardés</span>
-                </Button>
-              </Link>
-
-              <Link href="/profile">
-                <Button variant="outline" className="w-full h-auto py-6 flex-col gap-2">
-                  <Users className="w-8 h-8 text-primary" />
-                  <span className="font-semibold">Mon profil</span>
-                  <span className="text-xs text-muted-foreground">Paramètres du compte</span>
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Actions secondaires - filtered by permissions */}
+        {secondaryActions.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Autres accès</CardTitle>
+              <CardDescription>Gérez vos commandes et favoris</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className={`grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-${Math.min(secondaryActions.length, 4)}`}>
+                {secondaryActions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <Link key={action.href} href={action.href}>
+                      <Button variant="outline" className="w-full h-auto py-6 flex-col gap-2">
+                        <Icon className={`w-8 h-8 ${action.color}`} />
+                        <span className="font-semibold">{action.title}</span>
+                        <span className="text-xs text-muted-foreground">{action.description}</span>
+                      </Button>
+                    </Link>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Lien admin si applicable */}
         {isAdmin && (

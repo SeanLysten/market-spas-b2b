@@ -2897,6 +2897,29 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         return await db.acceptTeamInvitation(input.token);
       }),
+    // Get current user's team permissions
+    myPermissions: protectedProcedure.query(async ({ ctx }) => {
+      const user = ctx.user;
+      const { getDefaultPermissions } = await import("./team-permissions");
+      // PARTNER_ADMIN or PARTNER owners get full access
+      if (user.role === "PARTNER_ADMIN" || user.role === "PARTNER") {
+        return { role: "OWNER" as const, permissions: getDefaultPermissions("OWNER"), isOwner: true };
+      }
+      // PARTNER_USER - look up team_members for their permissions
+      if (user.role === "PARTNER_USER" && user.partnerId) {
+        const member = await db.getTeamMember(user.id, user.partnerId);
+        if (member) {
+          const perms = member.permissions ? JSON.parse(member.permissions as string) : getDefaultPermissions(member.role as any);
+          return { role: member.role, permissions: perms, isOwner: false };
+        }
+      }
+      // Admin users - full access
+      if (user.role === "SUPER_ADMIN" || user.role === "ADMIN") {
+        return { role: "OWNER" as const, permissions: getDefaultPermissions("OWNER"), isOwner: true };
+      }
+      // Default - minimal permissions
+      return { role: "PARTNER_USER" as const, permissions: getDefaultPermissions("SALES_REP" as any), isOwner: false };
+    }),
   }),
 
   // ============================================
