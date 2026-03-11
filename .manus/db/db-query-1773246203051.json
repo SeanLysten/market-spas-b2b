@@ -1,0 +1,160 @@
+{
+  "query": "SELECT p.id, p.companyName, p.primaryContactEmail, p.primaryContactName, p.status, u.id as userId, u.email as userEmail, u.role as userRole FROM partners p LEFT JOIN users u ON u.partnerId = p.id ORDER BY p.id LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT p.id, p.companyName, p.primaryContactEmail, p.primaryContactName, p.status, u.id as userId, u.email as userEmail, u.role as userRole FROM partners p LEFT JOIN users u ON u.partnerId = p.id ORDER BY p.id LIMIT 30;",
+  "rows": [
+    {
+      "id": "60001",
+      "companyName": "Market Spas Palmones",
+      "primaryContactEmail": "es@spas-wellis.com",
+      "primaryContactName": "Contact Market Spas Palmones",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    },
+    {
+      "id": "60002",
+      "companyName": "Fab'Elec",
+      "primaryContactEmail": "france@marketspas.com",
+      "primaryContactName": "Contact Fab'Elec",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    },
+    {
+      "id": "60003",
+      "companyName": "Projet d'eau",
+      "primaryContactEmail": "luca.c@edgar-den.fr",
+      "primaryContactName": "Contact Projet d'eau",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    },
+    {
+      "id": "60004",
+      "companyName": "Albatre Piscines & Spas",
+      "primaryContactEmail": "albatre.piscines@outlook.fr",
+      "primaryContactName": "Contact Albatre Piscines",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    },
+    {
+      "id": "60005",
+      "companyName": "Piscines Carré Bleu Brive",
+      "primaryContactEmail": "france@marketspas.com",
+      "primaryContactName": "Contact Piscines Carré Bleu",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    },
+    {
+      "id": "60006",
+      "companyName": "Valentin",
+      "primaryContactEmail": "france@marketspas.com",
+      "primaryContactName": "Contact Valentin",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    },
+    {
+      "id": "60007",
+      "companyName": "Relax and Co",
+      "primaryContactEmail": "france@marketspas.com",
+      "primaryContactName": "Contact Relax and Co",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    },
+    {
+      "id": "60008",
+      "companyName": "BluemoonSpas",
+      "primaryContactEmail": "contact@bluemoonspas.fr",
+      "primaryContactName": "Contact BluemoonSpas",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    },
+    {
+      "id": "60009",
+      "companyName": "Market Spas Bruxelles",
+      "primaryContactEmail": "rony@spas-wellis.com",
+      "primaryContactName": "Rony",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    },
+    {
+      "id": "60010",
+      "companyName": "Blue Home Création",
+      "primaryContactEmail": "contact@bluehomecreation.fr",
+      "primaryContactName": "Contact Blue Home Création",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    },
+    {
+      "id": "60011",
+      "companyName": "Beaune Paysage",
+      "primaryContactEmail": "contact@beaune-paysage.fr",
+      "primaryContactName": "Contact Beaune Paysage",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    },
+    {
+      "id": "60012",
+      "companyName": "Les Piscines du Sud Est",
+      "primaryContactEmail": "contact@piscines-sud-est.com",
+      "primaryContactName": "Contact Piscines du Sud Est",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    },
+    {
+      "id": "60013",
+      "companyName": "Tahiti Piscines",
+      "primaryContactEmail": "sales@marketspas.com",
+      "primaryContactName": "Contact Tahiti Piscines",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    },
+    {
+      "id": "60014",
+      "companyName": "MAEL'EAUX piscines et spas",
+      "primaryContactEmail": "Contact@piscines-spas-maeleaux.com",
+      "primaryContactName": "Contact MAEL'EAUX",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    },
+    {
+      "id": "60015",
+      "companyName": "SaniDesign",
+      "primaryContactEmail": "sanidesign1@gmail.com",
+      "primaryContactName": "Contact SaniDesign",
+      "status": "APPROVED",
+      "userId": "NULL",
+      "userEmail": "NULL",
+      "userRole": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcompanyName\tprimaryContactEmail\tprimaryContactName\tstatus\tuserId\tuserEmail\tuserRole\n60001\tMarket Spas Palmones\tes@spas-wellis.com\tContact Market Spas Palmones\tAPPROVED\tNULL\tNULL\tNULL\n60002\tFab'Elec\tfrance@marketspas.com\tContact Fab'Elec\tAPPROVED\tNULL\tNULL\tNULL\n60003\tProjet d'eau\tluca.c@edgar-den.fr\tContact Projet d'eau\tAPPROVED\tNULL\tNULL\tNULL\n60004\tAlbatre Piscines & Spas\talbatre.piscines@outlook.fr\tContact Albatre Piscines\tAPPROVED\tNULL\tNULL\tNULL\n60005\tPiscines Carré Bleu Brive\tfrance@marketspas.com\tContact Piscines Carré Bleu\tAPPROVED\tNULL\tNULL\tNULL\n60006\tValentin\tfrance@marketspas.com\tContact Valentin\tAPPROVED\tNULL\tNULL\tNULL\n60007\tRelax and Co\tfrance@marketspas.com\tContact Relax and Co\tAPPROVED\tNULL\tNULL\tNULL\n60008\tBluemoonSpas\tcontact@bluemoonspas.fr\tContact BluemoonSpas\tAPPROVED\tNULL\tNULL\tNULL\n60009\tMarket Spas Bruxelles\trony@spas-wellis.com\tRony\tAPPROVED\tNULL\tNULL\tNULL\n60010\tBlue Home Création\tcontact@bluehomecreation.fr\tContact Blue Home Création\tAPPROVED\tNULL\tNULL\tNULL\n60011\tBeaune Paysage\tcontact@beaune-paysage.fr\tContact Beaune Paysage\tAPPROVED\tNULL\tNULL\tNULL\n60012\tLes Piscines du Sud Est\tcontact@piscines-sud-est.com\tContact Piscines du Sud Est\tAPPROVED\tNULL\tNULL\tNULL\n60013\tTahiti Piscines\tsales@marketspas.com\tContact Tahiti Piscines\tAPPROVED\tNULL\tNULL\tNULL\n60014\tMAEL'EAUX piscines et spas\tContact@piscines-spas-maeleaux.com\tContact MAEL'EAUX\tAPPROVED\tNULL\tNULL\tNULL\n60015\tSaniDesign\tsanidesign1@gmail.com\tContact SaniDesign\tAPPROVED\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 118
+}

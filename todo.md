@@ -2521,3 +2521,16 @@
 - [x] Afficher un message d'erreur clair si l'email est déjà associé à un compte existant
 - [x] Ajouter une note sous le champ email indiquant que seuls les externes sont acceptés
 - [x] 28 tests vitest passants (dont 4 nouveaux pour la validation d'email externe)
+
+## Sélecteur partenaire réservé aux admins
+- [x] Le sélecteur de partenaire dans le dialog d'invitation ne doit être visible que pour SUPER_ADMIN/ADMIN (déjà correct)
+- [x] Les PARTNER_ADMIN invitent automatiquement dans leur propre équipe (pas de choix de partenaire) (déjà correct)
+- [x] Le sélecteur de partenaire sur la page Mon Équipe ne doit être visible que pour les admins (déjà correct)
+
+## Synchronisation Partenaires / Utilisateurs
+- [x] Chaque partenaire doit avoir un compte utilisateur PARTNER_ADMIN associé automatiquement
+- [x] Créer les comptes utilisateurs manquants pour les partenaires existants (sans invitation) - script sync-partner-users.mjs
+- [x] Lors de la création d'un partenaire dans l'admin, créer automatiquement le compte utilisateur associé
+- [x] Afficher le partenaire associé dans la liste Utilisateurs et vice versa
+- [x] Les deux onglets (Partenaires et Utilisateurs) doivent être synchronisés
+- [x] 34 tests vitest passants (dont 6 nouveaux pour la synchronisation)

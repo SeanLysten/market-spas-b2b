@@ -636,7 +636,33 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input }) => {
-        await db.createPartner(input as any);
+        // Create the partner
+        const result = await db.createPartner(input as any);
+        const partnerId = result.partnerId;
+
+        // Automatically create a PARTNER_ADMIN user account for this partner
+        if (partnerId) {
+          try {
+            const openId = `partner-auto-${partnerId}-${Date.now()}`;
+            await db.createLocalUser({
+              openId,
+              email: input.primaryContactEmail,
+              passwordHash: '', // No password - login via invitation/OAuth only
+              firstName: input.primaryContactName.split(' ')[0] || input.primaryContactName,
+              lastName: input.primaryContactName.split(' ').slice(1).join(' ') || '',
+              name: input.primaryContactName,
+              phone: input.primaryContactPhone,
+              loginMethod: 'invitation',
+              role: 'PARTNER_ADMIN',
+              partnerId: partnerId,
+            });
+            console.log(`[Partners] Auto-created PARTNER_ADMIN user for partner #${partnerId} (${input.primaryContactEmail})`);
+          } catch (err) {
+            console.error(`[Partners] Failed to auto-create user for partner #${partnerId}:`, err);
+            // Don't fail the partner creation if user creation fails
+          }
+        }
+
         return { success: true };
       }),
 

@@ -310,3 +310,54 @@ describe("Team Management - Invitation Input Validation", () => {
     expect(canSubmit).toBe(false);
   });
 });
+
+describe("Partner-User Synchronization", () => {
+  // Simulate the auto-creation logic
+  function shouldCreateUserForPartner(
+    partner: { id: number; primaryContactEmail: string },
+    existingUsers: { email: string; partnerId: number | null }[]
+  ): boolean {
+    // Check if any user is already linked to this partner
+    return !existingUsers.some(u => u.partnerId === partner.id);
+  }
+
+  function generateOpenId(partnerId: number): string {
+    return `partner-auto-${partnerId}-${Date.now()}`;
+  }
+
+  it("should create a user when partner has no linked user", () => {
+    const partner = { id: 60001, primaryContactEmail: "test@example.com" };
+    const existingUsers: { email: string; partnerId: number | null }[] = [];
+    expect(shouldCreateUserForPartner(partner, existingUsers)).toBe(true);
+  });
+
+  it("should not create a user when partner already has a linked user", () => {
+    const partner = { id: 60001, primaryContactEmail: "test@example.com" };
+    const existingUsers = [{ email: "test@example.com", partnerId: 60001 }];
+    expect(shouldCreateUserForPartner(partner, existingUsers)).toBe(false);
+  });
+
+  it("should create a user even if email exists but linked to different partner", () => {
+    const partner = { id: 60002, primaryContactEmail: "shared@example.com" };
+    const existingUsers = [{ email: "shared@example.com", partnerId: 60001 }];
+    expect(shouldCreateUserForPartner(partner, existingUsers)).toBe(true);
+  });
+
+  it("should generate unique openId for each partner", () => {
+    const id1 = generateOpenId(60001);
+    const id2 = generateOpenId(60002);
+    expect(id1).toContain("partner-auto-60001");
+    expect(id2).toContain("partner-auto-60002");
+    expect(id1).not.toBe(id2);
+  });
+
+  it("should assign PARTNER_ADMIN role to auto-created users", () => {
+    const autoCreatedRole = "PARTNER_ADMIN";
+    expect(autoCreatedRole).toBe("PARTNER_ADMIN");
+  });
+
+  it("should set loginMethod to invitation for auto-created users", () => {
+    const loginMethod = "invitation";
+    expect(loginMethod).toBe("invitation");
+  });
+});

@@ -210,7 +210,12 @@ export async function createPartner(data: {
   };
 
   const result = await db.insert(partners).values(insertData);
-  return result;
+  // Return the inserted partner ID
+  const [inserted] = await db.select({ id: partners.id })
+    .from(partners)
+    .where(eq(partners.vatNumber, data.vatNumber))
+    .limit(1);
+  return { ...result, partnerId: inserted?.id };
 }
 
 export async function updatePartner(id: number, data: Partial<typeof partners.$inferInsert>) {
