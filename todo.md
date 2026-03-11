@@ -2483,3 +2483,10 @@
 - [x] Masquer les commandes si pas accès commandes
 - [x] Masquer le catalogue si pas accès catalogue
 - [x] Masquer le SAV si pas accès SAV
+
+## Correction page Mon Équipe
+- [x] Supprimer l'onglet "Équipe" de la page Mon Profil (doublon avec /team)
+- [x] Corriger la page Mon Équipe (/team) : afficher le bouton d'invitation pour les PARTNER_ADMIN et admins
+- [x] Corriger la page Mon Équipe : afficher la gestion des permissions par membre
+- [x] Corriger la page Mon Équipe : gérer le cas admin (pas de partnerId) avec un message adapté
+- [x] Unifier toute la gestion d'équipe sur la page /team uniquement

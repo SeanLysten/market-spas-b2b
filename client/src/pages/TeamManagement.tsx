@@ -476,7 +476,8 @@ export default function TeamManagement() {
   const [editOpen, setEditOpen] = useState(false);
 
   const { data: meData } = trpc.auth.me.useQuery();
-  const isOwner = meData?.role === "PARTNER_ADMIN" || meData?.role === "PARTNER";
+  const isAdmin = meData?.role === "SUPER_ADMIN" || meData?.role === "ADMIN";
+  const isOwner = meData?.role === "PARTNER_ADMIN" || meData?.role === "PARTNER" || isAdmin;
 
   const { data: membersData, isLoading, refetch } = trpc.team.list.useQuery();
   const members = useSafeQuery(membersData);
@@ -553,7 +554,7 @@ export default function TeamManagement() {
               </p>
             </div>
           </div>
-          {isOwner && (
+          {isOwner && !isAdmin && (
             <Button className="gap-2" onClick={() => setInviteOpen(true)}>
               <Plus className="w-4 h-4" />
               Inviter un collaborateur
@@ -648,11 +649,26 @@ export default function TeamManagement() {
             ) : (
               <div className="text-center py-12">
                 <Users className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-                <p className="text-muted-foreground">Aucun membre dans votre équipe</p>
-                {isOwner && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Cliquez sur "Inviter un collaborateur" pour ajouter des membres
-                  </p>
+                {isAdmin ? (
+                  <>
+                    <p className="text-muted-foreground">Gestion d'équipe admin</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Pour gérer les équipes des partenaires, rendez-vous dans la section
+                      <a href="/admin/users" className="text-primary hover:underline ml-1">Utilisateurs</a> du panneau admin.
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Cette page est destinée aux comptes partenaires pour gérer leurs collaborateurs internes.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-muted-foreground">Aucun membre dans votre équipe</p>
+                    {isOwner && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Cliquez sur "Inviter un collaborateur" pour ajouter des membres
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             )}

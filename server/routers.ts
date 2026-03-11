@@ -2779,7 +2779,7 @@ export const appRouter = router({
     // List team members
     list: protectedProcedure.query(async ({ ctx }) => {
       if (!ctx.user.partnerId) {
-        throw new Error("User is not associated with a partner");
+        return []; // Admins without partnerId see empty list
       }
       return await db.getTeamMembers(ctx.user.partnerId);
     }),
@@ -2787,7 +2787,7 @@ export const appRouter = router({
     // List pending invitations
     listInvitations: protectedProcedure.query(async ({ ctx }) => {
       if (!ctx.user.partnerId) {
-        throw new Error("User is not associated with a partner");
+        return []; // Admins without partnerId see empty list
       }
       return await db.getTeamInvitations(ctx.user.partnerId);
     }),

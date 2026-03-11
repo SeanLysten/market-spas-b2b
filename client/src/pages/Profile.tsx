@@ -18,12 +18,7 @@ import {
   Save,
   ArrowLeft,
   Users,
-  Mail,
-  Trash2,
   Edit,
-  Clock,
-  CheckCircle2,
-  XCircle,
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -168,10 +163,12 @@ export default function Profile() {
               <Shield className="w-4 h-4" />
               <span className="hidden sm:inline">Sécurité</span>
             </TabsTrigger>
-            <TabsTrigger value="team" className="gap-2">
-              <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Équipe</span>
-            </TabsTrigger>
+            <Link href="/team">
+              <Button variant="ghost" className="gap-2 h-9 px-3">
+                <Users className="w-4 h-4" />
+                <span className="hidden sm:inline">Équipe</span>
+              </Button>
+            </Link>
           </TabsList>
 
           {/* Personal Information */}
@@ -552,277 +549,9 @@ export default function Profile() {
             </Card>
           </TabsContent>
 
-          {/* Team Management */}
-          <TabsContent value="team">
-            <TeamManagementTab />
-          </TabsContent>
+
         </Tabs>
       </main>
-    </div>
-  );
-}
-
-// Team Management Component
-function TeamManagementTab() {
-  const { user } = useAuth();
-  const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"SALES_REP" | "ORDER_MANAGER" | "ACCOUNTANT" | "FULL_MANAGER">("SALES_REP");
-
-  // Fetch team members and invitations
-  const { data: teamMembers, refetch: refetchMembers } = trpc.team.list.useQuery();
-  const { data: invitations, refetch: refetchInvitations } = trpc.team.listInvitations.useQuery();
-
-  // Mutations
-  const inviteMutation = trpc.team.invite.useMutation({
-    onSuccess: () => {
-      alert("Invitation envoyée avec succès!");
-      setShowInviteDialog(false);
-      setInviteEmail("");
-      setInviteRole("SALES_REP");
-      refetchInvitations();
-    },
-    onError: (error) => {
-      alert(`Erreur: ${error.message}`);
-    },
-  });
-
-  const cancelInvitationMutation = trpc.team.cancelInvitation.useMutation({
-    onSuccess: () => {
-      alert("Invitation annulée");
-      refetchInvitations();
-    },
-  });
-
-  const removeMemberMutation = trpc.team.remove.useMutation({
-    onSuccess: () => {
-      alert("Membre supprimé de l'équipe");
-      refetchMembers();
-    },
-    onError: (error) => {
-      alert(`Erreur: ${error.message}`);
-    },
-  });
-
-  const handleInvite = () => {
-    if (!inviteEmail) {
-      alert("Veuillez entrer une adresse email");
-      return;
-    }
-    inviteMutation.mutate({
-      email: inviteEmail,
-      role: inviteRole,
-    });
-  };
-
-  const getRoleLabel = (role: string) => {
-    const labels: Record<string, string> = {
-      OWNER: "Propriétaire",
-      SALES_REP: "Commercial Leads",
-      ORDER_MANAGER: "Gestionnaire Commandes",
-      ACCOUNTANT: "Comptable",
-      FULL_MANAGER: "Gestionnaire Complet",
-    };
-    return labels[role] || role;
-  };
-
-  const getRoleDescription = (role: string) => {
-    const descriptions: Record<string, string> = {
-      OWNER: "Accès complet à toutes les fonctionnalités",
-      SALES_REP: "Accès uniquement aux leads assignés",
-      ORDER_MANAGER: "Gestion du catalogue et des commandes",
-      ACCOUNTANT: "Consultation des factures et export des données financières",
-      FULL_MANAGER: "Accès complet sauf gestion d'équipe",
-    };
-    return descriptions[role] || "";
-  };
-
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-              <CardTitle>Gestion de l'équipe</CardTitle>
-              <CardDescription>
-                Invitez des membres de votre équipe et gérez leurs accès
-              </CardDescription>
-            </div>
-            <Button onClick={() => setShowInviteDialog(true)}>
-              <Mail className="w-4 h-4 mr-2" />
-              Inviter un membre
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Team Members List */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Membres de l'équipe</h3>
-            {!teamMembers || teamMembers.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                Aucun membre d'équipe pour le moment
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {teamMembers.map((member: any) => (
-                  <div
-                    key={member.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 sm:p-4 border rounded-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{member.user?.name || member.user?.email}</p>
-                        <p className="text-xs md:text-sm text-muted-foreground">{member.user?.email}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <p className="text-sm font-medium">{getRoleLabel(member.role)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {getRoleDescription(member.role)}
-                        </p>
-                      </div>
-                      {member.userId !== user?.id && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            if (confirm("Voulez-vous vraiment supprimer ce membre?")) {
-                              removeMemberMutation.mutate({ memberId: member.id });
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <Separator />
-
-          {/* Pending Invitations */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Invitations en attente</h3>
-            {!invitations || invitations.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                Aucune invitation en attente
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {invitations.map((invitation: any) => (
-                  <div
-                    key={invitation.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 sm:p-4 border rounded-lg bg-muted/30"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-orange-500/15 dark:bg-orange-500/25 flex items-center justify-center">
-                        <Clock className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{invitation.email}</p>
-                        <p className="text-xs md:text-sm text-muted-foreground">
-                          Invité le{" "}
-                          {new Date(invitation.createdAt).toLocaleDateString("fr-FR")}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <p className="text-sm font-medium">{getRoleLabel(invitation.role)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Expire le {new Date(invitation.expiresAt).toLocaleDateString("fr-FR")}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          if (confirm("Voulez-vous annuler cette invitation?")) {
-                            cancelInvitationMutation.mutate({ invitationId: invitation.id });
-                          }
-                        }}
-                      >
-                        <XCircle className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Invite Dialog */}
-      {showInviteDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle>Inviter un membre</CardTitle>
-              <CardDescription>
-                Entrez l'adresse email et sélectionnez le rôle
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="invite-email">Adresse email</Label>
-                <Input
-                  id="invite-email"
-                  type="email"
-                  placeholder="exemple@email.com"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="invite-role">Rôle</Label>
-                <select
-                  id="invite-role"
-                  className="w-full p-2 border rounded-lg"
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as any)}
-                >
-                  <option value="SALES_REP">Commercial Leads</option>
-                  <option value="ORDER_MANAGER">Gestionnaire Commandes</option>
-                  <option value="ACCOUNTANT">Comptable</option>
-                  <option value="FULL_MANAGER">Gestionnaire Complet</option>
-                </select>
-                <p className="text-xs md:text-sm text-muted-foreground">
-                  {getRoleDescription(inviteRole)}
-                </p>
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  className="flex-1 w-full sm:w-auto"
-                  onClick={() => {
-                    setShowInviteDialog(false);
-                    setInviteEmail("");
-                  }}
-                >
-                  Annuler
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={handleInvite}
-                  disabled={inviteMutation.isPending}
-                >
-                  {inviteMutation.isPending ? "Envoi..." : "Envoyer l'invitation"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }
