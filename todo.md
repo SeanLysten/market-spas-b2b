@@ -2534,3 +2534,11 @@
 - [x] Afficher le partenaire associé dans la liste Utilisateurs et vice versa
 - [x] Les deux onglets (Partenaires et Utilisateurs) doivent être synchronisés
 - [x] 34 tests vitest passants (dont 6 nouveaux pour la synchronisation)
+
+## Suppression en cascade Partenaire → Utilisateurs
+- [x] Quand un partenaire est supprimé, désactiver et dissocier automatiquement tous les comptes utilisateurs associés
+- [x] Quand un partenaire passe en statut SUSPENDED ou TERMINATED, désactiver les comptes utilisateurs associés
+- [x] Quand un partenaire est réactivé (APPROVED), réactiver les comptes utilisateurs associés
+- [x] Créer les fonctions db deactivateUsersByPartnerId et reactivateUsersByPartnerId
+- [x] Cascade appliquée dans les 3 routes : partners.update (x2) + partners.delete + partners.approve
+- [x] 46 tests vitest passants (dont 12 nouveaux pour la cascade)

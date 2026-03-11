@@ -681,6 +681,18 @@ export const appRouter = router({
       )
       .mutation(async ({ input }) => {
         await db.updatePartner(input.id, input.data);
+
+        // Cascade: désactiver/réactiver les utilisateurs selon le statut du partenaire
+        if (input.data.status) {
+          if (input.data.status === 'SUSPENDED' || input.data.status === 'TERMINATED') {
+            const count = await db.deactivateUsersByPartnerId(input.id);
+            console.log(`[Partners.update] Partenaire #${input.id} ${input.data.status} → ${count} utilisateur(s) désactivé(s)`);
+          } else if (input.data.status === 'APPROVED') {
+            const count = await db.reactivateUsersByPartnerId(input.id);
+            console.log(`[Partners.update] Partenaire #${input.id} APPROVED → ${count} utilisateur(s) réactivé(s)`);
+          }
+        }
+
         return { success: true };
       }),
 
@@ -1910,6 +1922,18 @@ export const appRouter = router({
             discountPercent: discountPercent !== undefined ? discountPercent.toString() : undefined,
           };
           await db.updatePartner(id, data);
+
+          // Cascade: désactiver/réactiver les utilisateurs selon le statut du partenaire
+          if (input.status) {
+            if (input.status === 'SUSPENDED' || input.status === 'TERMINATED') {
+              const count = await db.deactivateUsersByPartnerId(id);
+              console.log(`[Partners.update] Partenaire #${id} ${input.status} → ${count} utilisateur(s) désactivé(s)`);
+            } else if (input.status === 'APPROVED') {
+              const count = await db.reactivateUsersByPartnerId(id);
+              console.log(`[Partners.update] Partenaire #${id} APPROVED → ${count} utilisateur(s) réactivé(s)`);
+            }
+          }
+
           return { success: true };
         }),
 
@@ -1929,6 +1953,11 @@ export const appRouter = router({
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input }) => {
           await db.updatePartner(input.id, { status: "APPROVED" });
+          // Cascade: réactiver les utilisateurs du partenaire approuvé
+          const count = await db.reactivateUsersByPartnerId(input.id);
+          if (count > 0) {
+            console.log(`[Partners.approve] Partenaire #${input.id} APPROVED → ${count} utilisateur(s) réactivé(s)`);
+          }
           return { success: true };
         }),
     }),

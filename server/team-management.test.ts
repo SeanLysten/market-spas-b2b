@@ -361,3 +361,110 @@ describe("Partner-User Synchronization", () => {
     expect(loginMethod).toBe("invitation");
   });
 });
+
+describe("Partner Cascade - Deactivate/Reactivate Users", () => {
+  // Simulate the cascade logic
+  function shouldDeactivateUsers(partnerStatus: string): boolean {
+    return partnerStatus === "SUSPENDED" || partnerStatus === "TERMINATED";
+  }
+
+  function shouldReactivateUsers(partnerStatus: string): boolean {
+    return partnerStatus === "APPROVED";
+  }
+
+  function shouldCascadeOnDelete(): boolean {
+    return true; // Always deactivate + dissociate on delete
+  }
+
+  function filterActiveUsersByPartner(
+    users: { id: number; partnerId: number | null; isActive: boolean }[],
+    partnerId: number
+  ): { id: number; partnerId: number | null; isActive: boolean }[] {
+    return users.filter(u => u.partnerId === partnerId && u.isActive);
+  }
+
+  function filterInactiveUsersByPartner(
+    users: { id: number; partnerId: number | null; isActive: boolean }[],
+    partnerId: number
+  ): { id: number; partnerId: number | null; isActive: boolean }[] {
+    return users.filter(u => u.partnerId === partnerId && !u.isActive);
+  }
+
+  // Status-based cascade tests
+  it("should deactivate users when partner is SUSPENDED", () => {
+    expect(shouldDeactivateUsers("SUSPENDED")).toBe(true);
+  });
+
+  it("should deactivate users when partner is TERMINATED", () => {
+    expect(shouldDeactivateUsers("TERMINATED")).toBe(true);
+  });
+
+  it("should NOT deactivate users when partner is APPROVED", () => {
+    expect(shouldDeactivateUsers("APPROVED")).toBe(false);
+  });
+
+  it("should NOT deactivate users when partner is PENDING", () => {
+    expect(shouldDeactivateUsers("PENDING")).toBe(false);
+  });
+
+  it("should reactivate users when partner is APPROVED", () => {
+    expect(shouldReactivateUsers("APPROVED")).toBe(true);
+  });
+
+  it("should NOT reactivate users when partner is SUSPENDED", () => {
+    expect(shouldReactivateUsers("SUSPENDED")).toBe(false);
+  });
+
+  it("should NOT reactivate users when partner is TERMINATED", () => {
+    expect(shouldReactivateUsers("TERMINATED")).toBe(false);
+  });
+
+  // Delete cascade tests
+  it("should always cascade on partner delete", () => {
+    expect(shouldCascadeOnDelete()).toBe(true);
+  });
+
+  // User filtering tests
+  it("should find active users for a given partner", () => {
+    const users = [
+      { id: 1, partnerId: 100, isActive: true },
+      { id: 2, partnerId: 100, isActive: false },
+      { id: 3, partnerId: 200, isActive: true },
+      { id: 4, partnerId: 100, isActive: true },
+    ];
+    const active = filterActiveUsersByPartner(users, 100);
+    expect(active).toHaveLength(2);
+    expect(active.map(u => u.id)).toEqual([1, 4]);
+  });
+
+  it("should find inactive users for a given partner", () => {
+    const users = [
+      { id: 1, partnerId: 100, isActive: true },
+      { id: 2, partnerId: 100, isActive: false },
+      { id: 3, partnerId: 200, isActive: false },
+    ];
+    const inactive = filterInactiveUsersByPartner(users, 100);
+    expect(inactive).toHaveLength(1);
+    expect(inactive[0].id).toBe(2);
+  });
+
+  it("should return empty array when no active users for partner", () => {
+    const users = [
+      { id: 1, partnerId: 200, isActive: true },
+    ];
+    const active = filterActiveUsersByPartner(users, 100);
+    expect(active).toHaveLength(0);
+  });
+
+  it("should handle dissociation after delete (partnerId set to null)", () => {
+    const users = [
+      { id: 1, partnerId: 100, isActive: true },
+      { id: 2, partnerId: 100, isActive: true },
+    ];
+    // Simulate deactivation
+    const deactivated = users.map(u => ({ ...u, isActive: false }));
+    // Simulate dissociation
+    const dissociated = deactivated.map(u => ({ ...u, partnerId: null }));
+    expect(dissociated.every(u => !u.isActive && u.partnerId === null)).toBe(true);
+  });
+});

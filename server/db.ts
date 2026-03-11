@@ -593,6 +593,38 @@ export async function updateUserStatus(userId: number, isActive: boolean) {
   await db.update(users).set({ isActive }).where(eq(users.id, userId));
 }
 
+/**
+ * Deactivate all users linked to a partner
+ * Returns the number of users deactivated
+ */
+export async function deactivateUsersByPartnerId(partnerId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const linkedUsers = await db.select({ id: users.id }).from(users).where(and(eq(users.partnerId, partnerId), eq(users.isActive, true)));
+  if (linkedUsers.length > 0) {
+    await db.update(users).set({ isActive: false }).where(and(eq(users.partnerId, partnerId), eq(users.isActive, true)));
+    console.log(`[Cascade] Deactivated ${linkedUsers.length} user(s) for partner #${partnerId}`);
+  }
+  return linkedUsers.length;
+}
+
+/**
+ * Reactivate all users linked to a partner
+ * Returns the number of users reactivated
+ */
+export async function reactivateUsersByPartnerId(partnerId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const linkedUsers = await db.select({ id: users.id }).from(users).where(and(eq(users.partnerId, partnerId), eq(users.isActive, false)));
+  if (linkedUsers.length > 0) {
+    await db.update(users).set({ isActive: true }).where(and(eq(users.partnerId, partnerId), eq(users.isActive, false)));
+    console.log(`[Cascade] Reactivated ${linkedUsers.length} user(s) for partner #${partnerId}`);
+  }
+  return linkedUsers.length;
+}
+
 // ============================================
 // PRODUCT ADMIN QUERIES
 // ============================================
@@ -1318,7 +1350,13 @@ export async function deletePartner(id: number): Promise<{ reassignedTo?: { part
       .where(eq(leads.assignedPartnerId, id));
   }
 
-  // 4. Supprimer le partenaire
+  // 4. Désactiver les comptes utilisateurs associés (cascade)
+  const deactivatedCount = await deactivateUsersByPartnerId(id);
+  // Dissocier les utilisateurs du partenaire supprimé
+  await db.update(users).set({ partnerId: null }).where(eq(users.partnerId, id));
+  console.log(`[DeletePartner] ${deactivatedCount} utilisateur(s) désactivé(s) et dissocié(s) du partenaire #${id}`);
+
+  // 5. Supprimer le partenaire
   await db.delete(partners).where(eq(partners.id, id));
   
   console.log(`[DeletePartner] Partenaire ${deletedPartner.companyName} (ID ${id}) supprimé. Territoires transférés: ${result.territoriesTransferred}, Leads réassignés: ${result.leadsReassigned}`);
