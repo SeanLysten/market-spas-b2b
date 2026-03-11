@@ -244,6 +244,39 @@ describe("Team Management - Partner Selection for Admins", () => {
   });
 });
 
+describe("Team Management - External Email Validation", () => {
+  function validateExternalEmail(email: string, existingEmails: string[]): { valid: boolean; error?: string } {
+    if (!email) return { valid: false, error: "Email requis" };
+    if (existingEmails.includes(email.toLowerCase())) {
+      return { valid: false, error: "Cette adresse email est déjà associée à un compte existant" };
+    }
+    return { valid: true };
+  }
+
+  it("should reject an email that belongs to an existing user", () => {
+    const result = validateExternalEmail("admin@marketspas.com", ["admin@marketspas.com", "user@test.com"]);
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain("déjà associée");
+  });
+
+  it("should accept an email that does not belong to any existing user", () => {
+    const result = validateExternalEmail("nouveau@externe.com", ["admin@marketspas.com", "user@test.com"]);
+    expect(result.valid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it("should be case-insensitive when checking existing emails", () => {
+    const result = validateExternalEmail("Admin@MarketSpas.com", ["admin@marketspas.com"]);
+    expect(result.valid).toBe(false);
+  });
+
+  it("should reject empty email", () => {
+    const result = validateExternalEmail("", ["admin@marketspas.com"]);
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe("Email requis");
+  });
+});
+
 describe("Team Management - Invitation Input Validation", () => {
   it("should require partnerId for admin invitation", () => {
     const isAdmin = true;

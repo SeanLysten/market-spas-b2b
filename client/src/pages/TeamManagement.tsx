@@ -281,6 +281,9 @@ function InviteDialog({
                 placeholder="collaborateur@entreprise.com"
                 required
               />
+              <p className="text-xs text-muted-foreground">
+                Seules les personnes externes sans compte existant peuvent être invitées
+              </p>
             </div>
 
             {/* Role selection */}

@@ -2848,6 +2848,14 @@ export const appRouter = router({
           throw new Error("Veuillez sélectionner un partenaire pour inviter un membre d'équipe");
         }
 
+        // Vérifier que l'email n'est pas déjà un utilisateur existant
+        const existingUser = await db.getUserByEmail(input.email);
+        if (existingUser) {
+          throw new Error(
+            "Cette adresse email est déjà associée à un compte existant. Vous ne pouvez inviter que des personnes externes qui n'ont pas encore de compte."
+          );
+        }
+
         // Admins can always invite
         if (!isAdminUser) {
           // Check if user has permission to invite

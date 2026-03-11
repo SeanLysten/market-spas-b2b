@@ -2514,3 +2514,10 @@
 - [x] Afficher les membres et invitations du partenaire sélectionné
 - [x] Adapter les messages et descriptions selon le rôle (admin vs partenaire)
 - [x] 24 tests vitest pour la gestion d'équipe (rôles, permissions, logique admin, validation)
+
+## Fix dialog invitation Mon Équipe
+- [x] Corriger le z-index du menu déroulant (Select) qui s'affiche derrière le dialog d'invitation
+- [x] Empêcher l'invitation d'utilisateurs déjà inscrits : seuls des emails externes peuvent être invités à rejoindre l'équipe
+- [x] Afficher un message d'erreur clair si l'email est déjà associé à un compte existant
+- [x] Ajouter une note sous le champ email indiquant que seuls les externes sont acceptés
+- [x] 28 tests vitest passants (dont 4 nouveaux pour la validation d'email externe)
