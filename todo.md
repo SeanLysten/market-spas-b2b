@@ -2439,3 +2439,7 @@
 - [x] Retirer le lien "Modèles de Spa" séparé du menu admin (AdminLayout)
 - [x] Retirer la route /admin/spa-models séparée de App.tsx
 - [x] Supprimer le fichier AdminSpaModels.tsx devenu inutile
+
+## Corrections formulaire Modèles de Spa
+- [x] Fix : le sélecteur de marque ne permet pas de changer la marque lors de la création d'un modèle
+- [x] Ajout : drag & drop d'image directement dans le formulaire de création/édition de modèle (upload S3)

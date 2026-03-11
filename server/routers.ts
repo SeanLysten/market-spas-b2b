@@ -3661,6 +3661,21 @@ export const appRouter = router({
         return await spaModelsDb.removePartFromModel(input.linkId);
       }),
 
+    // --- Image upload ---
+    uploadImage: adminProcedure
+      .input(z.object({
+        imageData: z.string().min(1),
+        fileName: z.string().min(1),
+      }))
+      .mutation(async ({ input }) => {
+        const base64Data = input.imageData.replace(/^data:image\/\w+;base64,/, "");
+        const buffer = Buffer.from(base64Data, "base64");
+        const ext = input.fileName.split(".").pop() || "jpg";
+        const fileKey = `spa-models/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+        const { url } = await storagePut(fileKey, buffer, `image/${ext}`);
+        return { success: true, url };
+      }),
+
     // --- User-facing ---
     listWithPartCount: protectedProcedure
       .input(z.object({ brand: z.string().optional() }).optional())

@@ -31,7 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Plus,
   Search,
@@ -48,6 +48,7 @@ import {
   Ruler,
   Loader2,
   Check,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -730,14 +731,37 @@ function ModelFormDialog({
   editModel?: any;
   onSuccess: () => void;
 }) {
-  const [name, setName] = useState(editModel?.name || "");
-  const [brand, setBrand] = useState(editModel?.brand || "MARKET_SPAS");
-  const [series, setSeries] = useState(editModel?.series || "");
-  const [imageUrl, setImageUrl] = useState(editModel?.imageUrl || "");
-  const [description, setDescription] = useState(editModel?.description || "");
-  const [seats, setSeats] = useState<string>(editModel?.seats?.toString() || "");
-  const [dimensions, setDimensions] = useState(editModel?.dimensions || "");
-  const [sortOrder, setSortOrder] = useState<string>(editModel?.sortOrder?.toString() || "0");
+  const [name, setName] = useState("");
+  const [brand, setBrand] = useState("MARKET_SPAS");
+  const [series, setSeries] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [description, setDescription] = useState("");
+  const [seats, setSeats] = useState<string>("");
+  const [dimensions, setDimensions] = useState("");
+  const [sortOrder, setSortOrder] = useState<string>("0");
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset form when dialog opens or editModel changes
+  useEffect(() => {
+    if (open) {
+      setName(editModel?.name || "");
+      setBrand(editModel?.brand || "MARKET_SPAS");
+      setSeries(editModel?.series || "");
+      setImageUrl(editModel?.imageUrl || "");
+      setDescription(editModel?.description || "");
+      setSeats(editModel?.seats?.toString() || "");
+      setDimensions(editModel?.dimensions || "");
+      setSortOrder(editModel?.sortOrder?.toString() || "0");
+      setPreviewUrl(editModel?.imageUrl || null);
+      setIsDragging(false);
+      setIsUploading(false);
+    }
+  }, [open, editModel]);
+
+  const uploadImageMutation = trpc.spaModels.uploadImage.useMutation();
 
   const createMutation = trpc.spaModels.create.useMutation({
     onSuccess: () => {
@@ -756,6 +780,77 @@ function ModelFormDialog({
     },
     onError: (err) => toast.error(err.message),
   });
+
+  const handleImageFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Veuillez sélectionner une image");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("L'image ne doit pas dépasser 10 Mo");
+      return;
+    }
+    setIsUploading(true);
+    try {
+      // Show local preview immediately
+      const localPreview = URL.createObjectURL(file);
+      setPreviewUrl(localPreview);
+
+      // Convert to base64 and upload
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const result = await uploadImageMutation.mutateAsync({
+        imageData: base64,
+        fileName: file.name,
+      });
+
+      setImageUrl(result.url);
+      setPreviewUrl(result.url);
+      toast.success("Image uploadée avec succès");
+    } catch (err) {
+      console.error("Upload error:", err);
+      toast.error("Erreur lors de l'upload de l'image");
+      setPreviewUrl(imageUrl || null);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleImageFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageFile(file);
+  };
+
+  const handleRemoveImage = () => {
+    setImageUrl("");
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleSubmit = () => {
     if (!name.trim()) return toast.error("Le nom est requis");
@@ -791,9 +886,11 @@ function ModelFormDialog({
           </div>
           <div>
             <Label>Marque *</Label>
-            <Select value={brand} onValueChange={setBrand}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
+            <Select value={brand} onValueChange={(val) => setBrand(val)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une marque" />
+              </SelectTrigger>
+              <SelectContent className="z-[10001]">
                 {Object.entries(BRANDS).map(([k, v]) => (
                   <SelectItem key={k} value={k}>{v}</SelectItem>
                 ))}
@@ -814,13 +911,91 @@ function ModelFormDialog({
             <Label>Dimensions</Label>
             <Input value={dimensions} onChange={(e) => setDimensions(e.target.value)} placeholder="Ex: 220 x 220 x 90 cm" />
           </div>
+
+          {/* Image drag & drop zone */}
           <div>
-            <Label>URL de l'image</Label>
-            <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
-            {imageUrl && (
-              <img src={imageUrl} alt="Preview" className="mt-2 h-32 w-full object-contain rounded-lg bg-gray-50 dark:bg-gray-800" />
+            <Label>Image du modèle</Label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+              disabled={isUploading}
+            />
+            {previewUrl ? (
+              <div className="mt-2 relative group">
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="h-40 w-full object-contain rounded-lg border-2 border-border bg-gray-50 dark:bg-gray-800"
+                />
+                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8 bg-white/90 dark:bg-gray-800/90 shadow-sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    title="Remplacer l'image"
+                  >
+                    <Upload className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="h-8 w-8 shadow-sm"
+                    onClick={handleRemoveImage}
+                    disabled={isUploading}
+                    title="Supprimer l'image"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                {isUploading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
+                    <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-lg">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm font-medium">Upload en cours...</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={() => !isUploading && fileInputRef.current?.click()}
+                className={`mt-2 h-40 w-full rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
+                  isDragging
+                    ? "border-primary bg-primary/5 scale-[1.02]"
+                    : "border-gray-300 dark:border-gray-600 hover:border-primary/50 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                }`}
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">Upload en cours...</span>
+                  </>
+                ) : isDragging ? (
+                  <>
+                    <Upload className="h-8 w-8 text-primary" />
+                    <span className="text-sm font-medium text-primary">Déposez l'image ici</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-8 w-8 text-gray-400" />
+                    <span className="text-sm text-muted-foreground">Glissez-déposez une image ici</span>
+                    <span className="text-xs text-muted-foreground">ou cliquez pour parcourir</span>
+                  </>
+                )}
+              </div>
             )}
           </div>
+
           <div>
             <Label>Description</Label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Description du modèle..." />
@@ -832,7 +1007,7 @@ function ModelFormDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-          <Button onClick={handleSubmit} disabled={isLoading}>
+          <Button onClick={handleSubmit} disabled={isLoading || isUploading}>
             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {editModel ? "Enregistrer" : "Créer"}
           </Button>
