@@ -225,6 +225,13 @@
       "when": 1772714806347,
       "tag": "0031_jittery_mister_sinister",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "5",
+      "when": 1773223565396,
+      "tag": "0032_zippy_gressill",
+      "breakpoints": true
     }
   ]
 }

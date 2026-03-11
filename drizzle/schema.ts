@@ -2243,6 +2243,55 @@ export type SavSparePart = typeof savSpareParts.$inferSelect;
 export type InsertSavSparePart = typeof savSpareParts.$inferInsert;
 
 // ============================================
+// SPA MODELS (Modèles de spa pour pièces détachées)
+// ============================================
+
+export const spaModels = mysqlTable(
+  "spa_models",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    brand: savBrandEnum.notNull(),
+    series: varchar("series", { length: 100 }),
+    imageUrl: varchar("imageUrl", { length: 512 }),
+    description: text("description"),
+    seats: int("seats"),
+    dimensions: varchar("dimensions", { length: 100 }),
+    isActive: boolean("isActive").default(true),
+    sortOrder: int("sortOrder").default(0),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    brandIdx: index("sm_brand_idx").on(table.brand),
+    nameIdx: index("sm_name_idx").on(table.name),
+  })
+);
+
+export type SpaModel = typeof spaModels.$inferSelect;
+export type InsertSpaModel = typeof spaModels.$inferInsert;
+
+// Liaison modèle de spa ↔ pièce détachée
+export const spaModelSpareParts = mysqlTable(
+  "spa_model_spare_parts",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    spaModelId: int("spaModelId").notNull(),
+    sparePartId: int("sparePartId").notNull(),
+    notes: varchar("notes", { length: 255 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    spaModelIdIdx: index("smsp_spaModelId_idx").on(table.spaModelId),
+    sparePartIdIdx: index("smsp_sparePartId_idx").on(table.sparePartId),
+    uniquePair: index("smsp_unique_pair_idx").on(table.spaModelId, table.sparePartId),
+  })
+);
+
+export type SpaModelSparePart = typeof spaModelSpareParts.$inferSelect;
+export type InsertSpaModelSparePart = typeof spaModelSpareParts.$inferInsert;
+
+// ============================================
 // NOTIFICATION PREFERENCES
 // ============================================
 

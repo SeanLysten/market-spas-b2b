@@ -2418,3 +2418,18 @@
 - [x] Interface admin : bouton de fusion par groupe + "Tout fusionner automatiquement"
 - [x] Interface admin : responsive mobile (cartes dépliables)
 - [x] Tests vitest pour la logique de détection et fusion (19 tests passants)
+
+## Système Pièces Détachées par Modèle de Spa
+- [x] Schéma DB : table spa_models (id, name, brand, series, seats, dimensions, imageUrl, description, isActive)
+- [x] Schéma DB : table spa_model_spare_parts (id, spaModelId, sparePartId) - liaison modèle ↔ pièce
+- [x] Routes backend : CRUD modèles de spa (list, create, update, delete)
+- [x] Routes backend : attribution/retrait de pièces à un modèle (setParts, listParts)
+- [x] Routes backend : route utilisateur listWithPartCount + getParts
+- [x] Interface admin : page /admin/spa-models avec CRUD, recherche, filtre marque, stats
+- [x] Interface admin : attribution des pièces détachées par modèle (multi-select avec recherche)
+- [x] Interface utilisateur : page /spare-parts avec sélection marque → modèle → pièces
+- [x] Interface utilisateur : affichage des pièces par catégorie avec filtres et recherche
+- [x] Interface utilisateur : fiche détail pièce avec prix, stock, référence (commande via ticket SAV)
+- [x] Responsive mobile pour toutes les pages (cartes adaptatives)
+- [x] Navigation : lien "Modèles de Spa" dans admin + "Pièces Détachées" dans menu utilisateur
+- [x] Tests vitest : 7 tests passants (spa-models.test.ts)

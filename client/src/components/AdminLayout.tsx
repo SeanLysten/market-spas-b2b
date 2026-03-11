@@ -29,6 +29,7 @@ import {
   MessageSquare,
   BarChart3,
   CalendarDays,
+  Box,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
@@ -126,6 +127,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       items: [
         { name: "SAV", href: "/admin/after-sales", icon: Wrench },
         { name: "Pièces Détachées", href: "/admin/spare-parts", icon: Cog },
+        { name: "Modèles de Spa", href: "/admin/spa-models", icon: Box },
       ],
     },
     {

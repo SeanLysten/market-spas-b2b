@@ -15,6 +15,7 @@ import * as metaOAuth from "./meta-oauth";
 import * as candidatesDb from "./candidates-db";
 import { reclassifyExistingPartnerLeads } from "./meta-leads";
 import * as savDb from "./sav-db";
+import * as spaModelsDb from "./spa-models-db";
 import * as shopifyApi from "./shopify-api";
 import * as ga4Api from "./ga4-api";
 import { analyzeWarranty, COMPONENTS_BY_BRAND, DEFECT_TYPES_BY_COMPONENT, PRODUCT_LINES_BY_BRAND, COMPONENT_TO_SPARE_CATEGORY, generateTrackingUrl, type WarrantyInput, type SavBrand, type UsageType } from "./warranty-engine";
@@ -3572,6 +3573,99 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         return await savDb.removeSparePartCompatibility(input.id);
+      }),
+  }),
+
+  // ============================================
+  // SPA MODELS (Modèles de spa pour pièces détachées)
+  // ============================================
+  spaModels: router({
+    // --- Admin routes ---
+    list: protectedProcedure
+      .input(z.object({
+        brand: z.string().optional(),
+        search: z.string().optional(),
+        isActive: z.boolean().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await spaModelsDb.listSpaModels(input || undefined);
+      }),
+
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const model = await spaModelsDb.getSpaModelById(input.id);
+        if (!model) throw new TRPCError({ code: "NOT_FOUND", message: "Mod\u00e8le non trouv\u00e9." });
+        return model;
+      }),
+
+    create: adminProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        brand: z.string(),
+        series: z.string().optional(),
+        imageUrl: z.string().optional(),
+        description: z.string().optional(),
+        seats: z.number().optional(),
+        dimensions: z.string().optional(),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.createSpaModel(input);
+      }),
+
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        data: z.record(z.any()),
+      }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.updateSpaModel(input.id, input.data);
+      }),
+
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.deleteSpaModel(input.id);
+      }),
+
+    // --- Parts management ---
+    getParts: protectedProcedure
+      .input(z.object({ spaModelId: z.number() }))
+      .query(async ({ input }) => {
+        return await spaModelsDb.getModelParts(input.spaModelId);
+      }),
+
+    addPart: adminProcedure
+      .input(z.object({
+        spaModelId: z.number(),
+        sparePartId: z.number(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.addPartToModel(input);
+      }),
+
+    addMultipleParts: adminProcedure
+      .input(z.object({
+        spaModelId: z.number(),
+        sparePartIds: z.array(z.number()),
+      }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.addMultiplePartsToModel(input.spaModelId, input.sparePartIds);
+      }),
+
+    removePart: adminProcedure
+      .input(z.object({ linkId: z.number() }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.removePartFromModel(input.linkId);
+      }),
+
+    // --- User-facing ---
+    listWithPartCount: protectedProcedure
+      .input(z.object({ brand: z.string().optional() }).optional())
+      .query(async ({ input }) => {
+        return await spaModelsDb.listSpaModelsWithPartCount(input?.brand);
       }),
   }),
 

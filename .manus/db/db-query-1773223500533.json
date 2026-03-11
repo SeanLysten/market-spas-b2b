@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COUNT(*) as total_parts FROM spare_parts; SELECT COUNT(*) as total_compat FROM spare_parts_compatibility; SELECT DISTINCT modelName FROM spare_parts_compatibility WHERE modelName IS NOT NULL LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT COUNT(*) as total_parts FROM spare_parts; SELECT COUNT(*) as total_compat FROM spare_parts_compatibility; SELECT DISTINCT modelName FROM spare_parts_compatibility WHERE modelName IS NOT NULL LIMIT 20;",
+  "rows": [
+    {
+      "total_parts": "0"
+    },
+    {
+      "total_parts": "total_compat"
+    },
+    {
+      "total_parts": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_parts\n0\ntotal_compat\n0\n",
+  "stderr": "",
+  "execution_time_ms": 1046
+}
