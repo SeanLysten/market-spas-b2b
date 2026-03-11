@@ -2490,3 +2490,12 @@
 - [x] Corriger la page Mon Équipe : afficher la gestion des permissions par membre
 - [x] Corriger la page Mon Équipe : gérer le cas admin (pas de partnerId) avec un message adapté
 - [x] Unifier toute la gestion d'équipe sur la page /team uniquement
+
+## Dashboard admin personnalisé par rôle
+- [x] ADMIN_MARKETING : Widget GA4 trafic site (sessions, pages vues, taux rebond), résumé campagnes Meta Ads, résumé campagnes Google Ads, KPIs leads (nouveaux leads, taux conversion), accès rapide newsletter/agenda/territoires/carte réseau
+- [x] ADMIN_STOCK : Widget stock critique (produits < 5 unités), arrivages prévus, KPIs stock (total produits, valeur stock), accès rapide produits/prévisions/pièces détachées
+- [x] ADMIN_SAV : Widget tickets SAV récents, KPIs SAV (tickets ouverts, en attente, résolus), délai moyen résolution, accès rapide SAV/pièces détachées/ressources techniques
+- [x] ADMIN_ORDERS : Widget commandes récentes, KPIs commandes (CA mois, nombre commandes, panier moyen), graphique ventes, accès rapide commandes/partenaires/rapports
+- [x] ADMIN_FULL / SUPER_ADMIN : Dashboard complet existant (tous les widgets)
+- [x] ADMIN_CUSTOM : Afficher uniquement les widgets correspondant aux modules autorisés
+- [x] Message de bienvenue adapté au rôle avec description du périmètre
