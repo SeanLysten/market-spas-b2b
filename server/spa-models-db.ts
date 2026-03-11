@@ -19,7 +19,7 @@ export async function listSpaModels(filters?: {
   search?: string;
   isActive?: boolean;
 }) {
-  const db = getDb();
+  const db = await getDb();
   const conditions: any[] = [];
 
   if (filters?.brand) {
@@ -42,7 +42,7 @@ export async function listSpaModels(filters?: {
 }
 
 export async function getSpaModelById(id: number) {
-  const db = getDb();
+  const db = await getDb();
   const [model] = await db.select().from(spaModels).where(eq(spaModels.id, id));
   return model || null;
 }
@@ -57,19 +57,19 @@ export async function createSpaModel(data: {
   dimensions?: string;
   sortOrder?: number;
 }) {
-  const db = getDb();
+  const db = await getDb();
   const [result] = await db.insert(spaModels).values(data as any);
   return { id: result.insertId };
 }
 
 export async function updateSpaModel(id: number, data: Record<string, any>) {
-  const db = getDb();
+  const db = await getDb();
   await db.update(spaModels).set({ ...data, updatedAt: new Date() } as any).where(eq(spaModels.id, id));
   return { success: true };
 }
 
 export async function deleteSpaModel(id: number) {
-  const db = getDb();
+  const db = await getDb();
   // Supprimer les liaisons pièces d'abord
   await db.delete(spaModelSpareParts).where(eq(spaModelSpareParts.spaModelId, id));
   // Supprimer le modèle
@@ -82,7 +82,7 @@ export async function deleteSpaModel(id: number) {
 // ============================================
 
 export async function getModelParts(spaModelId: number) {
-  const db = getDb();
+  const db = await getDb();
   const rows = await db
     .select({
       linkId: spaModelSpareParts.id,
@@ -111,7 +111,7 @@ export async function addPartToModel(data: {
   sparePartId: number;
   notes?: string;
 }) {
-  const db = getDb();
+  const db = await getDb();
   // Vérifier si la liaison existe déjà
   const [existing] = await db
     .select()
@@ -130,7 +130,7 @@ export async function addPartToModel(data: {
 }
 
 export async function addMultiplePartsToModel(spaModelId: number, sparePartIds: number[]) {
-  const db = getDb();
+  const db = await getDb();
   // Récupérer les liaisons existantes
   const existing = await db
     .select({ sparePartId: spaModelSpareParts.sparePartId })
@@ -150,13 +150,13 @@ export async function addMultiplePartsToModel(spaModelId: number, sparePartIds: 
 }
 
 export async function removePartFromModel(linkId: number) {
-  const db = getDb();
+  const db = await getDb();
   await db.delete(spaModelSpareParts).where(eq(spaModelSpareParts.id, linkId));
   return { success: true };
 }
 
 export async function removePartFromModelByIds(spaModelId: number, sparePartId: number) {
-  const db = getDb();
+  const db = await getDb();
   await db
     .delete(spaModelSpareParts)
     .where(
@@ -173,7 +173,7 @@ export async function removePartFromModelByIds(spaModelId: number, sparePartId: 
 // ============================================
 
 export async function listSpaModelsWithPartCount(brand?: string) {
-  const db = getDb();
+  const db = await getDb();
   const conditions: any[] = [eq(spaModels.isActive, true)];
   if (brand) {
     conditions.push(eq(spaModels.brand, brand as any));
