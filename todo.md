@@ -2464,3 +2464,6 @@
 - [x] Interface utilisateur : suppression de membres d'équipe
 - [x] Protéger les pages utilisateur selon les permissions du membre d'équipe
 - [x] Tests vitest pour les permissions admin et partenaire (27 tests)
+
+## Bouton accès rapide Équipe
+- [x] Ajouter un bouton "Mon Équipe" dans le header du dashboard à côté du bouton Admin
