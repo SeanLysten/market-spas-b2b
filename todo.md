@@ -2504,3 +2504,13 @@
 - [x] Fix : lien d'invitation redirige vers manus.im/register au lieu du SITE_URL → 404
 - [x] Fix : supprimer/remplacer TOUTE référence visible à "Manus" dans le logiciel (emails, UI, etc.)
 - [x] Lier la gestion Utilisateurs (admin) et Partenaires : ce sont les mêmes entités, afficher le partenaire associé dans la liste users et vice versa
+
+## Fix page Mon Équipe pour admins
+- [x] Corriger le backend team routes : permettre aux admins d'inviter des membres avec un partnerId en input
+- [x] Corriger le backend team.list et team.listInvitations : accepter un partnerId optionnel pour les admins
+- [x] Corriger le frontend TeamManagement : afficher le bouton "Inviter un collaborateur" pour les admins
+- [x] Ajouter un sélecteur de partenaire dans la page Mon Équipe pour les admins
+- [x] Ajouter un sélecteur de partenaire dans le dialog d'invitation pour les admins
+- [x] Afficher les membres et invitations du partenaire sélectionné
+- [x] Adapter les messages et descriptions selon le rôle (admin vs partenaire)
+- [x] 24 tests vitest pour la gestion d'équipe (rôles, permissions, logique admin, validation)

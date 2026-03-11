@@ -2810,20 +2810,25 @@ export const appRouter = router({
   // ============================================
   team: router({
     // List team members
-    list: protectedProcedure.query(async ({ ctx }) => {
-      if (!ctx.user.partnerId) {
-        return []; // Admins without partnerId see empty list
-      }
-      return await db.getTeamMembers(ctx.user.partnerId);
-    }),
+    list: protectedProcedure
+      .input(z.object({ partnerId: z.number().optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        const isAdminUser = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        // Admins can specify a partnerId to view that partner's team
+        const targetPartnerId = (isAdminUser && input?.partnerId) ? input.partnerId : ctx.user.partnerId;
+        if (!targetPartnerId) return [];
+        return await db.getTeamMembers(targetPartnerId);
+      }),
 
     // List pending invitations
-    listInvitations: protectedProcedure.query(async ({ ctx }) => {
-      if (!ctx.user.partnerId) {
-        return []; // Admins without partnerId see empty list
-      }
-      return await db.getTeamInvitations(ctx.user.partnerId);
-    }),
+    listInvitations: protectedProcedure
+      .input(z.object({ partnerId: z.number().optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        const isAdminUser = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        const targetPartnerId = (isAdminUser && input?.partnerId) ? input.partnerId : ctx.user.partnerId;
+        if (!targetPartnerId) return [];
+        return await db.getTeamInvitations(targetPartnerId);
+      }),
 
     // Invite a team member
     invite: protectedProcedure
@@ -2832,27 +2837,34 @@ export const appRouter = router({
           email: z.string().email(),
           role: z.enum(["SALES_REP", "ORDER_MANAGER", "ACCOUNTANT", "FULL_MANAGER"]),
           customPermissions: z.string().optional(),
+          partnerId: z.number().optional(), // Admins can specify which partner
         })
       )
       .mutation(async ({ input, ctx }) => {
-        if (!ctx.user.partnerId) {
-          throw new Error("User is not associated with a partner");
+        const isAdminUser = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        const targetPartnerId = input.partnerId || ctx.user.partnerId;
+        
+        if (!targetPartnerId) {
+          throw new Error("Veuillez sélectionner un partenaire pour inviter un membre d'équipe");
         }
 
-        // Check if user has permission to invite
-        const member = await db.getTeamMember(ctx.user.id, ctx.user.partnerId);
-        if (member) {
-          const permissions = member.permissions ? JSON.parse(member.permissions) : null;
-          if (!permissions?.team?.invite) {
-            throw new Error("You don't have permission to invite team members");
+        // Admins can always invite
+        if (!isAdminUser) {
+          // Check if user has permission to invite
+          const member = await db.getTeamMember(ctx.user.id, targetPartnerId);
+          if (member) {
+            const permissions = member.permissions ? JSON.parse(member.permissions) : null;
+            if (!permissions?.team?.invite) {
+              throw new Error("You don't have permission to invite team members");
+            }
+          } else if (ctx.user.role !== "PARTNER_ADMIN") {
+            throw new Error("Only partner admins can invite team members");
           }
-        } else if (ctx.user.role !== "PARTNER_ADMIN") {
-          throw new Error("Only partner admins can invite team members");
         }
 
         return await db.createTeamInvitation({
           email: input.email,
-          partnerId: ctx.user.partnerId,
+          partnerId: targetPartnerId,
           role: input.role,
           permissions: input.customPermissions || null,
           invitedBy: ctx.user.id,
@@ -2863,10 +2875,13 @@ export const appRouter = router({
     cancelInvitation: protectedProcedure
       .input(z.object({ invitationId: z.number() }))
       .mutation(async ({ input, ctx }) => {
-        if (!ctx.user.partnerId) {
+        const isAdminUser = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        const partnerId = ctx.user.partnerId;
+        if (!partnerId && !isAdminUser) {
           throw new Error("User is not associated with a partner");
         }
-        return await db.cancelTeamInvitation(input.invitationId, ctx.user.partnerId);
+        // Admins can cancel any invitation - pass 0 as partnerId to bypass check
+        return await db.cancelTeamInvitation(input.invitationId, partnerId || 0);
       }),
 
     // Update member permissions
@@ -2879,24 +2894,28 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input, ctx }) => {
-        if (!ctx.user.partnerId) {
+        const isAdminUser = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        const partnerId = ctx.user.partnerId;
+        
+        if (!partnerId && !isAdminUser) {
           throw new Error("User is not associated with a partner");
         }
 
-        // Check if user has permission to manage team
-        const member = await db.getTeamMember(ctx.user.id, ctx.user.partnerId);
-        if (member) {
-          const permissions = member.permissions ? JSON.parse(member.permissions) : null;
-          if (!permissions?.team?.manage) {
-            throw new Error("You don't have permission to manage team members");
+        if (!isAdminUser) {
+          const member = await db.getTeamMember(ctx.user.id, partnerId!);
+          if (member) {
+            const permissions = member.permissions ? JSON.parse(member.permissions) : null;
+            if (!permissions?.team?.manage) {
+              throw new Error("You don't have permission to manage team members");
+            }
+          } else if (ctx.user.role !== "PARTNER_ADMIN") {
+            throw new Error("Only partner admins can manage team members");
           }
-        } else if (ctx.user.role !== "PARTNER_ADMIN") {
-          throw new Error("Only partner admins can manage team members");
         }
 
         return await db.updateTeamMemberPermissions({
           id: input.memberId,
-          partnerId: ctx.user.partnerId,
+          partnerId: partnerId || 0,
           role: input.role,
           permissions: input.permissions || null,
         });
@@ -2906,22 +2925,26 @@ export const appRouter = router({
     remove: protectedProcedure
       .input(z.object({ memberId: z.number() }))
       .mutation(async ({ input, ctx }) => {
-        if (!ctx.user.partnerId) {
+        const isAdminUser = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        const partnerId = ctx.user.partnerId;
+        
+        if (!partnerId && !isAdminUser) {
           throw new Error("User is not associated with a partner");
         }
 
-        // Check if user has permission to manage team
-        const member = await db.getTeamMember(ctx.user.id, ctx.user.partnerId);
-        if (member) {
-          const permissions = member.permissions ? JSON.parse(member.permissions) : null;
-          if (!permissions?.team?.manage) {
-            throw new Error("You don't have permission to remove team members");
+        if (!isAdminUser) {
+          const member = await db.getTeamMember(ctx.user.id, partnerId!);
+          if (member) {
+            const permissions = member.permissions ? JSON.parse(member.permissions) : null;
+            if (!permissions?.team?.manage) {
+              throw new Error("You don't have permission to remove team members");
+            }
+          } else if (ctx.user.role !== "PARTNER_ADMIN") {
+            throw new Error("Only partner admins can remove team members");
           }
-        } else if (ctx.user.role !== "PARTNER_ADMIN") {
-          throw new Error("Only partner admins can remove team members");
         }
 
-        return await db.removeTeamMember(input.memberId, ctx.user.partnerId);
+        return await db.removeTeamMember(input.memberId, partnerId || 0);
       }),
 
     // Accept invitation (public route with token)

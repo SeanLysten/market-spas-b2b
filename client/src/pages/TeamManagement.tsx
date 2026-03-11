@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -8,7 +8,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,8 +25,8 @@ import { trpc } from "@/lib/trpc";
 import { useSafeQuery } from "@/hooks/useSafeQuery";
 import { TableSkeleton } from "@/components/TableSkeleton";
 import {
-  Plus, Mail, UserX, Shield, ShieldCheck, Settings2, Users,
-  Trash2, RotateCw, Clock, CheckCircle2, AlertCircle, X, ArrowLeft,
+  Plus, Mail, Shield, ShieldCheck, Settings2, Users,
+  Trash2, Clock, X, ArrowLeft, Building2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -172,16 +171,21 @@ function InviteDialog({
   onOpenChange,
   onInvite,
   isPending,
+  isAdmin,
+  partners,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onInvite: (email: string, role: TeamRole, permissions: string) => void;
+  onInvite: (email: string, role: TeamRole, permissions: string, partnerId?: number) => void;
   isPending: boolean;
+  isAdmin: boolean;
+  partners?: any[];
 }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<TeamRole>("SALES_REP");
   const [permissions, setPermissions] = useState<Record<string, any>>(getDefaultPermissions("SALES_REP"));
   const [showCustom, setShowCustom] = useState(false);
+  const [selectedPartnerId, setSelectedPartnerId] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     if (open) {
@@ -189,6 +193,7 @@ function InviteDialog({
       setRole("SALES_REP");
       setPermissions(getDefaultPermissions("SALES_REP"));
       setShowCustom(false);
+      setSelectedPartnerId(undefined);
     }
   }, [open]);
 
@@ -205,7 +210,6 @@ function InviteDialog({
       [category]: {
         ...prev[category],
         [action]: value,
-        // If enabling edit, also enable view
         ...(action !== "view" && value && prev[category]?.view === false ? { view: true } : {}),
         ...(action !== "view" && value && prev[category]?.view === "none" ? { view: "all" } : {}),
       },
@@ -214,7 +218,11 @@ function InviteDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onInvite(email, role, JSON.stringify(permissions));
+    if (isAdmin && !selectedPartnerId) {
+      toast.error("Veuillez sélectionner un partenaire");
+      return;
+    }
+    onInvite(email, role, JSON.stringify(permissions), selectedPartnerId);
   };
 
   return (
@@ -227,11 +235,41 @@ function InviteDialog({
               Inviter un collaborateur
             </DialogTitle>
             <DialogDescription>
-              Ajoutez un membre à votre équipe avec un rôle et des permissions spécifiques
+              {isAdmin
+                ? "Ajoutez un collaborateur à l'équipe d'un partenaire"
+                : "Ajoutez un membre à votre équipe avec un rôle et des permissions spécifiques"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
+            {/* Partner selection for admins */}
+            {isAdmin && (
+              <div className="space-y-2">
+                <Label htmlFor="invite-partner" className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4" />
+                  Partenaire *
+                </Label>
+                <Select
+                  value={selectedPartnerId?.toString() || ""}
+                  onValueChange={(v) => setSelectedPartnerId(parseInt(v))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez un partenaire..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {partners?.map((p: any) => (
+                      <SelectItem key={p.id} value={p.id.toString()}>
+                        {p.companyName || p.tradeName || `Partenaire #${p.id}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Le collaborateur sera ajouté à l'équipe de ce partenaire
+                </p>
+              </div>
+            )}
+
             {/* Email */}
             <div className="space-y-2">
               <Label htmlFor="invite-email">Email *</Label>
@@ -311,7 +349,7 @@ function InviteDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={isPending || !email}>
+            <Button type="submit" disabled={isPending || !email || (isAdmin && !selectedPartnerId)}>
               {isPending ? (
                 <>
                   <Mail className="w-4 h-4 mr-2 animate-pulse" />
@@ -474,15 +512,35 @@ export default function TeamManagement() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editMember, setEditMember] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [selectedPartnerId, setSelectedPartnerId] = useState<number | undefined>(undefined);
 
   const { data: meData } = trpc.auth.me.useQuery();
   const isAdmin = meData?.role === "SUPER_ADMIN" || meData?.role === "ADMIN";
-  const isOwner = meData?.role === "PARTNER_ADMIN" || meData?.role === "PARTNER" || isAdmin;
+  const isPartnerOwner = meData?.role === "PARTNER_ADMIN" || meData?.role === "PARTNER";
+  const isOwner = isPartnerOwner || isAdmin;
+  const hasPartnerId = !!meData?.partnerId;
 
-  const { data: membersData, isLoading, refetch } = trpc.team.list.useQuery();
+  // Admins: load partner list for the selector
+  const { data: partnersData } = trpc.partners.list.useQuery(
+    { limit: 200, offset: 0 },
+    { enabled: isAdmin }
+  );
+
+  // Determine which partnerId to use for listing
+  const effectivePartnerId = isAdmin
+    ? selectedPartnerId
+    : meData?.partnerId || undefined;
+
+  const { data: membersData, isLoading, refetch } = trpc.team.list.useQuery(
+    effectivePartnerId ? { partnerId: effectivePartnerId } : undefined,
+    { enabled: !!effectivePartnerId }
+  );
   const members = useSafeQuery(membersData);
 
-  const { data: invitationsData, isLoading: invLoading, refetch: refetchInv } = trpc.team.listInvitations.useQuery();
+  const { data: invitationsData, isLoading: invLoading, refetch: refetchInv } = trpc.team.listInvitations.useQuery(
+    effectivePartnerId ? { partnerId: effectivePartnerId } : undefined,
+    { enabled: !!effectivePartnerId }
+  );
   const invitations = useSafeQuery(invitationsData);
 
   const inviteMutation = trpc.team.invite.useMutation();
@@ -490,11 +548,20 @@ export default function TeamManagement() {
   const removeMutation = trpc.team.remove.useMutation();
   const cancelInvMutation = trpc.team.cancelInvitation.useMutation();
 
-  const handleInvite = async (email: string, role: TeamRole, permissions: string) => {
+  const handleInvite = async (email: string, role: TeamRole, permissions: string, partnerId?: number) => {
     try {
-      await inviteMutation.mutateAsync({ email, role, customPermissions: permissions });
+      await inviteMutation.mutateAsync({
+        email,
+        role,
+        customPermissions: permissions,
+        ...(partnerId ? { partnerId } : {}),
+      });
       toast.success("Invitation envoyée avec succès");
       setInviteOpen(false);
+      // If admin invited to a specific partner, switch to that partner's view
+      if (isAdmin && partnerId) {
+        setSelectedPartnerId(partnerId);
+      }
       refetch();
       refetchInv();
     } catch (error: any) {
@@ -535,6 +602,9 @@ export default function TeamManagement() {
 
   const pendingInvitations = invitations?.filter((inv: any) => inv.status === "PENDING") || [];
 
+  // Get selected partner name for display
+  const selectedPartner = partnersData?.find?.((p: any) => p.id === selectedPartnerId);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8">
@@ -550,11 +620,13 @@ export default function TeamManagement() {
                 Mon Équipe
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
-                Gérez les accès de vos collaborateurs
+                {isAdmin
+                  ? "Gérez les équipes des partenaires"
+                  : "Gérez les accès de vos collaborateurs"}
               </p>
             </div>
           </div>
-          {isOwner && !isAdmin && (
+          {isOwner && (
             <Button className="gap-2" onClick={() => setInviteOpen(true)}>
               <Plus className="w-4 h-4" />
               Inviter un collaborateur
@@ -562,164 +634,223 @@ export default function TeamManagement() {
           )}
         </div>
 
-        {/* Members */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Membres de l'équipe</CardTitle>
-            <CardDescription>
-              {members?.length || 0} membre(s) dans votre équipe
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <TableSkeleton rows={4} columns={4} />
-            ) : members && members.length > 0 ? (
-              <div className="space-y-3">
-                {members.map((member: any) => {
-                  const roleLabel = ROLE_LABELS[member.role as TeamRole] || member.role;
-                  const roleColor = ROLE_COLORS[member.role as TeamRole] || "bg-muted text-foreground";
-                  const perms = member.permissions
-                    ? typeof member.permissions === "string"
-                      ? JSON.parse(member.permissions)
-                      : member.permissions
-                    : null;
-
-                  // Count active permissions
-                  let activePerms = 0;
-                  let totalPerms = 0;
-                  if (perms) {
-                    for (const [catKey, cat] of Object.entries(PERMISSION_CATEGORIES)) {
-                      if (catKey === "team" || catKey === "profile") continue;
-                      for (const actKey of Object.keys(cat.actions)) {
-                        totalPerms++;
-                        const val = perms[catKey]?.[actKey];
-                        if (val === true || val === "all" || val === "assigned") activePerms++;
-                      }
-                    }
-                  }
-
-                  return (
-                    <div
-                      key={member.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors gap-3"
-                    >
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <span className="text-sm font-semibold text-primary">
-                            {(member.userName || member.userEmail || "?").charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-semibold text-sm truncate">{member.userName || "—"}</p>
-                          <p className="text-xs text-muted-foreground truncate">{member.userEmail || "—"}</p>
-                          <div className="flex flex-wrap gap-1.5 mt-1.5">
-                            <Badge className={roleColor + " text-[10px]"}>{roleLabel}</Badge>
-                            {perms && (
-                              <Badge variant="outline" className="text-[10px]">
-                                {activePerms}/{totalPerms} permissions
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      {isOwner && member.role !== "OWNER" && (
-                        <div className="flex gap-2 flex-shrink-0">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => { setEditMember(member); setEditOpen(true); }}
-                          >
-                            <Settings2 className="w-3.5 h-3.5 mr-1" />
-                            Permissions
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => handleRemove(member.id)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Users className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-                {isAdmin ? (
-                  <>
-                    <p className="text-muted-foreground">Gestion d'équipe admin</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Pour gérer les équipes des partenaires, rendez-vous dans la section
-                      <a href="/admin/users" className="text-primary hover:underline ml-1">Utilisateurs</a> du panneau admin.
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Cette page est destinée aux comptes partenaires pour gérer leurs collaborateurs internes.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-muted-foreground">Aucun membre dans votre équipe</p>
-                    {isOwner && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Cliquez sur "Inviter un collaborateur" pour ajouter des membres
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Pending Invitations */}
-        {pendingInvitations.length > 0 && (
-          <Card>
-            <CardHeader>
+        {/* Admin: Partner selector */}
+        {isAdmin && (
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Clock className="w-5 h-5 text-amber-500" />
-                Invitations en attente
+                <Building2 className="w-5 h-5" />
+                Sélectionner un partenaire
               </CardTitle>
               <CardDescription>
-                {pendingInvitations.length} invitation(s) en attente de réponse
+                Choisissez un partenaire pour voir et gérer son équipe
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {pendingInvitations.map((inv: any) => (
-                  <div
-                    key={inv.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border bg-card gap-3"
-                  >
-                    <div>
-                      <p className="font-medium text-sm">{inv.email}</p>
-                      <div className="flex gap-1.5 mt-1">
-                        <Badge className={ROLE_COLORS[inv.role as TeamRole] || "bg-muted text-foreground"} >
-                          {ROLE_LABELS[inv.role as TeamRole] || inv.role}
-                        </Badge>
-                        <Badge variant="secondary" className="bg-amber-500/15 text-amber-800 dark:text-amber-400 text-[10px]">
-                          <Clock className="w-3 h-3 mr-1" />
-                          En attente
-                        </Badge>
-                      </div>
-                    </div>
+              <Select
+                value={selectedPartnerId?.toString() || ""}
+                onValueChange={(v) => setSelectedPartnerId(parseInt(v))}
+              >
+                <SelectTrigger className="max-w-md">
+                  <SelectValue placeholder="Sélectionnez un partenaire..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {partnersData?.map?.((p: any) => (
+                    <SelectItem key={p.id} value={p.id.toString()}>
+                      {p.companyName || p.tradeName || `Partenaire #${p.id}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedPartner && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Équipe de <span className="font-medium text-foreground">{selectedPartner.companyName || selectedPartner.tradeName}</span>
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Admin without partner selected */}
+        {isAdmin && !selectedPartnerId && (
+          <Card>
+            <CardContent className="py-12">
+              <div className="text-center">
+                <Building2 className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground">
+                  Sélectionnez un partenaire ci-dessus pour voir et gérer son équipe
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Vous pouvez aussi inviter directement un collaborateur en cliquant sur "Inviter un collaborateur"
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Members - show when partner is selected or user is a partner */}
+        {(effectivePartnerId || (!isAdmin && hasPartnerId)) && (
+          <>
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg">Membres de l'équipe</CardTitle>
+                <CardDescription>
+                  {members?.length || 0} membre(s) dans {isAdmin && selectedPartner ? `l'équipe de ${selectedPartner.companyName || selectedPartner.tradeName}` : "votre équipe"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <TableSkeleton rows={4} columns={4} />
+                ) : members && members.length > 0 ? (
+                  <div className="space-y-3">
+                    {members.map((member: any) => {
+                      const roleLabel = ROLE_LABELS[member.role as TeamRole] || member.role;
+                      const roleColor = ROLE_COLORS[member.role as TeamRole] || "bg-muted text-foreground";
+                      const perms = member.permissions
+                        ? typeof member.permissions === "string"
+                          ? JSON.parse(member.permissions)
+                          : member.permissions
+                        : null;
+
+                      let activePerms = 0;
+                      let totalPerms = 0;
+                      if (perms) {
+                        for (const [catKey, cat] of Object.entries(PERMISSION_CATEGORIES)) {
+                          if (catKey === "team" || catKey === "profile") continue;
+                          for (const actKey of Object.keys(cat.actions)) {
+                            totalPerms++;
+                            const val = perms[catKey]?.[actKey];
+                            if (val === true || val === "all" || val === "assigned") activePerms++;
+                          }
+                        }
+                      }
+
+                      return (
+                        <div
+                          key={member.id}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors gap-3"
+                        >
+                          <div className="flex items-start gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <span className="text-sm font-semibold text-primary">
+                                {(member.userName || member.userEmail || "?").charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-sm truncate">{member.userName || "—"}</p>
+                              <p className="text-xs text-muted-foreground truncate">{member.userEmail || "—"}</p>
+                              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                <Badge className={roleColor + " text-[10px]"}>{roleLabel}</Badge>
+                                {perms && (
+                                  <Badge variant="outline" className="text-[10px]">
+                                    {activePerms}/{totalPerms} permissions
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          {isOwner && member.role !== "OWNER" && (
+                            <div className="flex gap-2 flex-shrink-0">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => { setEditMember(member); setEditOpen(true); }}
+                              >
+                                <Settings2 className="w-3.5 h-3.5 mr-1" />
+                                Permissions
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => handleRemove(member.id)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Users className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground">Aucun membre dans cette équipe</p>
                     {isOwner && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-destructive"
-                        onClick={() => handleCancelInvitation(inv.id)}
-                        disabled={cancelInvMutation.isPending}
-                      >
-                        <X className="w-3.5 h-3.5 mr-1" />
-                        Annuler
-                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Cliquez sur "Inviter un collaborateur" pour ajouter des membres.
+                      </p>
                     )}
                   </div>
-                ))}
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Pending Invitations */}
+            {pendingInvitations.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-amber-500" />
+                    Invitations en attente
+                  </CardTitle>
+                  <CardDescription>
+                    {pendingInvitations.length} invitation(s) en attente de réponse
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {pendingInvitations.map((inv: any) => (
+                      <div
+                        key={inv.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border bg-card gap-3"
+                      >
+                        <div>
+                          <p className="font-medium text-sm">{inv.email}</p>
+                          <div className="flex gap-1.5 mt-1">
+                            <Badge className={ROLE_COLORS[inv.role as TeamRole] || "bg-muted text-foreground"}>
+                              {ROLE_LABELS[inv.role as TeamRole] || inv.role}
+                            </Badge>
+                            <Badge variant="secondary" className="bg-amber-500/15 text-amber-800 dark:text-amber-400 text-[10px]">
+                              <Clock className="w-3 h-3 mr-1" />
+                              En attente
+                            </Badge>
+                          </div>
+                        </div>
+                        {isOwner && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive"
+                            onClick={() => handleCancelInvitation(inv.id)}
+                            disabled={cancelInvMutation.isPending}
+                          >
+                            <X className="w-3.5 h-3.5 mr-1" />
+                            Annuler
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </>
+        )}
+
+        {/* Non-admin without partner */}
+        {!isAdmin && !hasPartnerId && (
+          <Card>
+            <CardContent className="py-12">
+              <div className="text-center">
+                <Users className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground">
+                  Vous n'êtes pas encore associé à un partenaire.
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Contactez votre administrateur pour être rattaché à un compte partenaire.
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -731,6 +862,8 @@ export default function TeamManagement() {
           onOpenChange={setInviteOpen}
           onInvite={handleInvite}
           isPending={inviteMutation.isPending}
+          isAdmin={isAdmin}
+          partners={partnersData as any[]}
         />
 
         {editMember && (
