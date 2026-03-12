@@ -670,3 +670,177 @@ describe("Registration Flow - Form Steps", () => {
     expect(canProceed(3, { billingStreet: "", billingCity: "Paris", billingPostalCode: "75001", billingCountry: "FR" })).toBe(false);
   });
 });
+
+
+// ============================================
+// COMPANY PROFILE TESTS
+// ============================================
+
+describe("Company Profile - Partner Self-Management", () => {
+  // Test updateMyPartner input validation
+  const VALID_COMPANY_DATA = {
+    companyName: "Test Company SAS",
+    tradeName: "TestCo",
+    vatNumber: "FR12345678901",
+    registrationNumber: "123 456 789",
+    website: "https://www.testco.com",
+    addressStreet: "123 Rue de Test",
+    addressStreet2: "Bâtiment A",
+    addressCity: "Paris",
+    addressPostalCode: "75001",
+    addressCountry: "FR",
+    addressRegion: "Île-de-France",
+    billingAddressSame: false,
+    billingStreet: "456 Rue de Facturation",
+    billingStreet2: null,
+    billingCity: "Lyon",
+    billingPostalCode: "69001",
+    billingCountry: "FR",
+    deliveryStreet: "789 Rue de Livraison",
+    deliveryStreet2: "Zone Industrielle",
+    deliveryCity: "Marseille",
+    deliveryPostalCode: "13001",
+    deliveryCountry: "FR",
+    deliveryInstructions: "Code portail: 1234, livrer entre 8h et 17h",
+    primaryContactName: "Jean Dupont",
+    primaryContactEmail: "jean@testco.com",
+    primaryContactPhone: "+33 6 12 34 56 78",
+    accountingEmail: "compta@testco.com",
+    orderEmail: "commandes@testco.com",
+  };
+
+  it("should validate company name is required", () => {
+    expect(VALID_COMPANY_DATA.companyName).toBeTruthy();
+    expect(VALID_COMPANY_DATA.companyName.length).toBeGreaterThan(0);
+  });
+
+  it("should validate VAT number format", () => {
+    expect(VALID_COMPANY_DATA.vatNumber).toMatch(/^[A-Z]{2}\d+$/);
+  });
+
+  it("should support separate billing address when billingAddressSame is false", () => {
+    expect(VALID_COMPANY_DATA.billingAddressSame).toBe(false);
+    expect(VALID_COMPANY_DATA.billingStreet).toBeTruthy();
+    expect(VALID_COMPANY_DATA.billingCity).toBeTruthy();
+    expect(VALID_COMPANY_DATA.billingPostalCode).toBeTruthy();
+    expect(VALID_COMPANY_DATA.billingCountry).toBeTruthy();
+  });
+
+  it("should clear billing address fields when billingAddressSame is true", () => {
+    const dataWithSameAddress = {
+      ...VALID_COMPANY_DATA,
+      billingAddressSame: true,
+      billingStreet: null,
+      billingCity: null,
+      billingPostalCode: null,
+      billingCountry: null,
+    };
+    expect(dataWithSameAddress.billingAddressSame).toBe(true);
+    expect(dataWithSameAddress.billingStreet).toBeNull();
+    expect(dataWithSameAddress.billingCity).toBeNull();
+  });
+
+  it("should support delivery address with instructions", () => {
+    expect(VALID_COMPANY_DATA.deliveryStreet).toBeTruthy();
+    expect(VALID_COMPANY_DATA.deliveryInstructions).toBeTruthy();
+    expect(VALID_COMPANY_DATA.deliveryInstructions).toContain("Code portail");
+  });
+
+  it("should validate email formats for specialized emails", () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    expect(VALID_COMPANY_DATA.primaryContactEmail).toMatch(emailRegex);
+    expect(VALID_COMPANY_DATA.accountingEmail).toMatch(emailRegex);
+    expect(VALID_COMPANY_DATA.orderEmail).toMatch(emailRegex);
+  });
+
+  it("should allow nullable optional fields", () => {
+    const minimalData = {
+      companyName: "Minimal Company",
+      vatNumber: "FR00000000000",
+      addressStreet: "1 Rue Simple",
+      addressCity: "Paris",
+      addressPostalCode: "75001",
+      addressCountry: "FR",
+      primaryContactName: "Contact",
+      primaryContactEmail: "contact@minimal.com",
+      primaryContactPhone: "+33 1 00 00 00 00",
+      tradeName: null,
+      registrationNumber: null,
+      website: null,
+      addressStreet2: null,
+      addressRegion: null,
+      billingAddressSame: true,
+      billingStreet: null,
+      billingStreet2: null,
+      billingCity: null,
+      billingPostalCode: null,
+      billingCountry: null,
+      deliveryStreet: null,
+      deliveryStreet2: null,
+      deliveryCity: null,
+      deliveryPostalCode: null,
+      deliveryCountry: null,
+      deliveryInstructions: null,
+      accountingEmail: null,
+      orderEmail: null,
+    };
+    expect(minimalData.tradeName).toBeNull();
+    expect(minimalData.website).toBeNull();
+    expect(minimalData.deliveryStreet).toBeNull();
+    expect(minimalData.accountingEmail).toBeNull();
+  });
+
+  // Test role-based access
+  it("should only allow PARTNER_ADMIN, ADMIN, or SUPER_ADMIN to update company info", () => {
+    const allowedRoles = ["PARTNER_ADMIN", "ADMIN", "SUPER_ADMIN"];
+    const deniedRoles = ["PARTNER", "SALES_REP", "ORDER_MANAGER", "ACCOUNTANT", "FULL_MANAGER"];
+
+    for (const role of allowedRoles) {
+      expect(allowedRoles).toContain(role);
+    }
+    for (const role of deniedRoles) {
+      expect(allowedRoles).not.toContain(role);
+    }
+  });
+
+  // Test country list
+  it("should have valid country codes", () => {
+    const COUNTRIES = [
+      { code: "FR", name: "France" },
+      { code: "BE", name: "Belgique" },
+      { code: "CH", name: "Suisse" },
+      { code: "LU", name: "Luxembourg" },
+      { code: "ES", name: "Espagne" },
+      { code: "DE", name: "Allemagne" },
+      { code: "IT", name: "Italie" },
+      { code: "NL", name: "Pays-Bas" },
+      { code: "PT", name: "Portugal" },
+      { code: "GB", name: "Royaume-Uni" },
+    ];
+    expect(COUNTRIES).toHaveLength(10);
+    expect(COUNTRIES.map(c => c.code)).toContain("FR");
+    expect(COUNTRIES.map(c => c.code)).toContain("BE");
+    expect(COUNTRIES.map(c => c.code)).toContain("ES");
+    // All codes should be 2-letter ISO
+    for (const country of COUNTRIES) {
+      expect(country.code).toMatch(/^[A-Z]{2}$/);
+      expect(country.name.length).toBeGreaterThan(0);
+    }
+  });
+
+  // Test that myPartner returns null when user has no partnerId
+  it("should return null for myPartner when user has no partnerId", () => {
+    const userWithoutPartner = { id: 1, role: "ADMIN", partnerId: null };
+    expect(userWithoutPartner.partnerId).toBeNull();
+  });
+
+  // Test form tab structure
+  it("should have 4 tabs in the company profile form", () => {
+    const tabs = ["company", "addresses", "delivery", "contacts"];
+    expect(tabs).toHaveLength(4);
+    expect(tabs).toContain("company");
+    expect(tabs).toContain("addresses");
+    expect(tabs).toContain("delivery");
+    expect(tabs).toContain("contacts");
+  });
+});

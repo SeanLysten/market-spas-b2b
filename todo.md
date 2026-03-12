@@ -2565,3 +2565,12 @@
 - [x] Vérifier la cohérence des données entre les différentes pages
 - [x] Corriger les incohérences détectées : 2 utilisateurs PARTNER → PARTNER_ADMIN, 3 utilisateurs sans partnerId identifiés
 - [x] 60 tests vitest passants
+
+## Profil société pour PARTNER_ADMIN
+- [x] Route backend partners.myPartner déjà existante pour récupérer les infos société
+- [x] Route backend partners.updateMyPartner étendue avec tous les champs (billing, delivery, contacts, TVA, SIREN)
+- [x] Page CompanyProfile avec 4 onglets (Entreprise, Adresses, Livraison, Contacts)
+- [x] Bouton "Ma Société" dans le dashboard visible uniquement pour PARTNER_ADMIN
+- [x] Route /company-profile ajoutée dans App.tsx
+- [x] Responsive mobile (grilles adaptatives, bouton save en bas sur mobile)
+- [x] 71 tests vitest passants (dont 12 nouveaux pour le profil société)

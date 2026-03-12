@@ -655,21 +655,48 @@ export const appRouter = router({
     updateMyPartner: protectedProcedure
       .input(
         z.object({
+          // Company info
           companyName: z.string().optional(),
-          tradeName: z.string().optional(),
+          tradeName: z.string().nullable().optional(),
           vatNumber: z.string().optional(),
+          registrationNumber: z.string().nullable().optional(),
+          website: z.string().nullable().optional(),
+          // Primary address
           addressStreet: z.string().optional(),
+          addressStreet2: z.string().nullable().optional(),
           addressCity: z.string().optional(),
           addressPostalCode: z.string().optional(),
           addressCountry: z.string().optional(),
+          addressRegion: z.string().nullable().optional(),
+          // Billing address
+          billingAddressSame: z.boolean().optional(),
+          billingStreet: z.string().nullable().optional(),
+          billingStreet2: z.string().nullable().optional(),
+          billingCity: z.string().nullable().optional(),
+          billingPostalCode: z.string().nullable().optional(),
+          billingCountry: z.string().nullable().optional(),
+          // Delivery address
+          deliveryStreet: z.string().nullable().optional(),
+          deliveryStreet2: z.string().nullable().optional(),
+          deliveryCity: z.string().nullable().optional(),
+          deliveryPostalCode: z.string().nullable().optional(),
+          deliveryCountry: z.string().nullable().optional(),
+          deliveryInstructions: z.string().nullable().optional(),
+          // Contacts
           primaryContactName: z.string().optional(),
           primaryContactEmail: z.string().email().optional(),
           primaryContactPhone: z.string().optional(),
+          accountingEmail: z.string().email().nullable().optional(),
+          orderEmail: z.string().email().nullable().optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
         if (!ctx.user.partnerId) {
           throw new Error("Vous n'êtes pas associé à un partenaire");
+        }
+        // Only PARTNER_ADMIN can update company info
+        if (ctx.user.role !== 'PARTNER_ADMIN' && ctx.user.role !== 'SUPER_ADMIN' && ctx.user.role !== 'ADMIN') {
+          throw new Error("Seul l'administrateur partenaire peut modifier les informations de la société");
         }
         await db.updatePartner(ctx.user.partnerId, input);
         return { success: true };

@@ -26,6 +26,7 @@ import {
   Target,
   UserCog,
   Receipt,
+  Building2,
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -186,6 +187,14 @@ export default function Dashboard() {
                   </span>
                 )}
               </Button>
+              {user?.role === 'PARTNER_ADMIN' && user?.partnerId && (
+                <Link href="/company-profile">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Building2 className="w-4 h-4" />
+                    <span className="hidden sm:inline">Ma Société</span>
+                  </Button>
+                </Link>
+              )}
               {(isOwner || canTeam) && (
                 <Link href="/team">
                   <Button variant="outline" size="sm" className="gap-2">
