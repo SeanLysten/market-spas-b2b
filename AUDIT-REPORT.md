@@ -1,20 +1,21 @@
 # Rapport d'Audit Complet — Market Spas B2B Portal
 
-**Date :** 12 mars 2026
-**Auteur :** Manus AI
+**Date :** 12 mars 2026 (mis à jour)
+**Auteur :** Manus AI (via compétence codebase-audit)
 **Portée :** Audit exhaustif du codebase (Phase 1 — Audit uniquement, aucune modification de code)
+**Méthode :** Scan automatisé `audit-scan.sh` + vérifications manuelles approfondies `deep-checks.md`
 
 ---
 
 ## 1. Résumé Exécutif
 
-Le portail B2B Market Spas est une application complexe de **82 655 lignes de code** réparties sur **265 fichiers TypeScript/TSX**, construite itérativement sur 274 commits. L'audit a identifié un total de **78 problèmes** répartis comme suit :
+Le portail B2B Market Spas est une application complexe de **82 655 lignes de code** réparties sur **265 fichiers TypeScript/TSX**. L'audit a identifié un total de **82 problèmes** répartis comme suit :
 
 | Sévérité | Nombre | Description |
 |----------|--------|-------------|
-| **CRITIQUE** | 4 | Risques de sécurité et composants totalement déconnectés |
-| **MOYEN** | 38 | Code mort, doublons, dépendances inutilisées |
-| **FAIBLE** | 36 | Organisation, nommage, console.log de debug |
+| **CRITIQUE** | 2 | JWT hardcodé dans script racine, AdminSettings déconnecté du backend |
+| **MOYEN** | 42 | 38 fonctions mortes, 10 composants morts, 13 tables potentiellement inutilisées, 4 dépendances inutilisées |
+| **FAIBLE** | 38 | 207 console.log serveur, 57 fichiers racine, 5 tests échouants, nommage |
 
 Le projet souffre principalement d'une **accumulation de code mort** (fonctions db.ts remplacées par sav-db.ts, composants jamais importés), de **fichiers de développement laissés à la racine** (scripts, notes, debug), et de quelques **problèmes de sécurité** (token JWT hardcodé, CSP désactivé). La structure fonctionnelle est globalement saine : les 31 modules sont majoritairement connectés de bout en bout, avec quelques exceptions notables.
 
@@ -98,7 +99,7 @@ Les composants shadcn/ui suivants sont installés mais jamais importés dans le 
 
 > **Note :** `form.tsx` et `item.tsx` sont référencés indirectement par d'autres composants UI, ils ne sont donc pas considérés comme morts.
 
-### 3.3 Fonctions Mortes dans db.ts (22 fonctions)
+### 3.3 Fonctions Mortes dans db.ts et autres fichiers serveur (38 fonctions)
 
 Ces fonctions sont exportées depuis `server/db.ts` mais ne sont appelées nulle part dans le code serveur (ni dans `routers.ts`, ni dans aucun autre fichier serveur hors tests) :
 
@@ -235,7 +236,7 @@ Le composant AdminOrders n'utilise que 2 appels tRPC (`orders.list` et `orders.u
 
 | Problème | Détails |
 |----------|---------|
-| **164 console.log dans le serveur** | Logs de debug qui devraient être remplacés par un logger structuré en production. |
+| **207 console.log dans le serveur** | Logs de debug qui devraient être remplacés par un logger structuré en production. |
 | **15 console.log dans le client** | Logs de debug à nettoyer. |
 | **9 TODO/FIXME dans le code** | Marqueurs de dette technique non résolus. |
 
@@ -310,7 +311,7 @@ Le code utilise principalement l'anglais pour les noms de variables et fonctions
 6. Supprimer `StripePayment.tsx`, `NotificationCenter.tsx` (orphelins)
 7. Supprimer les 4 modules `_core` inutilisés (llm, voiceTranscription, imageGeneration, dataApi)
 8. Supprimer les 7 composants UI inutilisés
-9. Supprimer les 22+ fonctions mortes dans `db.ts`
+9. Supprimer les 38 fonctions mortes dans `db.ts`, `email.ts` et `meta-leads.ts`
 10. Consolider les doublons (`getUnreadNotification*`, `getProductBySku/SKU`)
 
 ### Priorité 3 — Dépendances
@@ -336,7 +337,7 @@ Le code utilise principalement l'anglais pour les noms de variables et fonctions
 
 ### Priorité 6 — Qualité (long terme)
 
-23. Remplacer les 164 `console.log` serveur par un logger structuré (winston/pino)
+23. Remplacer les 207 `console.log` serveur par un logger structuré (winston/pino)
 24. Envisager le découpage de `routers.ts` et `db.ts` en modules par domaine
 25. Résoudre les 9 TODO/FIXME restants dans le code
 
@@ -352,6 +353,21 @@ Le code utilise principalement l'anglais pour les noms de variables et fonctions
 | Fichiers racine | 61+ | ~15 |
 | Dépendances | 87 + 26 | 80 + 25 |
 | `.manus/db/` | 1.8MB | 0 |
+
+---
+
+---
+
+## 11. Tests
+
+Le projet dispose de **56 fichiers de test** et **731 tests** au total. 726 tests passent avec succès, 5 échouent dans 2 fichiers :
+
+| Fichier | Tests échouants | Problème |
+|---------|----------------|----------|
+| lead-routing.test.ts | 1 | parseEmailForLead : extraction email depuis le corps |
+| meta-leads.test.ts | 4 | calculatePartnerScore : scoring partenaire désynchronisé |
+
+Ces échecs indiquent que le code source a évolué sans mise à jour des tests correspondants.
 
 ---
 

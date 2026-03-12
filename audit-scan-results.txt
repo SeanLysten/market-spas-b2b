@@ -1,0 +1,180 @@
+=== CODEBASE AUDIT SCAN ===
+Project: /home/ubuntu/market-spas-b2b
+Date: 2026-03-12T09:25:51Z
+
+## 1. PROJECT STATS
+Total TS/TSX files: 265
+Total lines of code: 82655
+Largest files:
+   5605 /home/ubuntu/market-spas-b2b/server/db.ts
+   5090 /home/ubuntu/market-spas-b2b/server/routers.ts
+   2604 /home/ubuntu/market-spas-b2b/drizzle/schema.ts
+   2303 /home/ubuntu/market-spas-b2b/client/src/pages/admin/AdminLeads.tsx
+   1985 /home/ubuntu/market-spas-b2b/client/src/pages/admin/AdminPartnerMap.tsx
+   1960 /home/ubuntu/market-spas-b2b/server/email.ts
+   1837 /home/ubuntu/market-spas-b2b/client/src/pages/admin/AdminProducts.tsx
+   1616 /home/ubuntu/market-spas-b2b/client/src/pages/admin/AdminSpareParts.tsx
+   1452 /home/ubuntu/market-spas-b2b/client/src/components/InteractivePartnerMap.tsx
+   1437 /home/ubuntu/market-spas-b2b/client/src/pages/ComponentShowcase.tsx
+
+## 2. POTENTIALLY DEAD COMPONENTS
+DEAD: LanguageSwitcher (50 lines) — /home/ubuntu/market-spas-b2b/client/src/components/LanguageSwitcher.tsx
+DEAD: ManusDialog (89 lines) — /home/ubuntu/market-spas-b2b/client/src/components/ManusDialog.tsx
+DEAD: NotificationCenter (176 lines) — /home/ubuntu/market-spas-b2b/client/src/components/NotificationCenter.tsx
+DEAD: ResponsiveTable (139 lines) — /home/ubuntu/market-spas-b2b/client/src/components/ResponsiveTable.tsx
+DEAD: StripePayment (177 lines) — /home/ubuntu/market-spas-b2b/client/src/components/StripePayment.tsx
+DEAD: input-group (168 lines) — /home/ubuntu/market-spas-b2b/client/src/components/ui/input-group.tsx
+DEAD: navigation-menu (168 lines) — /home/ubuntu/market-spas-b2b/client/src/components/ui/navigation-menu.tsx
+DEAD: spinner (16 lines) — /home/ubuntu/market-spas-b2b/client/src/components/ui/spinner.tsx
+DEAD: ComponentShowcase (1437 lines) — /home/ubuntu/market-spas-b2b/client/src/pages/ComponentShowcase.tsx
+DEAD: AdminAfterSalesStats (346 lines) — /home/ubuntu/market-spas-b2b/client/src/pages/admin/AdminAfterSalesStats.tsx
+
+## 3. DUPLICATE FUNCTION NAMES
+DUPLICATE in db.ts: updateGa
+DUPLICATE in google-analytics-oauth.ts: getGa
+DUPLICATE in ga4-api.ts: getGA
+
+## 4. DEAD EXPORTED FUNCTIONS
+DEAD in db.ts: getUsersByPartnerId()
+DEAD in db.ts: getPartnerByVatNumber()
+DEAD in db.ts: generateOrderNumber()
+DEAD in db.ts: createNotification()
+DEAD in db.ts: notifyPartnerUsers()
+DEAD in db.ts: getLowStockProducts()
+DEAD in db.ts: getLowStockVariants()
+DEAD in db.ts: checkAndCreateStockAlerts()
+DEAD in db.ts: getAdminDashboardStats()
+DEAD in db.ts: getRecentActivity()
+DEAD in db.ts: getLeadsByPartnerId()
+DEAD in db.ts: getPaymentsByOrderId()
+DEAD in db.ts: cancelOrder()
+DEAD in db.ts: createPartialShipment()
+DEAD in db.ts: processPartialRefund()
+DEAD in db.ts: createAfterSalesService()
+DEAD in db.ts: getAfterSalesServices()
+DEAD in db.ts: getAfterSalesServiceById()
+DEAD in db.ts: updateAfterSalesServiceStatus()
+DEAD in db.ts: addAfterSalesNote()
+DEAD in db.ts: getAfterSalesStats()
+DEAD in db.ts: getAfterSalesStatsByPartner()
+DEAD in db.ts: getAfterSalesWeeklyStats()
+DEAD in db.ts: addAfterSalesStatusHistory()
+DEAD in db.ts: getAfterSalesAssignmentHistory()
+DEAD in db.ts: addAfterSalesAssignmentHistory()
+DEAD in db.ts: addResponseTemplate()
+DEAD in db.ts: deleteExpiredInvitationTokens()
+DEAD in email.ts: sendEmail()
+DEAD in email.ts: sendOrderConfirmationEmail()
+DEAD in email.ts: sendOrderStatusUpdateEmail()
+DEAD in email.ts: sendLowStockAlertEmail()
+DEAD in email.ts: sendNewPartnerRegistrationEmail()
+DEAD in email.ts: sendWelcomePartnerEmail()
+DEAD in meta-leads.ts: distributeLeadToPartner()
+DEAD in meta-leads.ts: getPartnerLeadStats()
+DEAD in meta-leads.ts: getAdminLeadStats()
+DEAD in meta-leads.ts: syncMetaCampaignStats()
+
+## 5. SECURITY SCAN
+Hardcoded secrets:
+
+JWT tokens in code:
+/home/ubuntu/market-spas-b2b/test-reassign.mjs:6:    'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTczNjQzMTg5NywiZXhwIjoxNzM5MDIzODk3fQ.mKCLCvxhvL6WYdCz0AwUBmJwEOXPPCrIvCLVFv8DfzI'
+
+Passwords/secrets logged:
+/home/ubuntu/market-spas-b2b/server/email.ts:1478:      console.error(`[Email] Error sending password reset to ${email}:`, error);
+/home/ubuntu/market-spas-b2b/server/email.ts:1482:    console.log(`[Email] Password reset sent to ${email}:`, data?.id);
+/home/ubuntu/market-spas-b2b/server/email.ts:1485:    console.error(`[Email] Exception sending password reset to ${email}:`, error);
+/home/ubuntu/market-spas-b2b/server/routers.ts:266:          console.error(`[Auth] Failed to send password reset email to ${user.email}:`, emailResult.error);
+/home/ubuntu/market-spas-b2b/server/email-reset-password.test.ts:12:    console.log('[Test] Password reset email result:', result);
+
+CSP disabled:
+/home/ubuntu/market-spas-b2b/server/_core/index.ts:54:    contentSecurityPolicy: false, // Disable CSP to allow Vite/React to work
+
+Console.log count — server: 207, client: 15
+
+## 6. UNUSED UI COMPONENTS
+UNUSED UI: button-group
+UNUSED UI: chart
+UNUSED UI: empty
+UNUSED UI: field
+UNUSED UI: form
+UNUSED UI: input-group
+UNUSED UI: item
+UNUSED UI: kbd
+UNUSED UI: navigation-menu
+UNUSED UI: spinner
+
+## 7. ROOT FILE CLUTTER
+  audit-leads.mjs
+  check-user.mjs
+  check-users.mjs
+  extract-leads.mjs
+  get-partners.mjs
+  import-candidates.mjs
+  import_contacts.mjs
+  run-import.mjs
+  seed-demo-data.mjs
+  seed-resources.mjs
+  seed-variants.mjs
+  setup-leadgen-webhook.mjs
+  test-reassign.mjs
+  update-password.mjs
+  AUDIT-PAGES.md
+  GOOGLE_ADS_DEVELOPER_TOKEN_GUIDE.md
+  GUIDE-AUTOMATISATION-ARRIVAGES.md
+  GUIDE-MAKE-INTEGRATION.md
+  GUIDE-PREFERENCES-NOTIFICATION.md
+  PLAN-FINALISATION.md
+  RAPPORT-NOTIFICATIONS-WEBSOCKET.md
+  RESEND_SETUP_GUIDE.md
+  SIMULATION_REPORT.md
+  STYLE_GUIDE.md
+  ZAPIER_MAKE_INTEGRATION.md
+  audit-fonctionnalites.md
+  audit-remaining-tasks.md
+  audit-results.md
+  b2b-analysis-todo.md
+  b2b-features-research.md
+  dashboard-bug-analysis.md
+  facebook-app-settings.md
+  fb-advanced-settings.md
+  fb-login-business-docs.md
+  fb-login-settings-status.md
+  fb-settings-general.md
+  meta-app-creation-notes.md
+  meta-app-info.md
+  meta-apps-audit.md
+  meta-config-status.md
+  meta-oauth-audit.md
+  meta-oauth-config-state.md
+  meta-oauth-debug.md
+  meta-oauth-diagnostic.md
+  meta-oauth-issues.md
+  mobile-adaptation-todo.md
+  oauth-flow-analysis.md
+  redirect-error-analysis.md
+  research-roles-b2b.md
+  SHOPIFY_FORM_CODE.txt
+  SHOPIFY_FORM_FINAL.txt
+  audit-scan-results.txt
+  debug-oauth-config.txt
+  research-google-ads.txt
+  add-variants-tables.sql
+  SHOPIFY_FORM_FINAL.liquid
+  SHOPIFY_FORM_UPDATED.liquid
+Total non-config root files: 57
+
+## 8. tRPC ROUTE COVERAGE
+Backend routes: 26
+Frontend tRPC calls (unique): 252
+
+## 9. POTENTIALLY UNUSED DEPENDENCIES
+UNUSED: @aws-sdk/client-s3
+UNUSED: @aws-sdk/s3-request-presigner
+UNUSED: @hookform/resolvers
+UNUSED: @types/multer
+UNUSED: framer-motion
+UNUSED: jsonwebtoken
+UNUSED: tailwindcss-animate
+
+=== SCAN COMPLETE ===
