@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS product_variants (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  productId INT NOT NULL,\n  sku VARCHAR(100) NOT NULL UNIQUE,\n  name VARCHAR(255) NOT NULL,\n  priceAdjustmentHT DECIMAL(10,2) DEFAULT 0.00,\n  stockQuantity INT DEFAULT 0,\n  isActive BOOLEAN DEFAULT TRUE,\n  isDefault BOOLEAN DEFAULT FALSE,\n  sortOrder INT DEFAULT 0,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  FOREIGN KEY (productId) REFERENCES products(id) ON DELETE CASCADE,\n  INDEX idx_product_id (productId),\n  INDEX idx_sku (sku)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute CREATE TABLE IF NOT EXISTS product_variants (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  productId INT NOT NULL,\n  sku VARCHAR(100) NOT NULL UNIQUE,\n  name VARCHAR(255) NOT NULL,\n  priceAdjustmentHT DECIMAL(10,2) DEFAULT 0.00,\n  stockQuantity INT DEFAULT 0,\n  isActive BOOLEAN DEFAULT TRUE,\n  isDefault BOOLEAN DEFAULT FALSE,\n  sortOrder INT DEFAULT 0,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  FOREIGN KEY (productId) REFERENCES products(id) ON DELETE CASCADE,\n  INDEX idx_product_id (productId),\n  INDEX idx_sku (sku)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 60
-}

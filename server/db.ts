@@ -101,13 +101,6 @@ export async function getUserById(id: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function getUsersByPartnerId(partnerId: number) {
-  const db = await getDb();
-  if (!db) return [];
-
-  return await db.select().from(users).where(eq(users.partnerId, partnerId));
-}
-
 // ============================================
 // PARTNER QUERIES
 // ============================================
@@ -117,14 +110,6 @@ export async function getPartnerById(id: number) {
   if (!db) return undefined;
 
   const result = await db.select().from(partners).where(eq(partners.id, id)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
-}
-
-export async function getPartnerByVatNumber(vatNumber: string) {
-  const db = await getDb();
-  if (!db) return undefined;
-
-  const result = await db.select().from(partners).where(eq(partners.vatNumber, vatNumber)).limit(1);
   return result.length > 0 ? result[0] : undefined;
 }
 
@@ -631,7 +616,6 @@ export async function deactivateUsersByPartnerId(partnerId: number): Promise<num
   const linkedUsers = await db.select({ id: users.id }).from(users).where(and(eq(users.partnerId, partnerId), eq(users.isActive, true)));
   if (linkedUsers.length > 0) {
     await db.update(users).set({ isActive: false }).where(and(eq(users.partnerId, partnerId), eq(users.isActive, true)));
-    console.log(`[Cascade] Deactivated ${linkedUsers.length} user(s) for partner #${partnerId}`);
   }
   return linkedUsers.length;
 }
@@ -647,7 +631,6 @@ export async function reactivateUsersByPartnerId(partnerId: number): Promise<num
   const linkedUsers = await db.select({ id: users.id }).from(users).where(and(eq(users.partnerId, partnerId), eq(users.isActive, false)));
   if (linkedUsers.length > 0) {
     await db.update(users).set({ isActive: true }).where(and(eq(users.partnerId, partnerId), eq(users.isActive, false)));
-    console.log(`[Cascade] Reactivated ${linkedUsers.length} user(s) for partner #${partnerId}`);
   }
   return linkedUsers.length;
 }
@@ -733,11 +716,9 @@ export async function updateProduct(id: number, data: Partial<{
 
   // Guard: skip update if no fields to update
   if (Object.keys(updateData).length === 0) {
-    console.log(`[updateProduct] Skipping empty update for product ${id}`);
     return;
   }
 
-  console.log(`[updateProduct] Updating product ${id} with fields: ${Object.keys(updateData).join(', ')}`);
   await db.update(products).set(updateData).where(eq(products.id, id));
 }
 
@@ -1330,7 +1311,6 @@ export async function deletePartner(id: number): Promise<{ reassignedTo?: { part
   );
 
   if (nearest) {
-    console.log(`[DeletePartner] Réattribution au partenaire le plus proche: ${nearest.partnerName} (ID ${nearest.partnerId}, ${nearest.distanceKm} km)`);
     
     // 1. Transférer les territoires au partenaire le plus proche
     // Vérifier les doublons (le partenaire cible peut déjà avoir certains territoires)
@@ -1370,7 +1350,6 @@ export async function deletePartner(id: number): Promise<{ reassignedTo?: { part
     result.reassignedTo = nearest;
   } else {
     // Aucun partenaire proche trouvé, supprimer les territoires et désassigner les leads
-    console.log(`[DeletePartner] Aucun partenaire proche trouvé, suppression des territoires et désassignation des leads`);
     await db.delete(partnerTerritories).where(eq(partnerTerritories.partnerId, id));
     await db.update(leads)
       .set({ assignedPartnerId: null, assignmentReason: 'partner_deleted' })
@@ -1381,12 +1360,10 @@ export async function deletePartner(id: number): Promise<{ reassignedTo?: { part
   const deactivatedCount = await deactivateUsersByPartnerId(id);
   // Dissocier les utilisateurs du partenaire supprimé
   await db.update(users).set({ partnerId: null }).where(eq(users.partnerId, id));
-  console.log(`[DeletePartner] ${deactivatedCount} utilisateur(s) désactivé(s) et dissocié(s) du partenaire #${id}`);
 
   // 5. Supprimer le partenaire
   await db.delete(partners).where(eq(partners.id, id));
   
-  console.log(`[DeletePartner] Partenaire ${deletedPartner.companyName} (ID ${id}) supprimé. Territoires transférés: ${result.territoriesTransferred}, Leads réassignés: ${result.leadsReassigned}`);
   return result;
 }
 
@@ -1397,33 +1374,6 @@ export async function deletePartner(id: number): Promise<{ reassignedTo?: { part
 // ============================================
 
 import { orderItems } from "../drizzle/schema";
-
-export async function generateOrderNumber(): Promise<string> {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  const now = new Date();
-  const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
-  
-  // Get the count of orders created today
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-  
-  const result = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(orders)
-    .where(
-      and(
-        sql`${orders.createdAt} >= ${startOfDay}`,
-        sql`${orders.createdAt} < ${endOfDay}`
-      )
-    );
-  
-  const count = (result[0]?.count || 0) + 1;
-  const sequence = count.toString().padStart(4, "0");
-  
-  return `CMD-${dateStr}-${sequence}`;
-}
 
 export interface CreateOrderInput {
   partnerId: number;
@@ -1710,27 +1660,6 @@ export async function getUnreadNotificationCount(userId: number) {
 
 type NotificationType = "ORDER_CREATED" | "ORDER_STATUS_CHANGED" | "PAYMENT_RECEIVED" | "PAYMENT_FAILED" | "INVOICE_READY" | "STOCK_LOW" | "NEW_PARTNER" | "PARTNER_APPROVED" | "NEW_RESOURCE" | "SYSTEM_ALERT";
 
-export async function createNotification(data: {
-  userId: number;
-  type: NotificationType;
-  title: string;
-  message: string;
-  linkUrl?: string;
-  linkText?: string;
-}) {
-  const db = await getDb();
-  if (!db) return;
-
-  await db.insert(notifications).values({
-    userId: data.userId,
-    type: data.type,
-    title: data.title,
-    message: data.message,
-    linkUrl: data.linkUrl || null,
-    linkText: data.linkText || null,
-  });
-}
-
 // Helper to notify all admins
 export async function notifyAdmins(data: {
   type: NotificationType;
@@ -1762,286 +1691,6 @@ export async function notifyAdmins(data: {
       linkText: data.linkText,
     });
   }
-}
-
-// Helper to notify partner users
-export async function notifyPartnerUsers(partnerId: number, data: {
-  type: NotificationType;
-  title: string;
-  message: string;
-  linkUrl?: string;
-  linkText?: string;
-}) {
-  const db = await getDb();
-  if (!db) return;
-
-  const partnerUsers = await db
-    .select()
-    .from(users)
-    .where(eq(users.partnerId, partnerId));
-
-  for (const user of partnerUsers) {
-    await createNotification({
-      userId: user.id,
-      ...data,
-    });
-  }
-}
-
-
-// ============================================
-// STOCK ALERTS
-// ============================================
-
-const LOW_STOCK_THRESHOLD = 5;
-
-export async function getLowStockProducts(threshold: number = LOW_STOCK_THRESHOLD) {
-  const db = await getDb();
-  if (!db) return [];
-
-  const result = await db
-    .select()
-    .from(products)
-    .where(
-      and(
-        lte(products.stockQuantity, threshold),
-        eq(products.isActive, true)
-      )
-    )
-    .orderBy(asc(products.stockQuantity));
-
-  return result;
-}
-
-export async function getLowStockVariants(threshold: number = LOW_STOCK_THRESHOLD) {
-  const db = await getDb();
-  if (!db) return [];
-
-  const result = await db
-    .select({
-      variant: productVariants,
-      product: products,
-    })
-    .from(productVariants)
-    .innerJoin(products, eq(productVariants.productId, products.id))
-    .where(
-      and(
-        lte(productVariants.stockQuantity, threshold),
-        eq(productVariants.isActive, true)
-      )
-    )
-    .orderBy(asc(productVariants.stockQuantity));
-
-  return result;
-}
-
-export async function checkAndCreateStockAlerts() {
-  const db = await getDb();
-  if (!db) return { created: 0, products: [] };
-
-  const lowStockProducts = await getLowStockProducts();
-  const lowStockVariants = await getLowStockVariants();
-  
-  const alerts: { name: string; sku: string; stock: number; type: string }[] = [];
-
-  // Create notifications for low stock products
-  for (const product of lowStockProducts) {
-    alerts.push({
-      name: product.name,
-      sku: product.sku,
-      stock: product.stockQuantity || 0,
-      type: 'product',
-    });
-  }
-
-  // Create notifications for low stock variants
-  for (const { variant, product } of lowStockVariants) {
-    alerts.push({
-      name: `${product.name} - ${variant.name}`,
-      sku: variant.sku,
-      stock: variant.stockQuantity || 0,
-      type: 'variant',
-    });
-  }
-
-  return { created: alerts.length, products: alerts };
-}
-
-// ============================================
-// ADMIN DASHBOARD STATS
-// ============================================
-
-export async function getAdminDashboardStats() {
-  const db = await getDb();
-  if (!db) return null;
-
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-
-  // Total partners
-  const totalPartnersResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(partners);
-  const totalPartners = totalPartnersResult[0]?.count || 0;
-
-  // Active partners (approved)
-  const activePartnersResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(partners)
-    .where(eq(partners.status, 'APPROVED'));
-  const activePartners = activePartnersResult[0]?.count || 0;
-
-  // Pending partners
-  const pendingPartnersResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(partners)
-    .where(eq(partners.status, 'PENDING'));
-  const pendingPartners = pendingPartnersResult[0]?.count || 0;
-
-  // Total products
-  const totalProductsResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(products)
-    .where(eq(products.isActive, true));
-  const totalProducts = totalProductsResult[0]?.count || 0;
-
-  // Low stock products count
-  const lowStockResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(products)
-    .where(
-      and(
-        lte(products.stockQuantity, LOW_STOCK_THRESHOLD),
-        eq(products.isActive, true)
-      )
-    );
-  const lowStockCount = lowStockResult[0]?.count || 0;
-
-  // Total orders this month
-  const ordersThisMonthResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(orders)
-    .where(gte(orders.createdAt, startOfMonth));
-  const ordersThisMonth = ordersThisMonthResult[0]?.count || 0;
-
-  // Total orders last month
-  const ordersLastMonthResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(orders)
-    .where(
-      and(
-        gte(orders.createdAt, startOfLastMonth),
-        lte(orders.createdAt, endOfLastMonth)
-      )
-    );
-  const ordersLastMonth = ordersLastMonthResult[0]?.count || 0;
-
-  // Revenue this month
-  const revenueThisMonthResult = await db
-    .select({ total: sql<number>`COALESCE(SUM(total_ttc), 0)` })
-    .from(orders)
-    .where(
-      and(
-        gte(orders.createdAt, startOfMonth),
-        sql`status != 'CANCELLED'`
-      )
-    );
-  const revenueThisMonth = Number(revenueThisMonthResult[0]?.total || 0);
-
-  // Revenue last month
-  const revenueLastMonthResult = await db
-    .select({ total: sql<number>`COALESCE(SUM(total_ttc), 0)` })
-    .from(orders)
-    .where(
-      and(
-        gte(orders.createdAt, startOfLastMonth),
-        lte(orders.createdAt, endOfLastMonth),
-        sql`status != 'CANCELLED'`
-      )
-    );
-  const revenueLastMonth = Number(revenueLastMonthResult[0]?.total || 0);
-
-  // Pending orders
-  const pendingOrdersResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(orders)
-    .where(eq(orders.status, 'PENDING_APPROVAL'));
-  const pendingOrders = pendingOrdersResult[0]?.count || 0;
-
-  return {
-    partners: {
-      total: totalPartners,
-      active: activePartners,
-      pending: pendingPartners,
-    },
-    products: {
-      total: totalProducts,
-      lowStock: lowStockCount,
-    },
-    orders: {
-      thisMonth: ordersThisMonth,
-      lastMonth: ordersLastMonth,
-      pending: pendingOrders,
-      growth: ordersLastMonth > 0 
-        ? ((ordersThisMonth - ordersLastMonth) / ordersLastMonth * 100).toFixed(1)
-        : '0',
-    },
-    revenue: {
-      thisMonth: revenueThisMonth,
-      lastMonth: revenueLastMonth,
-      growth: revenueLastMonth > 0 
-        ? ((revenueThisMonth - revenueLastMonth) / revenueLastMonth * 100).toFixed(1)
-        : '0',
-    },
-  };
-}
-
-// ============================================
-// ACTIVITY LOGS
-// ============================================
-
-export async function getRecentActivity(limit: number = 20) {
-  const db = await getDb();
-  if (!db) return [];
-
-  // Get recent orders
-  const recentOrders = await db
-    .select({
-      id: orders.id,
-      type: sql<string>`'order'`,
-      title: sql<string>`CONCAT('Commande #', order_number)`,
-      description: sql<string>`CONCAT('Statut: ', status)`,
-      createdAt: orders.createdAt,
-    })
-    .from(orders)
-    .orderBy(desc(orders.createdAt))
-    .limit(limit);
-
-  // Get recent partner registrations
-  const recentPartners = await db
-    .select({
-      id: partners.id,
-      type: sql<string>`'partner'`,
-      title: sql<string>`CONCAT('Nouveau partenaire: ', company_name)`,
-      description: sql<string>`CONCAT('Statut: ', status)`,
-      createdAt: partners.createdAt,
-    })
-    .from(partners)
-    .orderBy(desc(partners.createdAt))
-    .limit(limit);
-
-  // Combine and sort by date
-  const combined = [...recentOrders, ...recentPartners]
-    .sort((a, b) => {
-      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return dateB - dateA;
-    })
-    .slice(0, limit);
-
-  return combined;
 }
 
 
@@ -2350,19 +1999,6 @@ export async function getLeadById(id: number) {
   return result[0] || null;
 }
 
-export async function getLeadsByPartnerId(partnerId: number) {
-  const db = await getDb();
-  if (!db) return [];
-
-  return db.select()
-    .from(leads)
-    .where(and(
-      eq(leads.assignedPartnerId, partnerId),
-      eq(leads.leadType, 'VENTE' as any)
-    ))
-    .orderBy(desc(leads.receivedAt), desc(leads.id));
-}
-
 export async function createLead(data: {
   metaLeadgenId?: string;
   firstName?: string;
@@ -2563,142 +2199,6 @@ export async function getPaymentTransactionByStripeId(stripePaymentIntentId: str
     .limit(1);
 
   return result[0] || null;
-}
-
-export async function getPaymentsByOrderId(orderId: number) {
-  const db = await getDb();
-  if (!db) return [];
-
-  return await db
-    .select()
-    .from(payments)
-    .where(eq(payments.orderId, orderId))
-    .orderBy(desc(payments.createdAt));
-}
-
-
-// ============================================
-// ADVANCED ORDER MANAGEMENT
-// ============================================
-
-/**
- * Cancel an order and restore stock
- */
-export async function cancelOrder(orderId: number, reason?: string) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  // Get order with items
-  const order = await getOrderWithItems(orderId);
-  if (!order) throw new Error(`Order ${orderId} not found`);
-
-  // Restore stock for all items
-  for (const item of order.items) {
-    if (item.variantId) {
-      await db
-        .update(productVariants)
-        .set({
-          stockQuantity: sql`${productVariants.stockQuantity} + ${item.quantity}`,
-        })
-        .where(eq(productVariants.id, item.variantId));
-    }
-  }
-
-  // Update order status to CANCELLED
-  const updateData: any = { status: "CANCELLED" };
-  if (reason) {
-    updateData.internalNotes = sql`CONCAT(COALESCE(${orders.internalNotes}, ''), '\nAnnulation: ', ${reason})`;
-  }
-  await db.update(orders).set(updateData).where(eq(orders.id, orderId));
-
-  return { success: true, message: "Commande annulée et stock restauré" };
-}
-
-/**
- * Create partial shipment for an order
- */
-export async function createPartialShipment(data: {
-  orderId: number;
-  items: Array<{ orderItemId: number; quantity: number }>;
-  trackingNumber?: string;
-  carrier?: string;
-  notes?: string;
-}) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  // TODO: Create shipments table in schema if needed
-  // For now, we'll just update order status and add a note
-
-  const shipmentNote = `Expédition partielle: ${data.items.length} articles\n${data.trackingNumber ? `Tracking: ${data.trackingNumber}` : ""}\n${data.carrier ? `Transporteur: ${data.carrier}` : ""}\n${data.notes || ""}`;
-
-  await db
-    .update(orders)
-    .set({
-      status: "SHIPPED",
-      shippedAt: new Date(),
-      trackingNumber: data.trackingNumber || null,
-      shippingCarrier: data.carrier || null,
-      internalNotes: sql`CONCAT(COALESCE(${orders.internalNotes}, ''), '\n', ${shipmentNote})`,
-    })
-    .where(eq(orders.id, data.orderId));
-
-  return { success: true, message: "Expédition partielle enregistrée" };
-}
-
-/**
- * Process partial refund for an order
- * TODO: Fix TypeScript errors with payments table schema
- */
-export async function processPartialRefund(data: {
-  orderId: number;
-  amount: number;
-  reason: string;
-  items?: Array<{ orderItemId: number; quantity: number }>;
-}): Promise<{ success: boolean; message: string }> {
-  // Temporarily disabled due to TypeScript schema issues
-  return { success: false, message: "Feature temporarily disabled" };
-  /*
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  const order = await getOrderById(data.orderId);
-  if (!order) throw new Error(`Order ${data.orderId} not found`);
-
-  // Record refund transaction
-  await db.insert(payments).values({
-    partnerId: order.partnerId,
-    orderId: data.orderId,
-    amount: (-data.amount).toString(),
-    currency: "EUR",
-    method: "REFUND",
-    status: "COMPLETED",
-    paidAt: new Date(),
-    refundReason: data.reason,
-  });
-
-  // If items are specified, restore their stock
-  if (data.items && data.items.length > 0) {
-    for (const item of data.items) {
-      const orderItem = await db
-        .select()
-        .from(sql`order_items`)
-        .where(sql`id = ${item.orderItemId}`)
-        .limit(1);
-
-      if (orderItem[0] && orderItem[0].productVariantId) {
-        await db
-          .update(productVariants)
-          .set({
-            stockQuantity: sql`${productVariants.stockQuantity} + ${item.quantity}`,
-          })
-          .where(eq(productVariants.id, orderItem[0].productVariantId));
-      }
-    }
-  }
-
-  return { success: true, message: "Remboursement partiel traité" };
-  */
 }
 
 
@@ -3906,474 +3406,6 @@ export async function addReturnNote(returnId: number, note: string, isAdmin: boo
   return true;
 }
 
-// ============================================
-// AFTER-SALES SERVICE (SAV)
-// ============================================
-
-export async function createAfterSalesService(data: {
-  partnerId: number;
-  productId?: number;
-  serialNumber: string;
-  issueType: string;
-  description: string;
-  urgency: string;
-  customerName?: string;
-  customerPhone?: string;
-  customerEmail?: string;
-  customerAddress?: string;
-  installationDate?: string;
-  media?: Array<{ url: string; key: string; type: "IMAGE" | "VIDEO"; description?: string }>;
-}) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  const { afterSalesServices, afterSalesMedia } = await import("../drizzle/schema");
-  
-  // Generate unique ticket number
-  const ticketNumber = `SAV-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-  
-  // Create service
-  const [result] = await db.insert(afterSalesServices).values({
-    ticketNumber,
-    partnerId: data.partnerId,
-    productId: data.productId,
-    serialNumber: data.serialNumber,
-    issueType: data.issueType as any,
-    description: data.description,
-    urgency: data.urgency as any,
-    customerName: data.customerName,
-    customerPhone: data.customerPhone,
-    customerEmail: data.customerEmail,
-    customerAddress: data.customerAddress,
-    installationDate: data.installationDate ? new Date(data.installationDate) : undefined,
-  });
-  
-  const serviceId = Number(result.insertId);
-  
-  // Create media entries
-  if (data.media && data.media.length > 0) {
-    await db.insert(afterSalesMedia).values(
-      data.media.map((m) => ({
-        serviceId,
-        mediaUrl: m.url,
-        mediaKey: m.key,
-        mediaType: m.type,
-        description: m.description,
-      }))
-    );
-  }
-  
-  return { serviceId, ticketNumber };
-}
-
-export async function getAfterSalesServices(filters?: {
-  partnerId?: number;
-  status?: string;
-  urgency?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  customerName?: string;
-  orderBy?: string;
-  orderDirection?: string;
-}) {
-  const db = await getDb();
-  if (!db) return [];
-  
-  const { afterSalesServices } = await import("../drizzle/schema");
-  
-  let query = db
-    .select({
-      service: afterSalesServices,
-      partner: partners,
-      product: products,
-    })
-    .from(afterSalesServices)
-    .leftJoin(partners, eq(afterSalesServices.partnerId, partners.id))
-    .leftJoin(products, eq(afterSalesServices.productId, products.id));
-  
-  const conditions = [];
-  if (filters?.partnerId) {
-    conditions.push(eq(afterSalesServices.partnerId, filters.partnerId));
-  }
-  
-  if (filters?.status) {
-    conditions.push(eq(afterSalesServices.status, filters.status as any));
-  }
-  
-  if (filters?.urgency) {
-    conditions.push(eq(afterSalesServices.urgency, filters.urgency as any));
-  }
-  
-  if (filters?.dateFrom) {
-    conditions.push(gte(afterSalesServices.createdAt, new Date(filters.dateFrom)));
-  }
-  
-  if (filters?.dateTo) {
-    const endDate = new Date(filters.dateTo);
-    endDate.setHours(23, 59, 59, 999);
-    conditions.push(lte(afterSalesServices.createdAt, endDate));
-  }
-  
-  if (filters?.customerName) {
-    conditions.push(like(afterSalesServices.customerName, `%${filters.customerName}%`));
-  }
-  
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
-  }
-  
-  // Apply sorting
-  if (filters?.orderBy && filters?.orderDirection) {
-    const column = filters.orderBy === 'createdAt' ? afterSalesServices.createdAt :
-                   filters.orderBy === 'status' ? afterSalesServices.status :
-                   filters.orderBy === 'urgency' ? afterSalesServices.urgency :
-                   afterSalesServices.createdAt;
-    
-    query = (filters.orderDirection === 'asc' ? query.orderBy(asc(column)) : query.orderBy(desc(column))) as any;
-  } else {
-    // Default sort by createdAt desc
-    query = query.orderBy(desc(afterSalesServices.createdAt)) as any;
-  }
-  
-  const results = await query;
-  return results;
-}
-
-export async function getAfterSalesServiceById(serviceId: number) {
-  const db = await getDb();
-  if (!db) return null;
-  
-  const { afterSalesServices, afterSalesMedia, afterSalesNotes } = await import("../drizzle/schema");
-  
-  const [serviceData] = await db
-    .select({
-      service: afterSalesServices,
-      partner: partners,
-      product: products,
-    })
-    .from(afterSalesServices)
-    .leftJoin(partners, eq(afterSalesServices.partnerId, partners.id))
-    .leftJoin(products, eq(afterSalesServices.productId, products.id))
-    .where(eq(afterSalesServices.id, serviceId));
-  
-  if (!serviceData) return null;
-  
-  // Get media
-  const media = await db
-    .select()
-    .from(afterSalesMedia)
-    .where(eq(afterSalesMedia.serviceId, serviceId));
-  
-  // Get notes with user info
-  const notes = await db
-    .select({
-      note: afterSalesNotes,
-      user: users,
-    })
-    .from(afterSalesNotes)
-    .leftJoin(users, eq(afterSalesNotes.userId, users.id))
-    .where(eq(afterSalesNotes.serviceId, serviceId))
-    .orderBy(afterSalesNotes.createdAt);
-  
-  return {
-    ...serviceData,
-    media,
-    notes,
-  };
-}
-
-export async function updateAfterSalesServiceStatus(
-  serviceId: number,
-  status: string,
-  updates?: {
-    assignedTechnicianId?: number;
-    resolutionNotes?: string;
-  }
-) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  const { afterSalesServices } = await import("../drizzle/schema");
-  
-  const updateData: any = {
-    status: status as any,
-    updatedAt: new Date(),
-  };
-  
-  if (updates?.assignedTechnicianId) {
-    updateData.assignedTechnicianId = updates.assignedTechnicianId;
-    updateData.assignedAt = new Date();
-  }
-  
-  if (updates?.resolutionNotes) {
-    updateData.resolutionNotes = updates.resolutionNotes;
-  }
-  
-  // Set timestamp based on status
-  if (status === "RESOLVED") {
-    updateData.resolvedAt = new Date();
-  } else if (status === "CLOSED") {
-    updateData.closedAt = new Date();
-  }
-  
-  await db
-    .update(afterSalesServices)
-    .set(updateData)
-    .where(eq(afterSalesServices.id, serviceId));
-  
-  return true;
-}
-
-export async function addAfterSalesNote(
-  serviceId: number,
-  userId: number,
-  note: string,
-  isInternal: boolean
-) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  const { afterSalesNotes } = await import("../drizzle/schema");
-  
-  await db.insert(afterSalesNotes).values({
-    serviceId,
-    userId,
-    note,
-    isInternal,
-  });
-  
-  return true;
-}
-
-
-// ============================================
-// AFTER SALES STATISTICS
-// ============================================
-
-export async function getAfterSalesStats(period: string = "8weeks") {
-  const db = await getDb();
-  if (!db) return null;
-  
-  const { afterSalesServices } = await import("../drizzle/schema");
-  const { count, eq, sql } = await import("drizzle-orm");
-  
-  // Convert period to SQL interval
-  const intervalMap: Record<string, string> = {
-    "4weeks": "4 WEEK",
-    "8weeks": "8 WEEK",
-    "3months": "3 MONTH",
-    "1year": "1 YEAR",
-  };
-  const interval = intervalMap[period] || "8 WEEK";
-  const dateFilter = sql`${afterSalesServices.createdAt} >= DATE_SUB(NOW(), INTERVAL ${sql.raw(interval)})`;
-  
-  // Total tickets
-  const totalTickets = await db
-    .select({ count: count() })
-    .from(afterSalesServices)
-    .where(dateFilter);
-  
-  // Tickets by status
-  const byStatus = await db
-    .select({ 
-      status: afterSalesServices.status, 
-      count: count() 
-    })
-    .from(afterSalesServices)
-    .where(dateFilter)
-    .groupBy(afterSalesServices.status);
-  
-  // Tickets by urgency
-  const byUrgency = await db
-    .select({ 
-      urgency: afterSalesServices.urgency, 
-      count: count() 
-    })
-    .from(afterSalesServices)
-    .where(dateFilter)
-    .groupBy(afterSalesServices.urgency);
-  
-  // Tickets by partner
-  const byPartner = await db
-    .select({ 
-      partnerId: afterSalesServices.partnerId, 
-      count: count() 
-    })
-    .from(afterSalesServices)
-    .where(dateFilter)
-    .groupBy(afterSalesServices.partnerId);
-  
-  return {
-    totalTickets: totalTickets[0]?.count || 0,
-    byStatus,
-    byUrgency,
-    byPartner,
-  };
-}
-
-export async function getAfterSalesStatsByPartner(partnerId: number) {
-  const db = await getDb();
-  if (!db) return null;
-  
-  const { afterSalesServices } = await import("../drizzle/schema");
-  const { count, eq } = await import("drizzle-orm");
-  
-  // Total tickets for partner
-  const totalTickets = await db
-    .select({ count: count() })
-    .from(afterSalesServices)
-    .where(eq(afterSalesServices.partnerId, partnerId));
-  
-  // Tickets by status for partner
-  const byStatus = await db
-    .select({ 
-      status: afterSalesServices.status, 
-      count: count() 
-    })
-    .from(afterSalesServices)
-    .where(eq(afterSalesServices.partnerId, partnerId))
-    .groupBy(afterSalesServices.status);
-  
-  // Tickets by urgency for partner
-  const byUrgency = await db
-    .select({ 
-      urgency: afterSalesServices.urgency, 
-      count: count() 
-    })
-    .from(afterSalesServices)
-    .where(eq(afterSalesServices.partnerId, partnerId))
-    .groupBy(afterSalesServices.urgency);
-  
-  return {
-    totalTickets: totalTickets[0]?.count || 0,
-    byStatus,
-    byUrgency,
-  };
-}
-
-export async function getAfterSalesWeeklyStats(period: string = "8weeks") {
-  const db = await getDb();
-  if (!db) return null;
-  
-  // Convert period to SQL interval
-  const intervalMap: Record<string, string> = {
-    "4weeks": "4 WEEK",
-    "8weeks": "8 WEEK",
-    "3months": "3 MONTH",
-    "1year": "1 YEAR",
-  };
-  const interval = intervalMap[period] || "8 WEEK";
-  
-  // Use raw SQL query to avoid Drizzle query builder issues
-  const query = `
-    SELECT 
-      YEARWEEK(createdAt, 1) as week,
-      COUNT(*) as count
-    FROM after_sales_services
-    WHERE createdAt >= DATE_SUB(NOW(), INTERVAL ${interval})
-    GROUP BY YEARWEEK(createdAt, 1)
-    ORDER BY YEARWEEK(createdAt, 1)
-  `;
-  
-  const [rows] = await db.execute(query) as any;
-  return rows as Array<{ week: string; count: number }>;
-}
-
-
-// Get status history for a ticket
-export async function getAfterSalesStatusHistory(serviceId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  
-  const { afterSalesStatusHistory, users } = await import("../drizzle/schema");
-  const { eq } = await import("drizzle-orm");
-  
-  return await db
-    .select({
-      id: afterSalesStatusHistory.id,
-      serviceId: afterSalesStatusHistory.serviceId,
-      previousStatus: afterSalesStatusHistory.previousStatus,
-      newStatus: afterSalesStatusHistory.newStatus,
-      reason: afterSalesStatusHistory.reason,
-      changedBy: afterSalesStatusHistory.changedBy,
-      changedByName: users.name,
-      createdAt: afterSalesStatusHistory.createdAt,
-    })
-    .from(afterSalesStatusHistory)
-    .leftJoin(users, eq(afterSalesStatusHistory.changedBy, users.id))
-    .where(eq(afterSalesStatusHistory.serviceId, serviceId))
-    .orderBy(desc(afterSalesStatusHistory.createdAt));
-}
-
-// Add status history entry
-export async function addAfterSalesStatusHistory(
-  serviceId: number,
-  previousStatus: string | null,
-  newStatus: string,
-  changedBy: number,
-  reason?: string
-) {
-  const db = await getDb();
-  if (!db) return null;
-  
-  const { afterSalesStatusHistory } = await import("../drizzle/schema");
-  
-  return await db.insert(afterSalesStatusHistory).values({
-    serviceId,
-    previousStatus: previousStatus as any,
-    newStatus: newStatus as any,
-    changedBy,
-    reason,
-  });
-}
-
-// Get assignment history for a ticket
-export async function getAfterSalesAssignmentHistory(serviceId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  
-  const { afterSalesAssignmentHistory, users } = await import("../drizzle/schema");
-  const { eq } = await import("drizzle-orm");
-  
-  return await db
-    .select({
-      id: afterSalesAssignmentHistory.id,
-      serviceId: afterSalesAssignmentHistory.serviceId,
-      previousTechnicianId: afterSalesAssignmentHistory.previousTechnicianId,
-      newTechnicianId: afterSalesAssignmentHistory.newTechnicianId,
-      reason: afterSalesAssignmentHistory.reason,
-      assignedBy: afterSalesAssignmentHistory.assignedBy,
-      assignedByName: users.name,
-      createdAt: afterSalesAssignmentHistory.createdAt,
-    })
-    .from(afterSalesAssignmentHistory)
-    .leftJoin(users, eq(afterSalesAssignmentHistory.assignedBy, users.id))
-    .where(eq(afterSalesAssignmentHistory.serviceId, serviceId))
-    .orderBy(desc(afterSalesAssignmentHistory.createdAt));
-}
-
-// Add assignment history entry
-export async function addAfterSalesAssignmentHistory(
-  serviceId: number,
-  previousTechnicianId: number | null,
-  newTechnicianId: number | null,
-  assignedBy: number,
-  reason?: string
-) {
-  const db = await getDb();
-  if (!db) return null;
-  
-  const { afterSalesAssignmentHistory } = await import("../drizzle/schema");
-  
-  return await db.insert(afterSalesAssignmentHistory).values({
-    serviceId,
-    previousTechnicianId,
-    newTechnicianId,
-    assignedBy,
-    reason,
-  });
-}
-
 // Get response templates
 export async function getResponseTemplates() {
   const db = await getDb();
@@ -4382,26 +3414,6 @@ export async function getResponseTemplates() {
   const { responseTemplates } = await import("../drizzle/schema");
   
   return await db.select().from(responseTemplates).orderBy(responseTemplates.category);
-}
-
-// Add response template
-export async function addResponseTemplate(
-  name: string,
-  category: string,
-  content: string,
-  createdBy: number
-) {
-  const db = await getDb();
-  if (!db) return null;
-  
-  const { responseTemplates } = await import("../drizzle/schema");
-  
-  return await db.insert(responseTemplates).values({
-    name,
-    category,
-    content,
-    createdBy,
-  });
 }
 
 // ============================================
@@ -4733,17 +3745,6 @@ export async function markInvitationTokenAsUsed(token: string) {
     .where(eq(invitationTokens.token, token));
 }
 
-export async function deleteExpiredInvitationTokens() {
-  const db = await getDb();
-  if (!db) return 0;
-
-  const result = await db
-    .delete(invitationTokens)
-    .where(lte(invitationTokens.expiresAt, new Date()));
-
-  return result;
-}
-
 export async function getInvitationTokenInfo(token: string) {
   const db = await getDb();
   if (!db) return null;
@@ -4953,7 +3954,6 @@ export async function connectMetaAdAccount(data: {
   }
 
   // Create new connection
-  console.log(`[Meta DB] Inserting new ad account: ${data.adAccountId}`);
   const insertResult = await db.insert(metaAdAccounts).values({
     metaUserId: data.metaUserId,
     metaUserName: data.metaUserName,
@@ -4970,7 +3970,6 @@ export async function connectMetaAdAccount(data: {
   // drizzle-orm with mysql2 returns [ResultSetHeader, ...]
   const result = insertResult[0];
   const insertId = (result as any).insertId ?? 0;
-  console.log(`[Meta DB] Insert result:`, JSON.stringify(result), `insertId: ${insertId}`);
   return { id: insertId };
 }
 
@@ -5076,7 +4075,6 @@ export async function connectGoogleAdAccount(data: {
   }
 
   // Create new connection
-  console.log(`[Google Ads DB] Inserting new customer: ${data.customerId}`);
   const insertResult = await db.insert(googleAdAccounts).values({
     googleUserId: data.googleUserId,
     googleUserEmail: data.googleUserEmail,
@@ -5094,7 +4092,6 @@ export async function connectGoogleAdAccount(data: {
   // drizzle-orm with mysql2 returns [ResultSetHeader, ...]
   const result = insertResult[0];
   const insertId = (result as any).insertId ?? 0;
-  console.log(`[Google Ads DB] Insert result:`, JSON.stringify(result), `insertId: ${insertId}`);
   return { id: insertId };
 }
 

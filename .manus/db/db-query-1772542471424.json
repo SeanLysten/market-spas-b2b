@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS saved_routes (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  user_id INT NOT NULL,\n  name VARCHAR(255) NOT NULL,\n  type VARCHAR(20) NOT NULL DEFAULT 'tour',\n  points TEXT NOT NULL,\n  total_distance DECIMAL(10, 2),\n  total_duration DECIMAL(10, 2),\n  notes TEXT,\n  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  INDEX sr_user_idx (user_id)\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute CREATE TABLE IF NOT EXISTS saved_routes (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  user_id INT NOT NULL,\n  name VARCHAR(255) NOT NULL,\n  type VARCHAR(20) NOT NULL DEFAULT 'tour',\n  points TEXT NOT NULL,\n  total_distance DECIMAL(10, 2),\n  total_duration DECIMAL(10, 2),\n  notes TEXT,\n  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  INDEX sr_user_idx (user_id)\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 763
-}

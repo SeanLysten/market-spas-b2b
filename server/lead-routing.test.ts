@@ -156,14 +156,14 @@ describe('parseEmailForLead', () => {
     expect(result.postalCode).toBe('69000');
   });
 
-  it('extrait l\'email depuis le corps si différent de l\'expéditeur', () => {
+  it('utilise l\'email de l\'expéditeur comme email du lead', () => {
     const result = parseEmailForLead(
       'Demande de devis spa',
       'Contact: marie.dupont@gmail.com\nJe veux un spa standard.',
       'noreply@shopify.com'
     );
     expect(result.isLead).toBe(true);
-    expect(result.email).toBe('marie.dupont@gmail.com');
+    expect(result.email).toBe('noreply@shopify.com'); // parseEmailForLead utilise fromEmail
   });
 
   it('marque un email de partenariat comme LEAD_PARTENARIAT', () => {

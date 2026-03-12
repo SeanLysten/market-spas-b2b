@@ -1,9 +1,0 @@
-{
-  "query": "\n-- Réassigner les leads luxembourgeois (+352 ou country LU/Luxembourg) de Valentin vers SaniDesign\nUPDATE leads \nSET assignedPartnerId = 60015, \n    assignmentReason = 'territory_LU-L',\n    updatedAt = NOW()\nWHERE (phone LIKE '+352%' OR phone LIKE '00352%' OR country = 'LU' OR country = 'Luxembourg')\n  AND leadType = 'VENTE'\n  AND assignedPartnerId != 60015;\n\n-- Aussi normaliser le country en 'LU' pour ceux qui ont 'Luxembourg'\nUPDATE leads\nSET country = 'LU'\nWHERE country = 'Luxembourg';\n",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute \n-- Réassigner les leads luxembourgeois (+352 ou country LU/Luxembourg) de Valentin vers SaniDesign\nUPDATE leads \nSET assignedPartnerId = 60015, \n    assignmentReason = 'territory_LU-L',\n    updatedAt = NOW()\nWHERE (phone LIKE '+352%' OR phone LIKE '00352%' OR country = 'LU' OR country = 'Luxembourg')\n  AND leadType = 'VENTE'\n  AND assignedPartnerId != 60015;\n\n-- Aussi normaliser le country en 'LU' pour ceux qui ont 'Luxembourg'\nUPDATE leads\nSET country = 'LU'\nWHERE country = 'Luxembourg';\n",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 72
-}

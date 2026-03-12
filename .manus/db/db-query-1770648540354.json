@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS `meta_ad_accounts` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `metaUserId` varchar(100) NOT NULL,\n  `metaUserName` varchar(255),\n  `adAccountId` varchar(100) NOT NULL,\n  `adAccountName` varchar(255),\n  `currency` varchar(10) DEFAULT 'EUR',\n  `timezone` varchar(100),\n  `accessToken` text NOT NULL,\n  `tokenExpiresAt` timestamp NULL,\n  `connectedBy` int NOT NULL,\n  `isActive` boolean DEFAULT true,\n  `lastSyncedAt` timestamp NULL,\n  `syncError` text,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `meta_ad_accounts_id` PRIMARY KEY(`id`),\n  INDEX `adAccountId_idx` (`adAccountId`),\n  INDEX `connectedBy_idx` (`connectedBy`)\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute CREATE TABLE IF NOT EXISTS `meta_ad_accounts` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `metaUserId` varchar(100) NOT NULL,\n  `metaUserName` varchar(255),\n  `adAccountId` varchar(100) NOT NULL,\n  `adAccountName` varchar(255),\n  `currency` varchar(10) DEFAULT 'EUR',\n  `timezone` varchar(100),\n  `accessToken` text NOT NULL,\n  `tokenExpiresAt` timestamp NULL,\n  `connectedBy` int NOT NULL,\n  `isActive` boolean DEFAULT true,\n  `lastSyncedAt` timestamp NULL,\n  `syncError` text,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `meta_ad_accounts_id` PRIMARY KEY(`id`),\n  INDEX `adAccountId_idx` (`adAccountId`),\n  INDEX `connectedBy_idx` (`connectedBy`)\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 578
-}

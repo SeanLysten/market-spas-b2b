@@ -90,7 +90,7 @@ describe("Partner Lead Scoring - calculatePartnerScore", () => {
       "travaillez-vous_dans_un_domaine_similaire_?_": "non",
     };
     const result = calculatePartnerScore(fields);
-    expect(result.score).toBe(0);
+    expect(result.score).toBe(1); // Score minimum de 1 pour tout lead partenariat
     expect(result.showroom).toBe("non");
     expect(result.vendSpa).toBe("non");
     expect(result.autreMarque).toBe("non");
@@ -122,7 +122,7 @@ describe("Partner Lead Scoring - calculatePartnerScore", () => {
       "travaillez-vous_dans_un_domaine_similaire_?_": "non",
     };
     const result = calculatePartnerScore(fields);
-    expect(result.score).toBe(4);
+    expect(result.score).toBe(6); // base 1 + showroom 2 + vendSpa 3 = 6
   });
 
   it("retourne score 2 pour un candidat avec seulement domaine similaire", () => {
@@ -131,7 +131,7 @@ describe("Partner Lead Scoring - calculatePartnerScore", () => {
       "travaillez-vous_dans_un_domaine_similaire_?_": "oui_(_piscine_ou_mobilier_de_jardin_)",
     };
     const result = calculatePartnerScore(fields);
-    expect(result.score).toBe(2);
+    expect(result.score).toBe(2); // base 1 + domaineSimilaire 1 = 2
     expect(result.domaineSimilaire).toBe("oui");
   });
 
@@ -140,7 +140,7 @@ describe("Partner Lead Scoring - calculatePartnerScore", () => {
       company_name: "Test",
     };
     const result = calculatePartnerScore(fields);
-    expect(result.score).toBe(0);
+    expect(result.score).toBe(1); // base 1, aucun critère positif
     expect(result.showroom).toBe("non");
     expect(result.vendSpa).toBe("non");
     expect(result.autreMarque).toBe("non");
@@ -155,7 +155,7 @@ describe("Partner Lead Scoring - calculatePartnerScore", () => {
       "travaillez-vous_déjà_dans_la_vente_de_spa_?_": "non",
     };
     const result = calculatePartnerScore(fields);
-    expect(result.score).toBe(4);
+    expect(result.score).toBe(4); // base 1 + showroom 2 + domaineSimilaire 1 = 4
     expect(result.showroom).toBe("oui");
     expect(result.domaineSimilaire).toBe("oui");
   });
@@ -169,7 +169,7 @@ describe("Partner Lead Scoring - calculatePartnerScore", () => {
       "travaillez-vous_dans_un_domaine_similaire_?_": "non",
     };
     const result = calculatePartnerScore(fields);
-    expect(result.score).toBe(6);
+    expect(result.score).toBe(7); // base 1 + showroom 2 + vendSpa 3 + autreMarque 1 = 7
   });
 });
 

@@ -1,8 +1,0 @@
-{
-  "query": "SELECT pcr.*, r.name as regionName, c.name as countryName \nFROM postal_code_ranges pcr \nJOIN regions r ON r.id = pcr.regionId \nJOIN countries c ON c.id = r.countryId \nWHERE c.code = 'BE' AND '1000' BETWEEN pcr.rangeStart AND pcr.rangeEnd \nLIMIT 5;",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT pcr.*, r.name as regionName, c.name as countryName \nFROM postal_code_ranges pcr \nJOIN regions r ON r.id = pcr.regionId \nJOIN countries c ON c.id = r.countryId \nWHERE c.code = 'BE' AND '1000' BETWEEN pcr.rangeStart AND pcr.rangeEnd \nLIMIT 5;",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1054 (42S22) at line 1: Unknown column 'pcr.rangestart' in 'where clause'"
-  ]
-}

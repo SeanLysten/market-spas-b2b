@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS `return_items` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `returnId` int NOT NULL,\n  `productId` int NOT NULL,\n  `quantity` int NOT NULL,\n  `reason` enum('DEFECTIVE', 'WRONG_ITEM', 'NOT_AS_DESCRIBED', 'CHANGED_MIND', 'OTHER') NOT NULL,\n  `reasonDetails` text,\n  `unitPrice` decimal(10, 2),\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT `return_items_id` PRIMARY KEY(`id`),\n  INDEX `returnId_idx` (`returnId`),\n  INDEX `productId_idx` (`productId`)\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute CREATE TABLE IF NOT EXISTS `return_items` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `returnId` int NOT NULL,\n  `productId` int NOT NULL,\n  `quantity` int NOT NULL,\n  `reason` enum('DEFECTIVE', 'WRONG_ITEM', 'NOT_AS_DESCRIBED', 'CHANGED_MIND', 'OTHER') NOT NULL,\n  `reasonDetails` text,\n  `unitPrice` decimal(10, 2),\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT `return_items_id` PRIMARY KEY(`id`),\n  INDEX `returnId_idx` (`returnId`),\n  INDEX `productId_idx` (`productId`)\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 181
-}

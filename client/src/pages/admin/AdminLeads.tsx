@@ -183,7 +183,6 @@ export default function AdminLeads() {
 
     // Quand un nouveau lead arrive, rafraîchir automatiquement
     socket.on("leads:refresh", () => {
-      console.log("[Leads] Nouveau lead détecté via WebSocket, rafraîchissement...");
       refetch();
       setLastRefreshTime(new Date());
     });
@@ -317,13 +316,11 @@ export default function AdminLeads() {
   const metaCallbackMutation = trpc.metaAds.handleCallback.useMutation();
   const connectAccountMutation = trpc.metaAds.connectAdAccount.useMutation({
     onSuccess: () => {
-      console.log("[Meta] Account connected successfully, refetching campaigns...");
       setShowAccountSelector(false);
       setMetaCallbackData(null);
       // Force a small delay before refetching to ensure DB write is committed
       setTimeout(() => {
         refetchMeta().then((result) => {
-          console.log("[Meta] Campaigns refetch result:", result.data);
           if (result.data?.connected) {
             alert("Compte publicitaire connecté avec succès ! Les campagnes sont en cours de chargement.");
           }
@@ -378,7 +375,6 @@ export default function AdminLeads() {
   );
   const fetchCustomerIdMutation = trpc.googleAds.fetchCustomerId.useMutation({
     onSuccess: () => {
-      console.log('[Google Ads] Customer ID fetched successfully');
       toast.success('Customer ID récupéré avec succès !');
       refetchGoogleAccounts();
       refetchGoogleCampaigns();
@@ -390,7 +386,6 @@ export default function AdminLeads() {
   });
   const connectGoogleAccountMutation = trpc.googleAds.connectAdAccount.useMutation({
     onSuccess: () => {
-      console.log("[Google Ads] Account connected successfully");
       setShowGoogleAccountSelector(false);
       setGoogleCallbackData(null);
       toast.success("Compte Google Ads connecté avec succès !");
@@ -434,7 +429,6 @@ export default function AdminLeads() {
     // Handle GA4 callback — traiter le code ici directement (AdminGoogleAnalytics n'est pas encore monté)
     const isGa4 = urlParams.get("ga4") === "true";
     if (code && isGa4) {
-      console.log("[GA4 OAuth] Code found, exchanging tokens directly in AdminLeads");
       // Nettoyer l'URL immédiatement pour éviter le double traitement
       window.history.replaceState({}, "", window.location.pathname);
       setActiveTab('campaigns');
@@ -458,19 +452,16 @@ export default function AdminLeads() {
 
     // Handle Google Ads callback
     if (code && isGoogleAds && !googleCallbackData) {
-      console.log("[Google Ads OAuth] Code found, exchanging...");
       setGoogleConnecting(true);
       // Clean URL immediately to prevent re-processing on re-render
       window.history.replaceState({}, "", window.location.pathname);
       (async () => {
         try {
           const data = await googleCallbackMutation.mutateAsync({ code });
-          console.log("[Google Ads OAuth] Token exchange successful:", JSON.stringify(data));
           setGoogleCallbackData(data);
           toast.success(`Compte Google Ads connecté : ${data.googleUserEmail}`);
           // Refresh connected accounts list and wait for it
           const refetchResult = await refetchGoogleAccounts();
-          console.log("[Google Ads OAuth] Refetch result:", JSON.stringify(refetchResult.data));
           // Switch to Google Ads tab to show the connection
           setAdsTab('google');
         } catch (err: any) {
@@ -487,7 +478,6 @@ export default function AdminLeads() {
     if (code && !isGoogleAds && !metaCallbackData) {
       // Build redirectUri from current origin - must match what was sent to Facebook
       const redirectUri = `${window.location.origin}/admin/leads`;
-      console.log("[Meta OAuth] Code found, exchanging with redirectUri:", redirectUri);
       setMetaConnecting(true);
       // Clean URL immediately to prevent re-processing on re-render
       window.history.replaceState({}, "", window.location.pathname);
@@ -495,7 +485,6 @@ export default function AdminLeads() {
         code,
         redirectUri,
       }).then((data) => {
-        console.log("[Meta OAuth] Token exchange successful, accounts:", data);
         setMetaCallbackData(data);
         setShowAccountSelector(true);
         setMetaConnecting(false);

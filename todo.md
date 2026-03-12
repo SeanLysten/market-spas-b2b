@@ -2584,3 +2584,36 @@
 - [x] 1.6 Audit sécurité (2 critiques, 3 moyens, 3 faibles)
 - [x] 1.7 Audit dépendances package.json (7 dépendances inutilisées, 1 accidentelle)
 - [x] Rapport d'audit structuré livré (AUDIT-REPORT.md)
+
+## CORRECTIONS AUDIT - Phase 2
+### P0 - Sécurité
+- [x] Supprimer test-reassign.mjs (JWT hardcodé)
+- [x] Supprimer update-password.mjs (mot de passe loggé en console)
+- [x] Masquer les emails dans les logs d'erreur de routers.ts
+
+### P1 - Code mort
+- [x] Supprimer ComponentShowcase.tsx, AIChatBox.tsx, ManusDialog.tsx
+- [x] Supprimer StripePayment.tsx, NotificationCenter.tsx
+- [x] Supprimer AdminAfterSalesStats.tsx (non routé)
+- [x] Supprimer les 7 composants UI inutilisés
+- [x] Supprimer 38 fonctions mortes dans db.ts + fragments orphelins
+- [x] Supprimer les fonctions mortes dans email.ts
+- [x] Supprimer les fonctions mortes dans meta-leads.ts
+- [x] Supprimer .manus/db/ (350 fichiers debug)
+
+### P2 - Dépendances
+- [x] Supprimer @hookform/resolvers, framer-motion, jsonwebtoken, tailwindcss-animate
+- [x] Supprimer add de devDependencies
+- [x] Déplacer @types/multer vers devDependencies
+
+### P3 - Organisation fichiers racine
+- [x] Déplacer les scripts .mjs dans scripts/
+- [x] Déplacer les guides/docs dans docs/
+- [x] Nettoyer les fichiers Shopify et obsolètes
+
+### P4 - Connexions cassées
+- [x] Corriger les 5 tests échouants (lead-routing, meta-leads) → 731/731 passants
+
+### P5 - Qualité
+- [x] Nettoyer 48 console.log serveur et client (db.ts: 12, routers.ts: 25, AdminLeads: 11)
+- [x] Consolider les fragments orphelins dans db.ts (6 fragments supprimés)

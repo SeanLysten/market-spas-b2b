@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS `regions` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`countryId` int NOT NULL,\n\t`code` varchar(10) NOT NULL,\n\t`name` varchar(100) NOT NULL,\n\t`nameEn` varchar(100),\n\t`nameFr` varchar(100),\n\t`nameNl` varchar(100),\n\t`isActive` boolean NOT NULL DEFAULT true,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `regions_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `unique_country_code` UNIQUE(`countryId`,`code`)\n);\nCREATE INDEX IF NOT EXISTS `countryId_idx` ON `regions` (`countryId`);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute CREATE TABLE IF NOT EXISTS `regions` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`countryId` int NOT NULL,\n\t`code` varchar(10) NOT NULL,\n\t`name` varchar(100) NOT NULL,\n\t`nameEn` varchar(100),\n\t`nameFr` varchar(100),\n\t`nameNl` varchar(100),\n\t`isActive` boolean NOT NULL DEFAULT true,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `regions_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `unique_country_code` UNIQUE(`countryId`,`code`)\n);\nCREATE INDEX IF NOT EXISTS `countryId_idx` ON `regions` (`countryId`);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 654
-}

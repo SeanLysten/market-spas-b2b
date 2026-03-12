@@ -739,7 +739,6 @@ export const appRouter = router({
               role: 'PARTNER_ADMIN',
               partnerId: partnerId,
             });
-            console.log(`[Partners] Auto-created PARTNER_ADMIN user for partner #${partnerId} (${input.primaryContactEmail})`);
           } catch (err) {
             console.error(`[Partners] Failed to auto-create user for partner #${partnerId}:`, err);
             // Don't fail the partner creation if user creation fails
@@ -769,10 +768,8 @@ export const appRouter = router({
         if (input.data.status) {
           if (input.data.status === 'SUSPENDED' || input.data.status === 'TERMINATED') {
             const count = await db.deactivateUsersByPartnerId(input.id);
-            console.log(`[Partners.update] Partenaire #${input.id} ${input.data.status} → ${count} utilisateur(s) désactivé(s)`);
           } else if (input.data.status === 'APPROVED') {
             const count = await db.reactivateUsersByPartnerId(input.id);
-            console.log(`[Partners.update] Partenaire #${input.id} APPROVED → ${count} utilisateur(s) réactivé(s)`);
           }
         }
 
@@ -1520,7 +1517,6 @@ export const appRouter = router({
               invitationUrl,
               expiresAt: tokenData.expiresAt,
             });
-            console.log(`[Invitation] Email sent to ${input.email}`);
           } catch (emailError) {
             console.error('[Invitation] Failed to send email:', emailError);
             // Continue anyway - admin can still share the link manually
@@ -1650,7 +1646,6 @@ export const appRouter = router({
               invitationUrl,
               expiresAt: invitation.expiresAt,
             });
-            console.log(`[Invitation] Email resent to ${invitation.email}`);
           } catch (emailError) {
             console.error('[Invitation] Failed to resend email:', emailError);
             throw new TRPCError({ 
@@ -1820,10 +1815,8 @@ export const appRouter = router({
 
           // Update product or variant with image URL
           if (input.variantId) {
-            console.log(`[uploadImage] Updating variant ${input.variantId} with imageUrl`);
             await db.updateProductVariant(input.variantId, { imageUrl: url });
           } else if (input.productId) {
-            console.log(`[uploadImage] Updating product ${input.productId} with imageUrl`);
             await db.updateProduct(input.productId, { imageUrl: url });
           }
 
@@ -1974,7 +1967,6 @@ export const appRouter = router({
             pendingInvitationsCount = invitations.length;
           } catch (e) {
             // Table may not have the expected columns yet
-            console.log('[deleteImpact] Could not query team_invitations:', e);
           }
 
           return {
@@ -2044,10 +2036,8 @@ export const appRouter = router({
           if (input.status) {
             if (input.status === 'SUSPENDED' || input.status === 'TERMINATED') {
               const count = await db.deactivateUsersByPartnerId(id);
-              console.log(`[Partners.update] Partenaire #${id} ${input.status} → ${count} utilisateur(s) désactivé(s)`);
             } else if (input.status === 'APPROVED') {
               const count = await db.reactivateUsersByPartnerId(id);
-              console.log(`[Partners.update] Partenaire #${id} APPROVED → ${count} utilisateur(s) réactivé(s)`);
             }
           }
 
@@ -2073,7 +2063,6 @@ export const appRouter = router({
           // Cascade: réactiver les utilisateurs du partenaire approuvé
           const count = await db.reactivateUsersByPartnerId(input.id);
           if (count > 0) {
-            console.log(`[Partners.approve] Partenaire #${input.id} APPROVED → ${count} utilisateur(s) réactivé(s)`);
           }
           return { success: true };
         }),
@@ -4094,7 +4083,6 @@ export const appRouter = router({
         tokenExpiresAt: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
-        console.log(`[Meta Ads] Connecting ad account ${input.adAccountId} for user ${ctx.user.id}`);
         try {
           const result = await db.connectMetaAdAccount({
             metaUserId: input.metaUserId,
@@ -4107,7 +4095,6 @@ export const appRouter = router({
             tokenExpiresAt: input.tokenExpiresAt ? new Date(input.tokenExpiresAt) : null,
             connectedBy: ctx.user.id,
           });
-          console.log(`[Meta Ads] Account connected successfully, id: ${result.id}`);
           return result;
         } catch (error: any) {
           console.error(`[Meta Ads] Error connecting account:`, error.message);
@@ -4138,7 +4125,6 @@ export const appRouter = router({
       }).optional())
       .query(async ({ input }) => {
         const accounts = await db.getConnectedMetaAdAccounts();
-        console.log(`[Meta Ads] getCampaigns: found ${accounts.length} connected accounts`);
         if (accounts.length === 0) {
           return { connected: false, campaigns: [], accounts: [] };
         }
@@ -4350,7 +4336,6 @@ export const appRouter = router({
           try {
             const { reclassifyExistingPartnerLeads } = await import('./meta-leads');
             const reclassResult = await reclassifyExistingPartnerLeads();
-            console.log(`[Meta Sync] Candidats partenaires créés: ${reclassResult.created}, déjà existants: ${reclassResult.alreadyExists}`);
           } catch (e) {
             console.error('[Meta Sync] Erreur création candidats partenaires:', e);
           }
@@ -4386,7 +4371,6 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const googleAdsOAuth = await import("./google-ads-oauth");
         
-        console.log(`[Google Ads OAuth] Exchanging code for tokens for user ${ctx.user.id}`);
         
         // Exchange code for tokens
         const tokens = await googleAdsOAuth.exchangeCodeForTokens(input.code);
@@ -4394,7 +4378,6 @@ export const appRouter = router({
         // Get user info
         const userInfo = await googleAdsOAuth.getGoogleUserInfo(tokens.accessToken);
         
-        console.log(`[Google Ads OAuth] Token exchange successful for ${userInfo.googleUserEmail}`);
         
         // Automatically save the connection to database
         // Use a default customer ID (the user can update it later if they have multiple accounts)
@@ -4411,14 +4394,12 @@ export const appRouter = router({
           connectedBy: ctx.user.id,
         });
         
-        console.log(`[Google Ads OAuth] Account saved to database with ID ${result.id}`);
         
         // Try to fetch accessible customer IDs and update the account
         // Prefer non-MCC (direct advertising) accounts over manager accounts
         try {
           const googleAdsApi = await import('./google-ads-api');
           const customerIds = await googleAdsApi.listAccessibleCustomers(tokens.accessToken);
-          console.log(`[Google Ads OAuth] Accessible customers: ${customerIds.join(', ')}`);
           
           if (customerIds.length > 0) {
             // Fetch details for all customers to find non-MCC accounts
@@ -4438,7 +4419,6 @@ export const appRouter = router({
                 currency: selectedAccount.currency,
                 timezone: selectedAccount.timezone,
               });
-              console.log(`[Google Ads OAuth] Updated account with customer: ${selectedAccount.name} (${selectedAccount.id}) - manager: ${selectedAccount.isManager}`);
             }
           }
         } catch (custError: any) {
@@ -4466,7 +4446,6 @@ export const appRouter = router({
         tokenExpiresAt: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
-        console.log(`[Google Ads] Connecting customer ${input.customerId} for user ${ctx.user.id}`);
         try {
           const result = await db.connectGoogleAdAccount({
             googleUserId: input.googleUserId,
@@ -4480,7 +4459,6 @@ export const appRouter = router({
             tokenExpiresAt: input.tokenExpiresAt ? new Date(input.tokenExpiresAt) : null,
             connectedBy: ctx.user.id,
           });
-          console.log(`[Google Ads] Account connected successfully, id: ${result.id}`);
           return result;
         } catch (error: any) {
           console.error(`[Google Ads] Error connecting account:`, error.message);
@@ -4514,7 +4492,6 @@ export const appRouter = router({
         try {
           const googleAdsApi = await import('./google-ads-api');
           const customerIds = await googleAdsApi.listAccessibleCustomers(account.accessToken);
-          console.log(`[Google Ads] Accessible customers for account ${input.accountId}:`, customerIds);
           
           if (customerIds.length === 0) {
             throw new Error('Aucun compte Google Ads accessible. Vérifiez que le compte Google connecté a accès à un compte Google Ads.');
@@ -4534,7 +4511,6 @@ export const appRouter = router({
             timezone: details.timezone,
           });
 
-          console.log(`[Google Ads] Updated account ${input.accountId} with customer: ${details.name} (${details.id})`);
 
           return {
             success: true,
@@ -4562,7 +4538,6 @@ export const appRouter = router({
       }).optional())
       .query(async ({ input }) => {
         const accounts = await db.getConnectedGoogleAdAccounts();
-        console.log(`[Google Ads] getCampaigns: found ${accounts.length} connected accounts`);
         if (accounts.length === 0) {
           return { connected: false, campaigns: [], accounts: [] };
         }
