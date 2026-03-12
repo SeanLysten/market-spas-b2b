@@ -2716,3 +2716,10 @@
 - [x] Identifier la source des envois automatiques de réinitialisation de mot de passe (toutes les 15 minutes)
 - [x] Corriger le bug pour stopper les envois automatiques non sollicités
 - [x] Vérifier qu'aucun cron job ou tâche planifiée ne déclenche ces emails
+
+## Visionneuse PDF intégrée dans les Ressources Techniques
+- [x] Créer un composant PDFViewer avec rendu des pages PDF, navigation (page précédente/suivante), zoom
+- [x] Intégrer le PDFViewer dans la page utilisateur Ressources Techniques (clic sur un PDF = ouverture en lecture)
+- [x] Intégrer le PDFViewer dans la page admin Ressources Techniques (prévisualisation des PDFs uploadés)
+- [x] Ajouter un bouton retour pour quitter la visionneuse et revenir à la liste des ressources
+- [x] Écrire les tests Vitest pour le composant PDFViewer

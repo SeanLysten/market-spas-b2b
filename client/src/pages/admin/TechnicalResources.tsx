@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { AdminLayout } from "@/components/AdminLayout";
+import PDFViewer from "@/components/PDFViewer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -70,6 +71,7 @@ export default function AdminTechnicalResources() {
   const [editingFolder, setEditingFolder] = useState<any>(null);
   const [editingResource, setEditingResource] = useState<any>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [viewingPdf, setViewingPdf] = useState<{ url: string; name: string } | null>(null);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -258,6 +260,17 @@ export default function AdminTechnicalResources() {
       default: return <File className="h-5 w-5 text-gray-500" />;
     }
   };
+
+  // If viewing a PDF, show the PDF viewer overlay
+  if (viewingPdf) {
+    return (
+      <PDFViewer
+        fileUrl={viewingPdf.url}
+        fileName={viewingPdf.name}
+        onClose={() => setViewingPdf(null)}
+      />
+    );
+  }
 
   return (
     <AdminLayout>
@@ -453,6 +466,11 @@ export default function AdminTechnicalResources() {
                         </div>
                       </div>
                       <div className="flex gap-1 flex-shrink-0">
+                        {resource.type === "PDF" && resource.fileUrl && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Prévisualiser" onClick={() => setViewingPdf({ url: resource.fileUrl, name: resource.title || "document.pdf" })}>
+                            <Eye className="h-3.5 w-3.5 text-primary" />
+                          </Button>
+                        )}
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditResource(resource)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
@@ -492,6 +510,11 @@ export default function AdminTechnicalResources() {
                         {new Date(resource.createdAt).toLocaleDateString("fr-FR")}
                       </div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {resource.type === "PDF" && resource.fileUrl && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Prévisualiser" onClick={() => setViewingPdf({ url: resource.fileUrl, name: resource.title || "document.pdf" })}>
+                            <Eye className="h-3.5 w-3.5 text-primary" />
+                          </Button>
+                        )}
                         {resource.fileUrl && (
                           <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                             <a href={resource.fileUrl} target="_blank" rel="noopener noreferrer">

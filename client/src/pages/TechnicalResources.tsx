@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PDFViewer from "@/components/PDFViewer";
 import {
   ArrowLeft,
   Search,
@@ -47,6 +48,7 @@ export default function TechnicalResources() {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [currentFolderId, setCurrentFolderId] = useState<number | null>(null);
+  const [viewingPdf, setViewingPdf] = useState<{ url: string; name: string } | null>(null);
 
   // Lire le paramètre tab de l'URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -100,6 +102,17 @@ export default function TechnicalResources() {
     };
     return labels[category] || category;
   };
+
+  // If viewing a PDF, show the PDF viewer overlay
+  if (viewingPdf) {
+    return (
+      <PDFViewer
+        fileUrl={viewingPdf.url}
+        fileName={viewingPdf.name}
+        onClose={() => setViewingPdf(null)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -249,8 +262,24 @@ export default function TechnicalResources() {
                             <Eye className="h-3 w-3" />
                             {resource.viewCount}
                           </div>
+                          {resource.type === "PDF" && resource.fileUrl && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() =>
+                                setViewingPdf({
+                                  url: resource.fileUrl,
+                                  name: resource.title || "document.pdf",
+                                })
+                              }
+                            >
+                              <BookOpen className="h-4 w-4 mr-1" />
+                              <span className="hidden sm:inline">Lire</span>
+                            </Button>
+                          )}
                           <Button
                             size="sm"
+                            variant="outline"
                             onClick={() => window.open(resource.fileUrl, "_blank")}
                           >
                             <Download className="h-4 w-4 mr-1" />
