@@ -2711,3 +2711,8 @@
 - [x] Ajouter un paramètre admin pour modifier le taux de TVA général du site
 - [x] Retirer le seuil de livraison gratuite (5000€) et la barre de progression dans le panier
 - [x] Retirer la logique de livraison gratuite côté backend
+
+## Bug: Emails de réinitialisation de mot de passe envoyés automatiquement
+- [x] Identifier la source des envois automatiques de réinitialisation de mot de passe (toutes les 15 minutes)
+- [x] Corriger le bug pour stopper les envois automatiques non sollicités
+- [x] Vérifier qu'aucun cron job ou tâche planifiée ne déclenche ces emails
