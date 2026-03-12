@@ -2705,3 +2705,9 @@
 
 ## Augmenter limite upload images
 - [x] Augmenter la limite d'upload des images produits de 10 MB à 40 MB (frontend ImageUpload.tsx, backend déjà à 50 MB)
+
+## TVA et livraison gratuite
+- [x] Mettre la TVA à 0% par défaut dans tout le système
+- [x] Ajouter un paramètre admin pour modifier le taux de TVA général du site
+- [x] Retirer le seuil de livraison gratuite (5000€) et la barre de progression dans le panier
+- [x] Retirer la logique de livraison gratuite côté backend

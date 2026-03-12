@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Package, MapPin, CreditCard, FileText, Calendar, TruckIcon, BadgePercent, Gift, Zap } from "lucide-react";
+import { ArrowLeft, Package, MapPin, CreditCard, FileText, Calendar, TruckIcon, BadgePercent, Zap } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 
@@ -38,8 +38,9 @@ export default function Checkout() {
   const discountPercent = cartData?.discountPercent || 0;
   const discountAmount = cartData?.discountAmount || 0;
   const partnerLevel = (cartData as any)?.partnerLevel || "";
-  const isFreeShipping = (cartData as any)?.isFreeShipping || false;
   const shippingHT = (cartData as any)?.shippingHT || 0;
+  const vatRate = (cartData as any)?.vatRate ?? 0;
+  const vatLabel = (cartData as any)?.vatLabel || "TVA";
   const vatAmount = cartData?.vatAmount || 0;
   const totalTTC = cartData?.totalTTC || 0;
 
@@ -240,14 +241,7 @@ export default function Checkout() {
                       </div>
                     </Label>
                     <div className="text-right">
-                      {isFreeShipping ? (
-                        <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
-                          <Gift className="w-4 h-4" />
-                          Gratuite
-                        </div>
-                      ) : (
-                        <div className="font-bold text-primary">{formatPrice(shippingHT)} € HT</div>
-                      )}
+                      <div className="font-bold text-primary">{formatPrice(shippingHT)} € HT</div>
                     </div>
                   </div>
 
@@ -395,15 +389,11 @@ export default function Checkout() {
                       <TruckIcon className="w-3.5 h-3.5" />
                       Livraison {shippingType === "express" ? "express" : "standard"}
                     </span>
-                    {isFreeShipping && shippingType === "standard" ? (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">Gratuite</span>
-                    ) : (
-                      <span>{formatPrice(shippingType === "express" ? (shippingHT > 0 ? shippingHT * 2 : 300) : shippingHT)} €</span>
-                    )}
+                    <span>{formatPrice(shippingType === "express" ? (shippingHT > 0 ? shippingHT * 2 : 300) : shippingHT)} €</span>
                   </div>
 
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">TVA</span>
+                    <span className="text-muted-foreground">{vatLabel} ({vatRate}%)</span>
                     <span>{formatPrice(vatAmount)} €</span>
                   </div>
                   <Separator />

@@ -804,11 +804,15 @@ export async function getCart(userId: number) {
   const subtotalAfterDiscount = subtotalHT - discountAmount;
   
   // Calculate shipping from system settings
-  const { shippingHT, isFreeShipping, config: shippingConfig } = await calculateShippingCost(subtotalAfterDiscount, "standard");
+  const { shippingHT } = await calculateShippingCost(subtotalAfterDiscount, "standard");
+  
+  // Get dynamic VAT rate from system settings
+  const taxConfig = await getTaxConfig();
+  const vatRate = taxConfig.vatRate / 100; // Convert percentage to decimal
   
   const subtotalWithShipping = subtotalAfterDiscount + shippingHT;
-  const vatAmount = subtotalAfterDiscount * 0.21; // VAT on products only
-  const shippingVAT = shippingHT * 0.21;
+  const vatAmount = subtotalAfterDiscount * vatRate;
+  const shippingVAT = shippingHT * vatRate;
   const totalVAT = vatAmount + shippingVAT;
   const totalTTC = subtotalWithShipping + totalVAT;
 
@@ -820,9 +824,9 @@ export async function getCart(userId: number) {
     partnerLevel,
     discountSource,
     shippingHT,
-    isFreeShipping,
-    freeShippingThreshold: shippingConfig.freeShippingThreshold,
     shippingVAT,
+    vatRate: taxConfig.vatRate,
+    vatLabel: taxConfig.vatLabel,
     vatAmount: totalVAT,
     totalTTC,
   };
@@ -1472,17 +1476,19 @@ export async function createOrder(input: CreateOrderInput) {
   const totalHTBeforeShipping = subtotalHT - orderDiscountAmount;
   
   // Calculate shipping cost from system settings
-  const { shippingHT, isFreeShipping } = await calculateShippingCost(
+  const { shippingHT } = await calculateShippingCost(
     totalHTBeforeShipping,
     input.shippingType || "standard"
   );
   
   const totalHT = totalHTBeforeShipping + shippingHT;
   
-  // Calculate VAT (average rate from items + shipping VAT at 21%)
-  const itemsVAT = itemsWithTotals.reduce((sum, item) => sum + item.totalVAT, 0);
-  const shippingVAT = (shippingHT * 21) / 100;
-  const totalVAT = itemsVAT + shippingVAT;
+  // Calculate VAT from dynamic system settings
+  const taxConfig = await getTaxConfig();
+  const vatRateDecimal = taxConfig.vatRate / 100;
+  const productsVAT = totalHTBeforeShipping * vatRateDecimal;
+  const shippingVAT = shippingHT * vatRateDecimal;
+  const totalVAT = productsVAT + shippingVAT;
   const totalTTC = totalHT + totalVAT;
 
   // Deposit (30% by default)
@@ -1587,7 +1593,6 @@ export async function createOrder(input: CreateOrderInput) {
     totalVAT,
     totalTTC,
     shippingHT,
-    isFreeShipping,
     depositAmount,
     balanceAmount,
   };
@@ -4780,11 +4785,20 @@ export interface PartnerLevelConfig {
 }
 
 export interface ShippingConfig {
-  freeShippingThreshold: number;
   defaultShippingCost: number;
   expressShippingCost: number;
   estimatedDeliveryDays: number;
 }
+
+export interface TaxConfig {
+  vatRate: number;
+  vatLabel: string;
+}
+
+const DEFAULT_TAX: TaxConfig = {
+  vatRate: 0,
+  vatLabel: "TVA",
+};
 
 const DEFAULT_PARTNER_LEVELS: PartnerLevelConfig[] = [
   { level: "BRONZE", discount: 0, minOrders: 0 },
@@ -4795,7 +4809,6 @@ const DEFAULT_PARTNER_LEVELS: PartnerLevelConfig[] = [
 ];
 
 const DEFAULT_SHIPPING: ShippingConfig = {
-  freeShippingThreshold: 5000,
   defaultShippingCost: 150,
   expressShippingCost: 300,
   estimatedDeliveryDays: 14,
@@ -4833,24 +4846,33 @@ export async function getShippingConfig(): Promise<ShippingConfig> {
 }
 
 /**
- * Calculate shipping cost based on subtotal HT and shipping type.
- * Returns 0 if subtotal exceeds freeShippingThreshold.
+ * Get tax config from system settings.
+ */
+export async function getTaxConfig(): Promise<TaxConfig> {
+  const raw = await getSystemSetting("tax");
+  if (!raw) return DEFAULT_TAX;
+  try {
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_TAX, ...parsed };
+  } catch {
+    return DEFAULT_TAX;
+  }
+}
+
+/**
+ * Calculate shipping cost based on shipping type.
  */
 export async function calculateShippingCost(
   subtotalHT: number,
   shippingType: "standard" | "express" = "standard"
-): Promise<{ shippingHT: number; isFreeShipping: boolean; config: ShippingConfig }> {
+): Promise<{ shippingHT: number; config: ShippingConfig }> {
   const config = await getShippingConfig();
-
-  if (subtotalHT >= config.freeShippingThreshold) {
-    return { shippingHT: 0, isFreeShipping: true, config };
-  }
 
   const shippingHT = shippingType === "express"
     ? config.expressShippingCost
     : config.defaultShippingCost;
 
-  return { shippingHT, isFreeShipping: false, config };
+  return { shippingHT, config };
 }
 
 /**

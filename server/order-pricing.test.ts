@@ -3,6 +3,7 @@ import {
   getDiscountForPartnerLevel,
   getShippingConfig,
   calculateShippingCost,
+  getTaxConfig,
   resolvePartnerDiscount,
   upsertSystemSetting,
   getSystemSetting,
@@ -77,17 +78,14 @@ describe("getShippingConfig", () => {
   it("returns default config when no setting exists", async () => {
     const config = await getShippingConfig();
     expect(config).toBeDefined();
-    expect(typeof config.freeShippingThreshold).toBe("number");
     expect(typeof config.defaultShippingCost).toBe("number");
     expect(typeof config.expressShippingCost).toBe("number");
     expect(typeof config.estimatedDeliveryDays).toBe("number");
-    expect(config.freeShippingThreshold).toBeGreaterThan(0);
     expect(config.defaultShippingCost).toBeGreaterThan(0);
   });
 
   it("uses custom shipping config from system settings", async () => {
     const customShipping = {
-      freeShippingThreshold: 3000,
       defaultShippingCost: 100,
       expressShippingCost: 250,
       estimatedDeliveryDays: 7,
@@ -95,14 +93,12 @@ describe("getShippingConfig", () => {
     await upsertSystemSetting("shipping", JSON.stringify(customShipping));
 
     const config = await getShippingConfig();
-    expect(config.freeShippingThreshold).toBe(3000);
     expect(config.defaultShippingCost).toBe(100);
     expect(config.expressShippingCost).toBe(250);
     expect(config.estimatedDeliveryDays).toBe(7);
 
     // Restore default
     const defaultShipping = {
-      freeShippingThreshold: 5000,
       defaultShippingCost: 150,
       expressShippingCost: 300,
       estimatedDeliveryDays: 14,
@@ -114,43 +110,83 @@ describe("getShippingConfig", () => {
 // ─── Test: calculateShippingCost ───────────────────────────────────────────
 
 describe("calculateShippingCost", () => {
-  it("returns free shipping when subtotal exceeds threshold", async () => {
+  it("always returns shipping cost regardless of subtotal (no free shipping)", async () => {
     const result = await calculateShippingCost(6000, "standard");
-    expect(result.shippingHT).toBe(0);
-    expect(result.isFreeShipping).toBe(true);
+    expect(result.shippingHT).toBeGreaterThan(0);
   });
 
-  it("returns standard shipping cost when below threshold", async () => {
+  it("returns standard shipping cost", async () => {
     const result = await calculateShippingCost(1000, "standard");
     expect(result.shippingHT).toBeGreaterThan(0);
-    expect(result.isFreeShipping).toBe(false);
   });
 
   it("returns express shipping cost (higher than standard)", async () => {
     const standardResult = await calculateShippingCost(1000, "standard");
     const expressResult = await calculateShippingCost(1000, "express");
     expect(expressResult.shippingHT).toBeGreaterThan(standardResult.shippingHT);
-    expect(expressResult.isFreeShipping).toBe(false);
   });
 
-  it("returns free shipping at exact threshold", async () => {
-    const config = await getShippingConfig();
-    const result = await calculateShippingCost(config.freeShippingThreshold, "standard");
-    expect(result.shippingHT).toBe(0);
-    expect(result.isFreeShipping).toBe(true);
-  });
-
-  it("returns shipping cost just below threshold", async () => {
-    const config = await getShippingConfig();
-    const result = await calculateShippingCost(config.freeShippingThreshold - 1, "standard");
+  it("returns shipping cost even for very large orders", async () => {
+    const result = await calculateShippingCost(100000, "standard");
     expect(result.shippingHT).toBeGreaterThan(0);
-    expect(result.isFreeShipping).toBe(false);
   });
 
   it("includes the config in the result", async () => {
     const result = await calculateShippingCost(1000, "standard");
     expect(result.config).toBeDefined();
-    expect(result.config.freeShippingThreshold).toBeGreaterThan(0);
+    expect(result.config.defaultShippingCost).toBeGreaterThan(0);
+  });
+});
+
+// ─── Test: getTaxConfig ──────────────────────────────────────────────────
+
+describe("getTaxConfig", () => {
+  it("returns default tax config (0% VAT) when no setting exists", async () => {
+    const config = await getTaxConfig();
+    expect(config).toBeDefined();
+    expect(config.vatRate).toBe(0);
+    expect(config.vatLabel).toBe("TVA");
+  });
+
+  it("uses custom tax config from system settings", async () => {
+    const customTax = {
+      vatRate: 21,
+      vatLabel: "BTW",
+    };
+    await upsertSystemSetting("tax", JSON.stringify(customTax));
+
+    const config = await getTaxConfig();
+    expect(config.vatRate).toBe(21);
+    expect(config.vatLabel).toBe("BTW");
+
+    // Restore default (0%)
+    const defaultTax = {
+      vatRate: 0,
+      vatLabel: "TVA",
+    };
+    await upsertSystemSetting("tax", JSON.stringify(defaultTax));
+  });
+
+  it("handles partial tax config (merges with defaults)", async () => {
+    await upsertSystemSetting("tax", JSON.stringify({ vatRate: 10 }));
+
+    const config = await getTaxConfig();
+    expect(config.vatRate).toBe(10);
+    expect(config.vatLabel).toBe("TVA"); // Default label preserved
+
+    // Restore default
+    await upsertSystemSetting("tax", JSON.stringify({ vatRate: 0, vatLabel: "TVA" }));
+  });
+
+  it("handles invalid JSON gracefully", async () => {
+    await upsertSystemSetting("tax", "not-valid-json");
+
+    const config = await getTaxConfig();
+    expect(config.vatRate).toBe(0);
+    expect(config.vatLabel).toBe("TVA");
+
+    // Restore default
+    await upsertSystemSetting("tax", JSON.stringify({ vatRate: 0, vatLabel: "TVA" }));
   });
 });
 

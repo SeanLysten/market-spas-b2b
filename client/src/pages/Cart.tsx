@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
-import { Minus, Plus, ShoppingCart, Trash2, ArrowRight, TruckIcon, Package, BadgePercent, Gift } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2, ArrowRight, TruckIcon, Package, BadgePercent } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -67,12 +66,6 @@ export default function Cart() {
   const inStockItems = cart?.items?.filter((item: any) => !item.isPreorder) || [];
   const preorderItems = cart?.items?.filter((item: any) => item.isPreorder) || [];
 
-  // Free shipping progress
-  const subtotalAfterDiscount = (cart?.subtotalHT || 0) - (cart?.discountAmount || 0);
-  const freeShippingThreshold = (cart as any)?.freeShippingThreshold || 5000;
-  const isFreeShipping = (cart as any)?.isFreeShipping || false;
-  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - subtotalAfterDiscount);
-  const freeShippingProgress = Math.min(100, (subtotalAfterDiscount / freeShippingThreshold) * 100);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -119,43 +112,6 @@ export default function Cart() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-3 md:p-8">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Free Shipping Progress Banner */}
-              {!isEmpty && (
-                <Card className={`border ${isFreeShipping ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-primary/20 bg-primary/5'}`}>
-                  <CardContent className="py-4">
-                    {isFreeShipping ? (
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
-                          <Gift className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-emerald-700 dark:text-emerald-400">
-                            Livraison gratuite applicable
-                          </p>
-                          <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80">
-                            Votre commande dépasse le seuil de {formatPrice(freeShippingThreshold)} € HT
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <TruckIcon className="w-4 h-4 text-primary" />
-                            <span className="text-sm font-medium">
-                              Plus que <strong>{formatPrice(remainingForFreeShipping)} € HT</strong> pour la livraison gratuite
-                            </span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {formatPrice(subtotalAfterDiscount)} / {formatPrice(freeShippingThreshold)} €
-                          </span>
-                        </div>
-                        <Progress value={freeShippingProgress} className="h-2" />
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
 
               {/* In Stock Items */}
               {inStockItems.length > 0 && (
@@ -334,15 +290,13 @@ export default function Cart() {
                         <TruckIcon className="w-3.5 h-3.5" />
                         Livraison
                       </span>
-                      {(cart as any)?.isFreeShipping ? (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">Gratuite</span>
-                      ) : (
-                        <span className="font-medium">{formatPrice((cart as any)?.shippingHT || 0)} €</span>
-                      )}
+                      <span className="font-medium">{formatPrice((cart as any)?.shippingHT || 0)} €</span>
                     </div>
 
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">TVA</span>
+                      <span className="text-muted-foreground">
+                        {(cart as any)?.vatLabel || "TVA"} ({(cart as any)?.vatRate ?? 0}%)
+                      </span>
                       <span className="font-medium">{formatPrice(cart.vatAmount)} €</span>
                     </div>
                     <Separator />

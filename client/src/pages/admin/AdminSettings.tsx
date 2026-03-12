@@ -57,10 +57,14 @@ interface NotificationSettings {
 }
 
 interface ShippingSettings {
-  freeShippingThreshold: number;
   defaultShippingCost: number;
   expressShippingCost: number;
   estimatedDeliveryDays: number;
+}
+
+interface TaxSettings {
+  vatRate: number;
+  vatLabel: string;
 }
 
 const DEFAULT_COMPANY: CompanySettings = {
@@ -93,10 +97,14 @@ const DEFAULT_NOTIFICATIONS: NotificationSettings = {
 };
 
 const DEFAULT_SHIPPING: ShippingSettings = {
-  freeShippingThreshold: 5000,
   defaultShippingCost: 150,
   expressShippingCost: 300,
   estimatedDeliveryDays: 14,
+};
+
+const DEFAULT_TAX: TaxSettings = {
+  vatRate: 0,
+  vatLabel: "TVA",
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -110,6 +118,7 @@ export default function AdminSettings() {
   const [partnerLevels, setPartnerLevels] = useState<PartnerLevel[]>(DEFAULT_LEVELS);
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATIONS);
   const [shippingSettings, setShippingSettings] = useState<ShippingSettings>(DEFAULT_SHIPPING);
+  const [taxSettings, setTaxSettings] = useState<TaxSettings>(DEFAULT_TAX);
 
   // ─── Data fetching ──────────────────────────────────────────────────────────
 
@@ -131,7 +140,12 @@ export default function AdminSettings() {
         setNotificationSettings({ ...DEFAULT_NOTIFICATIONS, ...allSettings.notifications });
       }
       if (allSettings.shipping) {
-        setShippingSettings({ ...DEFAULT_SHIPPING, ...allSettings.shipping });
+        // Remove freeShippingThreshold from old settings if present
+        const { freeShippingThreshold, ...cleanShipping } = allSettings.shipping as any;
+        setShippingSettings({ ...DEFAULT_SHIPPING, ...cleanShipping });
+      }
+      if (allSettings.tax) {
+        setTaxSettings({ ...DEFAULT_TAX, ...allSettings.tax });
       }
     }
   }, [allSettings]);
@@ -161,6 +175,11 @@ export default function AdminSettings() {
     setHasChanges(true);
   };
 
+  const updateTax = (patch: Partial<TaxSettings>) => {
+    setTaxSettings((prev) => ({ ...prev, ...patch }));
+    setHasChanges(true);
+  };
+
   // ─── Save handler ───────────────────────────────────────────────────────────
 
   const handleSave = async () => {
@@ -171,6 +190,7 @@ export default function AdminSettings() {
           { key: "company", value: companySettings, description: "Informations entreprise" },
           { key: "partner_levels", value: partnerLevels, description: "Niveaux partenaires et remises" },
           { key: "shipping", value: shippingSettings, description: "Paramètres de livraison" },
+          { key: "tax", value: taxSettings, description: "Paramètres de TVA" },
           { key: "notifications", value: notificationSettings, description: "Paramètres de notifications" },
         ],
       });
@@ -284,7 +304,7 @@ export default function AdminSettings() {
         </div>
 
         <Tabs defaultValue="company" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
             <TabsTrigger value="company" className="gap-2">
               <Building2 className="w-4 h-4" />
               Entreprise
@@ -292,6 +312,10 @@ export default function AdminSettings() {
             <TabsTrigger value="partners" className="gap-2">
               <Percent className="w-4 h-4" />
               Niveaux
+            </TabsTrigger>
+            <TabsTrigger value="tax" className="gap-2">
+              <Percent className="w-4 h-4" />
+              TVA
             </TabsTrigger>
             <TabsTrigger value="shipping" className="gap-2">
               <Truck className="w-4 h-4" />
@@ -471,6 +495,60 @@ export default function AdminSettings() {
             </Card>
           </TabsContent>
 
+          {/* ── Tax Settings ─────────────────────────────────────────────── */}
+          <TabsContent value="tax">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Percent className="w-5 h-5" />
+                  Paramètres de TVA
+                </CardTitle>
+                <CardDescription>
+                  Configurez le taux de TVA général appliqué à tous les produits du site
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Taux de TVA général (%)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={0.1}
+                      value={taxSettings.vatRate}
+                      onChange={(e) => updateTax({ vatRate: Number(e.target.value) })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Taux appliqué à tous les produits et services. Actuellement à {taxSettings.vatRate}%.
+                      Exemples : 0% (exonéré), 20% (France), 21% (Belgique)
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Libellé de la taxe</Label>
+                    <Input
+                      value={taxSettings.vatLabel}
+                      onChange={(e) => updateTax({ vatLabel: e.target.value })}
+                      placeholder="TVA"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Nom affiché sur les factures et récapitulatifs (ex: TVA, VAT, Tax)
+                    </p>
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-600" />
+                    <p className="text-sm text-amber-700 dark:text-amber-400">
+                      Le taux de TVA est actuellement à <strong>{taxSettings.vatRate}%</strong>. 
+                      Toute modification sera appliquée immédiatement à toutes les nouvelles commandes.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* ── Shipping Settings ─────────────────────────────────────────── */}
           <TabsContent value="shipping">
             <Card>
@@ -486,17 +564,6 @@ export default function AdminSettings() {
               <CardContent className="space-y-6">
                 <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Seuil de livraison gratuite (€)</Label>
-                    <Input
-                      type="number"
-                      value={shippingSettings.freeShippingThreshold}
-                      onChange={(e) => updateShipping({ freeShippingThreshold: Number(e.target.value) })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Livraison gratuite au-dessus de ce montant
-                    </p>
-                  </div>
-                  <div className="space-y-2">
                     <Label>Frais de livraison standard (€)</Label>
                     <Input
                       type="number"
@@ -504,9 +571,6 @@ export default function AdminSettings() {
                       onChange={(e) => updateShipping({ defaultShippingCost: Number(e.target.value) })}
                     />
                   </div>
-                </div>
-
-                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Frais de livraison express (€)</Label>
                     <Input
@@ -515,6 +579,8 @@ export default function AdminSettings() {
                       onChange={(e) => updateShipping({ expressShippingCost: Number(e.target.value) })}
                     />
                   </div>
+                </div>
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Délai de livraison estimé (jours)</Label>
                     <Input

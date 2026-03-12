@@ -972,6 +972,10 @@ export const appRouter = router({
         // Get partner discount from system settings (level-based) or custom override
         const { discountPercent, partnerLevel, source: discountSource } = await db.resolvePartnerDiscount(ctx.user.partnerId);
 
+        // Get dynamic VAT rate from system settings
+        const taxConfig = await db.getTaxConfig();
+        const dynamicVatRate = taxConfig.vatRate;
+
         // Build order items with product details
         const orderItems = [];
         for (const item of input.items) {
@@ -983,7 +987,7 @@ export const appRouter = router({
           let sku = product.sku;
           let name = product.name;
           let unitPriceHT = parseFloat(product.pricePartnerHT);
-          let vatRate = parseFloat(product.vatRate || "21");
+          let vatRate = dynamicVatRate;
 
           // If variant is specified, get variant details
           if (item.variantId) {
