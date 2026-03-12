@@ -24,8 +24,11 @@ import {
   AlertTriangle,
   GraduationCap,
   ChevronRight,
+  Star,
+  Heart,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { toast } from "sonner";
 
 const FOLDER_ICONS: Record<string, any> = {
   wrench: Wrench,
@@ -60,6 +63,31 @@ export default function TechnicalResources() {
     currentFolderId !== null ? { folderId: currentFolderId } : {}
   );
   const { data: forumTopics = [] } = trpc.admin.forum.listTopics.useQuery({});
+
+  // Favorites
+  const { data: favoriteIds = [], refetch: refetchFavorites } = trpc.resourceFavorites.list.useQuery();
+  const { data: favoriteResources = [], refetch: refetchFavoriteResources } = trpc.resourceFavorites.listWithDetails.useQuery();
+  const toggleFavoriteMutation = trpc.resourceFavorites.toggle.useMutation({
+    onSuccess: (result) => {
+      refetchFavorites();
+      refetchFavoriteResources();
+      if (result.isFavorite) {
+        toast.success("Ajouté aux favoris");
+      } else {
+        toast.success("Retiré des favoris");
+      }
+    },
+    onError: () => {
+      toast.error("Erreur lors de la mise à jour des favoris");
+    },
+  });
+
+  const isFavorite = (resourceId: number) => favoriteIds.includes(resourceId);
+
+  const handleToggleFavorite = (e: React.MouseEvent, resourceId: number) => {
+    e.stopPropagation();
+    toggleFavoriteMutation.mutate({ resourceId });
+  };
 
   const currentFolder = folders.find((f: any) => f.id === currentFolderId);
 
@@ -153,6 +181,68 @@ export default function TechnicalResources() {
 
           {/* Onglet Ressources */}
           <TabsContent value="resources" className="space-y-6">
+
+            {/* Favorites section */}
+            {favoriteResources.length > 0 && currentFolderId === null && !search && (
+              <div>
+                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
+                  Mes favoris
+                  <span className="text-muted-foreground font-normal text-sm">
+                    ({favoriteResources.length})
+                  </span>
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {favoriteResources.map((resource: any) => (
+                    <Card
+                      key={`fav-${resource.id}`}
+                      className="hover:shadow-md transition-shadow border-amber-200/50 bg-amber-50/30 dark:bg-amber-950/10 dark:border-amber-800/30"
+                    >
+                      <CardContent className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0">{getTypeIcon(resource.type)}</div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm truncate">{resource.title}</h3>
+                            {resource.fileSize && (
+                              <p className="text-xs text-muted-foreground">
+                                {formatFileSize(resource.fileSize)}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={(e) => handleToggleFavorite(e, resource.id)}
+                            >
+                              <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                            </Button>
+                            {resource.type === "PDF" && resource.fileUrl && (
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="h-8"
+                                onClick={() =>
+                                  setViewingPdf({
+                                    url: resource.fileUrl,
+                                    name: resource.title || "document.pdf",
+                                  })
+                                }
+                              >
+                                <BookOpen className="h-3.5 w-3.5 mr-1" />
+                                Lire
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Breadcrumb */}
             {currentFolderId !== null && (
               <div className="flex items-center gap-2 text-sm">
@@ -230,6 +320,20 @@ export default function TechnicalResources() {
                   >
                     <CardContent className="py-4">
                       <div className="flex items-center gap-4">
+                        {/* Favorite star button */}
+                        <button
+                          className="flex-shrink-0 focus:outline-none transition-transform hover:scale-110"
+                          onClick={(e) => handleToggleFavorite(e, resource.id)}
+                          title={isFavorite(resource.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+                        >
+                          <Star
+                            className={`h-5 w-5 transition-colors ${
+                              isFavorite(resource.id)
+                                ? "text-amber-500 fill-amber-500"
+                                : "text-muted-foreground/40 hover:text-amber-400"
+                            }`}
+                          />
+                        </button>
                         <div className="flex-shrink-0">{getTypeIcon(resource.type)}</div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-sm md:text-base truncate">

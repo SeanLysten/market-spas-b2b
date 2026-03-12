@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like, lte, gte, asc, ne, gt, lt, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, technicalResourceFolders, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts, ga4Accounts, partnerTerritories, scheduledNewsletters, savedRoutes } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, technicalResourceFolders, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts, ga4Accounts, partnerTerritories, scheduledNewsletters, savedRoutes, resourceFavorites } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -4896,4 +4896,68 @@ export async function resolvePartnerDiscount(partnerId: number): Promise<{
     return { discountPercent: customDiscount, partnerLevel: partner.level, source: "custom" };
   }
   return { discountPercent: levelDiscount, partnerLevel: partner.level, source: "level" };
+}
+
+
+// ============================================
+// RESOURCE FAVORITES
+// ============================================
+
+export async function toggleResourceFavorite(userId: number, resourceId: number): Promise<{ isFavorite: boolean }> {
+  const db = await getDb();
+  // Check if already favorited
+  const existing = await db
+    .select()
+    .from(resourceFavorites)
+    .where(and(eq(resourceFavorites.userId, userId), eq(resourceFavorites.resourceId, resourceId)));
+
+  if (existing.length > 0) {
+    // Remove favorite
+    await db
+      .delete(resourceFavorites)
+      .where(and(eq(resourceFavorites.userId, userId), eq(resourceFavorites.resourceId, resourceId)));
+    return { isFavorite: false };
+  } else {
+    // Add favorite
+    await db.insert(resourceFavorites).values({ userId, resourceId });
+    return { isFavorite: true };
+  }
+}
+
+export async function getUserResourceFavorites(userId: number): Promise<number[]> {
+  const db = await getDb();
+  const rows = await db
+    .select({ resourceId: resourceFavorites.resourceId })
+    .from(resourceFavorites)
+    .where(eq(resourceFavorites.userId, userId))
+    .orderBy(desc(resourceFavorites.createdAt));
+  return rows.map((r) => r.resourceId);
+}
+
+export async function getUserFavoriteResources(userId: number) {
+  const db = await getDb();
+  const rows = await db
+    .select({
+      resourceId: resourceFavorites.resourceId,
+      favoritedAt: resourceFavorites.createdAt,
+    })
+    .from(resourceFavorites)
+    .where(eq(resourceFavorites.userId, userId))
+    .orderBy(desc(resourceFavorites.createdAt));
+
+  if (rows.length === 0) return [];
+
+  const resourceIds = rows.map((r) => r.resourceId);
+  const resources_list = await db
+    .select()
+    .from(technicalResources)
+    .where(or(...resourceIds.map((id) => eq(technicalResources.id, id))));
+
+  // Maintain favorite order
+  return rows
+    .map((fav) => {
+      const resource = resources_list.find((r) => r.id === fav.resourceId);
+      return resource ? { ...resource, favoritedAt: fav.favoritedAt } : null;
+    })
+    .filter(Boolean);
 }

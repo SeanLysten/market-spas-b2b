@@ -2666,3 +2666,24 @@ export const systemSettings = mysqlTable(
 
 export type SystemSetting = typeof systemSettings.$inferSelect;
 export type InsertSystemSetting = typeof systemSettings.$inferInsert;
+
+
+// ============================================
+// RESOURCE FAVORITES
+// ============================================
+export const resourceFavorites = mysqlTable(
+  "resource_favorites",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    resourceId: int("resourceId").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index("rf_user_id_idx").on(table.userId),
+    resourceIdx: index("rf_resource_id_idx").on(table.resourceId),
+    uniqueFav: unique("rf_user_resource_unique").on(table.userId, table.resourceId),
+  })
+);
+export type ResourceFavorite = typeof resourceFavorites.$inferSelect;
+export type InsertResourceFavorite = typeof resourceFavorites.$inferInsert;

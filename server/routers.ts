@@ -5238,5 +5238,30 @@ export const appRouter = router({
       };
     }),
   }),
+
+  // ============================================
+  // RESOURCE FAVORITES
+  // ============================================
+  resourceFavorites: router({
+    // Toggle favorite for a resource
+    toggle: protectedProcedure
+      .input(z.object({ resourceId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const { toggleResourceFavorite } = await import("./db");
+        return await toggleResourceFavorite(ctx.user.id, input.resourceId);
+      }),
+
+    // Get list of favorite resource IDs for current user
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const { getUserResourceFavorites } = await import("./db");
+      return await getUserResourceFavorites(ctx.user.id);
+    }),
+
+    // Get full favorite resources with details
+    listWithDetails: protectedProcedure.query(async ({ ctx }) => {
+      const { getUserFavoriteResources } = await import("./db");
+      return await getUserFavoriteResources(ctx.user.id);
+    }),
+  }),
 });
 export type AppRouter = typeof appRouter;

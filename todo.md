@@ -2723,3 +2723,12 @@
 - [x] Intégrer le PDFViewer dans la page admin Ressources Techniques (prévisualisation des PDFs uploadés)
 - [x] Ajouter un bouton retour pour quitter la visionneuse et revenir à la liste des ressources
 - [x] Écrire les tests Vitest pour le composant PDFViewer
+
+## Favoris Ressources Techniques
+- [x] Créer la table resource_favorites dans le schéma DB (userId, resourceId, createdAt)
+- [x] Ajouter les fonctions DB : toggleFavorite, getUserFavorites, isFavorite
+- [x] Créer les routes tRPC : resourceFavorites.toggle, resourceFavorites.list
+- [x] Intégrer le bouton étoile sur chaque ressource PDF côté utilisateur
+- [x] Ajouter une section "Mes favoris" en haut de la page Ressources Techniques
+- [x] Intégrer le bouton favori dans le PDFViewer
+- [x] Écrire les tests Vitest pour les favoris
