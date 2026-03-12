@@ -274,6 +274,13 @@
       "when": 1773321800891,
       "tag": "0038_glamorous_korath",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "5",
+      "when": 1773323405531,
+      "tag": "0039_soft_speedball",
+      "breakpoints": true
     }
   ]
 }

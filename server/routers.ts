@@ -1807,6 +1807,15 @@ export const appRouter = router({
           return await db.getProductVariants(input.productId);
         }),
 
+      // Reorder products (drag & drop)
+      reorder: adminProcedure
+        .input(z.object({ orderedIds: z.array(z.number()) }))
+        .mutation(async ({ input }) => {
+          const { updateProductSortOrder } = await import("./db");
+          await updateProductSortOrder(input.orderedIds);
+          return { success: true };
+        }),
+
       // Image upload
       uploadImage: adminProcedure
         .input(

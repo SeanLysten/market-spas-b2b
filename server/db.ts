@@ -294,7 +294,7 @@ export async function getAllProducts(filters?: {
     query = query.where(and(...conditions)) as any;
   }
 
-  query = query.orderBy(desc(products.createdAt)) as any;
+  query = query.orderBy(asc(products.sortOrder), desc(products.createdAt)) as any;
 
   if (filters?.limit) {
     query = query.limit(filters.limit) as any;
@@ -4960,4 +4960,20 @@ export async function getUserFavoriteResources(userId: number) {
       return resource ? { ...resource, favoritedAt: fav.favoritedAt } : null;
     })
     .filter(Boolean);
+}
+
+
+// ============================================
+// PRODUCT SORT ORDER
+// ============================================
+
+export async function updateProductSortOrder(orderedIds: number[]): Promise<void> {
+  const db = await getDb();
+  // Update each product's sortOrder based on its position in the array
+  for (let i = 0; i < orderedIds.length; i++) {
+    await db
+      .update(products)
+      .set({ sortOrder: i + 1 })
+      .where(eq(products.id, orderedIds[i]));
+  }
 }

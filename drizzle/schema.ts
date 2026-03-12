@@ -517,6 +517,9 @@ export const products = mysqlTable(
     isVisible: boolean("isVisible").default(true),
     isFeatured: boolean("isFeatured").default(false),
 
+    // Sort order for drag & drop reordering
+    sortOrder: int("sortOrder").default(0),
+
     // Sync
     lastSyncedAt: timestamp("lastSyncedAt"),
 

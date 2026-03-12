@@ -28,10 +28,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { useSafeQuery } from "@/hooks/useSafeQuery";
 import { TableSkeleton } from "@/components/TableSkeleton";
-import { Plus, Edit, Trash2, Package, Palette, TruckIcon, Pencil, CheckCircle, ChevronDown, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { Plus, Edit, Trash2, Package, Palette, TruckIcon, Pencil, CheckCircle, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 export default function AdminProducts() {
   const [productDialogOpen, setProductDialogOpen] = useState(false);
@@ -84,6 +101,32 @@ export default function AdminProducts() {
   const createProductMutation = trpc.admin.products.create.useMutation();
   const updateProductMutation = trpc.admin.products.update.useMutation();
   const deleteProductMutation = trpc.admin.products.delete.useMutation();
+  const reorderMutation = trpc.admin.products.reorder.useMutation();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !products?.length) return;
+
+    const oldIndex = products.findIndex((p: any) => p.id === active.id);
+    const newIndex = products.findIndex((p: any) => p.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(products, oldIndex, newIndex);
+    const orderedIds = reordered.map((p: any) => p.id);
+
+    try {
+      await reorderMutation.mutateAsync({ orderedIds });
+      refetch();
+      toast.success("Ordre des produits mis \u00e0 jour");
+    } catch (error: any) {
+      toast.error("Erreur lors de la r\u00e9organisation");
+    }
+  }, [products, reorderMutation, refetch]);
 
   const handleProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -367,78 +410,39 @@ export default function AdminProducts() {
                 <TableSkeleton rows={10} columns={6} />
               ) : products && products.length > 0 ? (
                 <>
-                  {/* Vue Desktop - Tableau */}
+                  {/* Vue Desktop - Tableau avec Drag & Drop */}
                   <div className="hidden md:block">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-10"></TableHead>
-                          <TableHead>Code Produit</TableHead>
-                          <TableHead>Nom</TableHead>
-                          <TableHead>EAN13</TableHead>
-                          <TableHead>Prix HT</TableHead>
-                          <TableHead>Stock total</TableHead>
-                          <TableHead>Statut</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {products.map((product: any) => (
-                          <React.Fragment key={product.id}>
-                            <TableRow
-                              className={`cursor-pointer hover:bg-muted/50 transition-colors ${expandedProductId === product.id ? "bg-muted/30 border-b-0" : ""}`}
-                              onClick={() => handleToggleExpand(product.id)}
-                            >
-                              <TableCell className="w-10 px-2">
-                                {expandedProductId === product.id ? (
-                                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                )}
-                              </TableCell>
-                              <TableCell className="font-mono text-sm">{product.supplierProductCode || <span className="text-muted-foreground italic">Non défini</span>}</TableCell>
-                              <TableCell className="font-medium">{product.name}</TableCell>
-                              <TableCell className="font-mono text-xs">{product.ean13 || <span className="text-muted-foreground italic">—</span>}</TableCell>
-                              <TableCell>{Number(product.pricePublicHT || 0).toFixed(2)} €</TableCell>
-                              <TableCell>
-                                <ProductStockCell productId={product.id} />
-                              </TableCell>
-                              <TableCell>
-                                {product.isActive ? (
-                                  <Badge variant="default">Actif</Badge>
-                                ) : (
-                                  <Badge variant="secondary">Inactif</Badge>
-                                )}
-                              </TableCell>
-                              <TableCell className="text-right space-x-2" onClick={(e) => e.stopPropagation()}>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleEditProduct(product)}
-                                  title="Modifier le produit"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleDeleteProduct(product.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TableCell>
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      <SortableContext items={products.map((p: any) => p.id)} strategy={verticalListSortingStrategy}>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-8"></TableHead>
+                              <TableHead className="w-10"></TableHead>
+                              <TableHead>Code Produit</TableHead>
+                              <TableHead>Nom</TableHead>
+                              <TableHead>EAN13</TableHead>
+                              <TableHead>Prix HT</TableHead>
+                              <TableHead>Stock total</TableHead>
+                              <TableHead>Statut</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
-                            {expandedProductId === product.id && (
-                              <TableRow className="bg-muted/10 hover:bg-muted/10">
-                                <TableCell colSpan={8} className="p-0">
-                                  <ExpandedVariantsRow productId={product.id} />
-                                </TableCell>
-                              </TableRow>
-                            )}
-                          </React.Fragment>
-                        ))}
-                      </TableBody>
-                    </Table>
+                          </TableHeader>
+                          <TableBody>
+                            {products.map((product: any) => (
+                              <SortableProductRow
+                                key={product.id}
+                                product={product}
+                                expandedProductId={expandedProductId}
+                                onToggleExpand={handleToggleExpand}
+                                onEdit={handleEditProduct}
+                                onDelete={handleDeleteProduct}
+                              />
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </SortableContext>
+                    </DndContext>
                   </div>
 
                   {/* Vue Mobile - Cartes */}
@@ -515,6 +519,98 @@ export default function AdminProducts() {
         onOpenChange={setColorsDialogOpen}
       />
     </AdminLayout>
+  );
+}
+
+// Composant SortableProductRow pour le drag & drop
+function SortableProductRow({ product, expandedProductId, onToggleExpand, onEdit, onDelete }: {
+  product: any;
+  expandedProductId: number | null;
+  onToggleExpand: (id: number) => void;
+  onEdit: (product: any) => void;
+  onDelete: (id: number) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: product.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <React.Fragment>
+      <TableRow
+        ref={setNodeRef}
+        style={style}
+        className={`cursor-pointer hover:bg-muted/50 transition-colors ${expandedProductId === product.id ? "bg-muted/30 border-b-0" : ""} ${isDragging ? "bg-muted/60 shadow-lg" : ""}`}
+        onClick={() => onToggleExpand(product.id)}
+      >
+        <TableCell className="w-8 px-1" onClick={(e) => e.stopPropagation()}>
+          <button
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted/80 touch-none"
+            title="Glisser pour r\u00e9organiser"
+          >
+            <GripVertical className="h-4 w-4 text-muted-foreground" />
+          </button>
+        </TableCell>
+        <TableCell className="w-10 px-2">
+          {expandedProductId === product.id ? (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          )}
+        </TableCell>
+        <TableCell className="font-mono text-sm">{product.supplierProductCode || <span className="text-muted-foreground italic">Non d\u00e9fini</span>}</TableCell>
+        <TableCell className="font-medium">{product.name}</TableCell>
+        <TableCell className="font-mono text-xs">{product.ean13 || <span className="text-muted-foreground italic">\u2014</span>}</TableCell>
+        <TableCell>{Number(product.pricePublicHT || 0).toFixed(2)} \u20ac</TableCell>
+        <TableCell>
+          <ProductStockCell productId={product.id} />
+        </TableCell>
+        <TableCell>
+          {product.isActive ? (
+            <Badge variant="default">Actif</Badge>
+          ) : (
+            <Badge variant="secondary">Inactif</Badge>
+          )}
+        </TableCell>
+        <TableCell className="text-right space-x-2" onClick={(e) => e.stopPropagation()}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onEdit(product)}
+            title="Modifier le produit"
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => onDelete(product.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </TableCell>
+      </TableRow>
+      {expandedProductId === product.id && (
+        <TableRow className="bg-muted/10 hover:bg-muted/10">
+          <TableCell colSpan={9} className="p-0">
+            <ExpandedVariantsRow productId={product.id} />
+          </TableCell>
+        </TableRow>
+      )}
+    </React.Fragment>
   );
 }
 

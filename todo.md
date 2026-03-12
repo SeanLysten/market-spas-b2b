@@ -2736,3 +2736,11 @@
 ## Bug: Affichage des toggles actif/inactif sur les variantes produit
 - [x] Corriger l'affichage des boutons toggle (switch) actif/inactif des variantes dans l'admin produits
 - [x] S'assurer que les toggles sont bien alignés et ont un style cohérent
+
+## Réorganisation des produits par glisser-déposer
+- [x] Ajouter un champ sortOrder à la table products si nécessaire
+- [x] Créer la route tRPC admin pour mettre à jour l'ordre des produits
+- [x] Installer @dnd-kit et intégrer le drag & drop dans la liste admin des produits
+- [x] Persister l'ordre en base de données après chaque réorganisation
+- [x] Utiliser le sortOrder pour trier les produits côté utilisateur (catalogue)
+- [x] Écrire les tests Vitest
