@@ -2617,3 +2617,9 @@
 ### P5 - Qualité
 - [x] Nettoyer 48 console.log serveur et client (db.ts: 12, routers.ts: 25, AdminLeads: 11)
 - [x] Consolider les fragments orphelins dans db.ts (6 fragments supprimés)
+
+## Fix téléchargement ressources médias
+- [x] Corriger le téléchargement individuel : fetch+blob pour forcer le download cross-origin (S3)
+- [x] Corriger le téléchargement en lot : gestion d'erreurs par fichier, compteur de succès, clear selection après
+- [x] Fallback window.open si le fetch échoue
+- [x] Extension de fichier ajoutée automatiquement au nom si manquante

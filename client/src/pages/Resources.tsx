@@ -247,13 +247,25 @@ export default function Resources() {
   const handleDownload = async (id: number, fileUrl: string, title: string) => {
     try {
       await downloadMutation.mutateAsync({ id });
-      const link = document.createElement("a");
-      link.href = fileUrl;
-      link.download = title;
-      link.target = "_blank";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Fetch le fichier en blob pour forcer le téléchargement (contourne les restrictions CORS sur l'attribut download)
+      try {
+        const response = await fetch(fileUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        // Extraire l'extension du fichier depuis l'URL ou le type MIME
+        const urlExt = fileUrl.split(".").pop()?.split("?")[0] ?? "";
+        const hasExt = title.includes(".");
+        link.download = hasExt ? title : `${title}.${urlExt}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      } catch {
+        // Fallback : ouvrir dans un nouvel onglet si le fetch échoue
+        window.open(fileUrl, "_blank");
+      }
     } catch {
       toast.error("Erreur lors du téléchargement");
     }
@@ -264,12 +276,24 @@ export default function Resources() {
     if (!toDownload.length) return;
     setDownloadingAll(true);
     toast.info(`Téléchargement de ${toDownload.length} fichier(s)…`);
+    let successCount = 0;
     for (const r of toDownload) {
-      await handleDownload(r.id, r.fileUrl, r.title);
-      await new Promise((res) => setTimeout(res, 400));
+      try {
+        await handleDownload(r.id, r.fileUrl, r.title);
+        successCount++;
+      } catch {
+        // Continue avec les autres fichiers si un échoue
+      }
+      // Délai entre les téléchargements pour éviter le blocage par le navigateur
+      await new Promise((res) => setTimeout(res, 600));
     }
     setDownloadingAll(false);
-    toast.success(`${toDownload.length} fichier(s) téléchargé(s)`);
+    if (successCount === toDownload.length) {
+      toast.success(`${successCount} fichier(s) téléchargé(s)`);
+    } else {
+      toast.warning(`${successCount}/${toDownload.length} fichier(s) téléchargé(s)`);
+    }
+    clearSelection();
   };
 
   const handleView = (resource: any) => {
