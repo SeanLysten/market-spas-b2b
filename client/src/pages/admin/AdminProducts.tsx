@@ -518,6 +518,9 @@ export default function AdminProducts() {
 }
 
 const ADMIN_COLOR_MAP: Record<string, string> = {
+  "sterling marble": "#E8E4E0",
+  "odyssey": "#B0B0B0",
+  "midnight opal": "#1a1a2e",
   "blanc": "#ffffff",
   "white": "#ffffff",
   "noir": "#1a1a1a",
@@ -552,6 +555,38 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
   const [editingVariantId, setEditingVariantId] = useState<number | null>(null);
   const [editStockValue, setEditStockValue] = useState("");
   const [uploadingVariantId, setUploadingVariantId] = useState<number | null>(null);
+  const [editingCodeVariantId, setEditingCodeVariantId] = useState<number | null>(null);
+  const [editCodeField, setEditCodeField] = useState<'supplierProductCode' | 'ean13' | null>(null);
+  const [editCodeValue, setEditCodeValue] = useState("");
+
+  const handleStartEditCode = (variant: any, field: 'supplierProductCode' | 'ean13') => {
+    setEditingCodeVariantId(variant.id);
+    setEditCodeField(field);
+    setEditCodeValue(variant[field] || "");
+  };
+
+  const handleSaveCode = async (variantId: number) => {
+    if (!editCodeField) return;
+    try {
+      await updateMutation.mutateAsync({
+        id: variantId,
+        [editCodeField]: editCodeValue || null,
+      });
+      toast.success(editCodeField === 'supplierProductCode' ? "Code produit mis \u00e0 jour" : "EAN13 mis \u00e0 jour");
+      setEditingCodeVariantId(null);
+      setEditCodeField(null);
+      setEditCodeValue("");
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de la mise \u00e0 jour");
+    }
+  };
+
+  const handleCancelEditCode = () => {
+    setEditingCodeVariantId(null);
+    setEditCodeField(null);
+    setEditCodeValue("");
+  };
 
   const handleStartEdit = (variant: any) => {
     setEditingVariantId(variant.id);
@@ -714,8 +749,70 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{variant.supplierProductCode || variant.sku}</td>
-                <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{variant.ean13 || '—'}</td>
+                <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
+                  {editingCodeVariantId === variant.id && editCodeField === 'supplierProductCode' ? (
+                    <div className="flex items-center gap-1">
+                      <Input
+                        value={editCodeValue}
+                        onChange={(e) => setEditCodeValue(e.target.value)}
+                        className="w-36 h-7 text-xs font-mono"
+                        autoFocus
+                        placeholder="Ex: 662201 078 38"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') { e.preventDefault(); handleSaveCode(variant.id); }
+                          if (e.key === 'Escape') handleCancelEditCode();
+                        }}
+                      />
+                      <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={() => handleSaveCode(variant.id)}>
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={handleCancelEditCode}>
+                        <span className="text-xs">&times;</span>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      className="flex items-center gap-1 cursor-pointer group font-mono text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => handleStartEditCode(variant, 'supplierProductCode')}
+                      title="Cliquer pour modifier le code produit"
+                    >
+                      <span>{variant.supplierProductCode || <span className="italic">Ajouter code</span>}</span>
+                      <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  )}
+                </td>
+                <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
+                  {editingCodeVariantId === variant.id && editCodeField === 'ean13' ? (
+                    <div className="flex items-center gap-1">
+                      <Input
+                        value={editCodeValue}
+                        onChange={(e) => setEditCodeValue(e.target.value)}
+                        className="w-36 h-7 text-xs font-mono"
+                        autoFocus
+                        placeholder="Ex: 3364549284619"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') { e.preventDefault(); handleSaveCode(variant.id); }
+                          if (e.key === 'Escape') handleCancelEditCode();
+                        }}
+                      />
+                      <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={() => handleSaveCode(variant.id)}>
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={handleCancelEditCode}>
+                        <span className="text-xs">&times;</span>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      className="flex items-center gap-1 cursor-pointer group font-mono text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => handleStartEditCode(variant, 'ean13')}
+                      title="Cliquer pour modifier l'EAN13"
+                    >
+                      <span>{variant.ean13 || <span className="italic">Ajouter EAN</span>}</span>
+                      <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  )}
+                </td>
                 <td className="px-4 py-2">
                   {editingVariantId === variant.id ? (
                     <div className="flex items-center gap-2">

@@ -2665,3 +2665,12 @@
 - [x] Vérifier que l'import stock matche correctement par CodeProduit/EAN13 (5/5 matchés, transit géré)
 - [x] Vérifier que l'export commandes envoie les EAN13 des produits commandés
 - [x] Mettre à jour les tests Vitest (31 tests supplier-stock, transit inclus)
+
+## Renommage couleurs et édition codes produits
+- [x] Analyser toutes les variantes en base pour identifier les doublons (Noir=Midnight Opal, Gris=Odyssey, Blanc=Sterling Marble)
+- [x] Fusionner les variantes doublons : Noir → Midnight Opal, Gris → Odyssey, Blanc → Sterling Marble
+- [x] Supprimer les variantes doublons après fusion (transférer stock, commandes, incoming_stock)
+- [x] Renommer les couleurs dans toute la base de données (40 variantes, 10 produits)
+- [x] Rendre les champs CodeProduit et EAN13 facilement éditables dans l'admin (inline editing clic-pour-éditer)
+- [x] Permettre l'édition des codes sur tous les produits et variantes (inline dans le tableau des variantes)
+- [x] Tester le rendu dans le catalogue et l'admin après les modifications (couleurs renommées, édition inline fonctionnelle)

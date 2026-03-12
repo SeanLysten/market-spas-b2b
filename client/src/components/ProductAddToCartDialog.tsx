@@ -30,6 +30,9 @@ interface ProductAddToCartDialogProps {
 }
 
 const COLOR_MAP: Record<string, string> = {
+  "sterling marble": "#E8E4E0",
+  "odyssey": "#B0B0B0",
+  "midnight opal": "#1a1a2e",
   blanc: "#ffffff",
   noir: "#1a1a1a",
   gris: "#808080",
