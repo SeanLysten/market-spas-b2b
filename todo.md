@@ -2732,3 +2732,7 @@
 - [x] Ajouter une section "Mes favoris" en haut de la page Ressources Techniques
 - [x] Intégrer le bouton favori dans le PDFViewer
 - [x] Écrire les tests Vitest pour les favoris
+
+## Bug: Affichage des toggles actif/inactif sur les variantes produit
+- [x] Corriger l'affichage des boutons toggle (switch) actif/inactif des variantes dans l'admin produits
+- [x] S'assurer que les toggles sont bien alignés et ont un style cohérent

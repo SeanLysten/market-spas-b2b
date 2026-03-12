@@ -23,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { useSafeQuery } from "@/hooks/useSafeQuery";
@@ -683,13 +684,12 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
             {variants.map((variant: any) => (
               <tr key={variant.id} className={`border-t border-border/30 hover:bg-muted/20 ${variant.isActive === false ? 'opacity-50' : ''}`}>
                 <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    onClick={() => handleToggleActive(variant.id, variant.isActive !== false)}
-                    className={`w-8 h-5 rounded-full relative transition-colors duration-200 ${variant.isActive !== false ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-gray-300'}`}
+                  <Switch
+                    checked={variant.isActive !== false}
+                    onCheckedChange={() => handleToggleActive(variant.id, variant.isActive !== false)}
+                    className="data-[state=checked]:bg-emerald-500 dark:data-[state=checked]:bg-emerald-400"
                     title={variant.isActive !== false ? 'Désactiver cette couleur' : 'Activer cette couleur'}
-                  >
-                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${variant.isActive !== false ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
-                  </button>
+                  />
                 </td>
                 <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
                   {uploadingVariantId === variant.id ? (
