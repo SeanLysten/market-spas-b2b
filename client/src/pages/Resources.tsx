@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import {
   Search,
   FileText,
@@ -24,6 +25,8 @@ import {
   FileVideo,
   X,
   ChevronDown,
+  Archive,
+  Loader2,
 } from "lucide-react";
 import { Link } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -142,6 +145,9 @@ export default function Resources() {
   const [previewResource, setPreviewResource] = useState<any>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [downloadingAll, setDownloadingAll] = useState(false);
+  const [zipProgress, setZipProgress] = useState<{ current: number; total: number } | null>(null);
+  const { user } = useAuth();
+  const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN";
 
   // ─── Data ───────────────────────────────────────────────────────────────────
 
@@ -274,26 +280,65 @@ export default function Resources() {
   const handleDownloadSelected = async () => {
     const toDownload = filtered.filter((r) => selected.has(r.id));
     if (!toDownload.length) return;
+
+    // Si un seul fichier, télécharger directement
+    if (toDownload.length === 1) {
+      await handleDownload(toDownload[0].id, toDownload[0].fileUrl, toDownload[0].title);
+      clearSelection();
+      return;
+    }
+
+    // Téléchargement ZIP pour plusieurs fichiers
     setDownloadingAll(true);
-    toast.info(`Téléchargement de ${toDownload.length} fichier(s)…`);
-    let successCount = 0;
-    for (const r of toDownload) {
-      try {
-        await handleDownload(r.id, r.fileUrl, r.title);
-        successCount++;
-      } catch {
-        // Continue avec les autres fichiers si un échoue
+    setZipProgress({ current: 0, total: toDownload.length });
+    toast.info(`Préparation de l'archive ZIP (${toDownload.length} fichiers)…`);
+
+    try {
+      const ids = toDownload.map((r) => r.id).join(",");
+      const response = await fetch(`/api/resources/download-zip?ids=${ids}`);
+
+      if (!response.ok) {
+        throw new Error("Erreur serveur");
       }
-      // Délai entre les téléchargements pour éviter le blocage par le navigateur
-      await new Promise((res) => setTimeout(res, 600));
+
+      // Lire le stream avec progression
+      const contentLength = response.headers.get("content-length");
+      const totalBytes = contentLength ? parseInt(contentLength) : 0;
+      const reader = response.body?.getReader();
+      const chunks: Uint8Array[] = [];
+      let receivedBytes = 0;
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          receivedBytes += value.length;
+          if (totalBytes > 0) {
+            const pct = Math.round((receivedBytes / totalBytes) * toDownload.length);
+            setZipProgress({ current: Math.min(pct, toDownload.length), total: toDownload.length });
+          }
+        }
+      }
+
+      const blob = new Blob(chunks, { type: "application/zip" });
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `ressources-market-spas.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+
+      toast.success(`${toDownload.length} fichier(s) téléchargé(s) en ZIP`);
+    } catch {
+      toast.error("Erreur lors de la création de l'archive ZIP");
+    } finally {
+      setDownloadingAll(false);
+      setZipProgress(null);
+      clearSelection();
     }
-    setDownloadingAll(false);
-    if (successCount === toDownload.length) {
-      toast.success(`${successCount} fichier(s) téléchargé(s)`);
-    } else {
-      toast.warning(`${successCount}/${toDownload.length} fichier(s) téléchargé(s)`);
-    }
-    clearSelection();
   };
 
   const handleView = (resource: any) => {
@@ -483,9 +528,34 @@ export default function Resources() {
                 onClick={handleDownloadSelected}
                 disabled={downloadingAll}
               >
-                <Download className="w-3.5 h-3.5" />
-                Télécharger la sélection
+                {downloadingAll ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : selected.size > 1 ? (
+                  <Archive className="w-3.5 h-3.5" />
+                ) : (
+                  <Download className="w-3.5 h-3.5" />
+                )}
+                {downloadingAll && zipProgress
+                  ? `Préparation ZIP (${zipProgress.current}/${zipProgress.total})`
+                  : selected.size > 1
+                  ? `Télécharger en ZIP (${selected.size})`
+                  : "Télécharger"
+                }
               </Button>
+              {/* Barre de progression ZIP */}
+              {downloadingAll && zipProgress && (
+                <div className="flex items-center gap-2 ml-2">
+                  <div className="w-32 h-1.5 bg-primary/20 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all duration-300"
+                      style={{ width: `${(zipProgress.current / zipProgress.total) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {Math.round((zipProgress.current / zipProgress.total) * 100)}%
+                  </span>
+                </div>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -637,7 +707,15 @@ export default function Resources() {
                       {/* Info */}
                       <div className="p-2">
                         <p className="text-xs font-medium line-clamp-2 leading-tight">{resource.title}</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">{formatSize(resource.fileSize)}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <p className="text-[10px] text-muted-foreground">{formatSize(resource.fileSize)}</p>
+                          {isAdmin && resource.downloadCount > 0 && (
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                              <Download className="w-2.5 h-2.5" />
+                              {resource.downloadCount}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Hover actions */}
@@ -702,9 +780,15 @@ export default function Resources() {
                         <Icon className="w-4 h-4 shrink-0 text-muted-foreground" />
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">{resource.title}</p>
-                          <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                            {formatSize(resource.fileSize)}
-                          </p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground truncate hidden sm:block">
+                            <span>{formatSize(resource.fileSize)}</span>
+                            {isAdmin && resource.downloadCount > 0 && (
+                              <span className="inline-flex items-center gap-0.5">
+                                <Download className="w-3 h-3" />
+                                {resource.downloadCount}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
 

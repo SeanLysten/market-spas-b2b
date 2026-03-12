@@ -323,6 +323,62 @@ async function startServer() {
   app.use(inboundLeadsRouter);
   // Resource upload - multipart/form-data for large files (videos, etc.)
   app.use(uploadResourceRouter);
+  // Download ZIP - multiple resources
+  app.get("/api/resources/download-zip", async (req, res) => {
+    try {
+      const idsParam = req.query.ids as string;
+      if (!idsParam) {
+        return res.status(400).json({ error: "Missing ids parameter" });
+      }
+      const ids = idsParam.split(",").map(Number).filter(n => !isNaN(n));
+      if (ids.length === 0) {
+        return res.status(400).json({ error: "No valid ids provided" });
+      }
+      if (ids.length > 50) {
+        return res.status(400).json({ error: "Maximum 50 files per ZIP" });
+      }
+
+      const { default: archiver } = await import("archiver");
+      const { getAllResources, incrementResourceDownload } = await import("../db");
+      
+      const allResources = await getAllResources({ isActive: true });
+      const toZip = allResources.filter(r => ids.includes(r.id));
+      
+      if (toZip.length === 0) {
+        return res.status(404).json({ error: "No resources found" });
+      }
+
+      res.setHeader("Content-Type", "application/zip");
+      res.setHeader("Content-Disposition", `attachment; filename="ressources-market-spas-${Date.now()}.zip"`);
+
+      const archive = archiver("zip", { zlib: { level: 5 } });
+      archive.on("error", (err: Error) => {
+        console.error("[ZIP] Archive error:", err.message);
+        if (!res.headersSent) res.status(500).json({ error: "ZIP creation failed" });
+      });
+      archive.pipe(res);
+
+      for (const resource of toZip) {
+        try {
+          const fileResponse = await fetch(resource.fileUrl);
+          if (!fileResponse.ok) continue;
+          const buffer = Buffer.from(await fileResponse.arrayBuffer());
+          const ext = resource.fileUrl.split(".").pop()?.split("?")[0] ?? "bin";
+          const safeName = resource.title.replace(/[^a-zA-Z0-9àâäéèêëïîôùûüÿçÀÂÄÉÈÊËÏÎÔÙÛÜŸÇ\s\-_]/g, "").trim();
+          archive.append(buffer, { name: `${safeName}.${ext}` });
+          await incrementResourceDownload(resource.id);
+        } catch (err) {
+          console.error(`[ZIP] Failed to fetch ${resource.title}:`, (err as Error).message);
+        }
+      }
+
+      await archive.finalize();
+    } catch (err) {
+      console.error("[ZIP] Error:", (err as Error).message);
+      if (!res.headersSent) res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",

@@ -2623,3 +2623,9 @@
 - [x] Corriger le téléchargement en lot : gestion d'erreurs par fichier, compteur de succès, clear selection après
 - [x] Fallback window.open si le fetch échoue
 - [x] Extension de fichier ajoutée automatiquement au nom si manquante
+
+## Améliorations téléchargement ressources médias
+- [x] Téléchargement ZIP côté serveur pour sélection multiple (route backend + endpoint Express)
+- [x] Barre de progression visible pendant le téléchargement en lot
+- [x] Compteur de téléchargements visible sur chaque fichier pour les admins
+- [x] Tests vitest (28 tests dans resources-zip-download.test.ts)
