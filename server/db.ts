@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like, lte, gte, asc, ne, gt, lt, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts, ga4Accounts, partnerTerritories, scheduledNewsletters, savedRoutes } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, technicalResourceFolders, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts, ga4Accounts, partnerTerritories, scheduledNewsletters, savedRoutes } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -2342,9 +2342,44 @@ export async function getPartnerPerformance(limit: number = 10) {
 // TECHNICAL RESOURCES
 // ============================================
 
+// ============================================
+// TECHNICAL RESOURCE FOLDERS
+// ============================================
+
+export async function getAllTechFolders() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(technicalResourceFolders).orderBy(asc(technicalResourceFolders.sortOrder));
+}
+
+export async function createTechFolder(data: { name: string; slug: string; description?: string; icon?: string; sortOrder?: number; parentId?: number; createdBy: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(technicalResourceFolders).values(data as any);
+}
+
+export async function updateTechFolder(id: number, data: Partial<{ name: string; slug: string; description: string; icon: string; sortOrder: number }>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.update(technicalResourceFolders).set(data).where(eq(technicalResourceFolders.id, id));
+}
+
+export async function deleteTechFolder(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Move resources in this folder to "uncategorized" (folderId = null)
+  await db.update(technicalResources).set({ folderId: null }).where(eq(technicalResources.folderId, id));
+  return await db.delete(technicalResourceFolders).where(eq(technicalResourceFolders.id, id));
+}
+
+// ============================================
+// TECHNICAL RESOURCES
+// ============================================
+
 export async function getAllTechnicalResources(filters?: {
   type?: string;
   category?: string;
+  folderId?: number | null;
   productCategory?: string;
   search?: string;
 }) {
@@ -2358,6 +2393,13 @@ export async function getAllTechnicalResources(filters?: {
   }
   if (filters?.category) {
     conditions.push(eq(technicalResources.category, filters.category as any));
+  }
+  if (filters?.folderId !== undefined) {
+    if (filters.folderId === null) {
+      conditions.push(isNull(technicalResources.folderId));
+    } else if (filters.folderId) {
+      conditions.push(eq(technicalResources.folderId, filters.folderId));
+    }
   }
   if (filters?.productCategory) {
     conditions.push(eq(technicalResources.productCategory, filters.productCategory as any));
@@ -2393,10 +2435,14 @@ export async function getTechnicalResourceById(id: number) {
 
 export async function createTechnicalResource(data: {
   title: string;
-  description: string;
+  description?: string;
   type: string;
   fileUrl: string;
-  category: string;
+  fileName?: string;
+  fileSize?: number;
+  fileType?: string;
+  category?: string;
+  folderId?: number | null;
   productCategory?: string;
   tags?: string;
   createdBy: number;
@@ -2410,6 +2456,7 @@ export async function createTechnicalResource(data: {
     category: data.category as any,
     productCategory: data.productCategory as any,
     viewCount: 0,
+    downloadCount: 0,
     createdAt: new Date(),
   });
 
@@ -2423,7 +2470,11 @@ export async function updateTechnicalResource(
     description: string;
     type: string;
     fileUrl: string;
+    fileName: string;
+    fileSize: number;
+    fileType: string;
     category: string;
+    folderId: number | null;
     productCategory: string;
     tags: string;
   }>
@@ -2451,13 +2502,23 @@ export async function deleteTechnicalResource(id: number) {
     .where(eq(technicalResources.id, id));
 }
 
-export async function incrementResourceViewCount(id: number) {
+export async function incrementTechResourceViewCount(id: number) {
   const db = await getDb();
   if (!db) return;
 
   await db
     .update(technicalResources)
     .set({ viewCount: sql`${technicalResources.viewCount} + 1` })
+    .where(eq(technicalResources.id, id));
+}
+
+export async function incrementTechResourceDownloadCount(id: number) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(technicalResources)
+    .set({ downloadCount: sql`${technicalResources.downloadCount} + 1` })
     .where(eq(technicalResources.id, id));
 }
 

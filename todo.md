@@ -2690,3 +2690,12 @@
 - [x] Restreindre l'accès à la page Intégration Fournisseur aux SUPER_ADMIN uniquement
 - [x] Remplacer toutes les URLs manus par marketspas.pro dans la documentation API et les tests
 - [x] Vérifier qu'aucune mention de "manus" n'apparaît dans l'interface utilisateur (seul vite.config.ts technique reste)
+
+## Refonte Ressources Techniques (style Ressources Médias)
+- [x] Analyser le code existant des Ressources Techniques (admin + utilisateur) et des Ressources Médias
+- [x] Modifier le schéma DB : ajouter table technical_resource_folders + modifier technical_resources pour supporter upload fichier
+- [x] Créer les routes tRPC pour CRUD dossiers (techFolders) et upload/gestion de fichiers PDF (technicalResources.upload)
+- [x] Refondre la page admin Ressources Techniques : dossiers catégorisés + drag & drop PDF + upload S3
+- [x] Refondre la page utilisateur Ressources Techniques : navigation par dossiers + téléchargement PDF
+- [x] Écrire les tests Vitest pour les nouvelles routes (22 tests)
+- [x] Tester le rendu admin et utilisateur (dossiers affichés, drag & drop fonctionnel, navigation par dossiers)

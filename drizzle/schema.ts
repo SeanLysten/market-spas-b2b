@@ -1598,6 +1598,27 @@ export type InsertPartnerTerritory = typeof partnerTerritories.$inferInsert;
 const technicalResourceTypeEnum = ["PDF", "VIDEO", "LINK"] as const;
 const forumTopicStatusEnum = ["OPEN", "RESOLVED", "CLOSED"] as const;
 
+// Technical resource folders
+export const technicalResourceFolders = mysqlTable(
+  "technical_resource_folders",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    slug: varchar("slug", { length: 255 }).notNull(),
+    description: text("description"),
+    icon: varchar("icon", { length: 50 }).default("folder"),
+    sortOrder: int("sortOrder").default(0).notNull(),
+    parentId: int("parentId"), // for nested folders
+    createdBy: int("createdBy").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    slugIdx: index("tr_folder_slug_idx").on(table.slug),
+    parentIdx: index("tr_folder_parent_idx").on(table.parentId),
+  })
+);
+
 // Technical resources (PDFs, videos, links)
 export const technicalResources = mysqlTable(
   "technical_resources",
@@ -1607,10 +1628,15 @@ export const technicalResources = mysqlTable(
     description: text("description"),
     type: mysqlEnum("type", technicalResourceTypeEnum).notNull(),
     fileUrl: text("fileUrl"), // S3 URL or external link
+    fileName: varchar("fileName", { length: 500 }), // original file name
+    fileSize: int("fileSize"), // file size in bytes
+    fileType: varchar("fileType", { length: 100 }), // MIME type
     category: varchar("category", { length: 100 }), // e.g., "Installation", "Troubleshooting", "Maintenance"
+    folderId: int("folderId"), // reference to technical_resource_folders
     productCategory: mysqlEnum("productCategory", ["SPAS", "SWIM_SPAS", "MAINTENANCE", "COVERS", "ACCESSORIES", "OTHER"]),
     tags: text("tags"), // JSON array of tags
     viewCount: int("viewCount").default(0).notNull(),
+    downloadCount: int("downloadCount").default(0).notNull(),
     isPublic: boolean("isPublic").default(true).notNull(),
     createdBy: int("createdBy").notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -1619,6 +1645,7 @@ export const technicalResources = mysqlTable(
   (table) => ({
     typeIdx: index("type_idx").on(table.type),
     categoryIdx: index("category_idx").on(table.category),
+    folderIdx: index("tr_folder_id_idx").on(table.folderId),
     productCategoryIdx: index("productCategory_idx").on(table.productCategory),
     createdByIdx: index("createdBy_idx").on(table.createdBy),
   })
@@ -1675,6 +1702,9 @@ export const forumReplies = mysqlTable(
 
 export type TechnicalResource = typeof technicalResources.$inferSelect;
 export type InsertTechnicalResource = typeof technicalResources.$inferInsert;
+
+export type TechnicalResourceFolder = typeof technicalResourceFolders.$inferSelect;
+export type InsertTechnicalResourceFolder = typeof technicalResourceFolders.$inferInsert;
 
 export type ForumTopic = typeof forumTopics.$inferSelect;
 export type InsertForumTopic = typeof forumTopics.$inferInsert;

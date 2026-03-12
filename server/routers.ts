@@ -2703,6 +2703,29 @@ export const appRouter = router({
     }),
 
     // Technical Resources
+    // Technical Resource Folders
+    techFolders: router({
+      list: protectedProcedure.query(async () => {
+        return await db.getAllTechFolders();
+      }),
+      create: adminProcedure
+        .input(z.object({ name: z.string(), slug: z.string(), description: z.string().optional(), icon: z.string().optional(), sortOrder: z.number().optional() }))
+        .mutation(async ({ input, ctx }) => {
+          return await db.createTechFolder({ ...input, createdBy: ctx.user.id });
+        }),
+      update: adminProcedure
+        .input(z.object({ id: z.number(), name: z.string().optional(), slug: z.string().optional(), description: z.string().optional(), icon: z.string().optional(), sortOrder: z.number().optional() }))
+        .mutation(async ({ input }) => {
+          const { id, ...data } = input;
+          return await db.updateTechFolder(id, data);
+        }),
+      delete: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          return await db.deleteTechFolder(input.id);
+        }),
+    }),
+
     technicalResources: router({
       // List all technical resources
       list: protectedProcedure
@@ -2711,6 +2734,7 @@ export const appRouter = router({
             .object({
               type: z.string().optional(),
               category: z.string().optional(),
+              folderId: z.number().nullable().optional(),
               productCategory: z.string().optional(),
               search: z.string().optional(),
             })
@@ -2726,20 +2750,24 @@ export const appRouter = router({
         .query(async ({ input }) => {
           const resource = await db.getTechnicalResourceById(input.id);
           if (resource) {
-            await db.incrementResourceViewCount(input.id);
+            await db.incrementTechResourceViewCount(input.id);
           }
           return resource;
         }),
 
-      // Create resource (admin only)
+      // Create resource via tRPC (with base64 file upload)
       create: adminProcedure
         .input(
           z.object({
             title: z.string(),
-            description: z.string(),
+            description: z.string().optional(),
             type: z.string(),
             fileUrl: z.string(),
-            category: z.string(),
+            fileName: z.string().optional(),
+            fileSize: z.number().optional(),
+            fileType: z.string().optional(),
+            category: z.string().optional(),
+            folderId: z.number().nullable().optional(),
             productCategory: z.string().optional(),
             tags: z.string().optional(),
           })
@@ -2747,6 +2775,46 @@ export const appRouter = router({
         .mutation(async ({ input, ctx }) => {
           return await db.createTechnicalResource({
             ...input,
+            createdBy: ctx.user.id,
+          });
+        }),
+
+      // Upload file and create resource
+      upload: adminProcedure
+        .input(
+          z.object({
+            fileData: z.string(), // base64
+            fileName: z.string(),
+            fileType: z.string(),
+            fileSize: z.number(),
+            title: z.string().optional(),
+            description: z.string().optional(),
+            folderId: z.number().nullable().optional(),
+            category: z.string().optional(),
+            productCategory: z.string().optional(),
+          })
+        )
+        .mutation(async ({ input, ctx }) => {
+          const { storagePut } = await import("./storage");
+          const buffer = Buffer.from(input.fileData.split(",")[1] || input.fileData, "base64");
+          const sanitizedName = input.fileName.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9._-]/g, "");
+          const fileKey = `technical-resources/${Date.now()}-${sanitizedName}`;
+          const { url } = await storagePut(fileKey, buffer, input.fileType);
+
+          const title = input.title || input.fileName.replace(/\.[^/.]+$/, "");
+          const type = input.fileType.includes("pdf") ? "PDF" : input.fileType.includes("video") ? "VIDEO" : "LINK";
+
+          return await db.createTechnicalResource({
+            title,
+            description: input.description || null,
+            type,
+            fileUrl: url,
+            fileName: input.fileName,
+            fileSize: input.fileSize,
+            fileType: input.fileType,
+            category: input.category || null,
+            folderId: input.folderId ?? null,
+            productCategory: input.productCategory || null,
             createdBy: ctx.user.id,
           });
         }),
@@ -2761,6 +2829,7 @@ export const appRouter = router({
             type: z.string().optional(),
             fileUrl: z.string().optional(),
             category: z.string().optional(),
+            folderId: z.number().nullable().optional(),
             productCategory: z.string().optional(),
             tags: z.string().optional(),
           })
@@ -2775,6 +2844,14 @@ export const appRouter = router({
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input }) => {
           return await db.deleteTechnicalResource(input.id);
+        }),
+
+      // Track download
+      trackDownload: protectedProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.incrementTechResourceDownloadCount(input.id);
+          return { success: true };
         }),
     }),
 

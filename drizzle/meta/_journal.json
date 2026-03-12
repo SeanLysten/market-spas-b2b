@@ -260,6 +260,13 @@
       "when": 1773313367161,
       "tag": "0036_cultured_maggott",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "5",
+      "when": 1773318614871,
+      "tag": "0037_right_terror",
+      "breakpoints": true
     }
   ]
 }
