@@ -2574,3 +2574,13 @@
 - [x] Route /company-profile ajoutée dans App.tsx
 - [x] Responsive mobile (grilles adaptatives, bouton save en bas sur mobile)
 - [x] 71 tests vitest passants (dont 12 nouveaux pour le profil société)
+
+## AUDIT COMPLET DU CODEBASE (Phase 1 - Audit uniquement, pas de modifications)
+- [x] 1.1 Audit code mort et fichiers orphelins (10 fichiers morts, 7 composants UI inutilisés, 22+ fonctions mortes dans db.ts)
+- [x] 1.2 Audit doublons et code redondant (2 paires de fonctions dupliquées, SAV dupliqué db.ts vs sav-db.ts)
+- [x] 1.3 Audit connectivité des 31 modules (29 connectés, 1 déconnecté AdminSettings, 1 partiel AdminOrders)
+- [x] 1.4 Audit intégrité des flux de données (170 routes backend, 201 appels frontend, 225 validations input)
+- [x] 1.5 Audit architecture et nommage (5 fichiers monolithiques identifiés)
+- [x] 1.6 Audit sécurité (2 critiques, 3 moyens, 3 faibles)
+- [x] 1.7 Audit dépendances package.json (7 dépendances inutilisées, 1 accidentelle)
+- [x] Rapport d'audit structuré livré (AUDIT-REPORT.md)
