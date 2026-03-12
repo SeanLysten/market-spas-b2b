@@ -232,7 +232,7 @@ export default function ProductDetail() {
           <div className="space-y-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline">{product.sku}</Badge>
+                <Badge variant="outline" className="font-mono">{product.ean13 ? `EAN: ${product.ean13}` : (product.supplierProductCode || product.sku)}</Badge>
                 {hasStock ? (
                   <Badge className="bg-emerald-600 dark:bg-emerald-500">En stock ({stock})</Badge>
                 ) : (
@@ -388,10 +388,18 @@ export default function ProductDetail() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-muted-foreground dark:text-muted-foreground">SKU</span>
-                      <span className="font-medium">{product.sku}</span>
-                    </div>
+                    {product.supplierProductCode && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground dark:text-muted-foreground">Code Produit</span>
+                        <span className="font-medium font-mono">{product.supplierProductCode}</span>
+                      </div>
+                    )}
+                    {product.ean13 && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground dark:text-muted-foreground">EAN13</span>
+                        <span className="font-medium font-mono">{product.ean13}</span>
+                      </div>
+                    )}
                     {product.weight && (
                       <div className="flex justify-between py-2 border-b">
                         <span className="text-muted-foreground dark:text-muted-foreground">Poids</span>

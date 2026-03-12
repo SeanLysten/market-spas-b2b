@@ -376,7 +376,7 @@ export default function AfterSalesDetail({ serviceId, onClose }: AfterSalesDetai
                 {spareParts.map((sp: any, i: number) => (
                   <tr key={i} className="border-b last:border-0">
                     <td className="py-2">{sp.sparePart?.name || "Pièce"}</td>
-                    <td className="py-2 text-muted-foreground">{sp.sparePart?.sku || "-"}</td>
+                    <td className="py-2 text-muted-foreground font-mono">{sp.sparePart?.ean13 || sp.sparePart?.supplierProductCode || sp.sparePart?.sku || "-"}</td>
                     <td className="py-2 text-center">{sp.quantity}</td>
                     <td className="py-2 text-right">{sp.unitPrice ? `${(sp.unitPrice / 100).toFixed(2)} €` : "-"}</td>
                     <td className="py-2 text-right font-medium">

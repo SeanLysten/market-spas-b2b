@@ -2649,10 +2649,19 @@
 - [x] Ajouter les champs supplierProductCode et ean13 au schéma products/variants
 - [x] Migrer la base de données avec les nouveaux champs
 - [x] Mettre à jour l'admin produits pour afficher/éditer CodeProduit et EAN13
-- [ ] Pré-remplir les codes produits fournis par le collaborateur (15 produits Neptune V2, Easy Relax, Volcano, Mykonos, Twin Plug & Play)
+- [x] Pré-remplir les codes produits fournis par le collaborateur (15 produits Neptune V2, Easy Relax, Volcano, Mykonos, Twin Plug & Play)
 - [x] Créer l'endpoint POST /api/supplier/stock/import pour recevoir le JSON de stock (CodeProduit, EnStock, EnTransit)
 - [x] Logique de matching CodeProduit/EAN13 → produit/variante et mise à jour stock + transit
 - [x] Créer l'endpoint GET /api/supplier/orders/export pour envoyer les commandes/paiements/clients au collaborateur
 - [x] Créer l'interface admin de gestion de l'intégration (test import, logs, mapping, documentation API)
 - [x] Écrire les tests Vitest pour les endpoints d'import/export (26 tests)
 - [x] Tester avec le fichier JSON de test du collaborateur (import: 19/19 traités, export: endpoint fonctionnel)
+
+## Remplacement SKU par CodeProduit/EAN13
+- [x] Remplacer l'affichage SKU par CodeProduit + EAN13 dans toute la plateforme (SKU auto-généré en interne)
+- [x] Mettre à jour l'admin produits pour afficher CodeProduit et EAN13 au lieu de SKU
+- [x] Mettre à jour le catalogue, panier, favoris, confirmation, suivi, SAV pour utiliser EAN13
+- [x] Pré-remplir les 15 variantes avec les codes du collaborateur + créer variantes manquantes (Odyssey, Midnight Opal) + produit Twin Plug & Play
+- [x] Vérifier que l'import stock matche correctement par CodeProduit/EAN13 (5/5 matchés, transit géré)
+- [x] Vérifier que l'export commandes envoie les EAN13 des produits commandés
+- [x] Mettre à jour les tests Vitest (31 tests supplier-stock, transit inclus)

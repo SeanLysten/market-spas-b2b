@@ -280,8 +280,8 @@ export default function OrderTracking() {
                         {item.variant && (
                           <p className="text-xs md:text-sm text-muted-foreground">{item.variant.name}</p>
                         )}
-                        <p className="text-xs md:text-sm text-muted-foreground">
-                          SKU: {item.product?.sku || "N/A"}
+                        <p className="text-xs md:text-sm text-muted-foreground font-mono">
+                          {item.product?.ean13 ? `EAN: ${item.product.ean13}` : (item.product?.supplierProductCode || item.product?.sku || 'N/A')}
                         </p>
                       </div>
                       <div className="text-right">

@@ -1,0 +1,73 @@
+{
+  "query": "SELECT id, sku, name, supplierProductCode, ean13 FROM products ORDER BY id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, sku, name, supplierProductCode, ean13 FROM products ORDER BY id LIMIT 20;",
+  "rows": [
+    {
+      "id": "60001",
+      "sku": "SPA-EASYRELAX",
+      "name": "Easy Relax",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "60002",
+      "sku": "SPA-KOS",
+      "name": "Kos",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "60003",
+      "sku": "SPA-MYKONOS",
+      "name": "Mykonos",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "60004",
+      "sku": "SPA-NEPTUNE",
+      "name": "Neptune",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "60005",
+      "sku": "SPA-VOLCANO",
+      "name": "Volcano",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "60007",
+      "sku": "SPA-DEVOTION",
+      "name": "Devotion",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "60008",
+      "sku": "SPA-ECSTATIC",
+      "name": "Ecstatic",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "60009",
+      "sku": "SPA-EUPHORIA",
+      "name": "Euphoria",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "60010",
+      "sku": "SPA-HAPPY",
+      "name": "Happy",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsku\tname\tsupplierProductCode\tean13\n60001\tSPA-EASYRELAX\tEasy Relax\tNULL\tNULL\n60002\tSPA-KOS\tKos\tNULL\tNULL\n60003\tSPA-MYKONOS\tMykonos\tNULL\tNULL\n60004\tSPA-NEPTUNE\tNeptune\tNULL\tNULL\n60005\tSPA-VOLCANO\tVolcano\tNULL\tNULL\n60007\tSPA-DEVOTION\tDevotion\tNULL\tNULL\n60008\tSPA-ECSTATIC\tEcstatic\tNULL\tNULL\n60009\tSPA-EUPHORIA\tEuphoria\tNULL\tNULL\n60010\tSPA-HAPPY\tHappy\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 153
+}

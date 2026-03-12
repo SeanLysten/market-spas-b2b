@@ -88,8 +88,10 @@ export default function AdminProducts() {
     e.preventDefault();
 
     try {
+      // Auto-generate SKU from name if not editing
+      const autoSku = editingProduct?.sku || `SPA-${productForm.name.toUpperCase().replace(/[^A-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}`;
       const data = {
-        sku: productForm.sku,
+        sku: autoSku,
         name: productForm.name,
         description: productForm.description || undefined,
         priceHT: parseFloat(productForm.priceHT),
@@ -221,23 +223,33 @@ export default function AdminProducts() {
               <form onSubmit={handleProductSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="sku">SKU *</Label>
+                    <Label htmlFor="supplierProductCode">Code Produit Fournisseur</Label>
                     <Input
-                      id="sku"
-                      value={productForm.sku}
-                      onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
-                      required
+                      id="supplierProductCode"
+                      value={productForm.supplierProductCode}
+                      onChange={(e) => setProductForm({ ...productForm, supplierProductCode: e.target.value })}
+                      placeholder="Ex: 662201 078 38"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="name">Nom *</Label>
+                    <Label htmlFor="ean13">Code EAN13</Label>
                     <Input
-                      id="name"
-                      value={productForm.name}
-                      onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                      required
+                      id="ean13"
+                      value={productForm.ean13}
+                      onChange={(e) => setProductForm({ ...productForm, ean13: e.target.value })}
+                      placeholder="Ex: 3364549284619"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="name">Nom *</Label>
+                  <Input
+                    id="name"
+                    value={productForm.name}
+                    onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                    required
+                  />
                 </div>
 
                 <div>
@@ -312,30 +324,7 @@ export default function AdminProducts() {
                   />
                 </div>
 
-                {/* Supplier Integration */}
-                <div className="col-span-2 border-t pt-4 mt-2">
-                  <h4 className="text-sm font-semibold text-muted-foreground mb-3">Intégration fournisseur</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="supplierProductCode">Code Produit Fournisseur</Label>
-                      <Input
-                        id="supplierProductCode"
-                        value={productForm.supplierProductCode}
-                        onChange={(e) => setProductForm({ ...productForm, supplierProductCode: e.target.value })}
-                        placeholder="Ex: 662201 078 38"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="ean13">Code EAN13</Label>
-                      <Input
-                        id="ean13"
-                        value={productForm.ean13}
-                        onChange={(e) => setProductForm({ ...productForm, ean13: e.target.value })}
-                        placeholder="Ex: 3364549284619"
-                      />
-                    </div>
-                  </div>
-                </div>
+
 
                 <div>
                   <Label>Image du produit</Label>
@@ -383,8 +372,9 @@ export default function AdminProducts() {
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-10"></TableHead>
-                          <TableHead>SKU</TableHead>
+                          <TableHead>Code Produit</TableHead>
                           <TableHead>Nom</TableHead>
+                          <TableHead>EAN13</TableHead>
                           <TableHead>Prix HT</TableHead>
                           <TableHead>Stock total</TableHead>
                           <TableHead>Statut</TableHead>
@@ -405,8 +395,9 @@ export default function AdminProducts() {
                                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                 )}
                               </TableCell>
-                              <TableCell className="font-mono text-sm">{product.sku}</TableCell>
+                              <TableCell className="font-mono text-sm">{product.supplierProductCode || <span className="text-muted-foreground italic">Non défini</span>}</TableCell>
                               <TableCell className="font-medium">{product.name}</TableCell>
+                              <TableCell className="font-mono text-xs">{product.ean13 || <span className="text-muted-foreground italic">—</span>}</TableCell>
                               <TableCell>{Number(product.pricePublicHT || 0).toFixed(2)} €</TableCell>
                               <TableCell>
                                 <ProductStockCell productId={product.id} />
@@ -438,7 +429,7 @@ export default function AdminProducts() {
                             </TableRow>
                             {expandedProductId === product.id && (
                               <TableRow className="bg-muted/10 hover:bg-muted/10">
-                                <TableCell colSpan={7} className="p-0">
+                                <TableCell colSpan={8} className="p-0">
                                   <ExpandedVariantsRow productId={product.id} />
                                 </TableCell>
                               </TableRow>
@@ -461,7 +452,8 @@ export default function AdminProducts() {
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-sm truncate">{product.name}</p>
-                                <p className="text-xs text-muted-foreground font-mono">{product.sku}</p>
+                                <p className="text-xs text-muted-foreground font-mono">{product.supplierProductCode || product.sku}</p>
+                                {product.ean13 && <p className="text-[10px] text-muted-foreground">EAN: {product.ean13}</p>}
                               </div>
                               <div className="flex items-center gap-1 flex-shrink-0">
                                 {product.isActive ? (
@@ -647,7 +639,8 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
               <th className="text-left px-4 py-2 font-medium text-muted-foreground w-12">Actif</th>
               <th className="text-left px-4 py-2 font-medium text-muted-foreground w-16">Image</th>
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">Couleur</th>
-              <th className="text-left px-4 py-2 font-medium text-muted-foreground">SKU</th>
+              <th className="text-left px-4 py-2 font-medium text-muted-foreground">Code Produit</th>
+              <th className="text-left px-4 py-2 font-medium text-muted-foreground">EAN13</th>
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">Stock</th>
             </tr>
           </thead>
@@ -721,7 +714,8 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{variant.sku}</td>
+                <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{variant.supplierProductCode || variant.sku}</td>
+                <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{variant.ean13 || '—'}</td>
                 <td className="px-4 py-2">
                   {editingVariantId === variant.id ? (
                     <div className="flex items-center gap-2">
@@ -780,7 +774,7 @@ function ProductVariantsManager({ product, onBack }: { product: any; onBack: () 
         </Button>
         <div>
           <h2 className="text-2xl text-display text-display font-bold">{product.name}</h2>
-          <p className="text-xs md:text-sm text-muted-foreground">SKU: {product.sku}</p>
+          <p className="text-xs md:text-sm text-muted-foreground">Code: {product.supplierProductCode || product.sku}{product.ean13 ? ` — EAN: ${product.ean13}` : ''}</p>
         </div>
       </div>
 
@@ -835,9 +829,11 @@ function VariantsTab({ productId }: { productId: number }) {
       if (form.voltage) options.push({ optionName: "Voltage", optionValue: form.voltage });
       if (form.material) options.push({ optionName: "Matériau", optionValue: form.material });
 
+      // Auto-generate variant SKU from name
+      const autoVariantSku = `VAR-${form.name.toUpperCase().replace(/[^A-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}-${Date.now().toString(36).slice(-4)}`;
       await createMutation.mutateAsync({
         productId,
-        sku: form.sku,
+        sku: autoVariantSku,
         name: form.name,
         stockQuantity: parseInt(form.stockQuantity),
         supplierProductCode: form.supplierProductCode || undefined,
@@ -926,14 +922,25 @@ function VariantsTab({ productId }: { productId: number }) {
                 <DialogTitle>Nouvelle variante</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="variant-sku">SKU *</Label>
-                  <Input
-                    id="variant-sku"
-                    value={form.sku}
-                    onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="variant-supplierCode">Code Produit Fournisseur</Label>
+                    <Input
+                      id="variant-supplierCode"
+                      value={form.supplierProductCode}
+                      onChange={(e) => setForm({ ...form, supplierProductCode: e.target.value })}
+                      placeholder="Ex: 662201 078 38"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="variant-ean13">Code EAN13</Label>
+                    <Input
+                      id="variant-ean13"
+                      value={form.ean13}
+                      onChange={(e) => setForm({ ...form, ean13: e.target.value })}
+                      placeholder="Ex: 3364549284619"
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="variant-name">Nom *</Label>
@@ -999,30 +1006,7 @@ function VariantsTab({ productId }: { productId: number }) {
                   />
                 </div>
 
-                {/* Supplier Integration */}
-                <div className="border-t pt-3 mt-2">
-                  <h4 className="text-sm font-semibold text-muted-foreground mb-3">Intégration fournisseur</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="variant-supplierCode">Code Produit Fournisseur</Label>
-                      <Input
-                        id="variant-supplierCode"
-                        value={form.supplierProductCode}
-                        onChange={(e) => setForm({ ...form, supplierProductCode: e.target.value })}
-                        placeholder="Ex: 662201 078 38"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="variant-ean13">Code EAN13</Label>
-                      <Input
-                        id="variant-ean13"
-                        value={form.ean13}
-                        onChange={(e) => setForm({ ...form, ean13: e.target.value })}
-                        placeholder="Ex: 3364549284619"
-                      />
-                    </div>
-                  </div>
-                </div>
+
 
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
@@ -1040,7 +1024,8 @@ function VariantsTab({ productId }: { productId: number }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>SKU</TableHead>
+                <TableHead>Code Produit</TableHead>
+                <TableHead>EAN13</TableHead>
                 <TableHead>Nom</TableHead>
                 <TableHead>Couleur</TableHead>
                 <TableHead>Stock</TableHead>
@@ -1050,7 +1035,8 @@ function VariantsTab({ productId }: { productId: number }) {
             <TableBody>
               {variants.map((variant: any) => (
                 <TableRow key={variant.id}>
-                  <TableCell className="font-mono text-sm">{variant.sku}</TableCell>
+                  <TableCell className="font-mono text-sm">{variant.supplierProductCode || variant.sku}</TableCell>
+                  <TableCell className="font-mono text-xs">{variant.ean13 || '—'}</TableCell>
                   <TableCell className="font-medium">{variant.name}</TableCell>
                   <TableCell>
                     {variant.color ? (

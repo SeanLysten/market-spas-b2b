@@ -163,7 +163,7 @@ export default function OrderConfirmation() {
                         <TableCell>
                           <div>
                             <p className="font-medium">{item.name}</p>
-                            <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">SKU: {item.sku}</p>
+                            <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground font-mono">{item.ean13 ? `EAN: ${item.ean13}` : (item.supplierProductCode || item.sku)}</p>
                           </div>
                         </TableCell>
                         <TableCell className="text-center">{item.quantity}</TableCell>

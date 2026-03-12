@@ -191,7 +191,7 @@ export default function Cart() {
                         {/* Product Info */}
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold line-clamp-1">{item.product?.name}</h3>
-                          <p className="text-xs md:text-sm text-muted-foreground">SKU: {item.product?.sku}</p>
+                          <p className="text-xs md:text-sm text-muted-foreground font-mono">{item.product?.ean13 ? `EAN: ${item.product.ean13}` : (item.product?.supplierProductCode || item.product?.sku)}</p>
                           <div className="mt-2 flex items-center gap-2">
                             <span className="text-base font-semibold text-display text-primary">
                               {formatPrice(typeof item.unitPriceHT === 'string' ? parseFloat(item.unitPriceHT) : item.unitPriceHT)} €
@@ -274,7 +274,7 @@ export default function Cart() {
                               Arrivage prévu
                             </Badge>
                           </div>
-                          <p className="text-xs md:text-sm text-muted-foreground">SKU: {item.product?.sku}</p>
+                          <p className="text-xs md:text-sm text-muted-foreground font-mono">{item.product?.ean13 ? `EAN: ${item.product.ean13}` : (item.product?.supplierProductCode || item.product?.sku)}</p>
                           <div className="mt-2 flex items-center gap-2">
                             <span className="text-base font-semibold text-display text-primary">
                               {formatPrice(typeof item.unitPriceHT === 'string' ? parseFloat(item.unitPriceHT) : item.unitPriceHT)} €

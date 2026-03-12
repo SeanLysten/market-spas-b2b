@@ -23,7 +23,8 @@ export default function Favorites() {
 
   const filteredFavorites = favorites?.filter((fav) =>
     fav.product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    fav.product.sku.toLowerCase().includes(searchQuery.toLowerCase())
+    (fav.product.ean13 || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (fav.product.supplierProductCode || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleAddToCart = (productId: number) => {
@@ -120,7 +121,7 @@ export default function Favorites() {
                     </div>
                     
                     <div className="p-4">
-                      <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">{fav.product.sku}</p>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1 font-mono">{fav.product.ean13 ? `EAN: ${fav.product.ean13}` : (fav.product.supplierProductCode || fav.product.sku)}</p>
                       <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
                         {fav.product.name}
                       </h3>

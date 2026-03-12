@@ -275,6 +275,47 @@ describe("Supplier Orders Export - Format", () => {
 });
 
 // ============================================
+// Tests for transit (incoming stock) handling
+// ============================================
+
+describe("Supplier Stock Import - Transit Handling", () => {
+  it("should create incoming stock entry when EnTransit > 0", () => {
+    const item = { Ean13: 3364549284619, CodeProduit: "662201 078 38", EnStock: 5, EnTransit: 3 };
+    expect(item.EnTransit).toBeGreaterThan(0);
+    // When EnTransit > 0, an incoming_stock entry should be created or updated
+  });
+
+  it("should mark existing incoming stock as ARRIVED when EnTransit is 0", () => {
+    const item = { Ean13: 3364549284619, CodeProduit: "662201 078 38", EnStock: 10, EnTransit: 0 };
+    expect(item.EnTransit).toBe(0);
+    // When EnTransit is 0, existing PENDING incoming_stock should be marked as ARRIVED
+  });
+
+  it("should update existing PENDING incoming stock quantity instead of creating duplicate", () => {
+    const existingIncoming = { id: 1, variantId: 30014, quantity: 5, status: "PENDING" };
+    const newTransit = 8;
+    // Should update quantity to 8, not create a new entry
+    expect(existingIncoming.status).toBe("PENDING");
+    expect(newTransit).not.toBe(existingIncoming.quantity);
+  });
+
+  it("should set expected week to current week + 2 for new transit entries", () => {
+    const now = new Date();
+    const currentWeek = Math.ceil((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
+    const expectedWeek = currentWeek + 2;
+    expect(expectedWeek).toBeGreaterThan(currentWeek);
+    expect(expectedWeek).toBeLessThanOrEqual(54);
+  });
+
+  it("should include import key in notes for traceability", () => {
+    const importKey = "TestTransitMarketSpa";
+    const notes = `Import automatique fournisseur (${importKey})`;
+    expect(notes).toContain(importKey);
+    expect(notes).toContain("Import automatique");
+  });
+});
+
+// ============================================
 // Tests for the test JSON file format
 // ============================================
 

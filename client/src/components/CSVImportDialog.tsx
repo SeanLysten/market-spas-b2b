@@ -105,7 +105,7 @@ export function CSVImportDialog() {
         <DialogHeader>
           <DialogTitle>Importer une commande en masse</DialogTitle>
           <DialogDescription>
-            Téléchargez un fichier CSV ou Excel avec les colonnes SKU et Quantité
+            Téléchargez un fichier CSV ou Excel avec les colonnes Code Produit (ou EAN13) et Quantité
           </DialogDescription>
         </DialogHeader>
 
@@ -168,7 +168,7 @@ export function CSVImportDialog() {
                 <table className="w-full text-sm">
                   <thead className="bg-muted">
                     <tr>
-                      <th className="px-4 py-2 text-left">SKU</th>
+                      <th className="px-4 py-2 text-left">Code / EAN13</th>
                       <th className="px-4 py-2 text-left">Produit</th>
                       <th className="px-4 py-2 text-right">Quantité</th>
                       <th className="px-4 py-2 text-right">Prix HT</th>
@@ -207,7 +207,7 @@ export function CSVImportDialog() {
               <div className="border border-destructive/50 rounded-lg p-4 max-h-40 overflow-y-auto">
                 {errors.map((error, index) => (
                   <div key={index} className="text-sm text-destructive mb-1">
-                    Ligne {error.row} - SKU "{error.sku}": {error.error}
+                    Ligne {error.row} - Code "{error.sku}": {error.error}
                   </div>
                 ))}
               </div>
