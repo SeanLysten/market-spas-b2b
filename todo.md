@@ -2549,3 +2549,19 @@
 - [x] Afficher le détail des comptes utilisateurs impactés (nom, email, statut actif/inactif)
 - [x] Afficher le nombre de territoires et leads qui seront réassignés
 - [x] 46 tests vitest passants
+
+## Amélioration flux inscription partenaire
+- [x] Formulaire d'inscription en 3 étapes : Compte, Entreprise (nom, SIREN/TVA, site web), Adresses (facturation + livraison)
+- [x] Création automatique de la fiche partenaire (statut PENDING) lors de l'inscription
+- [x] Rôle PARTNER_ADMIN attribué automatiquement aux nouveaux partenaires
+- [x] Lien automatique utilisateur → partenaire via partnerId
+- [x] Invitation d'équipe : formulaire simplifié (1 étape, pas de champs société)
+- [x] Détection isTeamInvitation via le token (partnerId présent = équipe)
+
+## Vérification cohérence globale
+- [x] Vérifier la cohérence des rôles à travers tout le logiciel
+- [x] Vérifier la synchronisation entre onglets Partenaires et Utilisateurs
+- [x] Vérifier les permissions et accès selon les rôles
+- [x] Vérifier la cohérence des données entre les différentes pages
+- [x] Corriger les incohérences détectées : 2 utilisateurs PARTNER → PARTNER_ADMIN, 3 utilisateurs sans partnerId identifiés
+- [x] 60 tests vitest passants

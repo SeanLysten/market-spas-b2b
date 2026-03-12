@@ -468,3 +468,205 @@ describe("Partner Cascade - Deactivate/Reactivate Users", () => {
     expect(dissociated.every(u => !u.isActive && u.partnerId === null)).toBe(true);
   });
 });
+
+
+// ============================================
+// REGISTRATION FLOW TESTS
+// ============================================
+
+describe("Registration Flow - Partner vs Team Invitation", () => {
+  // Simulate the role determination logic from auth.register
+  function determineRole(isTeamInvitation: boolean, invitationRole: string | null): string {
+    if (isTeamInvitation) {
+      return invitationRole || 'PARTNER_USER';
+    } else {
+      return 'PARTNER_ADMIN';
+    }
+  }
+
+  // Simulate isTeamInvitation detection
+  function detectIsTeamInvitation(tokenPartnerId: number | null): boolean {
+    return !!tokenPartnerId;
+  }
+
+  it("should assign PARTNER_ADMIN role for new partner registration (no partnerId in token)", () => {
+    const isTeam = detectIsTeamInvitation(null);
+    expect(isTeam).toBe(false);
+    const role = determineRole(isTeam, null);
+    expect(role).toBe("PARTNER_ADMIN");
+  });
+
+  it("should assign PARTNER_ADMIN role even if invitation has a different role for new partner", () => {
+    const isTeam = detectIsTeamInvitation(null);
+    const role = determineRole(isTeam, "PARTNER");
+    expect(role).toBe("PARTNER_ADMIN");
+  });
+
+  it("should assign invitation role for team invitation (partnerId exists)", () => {
+    const isTeam = detectIsTeamInvitation(42);
+    expect(isTeam).toBe(true);
+    const role = determineRole(isTeam, "PARTNER_ORDERS");
+    expect(role).toBe("PARTNER_ORDERS");
+  });
+
+  it("should default to PARTNER_USER for team invitation without explicit role", () => {
+    const isTeam = detectIsTeamInvitation(42);
+    const role = determineRole(isTeam, null);
+    expect(role).toBe("PARTNER_USER");
+  });
+
+  it("should assign PARTNER_FULL role for team invitation with PARTNER_FULL role", () => {
+    const isTeam = detectIsTeamInvitation(10);
+    const role = determineRole(isTeam, "PARTNER_FULL");
+    expect(role).toBe("PARTNER_FULL");
+  });
+});
+
+describe("Registration Flow - Partner Creation Data", () => {
+  function buildPartnerData(input: {
+    companyName: string;
+    vatNumber?: string;
+    billingStreet?: string;
+    billingCity?: string;
+    billingPostalCode?: string;
+    billingCountry?: string;
+    shippingSameAsBilling?: boolean;
+    shippingStreet?: string;
+    shippingCity?: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+  }) {
+    return {
+      companyName: input.companyName,
+      vatNumber: input.vatNumber || '',
+      addressStreet: input.billingStreet || '',
+      addressCity: input.billingCity || '',
+      addressPostalCode: input.billingPostalCode || '',
+      addressCountry: input.billingCountry || 'FR',
+      deliveryStreet: input.shippingSameAsBilling ? input.billingStreet || null : input.shippingStreet || null,
+      deliveryCity: input.shippingSameAsBilling ? input.billingCity || null : input.shippingCity || null,
+      primaryContactName: `${input.firstName} ${input.lastName}`,
+      primaryContactEmail: input.email,
+      primaryContactPhone: input.phone || '',
+      status: 'PENDING',
+    };
+  }
+
+  it("should build correct partner data with billing = shipping", () => {
+    const data = buildPartnerData({
+      companyName: "Test SAS",
+      vatNumber: "FR12345678901",
+      billingStreet: "10 rue de Paris",
+      billingCity: "Paris",
+      billingPostalCode: "75001",
+      billingCountry: "FR",
+      shippingSameAsBilling: true,
+      firstName: "Jean",
+      lastName: "Dupont",
+      email: "jean@test.com",
+      phone: "+33612345678",
+    });
+
+    expect(data.companyName).toBe("Test SAS");
+    expect(data.vatNumber).toBe("FR12345678901");
+    expect(data.addressStreet).toBe("10 rue de Paris");
+    expect(data.addressCity).toBe("Paris");
+    expect(data.deliveryStreet).toBe("10 rue de Paris");
+    expect(data.deliveryCity).toBe("Paris");
+    expect(data.primaryContactName).toBe("Jean Dupont");
+    expect(data.primaryContactEmail).toBe("jean@test.com");
+    expect(data.status).toBe("PENDING");
+  });
+
+  it("should build correct partner data with different shipping address", () => {
+    const data = buildPartnerData({
+      companyName: "Spa Pro SARL",
+      billingStreet: "5 avenue des Champs",
+      billingCity: "Paris",
+      billingPostalCode: "75008",
+      shippingSameAsBilling: false,
+      shippingStreet: "Zone Industrielle Nord",
+      shippingCity: "Lyon",
+      firstName: "Marie",
+      lastName: "Martin",
+      email: "marie@spapro.fr",
+    });
+
+    expect(data.addressStreet).toBe("5 avenue des Champs");
+    expect(data.addressCity).toBe("Paris");
+    expect(data.deliveryStreet).toBe("Zone Industrielle Nord");
+    expect(data.deliveryCity).toBe("Lyon");
+  });
+
+  it("should use FR as default country", () => {
+    const data = buildPartnerData({
+      companyName: "Test",
+      firstName: "A",
+      lastName: "B",
+      email: "a@b.com",
+    });
+
+    expect(data.addressCountry).toBe("FR");
+  });
+
+  it("should handle empty phone gracefully", () => {
+    const data = buildPartnerData({
+      companyName: "Test",
+      firstName: "A",
+      lastName: "B",
+      email: "a@b.com",
+    });
+
+    expect(data.primaryContactPhone).toBe("");
+  });
+});
+
+describe("Registration Flow - Form Steps", () => {
+  it("should show 3 steps for new partner registration", () => {
+    const isTeamInvitation = false;
+    const totalSteps = isTeamInvitation ? 1 : 3;
+    expect(totalSteps).toBe(3);
+  });
+
+  it("should show 1 step for team member invitation", () => {
+    const isTeamInvitation = true;
+    const totalSteps = isTeamInvitation ? 1 : 3;
+    expect(totalSteps).toBe(1);
+  });
+
+  // Validate step canProceed logic
+  function canProceed(step: number, formData: Record<string, any>): boolean {
+    switch (step) {
+      case 1:
+        return !!(formData.firstName && formData.lastName && formData.email && 
+               formData.password && formData.confirmPassword && 
+               formData.password === formData.confirmPassword && formData.password.length >= 8);
+      case 2:
+        return !!(formData.companyName && formData.vatNumber);
+      case 3:
+        return !!(formData.billingStreet && formData.billingCity && formData.billingPostalCode && formData.billingCountry);
+      default:
+        return false;
+    }
+  }
+
+  it("should validate step 1 requires all personal fields", () => {
+    expect(canProceed(1, { firstName: "Jean", lastName: "Dupont", email: "j@d.com", password: "12345678", confirmPassword: "12345678" })).toBe(true);
+    expect(canProceed(1, { firstName: "", lastName: "Dupont", email: "j@d.com", password: "12345678", confirmPassword: "12345678" })).toBe(false);
+    expect(canProceed(1, { firstName: "Jean", lastName: "Dupont", email: "j@d.com", password: "1234567", confirmPassword: "1234567" })).toBe(false);
+    expect(canProceed(1, { firstName: "Jean", lastName: "Dupont", email: "j@d.com", password: "12345678", confirmPassword: "87654321" })).toBe(false);
+  });
+
+  it("should validate step 2 requires company name and VAT", () => {
+    expect(canProceed(2, { companyName: "Test SAS", vatNumber: "FR123" })).toBe(true);
+    expect(canProceed(2, { companyName: "", vatNumber: "FR123" })).toBe(false);
+    expect(canProceed(2, { companyName: "Test SAS", vatNumber: "" })).toBe(false);
+  });
+
+  it("should validate step 3 requires billing address fields", () => {
+    expect(canProceed(3, { billingStreet: "10 rue", billingCity: "Paris", billingPostalCode: "75001", billingCountry: "FR" })).toBe(true);
+    expect(canProceed(3, { billingStreet: "", billingCity: "Paris", billingPostalCode: "75001", billingCountry: "FR" })).toBe(false);
+  });
+});

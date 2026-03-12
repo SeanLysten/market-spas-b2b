@@ -63,7 +63,7 @@ export const appRouter = router({
         if (!validation) {
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Token d\'invitation invalide ou expiré' });
         }
-        return { email: validation.email, firstName: validation.firstName, lastName: validation.lastName };
+        return { email: validation.email, firstName: validation.firstName, lastName: validation.lastName, isTeamInvitation: !!validation.partnerId };
       }),
 
     // Local authentication
@@ -118,6 +118,21 @@ export const appRouter = router({
         phone: z.string().optional(),
         companyName: z.string().optional(),
         invitationToken: z.string().optional(),
+        // Company fields for partner registration
+        tradeName: z.string().optional(),
+        vatNumber: z.string().optional(),
+        website: z.string().optional(),
+        billingStreet: z.string().optional(),
+        billingStreet2: z.string().optional(),
+        billingCity: z.string().optional(),
+        billingPostalCode: z.string().optional(),
+        billingCountry: z.string().optional(),
+        shippingSameAsBilling: z.boolean().optional(),
+        shippingStreet: z.string().optional(),
+        shippingStreet2: z.string().optional(),
+        shippingCity: z.string().optional(),
+        shippingPostalCode: z.string().optional(),
+        shippingCountry: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         // Validate invitation token if provided
@@ -143,11 +158,13 @@ export const appRouter = router({
         // Get invitation token data to retrieve partnerId and role
         let invitationPartnerId: number | null = null;
         let invitationRole: string | null = null;
+        let isTeamInvitation = false;
         if (input.invitationToken) {
           const tokenData = await db.getInvitationTokenByToken(input.invitationToken);
           if (tokenData) {
             invitationPartnerId = tokenData.partnerId || null;
             invitationRole = tokenData.role || null;
+            isTeamInvitation = !!tokenData.partnerId;
           }
         }
 
@@ -155,8 +172,47 @@ export const appRouter = router({
         const bcrypt = await import('bcryptjs');
         const passwordHash = await bcrypt.hash(input.password, 10);
 
-        // Determine role from invitation
-        const userRole = invitationRole || 'PARTNER';
+        // Determine role:
+        // - Team invitation (partnerId exists): use invitation role (e.g. PARTNER_USER, PARTNER_ORDERS, PARTNER_FULL)
+        // - New partner registration (no partnerId): always PARTNER_ADMIN
+        let userRole: string;
+        if (isTeamInvitation) {
+          userRole = invitationRole || 'PARTNER_USER';
+        } else {
+          userRole = 'PARTNER_ADMIN';
+        }
+
+        // If this is a new partner registration (not a team invitation), create the partner record first
+        if (!isTeamInvitation && input.companyName) {
+          const partnerResult = await db.createPartner({
+            companyName: input.companyName,
+            tradeName: input.tradeName || null,
+            vatNumber: input.vatNumber || '',
+            addressStreet: input.billingStreet || '',
+            addressStreet2: input.billingStreet2 || null,
+            addressCity: input.billingCity || '',
+            addressPostalCode: input.billingPostalCode || '',
+            addressCountry: input.billingCountry || 'FR',
+            billingAddressSame: true,
+            billingStreet: input.billingStreet || null,
+            billingStreet2: input.billingStreet2 || null,
+            billingCity: input.billingCity || null,
+            billingPostalCode: input.billingPostalCode || null,
+            billingCountry: input.billingCountry || null,
+            deliveryStreet: input.shippingSameAsBilling ? input.billingStreet || null : input.shippingStreet || null,
+            deliveryStreet2: input.shippingSameAsBilling ? input.billingStreet2 || null : input.shippingStreet2 || null,
+            deliveryCity: input.shippingSameAsBilling ? input.billingCity || null : input.shippingCity || null,
+            deliveryPostalCode: input.shippingSameAsBilling ? input.billingPostalCode || null : input.shippingPostalCode || null,
+            deliveryCountry: input.shippingSameAsBilling ? input.billingCountry || 'FR' : input.shippingCountry || 'FR',
+            primaryContactName: `${input.firstName} ${input.lastName}`,
+            primaryContactEmail: input.email,
+            primaryContactPhone: input.phone || '',
+            website: input.website || null,
+            status: 'PENDING',
+            partnerLevel: 'BRONZE',
+          } as any);
+          invitationPartnerId = partnerResult?.partnerId || null;
+        }
 
         // Create user
         const crypto = await import('crypto');

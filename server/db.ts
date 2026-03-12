@@ -179,6 +179,7 @@ export async function createPartner(data: {
   primaryContactEmail: string;
   tradeName?: string;
   addressStreet?: string;
+  addressStreet2?: string | null;
   addressCity?: string;
   addressPostalCode?: string;
   addressCountry?: string;
@@ -188,6 +189,19 @@ export async function createPartner(data: {
   discountPercent?: number;
   status?: "PENDING" | "APPROVED" | "SUSPENDED" | "TERMINATED";
   internalNotes?: string;
+  website?: string | null;
+  billingAddressSame?: boolean;
+  billingStreet?: string | null;
+  billingStreet2?: string | null;
+  billingCity?: string | null;
+  billingPostalCode?: string | null;
+  billingCountry?: string | null;
+  deliveryStreet?: string | null;
+  deliveryStreet2?: string | null;
+  deliveryCity?: string | null;
+  deliveryPostalCode?: string | null;
+  deliveryCountry?: string | null;
+  [key: string]: any;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -198,15 +212,28 @@ export async function createPartner(data: {
     primaryContactEmail: data.primaryContactEmail,
     tradeName: data.tradeName || null,
     addressStreet: data.addressStreet || "N/A",
+    addressStreet2: data.addressStreet2 || null,
     addressCity: data.addressCity || "N/A",
     addressPostalCode: data.addressPostalCode || "N/A",
-    addressCountry: data.addressCountry || "BE",
+    addressCountry: data.addressCountry || "FR",
     primaryContactName: data.primaryContactName || "N/A",
     primaryContactPhone: data.primaryContactPhone || "N/A",
+    website: data.website || null,
     level: data.level || "BRONZE",
     discountPercent: data.discountPercent?.toString() || "0",
     status: data.status || "PENDING",
     internalNotes: data.internalNotes || null,
+    billingAddressSame: data.billingAddressSame ?? true,
+    billingStreet: data.billingStreet || null,
+    billingStreet2: data.billingStreet2 || null,
+    billingCity: data.billingCity || null,
+    billingPostalCode: data.billingPostalCode || null,
+    billingCountry: data.billingCountry || null,
+    deliveryStreet: data.deliveryStreet || null,
+    deliveryStreet2: data.deliveryStreet2 || null,
+    deliveryCity: data.deliveryCity || null,
+    deliveryPostalCode: data.deliveryPostalCode || null,
+    deliveryCountry: data.deliveryCountry || null,
   };
 
   const result = await db.insert(partners).values(insertData);

@@ -1,0 +1,26 @@
+{
+  "query": "SELECT id, name, email, role, partnerId, isActive FROM users WHERE id IN (1380046, 5431080);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, name, email, role, partnerId, isActive FROM users WHERE id IN (1380046, 5431080);",
+  "rows": [
+    {
+      "id": "1380046",
+      "name": "Miguel Donoso",
+      "email": "miguel.df1990@gmail.com",
+      "role": "PARTNER_ADMIN",
+      "partnerId": "NULL",
+      "isActive": "1"
+    },
+    {
+      "id": "5431080",
+      "name": "Sean Lysten",
+      "email": "marketing@marketspas.com",
+      "role": "PARTNER_ADMIN",
+      "partnerId": "NULL",
+      "isActive": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\tpartnerId\tisActive\n1380046\tMiguel Donoso\tmiguel.df1990@gmail.com\tPARTNER_ADMIN\tNULL\t1\n5431080\tSean Lysten\tmarketing@marketspas.com\tPARTNER_ADMIN\tNULL\t1\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}
