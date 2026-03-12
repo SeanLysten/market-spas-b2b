@@ -2702,3 +2702,6 @@
 
 ## Bouton de déconnexion utilisateur
 - [x] Ajouter un bouton de déconnexion visible côté utilisateur (Dashboard header, en rouge avec icône LogOut)
+
+## Augmenter limite upload images
+- [x] Augmenter la limite d'upload des images produits de 10 MB à 40 MB (frontend ImageUpload.tsx, backend déjà à 50 MB)

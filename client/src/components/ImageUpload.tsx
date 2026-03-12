@@ -43,9 +43,9 @@ export function ImageUpload({ currentImageUrl, onImageUploaded, productId, varia
       return;
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("L'image ne doit pas dépasser 10MB");
+    // Validate file size (max 40MB)
+    if (file.size > 40 * 1024 * 1024) {
+      toast.error("L'image ne doit pas dépasser 40MB");
       return;
     }
 
