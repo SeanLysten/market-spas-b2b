@@ -2699,3 +2699,6 @@
 - [x] Refondre la page utilisateur Ressources Techniques : navigation par dossiers + téléchargement PDF
 - [x] Écrire les tests Vitest pour les nouvelles routes (22 tests)
 - [x] Tester le rendu admin et utilisateur (dossiers affichés, drag & drop fonctionnel, navigation par dossiers)
+
+## Bouton de déconnexion utilisateur
+- [x] Ajouter un bouton de déconnexion visible côté utilisateur (Dashboard header, en rouge avec icône LogOut)
