@@ -29,6 +29,7 @@ import {
   MessageSquare,
   BarChart3,
   CalendarDays,
+  ArrowRightLeft,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
@@ -76,6 +77,7 @@ const ROUTE_MODULE_MAP: Record<string, string> = {
   '/admin/calendar': 'calendar',
   '/admin/newsletter': 'newsletter',
   '/admin/users': 'users',
+  '/admin/supplier-integration': 'settings',
   '/admin/settings': 'settings',
 };
 
@@ -132,6 +134,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       items: [
         { name: "Produits", href: "/admin/products", icon: Package },
         { name: "Prévisions Stock", href: "/admin/forecast", icon: TrendingUp },
+        { name: "Intégration Fournisseur", href: "/admin/supplier-integration", icon: ArrowRightLeft },
       ],
     },
     {

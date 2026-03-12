@@ -24,6 +24,7 @@ import AdminNewsletter from "@/pages/admin/AdminNewsletter";
 import AdminCalendar from "@/pages/admin/AdminCalendar";
 
 import AdminTechnicalResources from "@/pages/admin/TechnicalResources";
+import AdminSupplierIntegration from "@/pages/admin/AdminSupplierIntegration";
 
 import Dashboard from "./pages/Dashboard";
 import Catalog from "./pages/Catalog";
@@ -113,6 +114,7 @@ function Router() {
       <Route path="/admin/spare-parts" component={AdminSpareParts} />
       <Route path="/admin/newsletter" component={AdminNewsletter} />
       <Route path="/admin/calendar" component={AdminCalendar} />
+      <Route path="/admin/supplier-integration" component={AdminSupplierIntegration} />
 
       <Route path="/admin/technical-resources" component={AdminTechnicalResources} />
 

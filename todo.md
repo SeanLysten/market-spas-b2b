@@ -2644,3 +2644,15 @@
 - [x] Modifier la logique de calcul des frais de livraison (seuil gratuit, standard, express) via calculateShippingCost()
 - [x] Mettre à jour Cart.tsx (barre progression livraison gratuite, remise partenaire, frais livraison) et Checkout.tsx (choix standard/express, recap dynamique)
 - [x] Écrire les tests Vitest pour la logique de calcul (17 tests dans order-pricing.test.ts)
+
+## Intégration API collaborateur (stock + commandes)
+- [x] Ajouter les champs supplierProductCode et ean13 au schéma products/variants
+- [x] Migrer la base de données avec les nouveaux champs
+- [x] Mettre à jour l'admin produits pour afficher/éditer CodeProduit et EAN13
+- [ ] Pré-remplir les codes produits fournis par le collaborateur (15 produits Neptune V2, Easy Relax, Volcano, Mykonos, Twin Plug & Play)
+- [x] Créer l'endpoint POST /api/supplier/stock/import pour recevoir le JSON de stock (CodeProduit, EnStock, EnTransit)
+- [x] Logique de matching CodeProduit/EAN13 → produit/variante et mise à jour stock + transit
+- [x] Créer l'endpoint GET /api/supplier/orders/export pour envoyer les commandes/paiements/clients au collaborateur
+- [x] Créer l'interface admin de gestion de l'intégration (test import, logs, mapping, documentation API)
+- [x] Écrire les tests Vitest pour les endpoints d'import/export (26 tests)
+- [x] Tester avec le fichier JSON de test du collaborateur (import: 19/19 traités, export: endpoint fonctionnel)

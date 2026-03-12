@@ -50,6 +50,8 @@ export default function AdminProducts() {
     stockQuantity: "0",
     weight: "",
     imageUrl: "",
+    supplierProductCode: "",
+    ean13: "",
     isActive: true,
     isVisible: true,
   });
@@ -63,6 +65,8 @@ export default function AdminProducts() {
     material: "",
     stockQuantity: "0",
     imageUrl: "",
+    supplierProductCode: "",
+    ean13: "",
   });
 
   const [incomingForm, setIncomingForm] = useState({
@@ -93,6 +97,8 @@ export default function AdminProducts() {
         stockQuantity: parseInt(productForm.stockQuantity),
         weight: productForm.weight ? parseFloat(productForm.weight) : undefined,
         imageUrl: productForm.imageUrl || undefined,
+        supplierProductCode: productForm.supplierProductCode || undefined,
+        ean13: productForm.ean13 || undefined,
         isActive: productForm.isActive,
         isVisible: productForm.isVisible,
       };
@@ -128,6 +134,8 @@ export default function AdminProducts() {
       stockQuantity: "0",
       weight: "",
       imageUrl: "",
+      supplierProductCode: "",
+      ean13: "",
       isActive: true,
       isVisible: true,
     });
@@ -145,6 +153,8 @@ export default function AdminProducts() {
       stockQuantity: product.stockQuantity?.toString() || "0",
       weight: product.weight?.toString() || "",
       imageUrl: product.imageUrl || "",
+      supplierProductCode: product.supplierProductCode || "",
+      ean13: product.ean13 || "",
       isActive: product.isActive ?? true,
       isVisible: product.isVisible ?? true,
     });
@@ -300,6 +310,31 @@ export default function AdminProducts() {
                     value={productForm.weight}
                     onChange={(e) => setProductForm({ ...productForm, weight: e.target.value })}
                   />
+                </div>
+
+                {/* Supplier Integration */}
+                <div className="col-span-2 border-t pt-4 mt-2">
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-3">Intégration fournisseur</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="supplierProductCode">Code Produit Fournisseur</Label>
+                      <Input
+                        id="supplierProductCode"
+                        value={productForm.supplierProductCode}
+                        onChange={(e) => setProductForm({ ...productForm, supplierProductCode: e.target.value })}
+                        placeholder="Ex: 662201 078 38"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ean13">Code EAN13</Label>
+                      <Input
+                        id="ean13"
+                        value={productForm.ean13}
+                        onChange={(e) => setProductForm({ ...productForm, ean13: e.target.value })}
+                        placeholder="Ex: 3364549284619"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -780,6 +815,8 @@ function VariantsTab({ productId }: { productId: number }) {
     material: "",
     stockQuantity: "0",
     imageUrl: "",
+    supplierProductCode: "",
+    ean13: "",
   });
 
   const { data: variantsData, refetch } = trpc.admin.products.getVariants.useQuery({ productId });
@@ -803,6 +840,8 @@ function VariantsTab({ productId }: { productId: number }) {
         sku: form.sku,
         name: form.name,
         stockQuantity: parseInt(form.stockQuantity),
+        supplierProductCode: form.supplierProductCode || undefined,
+        ean13: form.ean13 || undefined,
         options,
       });
 
@@ -817,6 +856,8 @@ function VariantsTab({ productId }: { productId: number }) {
         material: "",
         stockQuantity: "0",
         imageUrl: "",
+        supplierProductCode: "",
+        ean13: "",
       });
       refetch();
     } catch (error: any) {
@@ -956,6 +997,31 @@ function VariantsTab({ productId }: { productId: number }) {
                     onImageUploaded={(url) => setForm({ ...form, imageUrl: url })}
                     productId={productId}
                   />
+                </div>
+
+                {/* Supplier Integration */}
+                <div className="border-t pt-3 mt-2">
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-3">Intégration fournisseur</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="variant-supplierCode">Code Produit Fournisseur</Label>
+                      <Input
+                        id="variant-supplierCode"
+                        value={form.supplierProductCode}
+                        onChange={(e) => setForm({ ...form, supplierProductCode: e.target.value })}
+                        placeholder="Ex: 662201 078 38"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="variant-ean13">Code EAN13</Label>
+                      <Input
+                        id="variant-ean13"
+                        value={form.ean13}
+                        onChange={(e) => setForm({ ...form, ean13: e.target.value })}
+                        placeholder="Ex: 3364549284619"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <DialogFooter>

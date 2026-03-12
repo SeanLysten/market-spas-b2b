@@ -18,6 +18,7 @@ import { webhooksRouter } from "../webhooks";
 import { getPrivacyHTML, getTermsHTML } from "../static-pages";
 import { inboundLeadsRouter } from "../routes/inbound-leads";
 import { uploadResourceRouter } from "../routes/upload-resource";
+import { supplierStockRouter } from "../routes/supplier-stock";
 import { validateEnv } from "./env";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -323,6 +324,8 @@ async function startServer() {
   app.use(inboundLeadsRouter);
   // Resource upload - multipart/form-data for large files (videos, etc.)
   app.use(uploadResourceRouter);
+  // Supplier stock integration API
+  app.use(supplierStockRouter);
   // Download ZIP - multiple resources
   app.get("/api/resources/download-zip", async (req, res) => {
     try {

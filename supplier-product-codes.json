@@ -1,0 +1,19 @@
+{
+  "products": [
+    { "model": "Neptune V2", "color": "Sterling Silver", "supplierCode": "662201 078 38", "ean13": "3364549284619" },
+    { "model": "Neptune V2", "color": "Odyssey", "supplierCode": "662201 079 38", "ean13": "3364549284626" },
+    { "model": "Neptune V2", "color": "Midnight Opal", "supplierCode": "662201 080 38", "ean13": "3364549284633" },
+    { "model": "Easy relax", "color": "Sterling Silver", "supplierCode": "662600 078 38", "ean13": "3364549284640" },
+    { "model": "Easy relax", "color": "Odyssey", "supplierCode": "662600 079 38", "ean13": "3364549284657" },
+    { "model": "Easy relax", "color": "Midnight Opal", "supplierCode": "662600 080 38", "ean13": "3364549284664" },
+    { "model": "Volcano", "color": "Sterling Silver", "supplierCode": "662700 078 38", "ean13": "3364549284718" },
+    { "model": "Volcano", "color": "Odyssey", "supplierCode": "662700 079 38", "ean13": "3364549284725" },
+    { "model": "Volcano", "color": "Midnight Opal", "supplierCode": "662700 080 38", "ean13": "3364549284732" },
+    { "model": "Mykonos", "color": "Sterling Silver", "supplierCode": "662800 078 38", "ean13": "3364549284749" },
+    { "model": "Mykonos", "color": "Odyssey", "supplierCode": "662800 079 38", "ean13": "3364549284756" },
+    { "model": "Mykonos", "color": "Midnight Opal", "supplierCode": "662800 080 38", "ean13": "3364549284763" },
+    { "model": "Twin Plug & Play", "color": "Sterling Silver", "supplierCode": "662900 078 38", "ean13": "3364549284770" },
+    { "model": "Twin Plug & Play", "color": "Odyssey", "supplierCode": "662900 079 38", "ean13": "3364549284787" },
+    { "model": "Twin Plug & Play", "color": "Midnight Opal", "supplierCode": "662900 080 38", "ean13": "3364549284794" }
+  ]
+}

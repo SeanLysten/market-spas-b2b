@@ -504,6 +504,10 @@ export const products = mysqlTable(
     sheetsRowId: int("sheetsRowId"),
     odooProductId: int("odooProductId"),
 
+    // Supplier integration
+    supplierProductCode: varchar("supplierProductCode", { length: 50 }),
+    ean13: varchar("ean13", { length: 20 }),
+
     // SEO
     metaTitle: varchar("metaTitle", { length: 255 }),
     metaDescription: text("metaDescription"),
@@ -554,6 +558,10 @@ export const productVariants = mysqlTable(
     sheetsRowId: int("sheetsRowId"),
     odooProductId: int("odooProductId"),
 
+    // Supplier integration
+    supplierProductCode: varchar("supplierProductCode", { length: 50 }),
+    ean13: varchar("ean13", { length: 20 }),
+
     // Image
     imageUrl: text("imageUrl"),
 
@@ -566,6 +574,8 @@ export const productVariants = mysqlTable(
   (table) => ({
     productIdIdx: index("productId_idx").on(table.productId),
     skuIdx: index("sku_idx").on(table.sku),
+    supplierCodeIdx: index("supplier_code_idx").on(table.supplierProductCode),
+    ean13Idx: index("ean13_idx").on(table.ean13),
   })
 );
 

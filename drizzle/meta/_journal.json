@@ -253,6 +253,13 @@
       "when": 1773309920766,
       "tag": "0035_wet_rage",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "5",
+      "when": 1773313367161,
+      "tag": "0036_cultured_maggott",
+      "breakpoints": true
     }
   ]
 }

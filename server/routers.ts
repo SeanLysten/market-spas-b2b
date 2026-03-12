@@ -1694,6 +1694,8 @@ export const appRouter = router({
             weight: z.number().optional(),
             dimensions: z.string().optional(),
             imageUrl: z.string().optional(),
+            supplierProductCode: z.string().optional(),
+            ean13: z.string().optional(),
             isActive: z.boolean().optional(),
             isVisible: z.boolean().optional(),
           })
@@ -1718,6 +1720,8 @@ export const appRouter = router({
             weight: z.number().optional(),
             dimensions: z.string().optional(),
             imageUrl: z.string().optional(),
+            supplierProductCode: z.string().optional(),
+            ean13: z.string().optional(),
             isActive: z.boolean().optional(),
             isVisible: z.boolean().optional(),
           })
@@ -1749,6 +1753,8 @@ export const appRouter = router({
             name: z.string(),
             priceAdjustmentHT: z.number().optional(),
             stockQuantity: z.number().optional(),
+            supplierProductCode: z.string().optional(),
+            ean13: z.string().optional(),
             isDefault: z.boolean().optional(),
             options: z.array(
               z.object({
@@ -1770,6 +1776,8 @@ export const appRouter = router({
             name: z.string().optional(),
             priceAdjustmentHT: z.number().optional(),
             stockQuantity: z.number().optional(),
+            supplierProductCode: z.string().optional(),
+            ean13: z.string().optional(),
             isActive: z.boolean().optional(),
             isDefault: z.boolean().optional(),
             imageUrl: z.string().nullable().optional(),

@@ -652,6 +652,8 @@ export async function createProduct(data: {
   weight?: number;
   dimensions?: string;
   imageUrl?: string;
+  supplierProductCode?: string;
+  ean13?: string;
   isActive?: boolean;
   isVisible?: boolean;
 }) {
@@ -668,6 +670,8 @@ export async function createProduct(data: {
     vatRate: data.vatRate.toString(),
     stockQuantity: data.stockQuantity,
     weight: data.weight ? data.weight.toString() : null,
+    supplierProductCode: data.supplierProductCode || null,
+    ean13: data.ean13 || null,
     isActive: data.isActive !== undefined ? data.isActive : true,
     isVisible: data.isVisible !== undefined ? data.isVisible : true,
   });
@@ -688,6 +692,8 @@ export async function updateProduct(id: number, data: Partial<{
   weight: number;
   dimensions: string;
   imageUrl: string;
+  supplierProductCode: string;
+  ean13: string;
   isActive: boolean;
   isVisible: boolean;
 }>) {
@@ -711,6 +717,8 @@ export async function updateProduct(id: number, data: Partial<{
   if (data.weight !== undefined) updateData.weight = data.weight;
   if (data.dimensions !== undefined) updateData.dimensions = data.dimensions;
   if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl;
+  if (data.supplierProductCode !== undefined) updateData.supplierProductCode = data.supplierProductCode;
+  if (data.ean13 !== undefined) updateData.ean13 = data.ean13;
   if (data.isActive !== undefined) updateData.isActive = data.isActive;
   if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
 
@@ -1036,6 +1044,8 @@ export async function createProductVariant(data: {
   name: string;
   priceAdjustmentHT?: number;
   stockQuantity?: number;
+  supplierProductCode?: string;
+  ean13?: string;
   isDefault?: boolean;
   options: Array<{ optionName: string; optionValue: string }>;
 }) {
@@ -1058,6 +1068,8 @@ export async function createProductVariant(data: {
     voltage: voltage || null,
     material: material || null,
     stockQuantity: data.stockQuantity || 0,
+    supplierProductCode: data.supplierProductCode || null,
+    ean13: data.ean13 || null,
     isActive: true,
   });
 
@@ -1087,6 +1099,8 @@ export async function updateProductVariant(
     voltage?: string;
     material?: string;
     stockQuantity?: number;
+    supplierProductCode?: string;
+    ean13?: string;
     imageUrl?: string | null;
     isActive?: boolean;
   }
@@ -1102,6 +1116,8 @@ export async function updateProductVariant(
   if (data.voltage !== undefined) updateData.voltage = data.voltage;
   if (data.material !== undefined) updateData.material = data.material;
   if (data.stockQuantity !== undefined) updateData.stockQuantity = data.stockQuantity;
+  if (data.supplierProductCode !== undefined) updateData.supplierProductCode = data.supplierProductCode;
+  if (data.ean13 !== undefined) updateData.ean13 = data.ean13;
   if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl;
   if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
