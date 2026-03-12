@@ -96,7 +96,7 @@ describe('Order Status Change Email Notification', () => {
       oldStatus: 'PENDING_APPROVAL',
       newStatus: 'SHIPPED',
       totalTTC: '6360.00',
-      portalUrl: 'https://market-spas-b2b.manus.space',
+      portalUrl: 'https://marketspas.pro',
     };
 
     // Verify all required fields are present

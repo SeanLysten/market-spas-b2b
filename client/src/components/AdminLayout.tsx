@@ -134,7 +134,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       items: [
         { name: "Produits", href: "/admin/products", icon: Package },
         { name: "Prévisions Stock", href: "/admin/forecast", icon: TrendingUp },
-        { name: "Intégration Fournisseur", href: "/admin/supplier-integration", icon: ArrowRightLeft },
       ],
     },
     {
@@ -181,9 +180,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       ],
     },
     {
-      name: "Paramètres",
-      href: "/admin/settings",
+      label: "Paramètres",
       icon: Settings,
+      items: [
+        { name: "Paramètres généraux", href: "/admin/settings", icon: Settings },
+        ...(user?.role === 'SUPER_ADMIN' ? [{ name: "Intégration Fournisseur", href: "/admin/supplier-integration", icon: ArrowRightLeft }] : []),
+      ],
     },
   ];
 

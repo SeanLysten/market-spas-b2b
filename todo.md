@@ -2674,3 +2674,19 @@
 - [x] Rendre les champs CodeProduit et EAN13 facilement éditables dans l'admin (inline editing clic-pour-éditer)
 - [x] Permettre l'édition des codes sur tous les produits et variantes (inline dans le tableau des variantes)
 - [x] Tester le rendu dans le catalogue et l'admin après les modifications (couleurs renommées, édition inline fonctionnelle)
+
+## Webhooks sortants automatiques (notification collaborateur)
+- [x] Analyser le flux de paiement/commande existant pour identifier les points d'accroche
+- [ ] Créer un module webhook sortant (outgoing-webhook) avec envoi automatique POST vers l'API du collaborateur
+- [ ] Déclencher le webhook à chaque : création de commande, paiement confirmé, acompte versé
+- [ ] Inclure dans le payload : infos client, numéro commande, EAN13 des produits, quantités, statut paiement, montants
+- [ ] Ajouter la configuration de l'URL webhook du collaborateur dans les settings admin (Intégration Fournisseur)
+- [ ] Système de retry automatique en cas d'échec d'envoi (3 tentatives avec backoff)
+- [ ] Log des webhooks envoyés avec statut (succès/échec) visible dans l'admin
+- [ ] Écrire les tests Vitest pour les webhooks sortants
+
+## Déplacement Intégration Fournisseur + URLs marketspas.pro
+- [x] Déplacer le lien "Intégration Fournisseur" de "Produits & Stock" vers "Paramètres" dans le menu admin
+- [x] Restreindre l'accès à la page Intégration Fournisseur aux SUPER_ADMIN uniquement
+- [x] Remplacer toutes les URLs manus par marketspas.pro dans la documentation API et les tests
+- [x] Vérifier qu'aucune mention de "manus" n'apparaît dans l'interface utilisateur (seul vite.config.ts technique reste)

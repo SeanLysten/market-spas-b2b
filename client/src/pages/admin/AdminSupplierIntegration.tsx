@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { Link } from "wouter";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -99,6 +101,7 @@ const SUPPLIER_PRODUCTS = [
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AdminSupplierIntegration() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("import");
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -230,7 +233,24 @@ export default function AdminSupplierIntegration() {
 
   // ─── API Endpoints Info ───────────────────────────────────────────────────
 
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const baseUrl = "https://marketspas.pro";
+
+  // Restrict access to SUPER_ADMIN only
+  if (user?.role !== 'SUPER_ADMIN') {
+    return (
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+          <h1 className="text-2xl font-bold">Accès restreint</h1>
+          <p className="text-muted-foreground text-center max-w-md">
+            Cette page est réservée aux super administrateurs. Contactez votre administrateur pour obtenir l'accès.
+          </p>
+          <Link href="/admin">
+            <Button>Retour au dashboard</Button>
+          </Link>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
