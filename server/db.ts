@@ -772,13 +772,17 @@ export async function getCart(userId: number) {
     }
   }
 
-  // Get user's partner discount
+  // Get user's partner discount from system settings (level-based)
   const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   let discountPercent = 0;
+  let partnerLevel = "BRONZE";
+  let discountSource: "level" | "custom" | "none" = "none";
   
   if (user[0]?.partnerId) {
-    const partner = await db.select().from(partners).where(eq(partners.id, user[0].partnerId)).limit(1);
-    discountPercent = typeof partner[0]?.discountPercent === 'string' ? parseFloat(partner[0].discountPercent) : (partner[0]?.discountPercent || 0);
+    const resolved = await resolvePartnerDiscount(user[0].partnerId);
+    discountPercent = resolved.discountPercent;
+    partnerLevel = resolved.partnerLevel;
+    discountSource = resolved.source;
   }
 
   // Calculate totals
@@ -790,15 +794,28 @@ export async function getCart(userId: number) {
 
   const discountAmount = (subtotalHT * discountPercent) / 100;
   const subtotalAfterDiscount = subtotalHT - discountAmount;
-  const vatAmount = subtotalAfterDiscount * 0.21; // Default 21% VAT
-  const totalTTC = subtotalAfterDiscount + vatAmount;
+  
+  // Calculate shipping from system settings
+  const { shippingHT, isFreeShipping, config: shippingConfig } = await calculateShippingCost(subtotalAfterDiscount, "standard");
+  
+  const subtotalWithShipping = subtotalAfterDiscount + shippingHT;
+  const vatAmount = subtotalAfterDiscount * 0.21; // VAT on products only
+  const shippingVAT = shippingHT * 0.21;
+  const totalVAT = vatAmount + shippingVAT;
+  const totalTTC = subtotalWithShipping + totalVAT;
 
   return {
     items,
     subtotalHT,
     discountPercent,
     discountAmount,
-    vatAmount,
+    partnerLevel,
+    discountSource,
+    shippingHT,
+    isFreeShipping,
+    freeShippingThreshold: shippingConfig.freeShippingThreshold,
+    shippingVAT,
+    vatAmount: totalVAT,
     totalTTC,
   };
 }
@@ -1401,6 +1418,7 @@ export interface CreateOrderInput {
     instructions?: string;
   };
   paymentMethod: string;
+  shippingType?: "standard" | "express";
   customerNotes?: string;
   discountPercent?: number;
 }
@@ -1435,10 +1453,20 @@ export async function createOrder(input: CreateOrderInput) {
 
   const orderDiscountPercent = input.discountPercent || 0;
   const orderDiscountAmount = (subtotalHT * orderDiscountPercent) / 100;
-  const totalHT = subtotalHT - orderDiscountAmount;
+  const totalHTBeforeShipping = subtotalHT - orderDiscountAmount;
   
-  // Calculate VAT (average rate from items)
-  const totalVAT = itemsWithTotals.reduce((sum, item) => sum + item.totalVAT, 0);
+  // Calculate shipping cost from system settings
+  const { shippingHT, isFreeShipping } = await calculateShippingCost(
+    totalHTBeforeShipping,
+    input.shippingType || "standard"
+  );
+  
+  const totalHT = totalHTBeforeShipping + shippingHT;
+  
+  // Calculate VAT (average rate from items + shipping VAT at 21%)
+  const itemsVAT = itemsWithTotals.reduce((sum, item) => sum + item.totalVAT, 0);
+  const shippingVAT = (shippingHT * 21) / 100;
+  const totalVAT = itemsVAT + shippingVAT;
   const totalTTC = totalHT + totalVAT;
 
   // Deposit (30% by default)
@@ -1454,7 +1482,7 @@ export async function createOrder(input: CreateOrderInput) {
     subtotalHT: subtotalHT.toFixed(2),
     discountAmount: orderDiscountAmount.toFixed(2),
     discountPercent: orderDiscountPercent.toFixed(2),
-    shippingHT: "0.00",
+    shippingHT: shippingHT.toFixed(2),
     totalHT: totalHT.toFixed(2),
     totalVAT: totalVAT.toFixed(2),
     totalTTC: totalTTC.toFixed(2),
@@ -1542,6 +1570,8 @@ export async function createOrder(input: CreateOrderInput) {
     totalHT,
     totalVAT,
     totalTTC,
+    shippingHT,
+    isFreeShipping,
     depositAmount,
     balanceAmount,
   };
@@ -4659,4 +4689,112 @@ export async function upsertMultipleSystemSettings(
   for (const setting of settings) {
     await upsertSystemSetting(setting.key, setting.value, userId, setting.description);
   }
+}
+
+
+// ============================================
+// ORDER PRICING CONFIG (dynamic from system_settings)
+// ============================================
+
+export interface PartnerLevelConfig {
+  level: string;
+  discount: number;
+  minOrders: number;
+}
+
+export interface ShippingConfig {
+  freeShippingThreshold: number;
+  defaultShippingCost: number;
+  expressShippingCost: number;
+  estimatedDeliveryDays: number;
+}
+
+const DEFAULT_PARTNER_LEVELS: PartnerLevelConfig[] = [
+  { level: "BRONZE", discount: 0, minOrders: 0 },
+  { level: "SILVER", discount: 5, minOrders: 5 },
+  { level: "GOLD", discount: 10, minOrders: 15 },
+  { level: "PLATINUM", discount: 15, minOrders: 30 },
+  { level: "VIP", discount: 20, minOrders: 50 },
+];
+
+const DEFAULT_SHIPPING: ShippingConfig = {
+  freeShippingThreshold: 5000,
+  defaultShippingCost: 150,
+  expressShippingCost: 300,
+  estimatedDeliveryDays: 14,
+};
+
+/**
+ * Get the discount percent for a given partner level from system settings.
+ * Falls back to the partner's own discountPercent field if no level config found.
+ */
+export async function getDiscountForPartnerLevel(partnerLevel: string): Promise<number> {
+  const raw = await getSystemSetting("partner_levels");
+  let levels: PartnerLevelConfig[] = DEFAULT_PARTNER_LEVELS;
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) levels = parsed;
+    } catch {}
+  }
+  const match = levels.find((l) => l.level === partnerLevel);
+  return match ? match.discount : 0;
+}
+
+/**
+ * Get shipping config from system settings.
+ */
+export async function getShippingConfig(): Promise<ShippingConfig> {
+  const raw = await getSystemSetting("shipping");
+  if (!raw) return DEFAULT_SHIPPING;
+  try {
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_SHIPPING, ...parsed };
+  } catch {
+    return DEFAULT_SHIPPING;
+  }
+}
+
+/**
+ * Calculate shipping cost based on subtotal HT and shipping type.
+ * Returns 0 if subtotal exceeds freeShippingThreshold.
+ */
+export async function calculateShippingCost(
+  subtotalHT: number,
+  shippingType: "standard" | "express" = "standard"
+): Promise<{ shippingHT: number; isFreeShipping: boolean; config: ShippingConfig }> {
+  const config = await getShippingConfig();
+
+  if (subtotalHT >= config.freeShippingThreshold) {
+    return { shippingHT: 0, isFreeShipping: true, config };
+  }
+
+  const shippingHT = shippingType === "express"
+    ? config.expressShippingCost
+    : config.defaultShippingCost;
+
+  return { shippingHT, isFreeShipping: false, config };
+}
+
+/**
+ * Resolve the effective discount for a partner:
+ * 1. Use the level-based discount from system_settings (partner_levels)
+ * 2. If the partner has a custom discountPercent override, use the higher of the two
+ */
+export async function resolvePartnerDiscount(partnerId: number): Promise<{
+  discountPercent: number;
+  partnerLevel: string;
+  source: "level" | "custom" | "none";
+}> {
+  const partner = await getPartnerById(partnerId);
+  if (!partner) return { discountPercent: 0, partnerLevel: "BRONZE", source: "none" };
+
+  const levelDiscount = await getDiscountForPartnerLevel(partner.level);
+  const customDiscount = partner.discountPercent ? parseFloat(partner.discountPercent) : 0;
+
+  // Use the higher discount (level-based or custom override)
+  if (customDiscount > 0 && customDiscount > levelDiscount) {
+    return { discountPercent: customDiscount, partnerLevel: partner.level, source: "custom" };
+  }
+  return { discountPercent: levelDiscount, partnerLevel: partner.level, source: "level" };
 }

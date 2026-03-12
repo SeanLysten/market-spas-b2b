@@ -960,6 +960,7 @@ export const appRouter = router({
             instructions: z.string().optional(),
           }),
           paymentMethod: z.string(),
+          shippingType: z.enum(["standard", "express"]).optional(),
           customerNotes: z.string().optional(),
         })
       )
@@ -968,9 +969,8 @@ export const appRouter = router({
           throw new Error("Vous devez être associé à un partenaire pour passer commande");
         }
 
-        // Get partner discount
-        const partner = await db.getPartnerById(ctx.user.partnerId);
-        const discountPercent = partner?.discountPercent ? parseFloat(partner.discountPercent) : 0;
+        // Get partner discount from system settings (level-based) or custom override
+        const { discountPercent, partnerLevel, source: discountSource } = await db.resolvePartnerDiscount(ctx.user.partnerId);
 
         // Build order items with product details
         const orderItems = [];
@@ -1010,13 +1010,14 @@ export const appRouter = router({
           });
         }
 
-        // Create the order
+        // Create the order with dynamic shipping
         const result = await db.createOrder({
           partnerId: ctx.user.partnerId,
           createdById: ctx.user.id,
           items: orderItems,
           deliveryAddress: input.deliveryAddress,
           paymentMethod: input.paymentMethod,
+          shippingType: input.shippingType || "standard",
           customerNotes: input.customerNotes,
           discountPercent,
         });
@@ -1034,7 +1035,10 @@ export const appRouter = router({
           orderNumber: result.orderNumber,
           totalHT: result.totalHT,
           totalTTC: result.totalTTC,
+          shippingHT: result.shippingHT,
           depositAmount: result.depositAmount,
+          discountPercent,
+          partnerLevel,
           message: "Commande créée avec succès",
         };
       }),

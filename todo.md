@@ -2637,3 +2637,10 @@
 - [x] Refondre le frontend AdminSettings pour charger/sauvegarder via tRPC
 - [x] Afficher le statut réel des intégrations (Stripe, Resend) depuis les env vars
 - [x] Écrire les tests Vitest pour les routes settings (12 tests)
+
+## Intégration settings dans la logique de calcul des commandes
+- [x] Créer les fonctions utilitaires getDiscountForPartnerLevel(), getShippingConfig(), calculateShippingCost(), resolvePartnerDiscount()
+- [x] Modifier la logique de création de commande pour appliquer la remise du niveau partenaire (resolvePartnerDiscount)
+- [x] Modifier la logique de calcul des frais de livraison (seuil gratuit, standard, express) via calculateShippingCost()
+- [x] Mettre à jour Cart.tsx (barre progression livraison gratuite, remise partenaire, frais livraison) et Checkout.tsx (choix standard/express, recap dynamique)
+- [x] Écrire les tests Vitest pour la logique de calcul (17 tests dans order-pricing.test.ts)

@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
-import { Minus, Plus, ShoppingCart, Trash2, ArrowRight, TruckIcon, Package } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2, ArrowRight, TruckIcon, Package, BadgePercent, Gift } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -66,6 +67,13 @@ export default function Cart() {
   const inStockItems = cart?.items?.filter((item: any) => !item.isPreorder) || [];
   const preorderItems = cart?.items?.filter((item: any) => item.isPreorder) || [];
 
+  // Free shipping progress
+  const subtotalAfterDiscount = (cart?.subtotalHT || 0) - (cart?.discountAmount || 0);
+  const freeShippingThreshold = (cart as any)?.freeShippingThreshold || 5000;
+  const isFreeShipping = (cart as any)?.isFreeShipping || false;
+  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - subtotalAfterDiscount);
+  const freeShippingProgress = Math.min(100, (subtotalAfterDiscount / freeShippingThreshold) * 100);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       {/* Header */}
@@ -95,7 +103,7 @@ export default function Cart() {
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-12 pb-12 text-center">
               <ShoppingCart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h2 className="text-2xl text-display text-display font-bold mb-2">Votre panier est vide</h2>
+              <h2 className="text-2xl text-display font-bold mb-2">Votre panier est vide</h2>
               <p className="text-muted-foreground mb-6">
                 Découvrez notre catalogue et ajoutez des produits à votre panier
               </p>
@@ -111,6 +119,44 @@ export default function Cart() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-3 md:p-8">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-6">
+              {/* Free Shipping Progress Banner */}
+              {!isEmpty && (
+                <Card className={`border ${isFreeShipping ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-primary/20 bg-primary/5'}`}>
+                  <CardContent className="py-4">
+                    {isFreeShipping ? (
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
+                          <Gift className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-emerald-700 dark:text-emerald-400">
+                            Livraison gratuite applicable
+                          </p>
+                          <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80">
+                            Votre commande dépasse le seuil de {formatPrice(freeShippingThreshold)} € HT
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <TruckIcon className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-medium">
+                              Plus que <strong>{formatPrice(remainingForFreeShipping)} € HT</strong> pour la livraison gratuite
+                            </span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {formatPrice(subtotalAfterDiscount)} / {formatPrice(freeShippingThreshold)} €
+                          </span>
+                        </div>
+                        <Progress value={freeShippingProgress} className="h-2" />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* In Stock Items */}
               {inStockItems.length > 0 && (
                 <Card>
@@ -148,7 +194,7 @@ export default function Cart() {
                           <p className="text-xs md:text-sm text-muted-foreground">SKU: {item.product?.sku}</p>
                           <div className="mt-2 flex items-center gap-2">
                             <span className="text-base font-semibold text-display text-primary">
-                              {formatPrice(item.unitPriceHT)} €
+                              {formatPrice(typeof item.unitPriceHT === 'string' ? parseFloat(item.unitPriceHT) : item.unitPriceHT)} €
                             </span>
                             <span className="text-sm text-muted-foreground">HT</span>
                           </div>
@@ -213,21 +259,14 @@ export default function Cart() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {preorderItems.map((item: any) => (
-                      <div key={`preorder-${item.productId}`} className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border border-orange-500/20 dark:border-orange-500/30 bg-orange-500/10 dark:bg-orange-500/20/50">
-                        {/* Product Image */}
+                      <div key={`preorder-${item.productId}`} className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border border-orange-500/20 dark:border-orange-500/30 bg-orange-500/5">
                         <div className="w-full sm:w-24 h-32 sm:h-24 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                           {item.product?.imageUrl ? (
-                            <img
-                              src={item.product.imageUrl}
-                              alt={item.product.name}
-                              className="w-full h-full object-cover rounded-lg"
-                            />
+                            <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover rounded-lg" />
                           ) : (
                             <TruckIcon className="w-8 h-8 text-muted-foreground" />
                           )}
                         </div>
-
-                        {/* Product Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start gap-2">
                             <h3 className="font-semibold line-clamp-1 flex-1">{item.product?.name}</h3>
@@ -238,44 +277,22 @@ export default function Cart() {
                           <p className="text-xs md:text-sm text-muted-foreground">SKU: {item.product?.sku}</p>
                           <div className="mt-2 flex items-center gap-2">
                             <span className="text-base font-semibold text-display text-primary">
-                              {formatPrice(item.unitPriceHT)} €
+                              {formatPrice(typeof item.unitPriceHT === 'string' ? parseFloat(item.unitPriceHT) : item.unitPriceHT)} €
                             </span>
                             <span className="text-sm text-muted-foreground">HT</span>
                           </div>
                         </div>
-
-                        {/* Quantity Controls */}
                         <div className="flex flex-col items-end gap-2">
                           <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
-                              disabled={item.quantity <= 1}
-                            >
+                            <Button variant="outline" size="sm" onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)} disabled={item.quantity <= 1}>
                               <Minus className="w-4 h-4" />
                             </Button>
-                            <Input
-                              type="number"
-                              min="1"
-                              value={item.quantity}
-                              onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value) || 1)}
-                              className="w-16 text-center"
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}
-                            >
+                            <Input type="number" min="1" value={item.quantity} onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value) || 1)} className="w-16 text-center" />
+                            <Button variant="outline" size="sm" onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}>
                               <Plus className="w-4 h-4" />
                             </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveItem(item.productId)}
-                            className="text-destructive hover:text-destructive"
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => handleRemoveItem(item.productId)} className="text-destructive hover:text-destructive">
                             <Trash2 className="w-4 h-4 mr-1" />
                             Retirer
                           </Button>
@@ -299,14 +316,33 @@ export default function Cart() {
                       <span className="text-muted-foreground">Sous-total HT</span>
                       <span className="font-medium">{formatPrice(cart.subtotalHT)} €</span>
                     </div>
+
+                    {/* Partner Discount */}
                     {cart.discountPercent > 0 && (
                       <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
-                        <span>Remise partenaire ({cart.discountPercent}%)</span>
+                        <span className="flex items-center gap-1">
+                          <BadgePercent className="w-3.5 h-3.5" />
+                          Remise {(cart as any).partnerLevel || "partenaire"} ({cart.discountPercent}%)
+                        </span>
                         <span>-{formatPrice(cart.discountAmount)} €</span>
                       </div>
                     )}
+
+                    {/* Shipping */}
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">TVA (21%)</span>
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <TruckIcon className="w-3.5 h-3.5" />
+                        Livraison
+                      </span>
+                      {(cart as any)?.isFreeShipping ? (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">Gratuite</span>
+                      ) : (
+                        <span className="font-medium">{formatPrice((cart as any)?.shippingHT || 0)} €</span>
+                      )}
+                    </div>
+
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">TVA</span>
                       <span className="font-medium">{formatPrice(cart.vatAmount)} €</span>
                     </div>
                     <Separator />
@@ -315,6 +351,16 @@ export default function Cart() {
                       <span className="text-primary">{formatPrice(cart.totalTTC)} €</span>
                     </div>
                   </div>
+
+                  {/* Partner Level Badge */}
+                  {(cart as any)?.partnerLevel && cart.discountPercent > 0 && (
+                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+                      <p className="text-xs text-muted-foreground">
+                        <BadgePercent className="w-4 h-4 inline mr-1 text-primary" />
+                        Votre niveau <strong className="text-primary">{(cart as any).partnerLevel}</strong> vous donne droit à une remise de <strong className="text-primary">{cart.discountPercent}%</strong> sur tous les produits.
+                      </p>
+                    </div>
+                  )}
 
                   {preorderItems.length > 0 && (
                     <div className="p-3 rounded-lg bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/20 dark:border-orange-500/30">
