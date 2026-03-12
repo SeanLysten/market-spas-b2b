@@ -2629,3 +2629,11 @@
 - [x] Barre de progression visible pendant le téléchargement en lot
 - [x] Compteur de téléchargements visible sur chaque fichier pour les admins
 - [x] Tests vitest (28 tests dans resources-zip-download.test.ts)
+
+## Intégration AdminSettings avec le backend
+- [x] Créer la table system_settings en base de données (clé-valeur JSON)
+- [x] Créer les fonctions DB : getSettings, upsertSettings
+- [x] Créer les routes tRPC : settings.get, settings.update (adminProcedure)
+- [x] Refondre le frontend AdminSettings pour charger/sauvegarder via tRPC
+- [x] Afficher le statut réel des intégrations (Stripe, Resend) depuis les env vars
+- [x] Écrire les tests Vitest pour les routes settings (12 tests)

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,73 +6,253 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { trpc } from "@/lib/trpc";
 import { 
-  Settings, 
   Building2, 
   Mail, 
   CreditCard, 
   Bell, 
-  Shield, 
   Globe,
   Save,
   Percent,
   Truck,
-  FileText
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  BarChart3,
+  ShoppingBag,
+  Megaphone,
 } from "lucide-react";
 import { toast } from "sonner";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface CompanySettings {
+  companyName: string;
+  legalName: string;
+  vatNumber: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  phone: string;
+  email: string;
+  website: string;
+}
+
+interface PartnerLevel {
+  level: string;
+  discount: number;
+  minOrders: number;
+}
+
+interface NotificationSettings {
+  emailNewOrder: boolean;
+  emailOrderStatus: boolean;
+  emailLowStock: boolean;
+  emailNewPartner: boolean;
+  stockAlertThreshold: number;
+}
+
+interface ShippingSettings {
+  freeShippingThreshold: number;
+  defaultShippingCost: number;
+  expressShippingCost: number;
+  estimatedDeliveryDays: number;
+}
+
+const DEFAULT_COMPANY: CompanySettings = {
+  companyName: "",
+  legalName: "",
+  vatNumber: "",
+  address: "",
+  city: "",
+  postalCode: "",
+  country: "BE",
+  phone: "",
+  email: "",
+  website: "",
+};
+
+const DEFAULT_LEVELS: PartnerLevel[] = [
+  { level: "BRONZE", discount: 0, minOrders: 0 },
+  { level: "SILVER", discount: 5, minOrders: 5 },
+  { level: "GOLD", discount: 10, minOrders: 15 },
+  { level: "PLATINUM", discount: 15, minOrders: 30 },
+  { level: "VIP", discount: 20, minOrders: 50 },
+];
+
+const DEFAULT_NOTIFICATIONS: NotificationSettings = {
+  emailNewOrder: true,
+  emailOrderStatus: true,
+  emailLowStock: true,
+  emailNewPartner: true,
+  stockAlertThreshold: 5,
+};
+
+const DEFAULT_SHIPPING: ShippingSettings = {
+  freeShippingThreshold: 5000,
+  defaultShippingCost: 150,
+  expressShippingCost: 300,
+  estimatedDeliveryDays: 14,
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export default function AdminSettings() {
   const [isSaving, setIsSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
-  // Company settings
-  const [companySettings, setCompanySettings] = useState({
-    companyName: "Market Spas",
-    legalName: "Market Spas SPRL",
-    vatNumber: "BE0123456789",
-    address: "Rue du Commerce 123",
-    city: "Bruxelles",
-    postalCode: "1000",
-    country: "BE",
-    phone: "+32 2 123 45 67",
-    email: "contact@marketspas.be",
-    website: "https://www.marketspas.be",
-  });
+  // State for each settings group
+  const [companySettings, setCompanySettings] = useState<CompanySettings>(DEFAULT_COMPANY);
+  const [partnerLevels, setPartnerLevels] = useState<PartnerLevel[]>(DEFAULT_LEVELS);
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATIONS);
+  const [shippingSettings, setShippingSettings] = useState<ShippingSettings>(DEFAULT_SHIPPING);
 
-  // Partner levels settings
-  const [partnerLevels, setPartnerLevels] = useState([
-    { level: "BRONZE", discount: 0, minOrders: 0 },
-    { level: "SILVER", discount: 5, minOrders: 5 },
-    { level: "GOLD", discount: 10, minOrders: 15 },
-    { level: "PLATINUM", discount: 15, minOrders: 30 },
-    { level: "VIP", discount: 20, minOrders: 50 },
-  ]);
+  // ─── Data fetching ──────────────────────────────────────────────────────────
 
-  // Notification settings
-  const [notificationSettings, setNotificationSettings] = useState({
-    emailNewOrder: true,
-    emailOrderStatus: true,
-    emailLowStock: true,
-    emailNewPartner: true,
-    stockAlertThreshold: 5,
-  });
+  const { data: allSettings, isLoading } = trpc.settings.getAll.useQuery();
+  const { data: integrations, isLoading: integrationsLoading } = trpc.settings.integrationStatus.useQuery();
+  const updateMultipleMutation = trpc.settings.updateMultiple.useMutation();
+  const utils = trpc.useUtils();
 
-  // Shipping settings
-  const [shippingSettings, setShippingSettings] = useState({
-    freeShippingThreshold: 5000,
-    defaultShippingCost: 150,
-    expressShippingCost: 300,
-    estimatedDeliveryDays: 14,
-  });
+  // Populate state from server data
+  useEffect(() => {
+    if (allSettings) {
+      if (allSettings.company) {
+        setCompanySettings({ ...DEFAULT_COMPANY, ...allSettings.company });
+      }
+      if (allSettings.partner_levels && Array.isArray(allSettings.partner_levels)) {
+        setPartnerLevels(allSettings.partner_levels);
+      }
+      if (allSettings.notifications) {
+        setNotificationSettings({ ...DEFAULT_NOTIFICATIONS, ...allSettings.notifications });
+      }
+      if (allSettings.shipping) {
+        setShippingSettings({ ...DEFAULT_SHIPPING, ...allSettings.shipping });
+      }
+    }
+  }, [allSettings]);
+
+  // Track changes
+  const updateCompany = (patch: Partial<CompanySettings>) => {
+    setCompanySettings((prev) => ({ ...prev, ...patch }));
+    setHasChanges(true);
+  };
+
+  const updateLevel = (index: number, field: "discount" | "minOrders", value: number) => {
+    setPartnerLevels((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+    setHasChanges(true);
+  };
+
+  const updateNotification = (patch: Partial<NotificationSettings>) => {
+    setNotificationSettings((prev) => ({ ...prev, ...patch }));
+    setHasChanges(true);
+  };
+
+  const updateShipping = (patch: Partial<ShippingSettings>) => {
+    setShippingSettings((prev) => ({ ...prev, ...patch }));
+    setHasChanges(true);
+  };
+
+  // ─── Save handler ───────────────────────────────────────────────────────────
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate save
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast.success("Paramètres enregistrés avec succès");
-    setIsSaving(false);
+    try {
+      await updateMultipleMutation.mutateAsync({
+        settings: [
+          { key: "company", value: companySettings, description: "Informations entreprise" },
+          { key: "partner_levels", value: partnerLevels, description: "Niveaux partenaires et remises" },
+          { key: "shipping", value: shippingSettings, description: "Paramètres de livraison" },
+          { key: "notifications", value: notificationSettings, description: "Paramètres de notifications" },
+        ],
+      });
+      utils.settings.getAll.invalidate();
+      setHasChanges(false);
+      toast.success("Paramètres enregistrés avec succès");
+    } catch {
+      toast.error("Erreur lors de l'enregistrement des paramètres");
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  // ─── Integration status helper ──────────────────────────────────────────────
+
+  const IntegrationCard = ({
+    title,
+    description,
+    icon: Icon,
+    connected,
+    statusLabel,
+    details,
+  }: {
+    title: string;
+    description: string;
+    icon: React.ElementType;
+    connected: boolean;
+    statusLabel: string;
+    details?: string;
+  }) => (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Icon className="w-5 h-5" />
+          {title}
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div
+          className={`flex items-center justify-between p-4 rounded-lg border ${
+            connected
+              ? "bg-emerald-500/10 border-emerald-500/20"
+              : "bg-muted/50 border-border"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {connected ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            ) : (
+              <XCircle className="w-4 h-4 text-muted-foreground" />
+            )}
+            <span
+              className={`font-medium text-sm ${
+                connected ? "text-emerald-800" : "text-muted-foreground"
+              }`}
+            >
+              {statusLabel}
+            </span>
+          </div>
+        </div>
+        {details && (
+          <p className="text-xs text-muted-foreground">{details}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  // ─── Loading state ──────────────────────────────────────────────────────────
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Chargement des paramètres…</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -85,10 +265,22 @@ export default function AdminSettings() {
               Configuration générale de la plateforme
             </p>
           </div>
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
-            <Save className="w-4 h-4" />
-            {isSaving ? "Enregistrement..." : "Enregistrer"}
-          </Button>
+          <div className="flex items-center gap-2">
+            {hasChanges && (
+              <span className="flex items-center gap-1 text-sm text-amber-600">
+                <AlertCircle className="w-4 h-4" />
+                Modifications non enregistrées
+              </span>
+            )}
+            <Button onClick={handleSave} disabled={isSaving || !hasChanges} className="gap-2">
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {isSaving ? "Enregistrement…" : "Enregistrer"}
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="company" className="space-y-6">
@@ -115,7 +307,7 @@ export default function AdminSettings() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Company Settings */}
+          {/* ── Company Settings ─────────────────────────────────────────── */}
           <TabsContent value="company">
             <Card>
               <CardHeader>
@@ -134,7 +326,7 @@ export default function AdminSettings() {
                     <Input
                       id="companyName"
                       value={companySettings.companyName}
-                      onChange={(e) => setCompanySettings({ ...companySettings, companyName: e.target.value })}
+                      onChange={(e) => updateCompany({ companyName: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -142,7 +334,7 @@ export default function AdminSettings() {
                     <Input
                       id="legalName"
                       value={companySettings.legalName}
-                      onChange={(e) => setCompanySettings({ ...companySettings, legalName: e.target.value })}
+                      onChange={(e) => updateCompany({ legalName: e.target.value })}
                     />
                   </div>
                 </div>
@@ -153,7 +345,7 @@ export default function AdminSettings() {
                     <Input
                       id="vatNumber"
                       value={companySettings.vatNumber}
-                      onChange={(e) => setCompanySettings({ ...companySettings, vatNumber: e.target.value })}
+                      onChange={(e) => updateCompany({ vatNumber: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -161,7 +353,7 @@ export default function AdminSettings() {
                     <Input
                       id="phone"
                       value={companySettings.phone}
-                      onChange={(e) => setCompanySettings({ ...companySettings, phone: e.target.value })}
+                      onChange={(e) => updateCompany({ phone: e.target.value })}
                     />
                   </div>
                 </div>
@@ -171,7 +363,7 @@ export default function AdminSettings() {
                   <Input
                     id="address"
                     value={companySettings.address}
-                    onChange={(e) => setCompanySettings({ ...companySettings, address: e.target.value })}
+                    onChange={(e) => updateCompany({ address: e.target.value })}
                   />
                 </div>
 
@@ -181,7 +373,7 @@ export default function AdminSettings() {
                     <Input
                       id="postalCode"
                       value={companySettings.postalCode}
-                      onChange={(e) => setCompanySettings({ ...companySettings, postalCode: e.target.value })}
+                      onChange={(e) => updateCompany({ postalCode: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -189,14 +381,14 @@ export default function AdminSettings() {
                     <Input
                       id="city"
                       value={companySettings.city}
-                      onChange={(e) => setCompanySettings({ ...companySettings, city: e.target.value })}
+                      onChange={(e) => updateCompany({ city: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="country">Pays</Label>
                     <Select 
                       value={companySettings.country} 
-                      onValueChange={(v) => setCompanySettings({ ...companySettings, country: v })}
+                      onValueChange={(v) => updateCompany({ country: v })}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -207,6 +399,8 @@ export default function AdminSettings() {
                         <SelectItem value="NL">Pays-Bas</SelectItem>
                         <SelectItem value="LU">Luxembourg</SelectItem>
                         <SelectItem value="DE">Allemagne</SelectItem>
+                        <SelectItem value="CH">Suisse</SelectItem>
+                        <SelectItem value="ES">Espagne</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -219,7 +413,7 @@ export default function AdminSettings() {
                       id="email"
                       type="email"
                       value={companySettings.email}
-                      onChange={(e) => setCompanySettings({ ...companySettings, email: e.target.value })}
+                      onChange={(e) => updateCompany({ email: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -227,7 +421,7 @@ export default function AdminSettings() {
                     <Input
                       id="website"
                       value={companySettings.website}
-                      onChange={(e) => setCompanySettings({ ...companySettings, website: e.target.value })}
+                      onChange={(e) => updateCompany({ website: e.target.value })}
                     />
                   </div>
                 </div>
@@ -235,7 +429,7 @@ export default function AdminSettings() {
             </Card>
           </TabsContent>
 
-          {/* Partner Levels */}
+          {/* ── Partner Levels ────────────────────────────────────────────── */}
           <TabsContent value="partners">
             <Card>
               <CardHeader>
@@ -258,11 +452,7 @@ export default function AdminSettings() {
                           <Input
                             type="number"
                             value={level.discount}
-                            onChange={(e) => {
-                              const newLevels = [...partnerLevels];
-                              newLevels[index].discount = Number(e.target.value);
-                              setPartnerLevels(newLevels);
-                            }}
+                            onChange={(e) => updateLevel(index, "discount", Number(e.target.value))}
                           />
                         </div>
                         <div className="space-y-2">
@@ -270,11 +460,7 @@ export default function AdminSettings() {
                           <Input
                             type="number"
                             value={level.minOrders}
-                            onChange={(e) => {
-                              const newLevels = [...partnerLevels];
-                              newLevels[index].minOrders = Number(e.target.value);
-                              setPartnerLevels(newLevels);
-                            }}
+                            onChange={(e) => updateLevel(index, "minOrders", Number(e.target.value))}
                           />
                         </div>
                       </div>
@@ -285,7 +471,7 @@ export default function AdminSettings() {
             </Card>
           </TabsContent>
 
-          {/* Shipping Settings */}
+          {/* ── Shipping Settings ─────────────────────────────────────────── */}
           <TabsContent value="shipping">
             <Card>
               <CardHeader>
@@ -304,7 +490,7 @@ export default function AdminSettings() {
                     <Input
                       type="number"
                       value={shippingSettings.freeShippingThreshold}
-                      onChange={(e) => setShippingSettings({ ...shippingSettings, freeShippingThreshold: Number(e.target.value) })}
+                      onChange={(e) => updateShipping({ freeShippingThreshold: Number(e.target.value) })}
                     />
                     <p className="text-xs text-muted-foreground">
                       Livraison gratuite au-dessus de ce montant
@@ -315,7 +501,7 @@ export default function AdminSettings() {
                     <Input
                       type="number"
                       value={shippingSettings.defaultShippingCost}
-                      onChange={(e) => setShippingSettings({ ...shippingSettings, defaultShippingCost: Number(e.target.value) })}
+                      onChange={(e) => updateShipping({ defaultShippingCost: Number(e.target.value) })}
                     />
                   </div>
                 </div>
@@ -326,7 +512,7 @@ export default function AdminSettings() {
                     <Input
                       type="number"
                       value={shippingSettings.expressShippingCost}
-                      onChange={(e) => setShippingSettings({ ...shippingSettings, expressShippingCost: Number(e.target.value) })}
+                      onChange={(e) => updateShipping({ expressShippingCost: Number(e.target.value) })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -334,7 +520,7 @@ export default function AdminSettings() {
                     <Input
                       type="number"
                       value={shippingSettings.estimatedDeliveryDays}
-                      onChange={(e) => setShippingSettings({ ...shippingSettings, estimatedDeliveryDays: Number(e.target.value) })}
+                      onChange={(e) => updateShipping({ estimatedDeliveryDays: Number(e.target.value) })}
                     />
                   </div>
                 </div>
@@ -342,7 +528,7 @@ export default function AdminSettings() {
             </Card>
           </TabsContent>
 
-          {/* Notification Settings */}
+          {/* ── Notification Settings ─────────────────────────────────────── */}
           <TabsContent value="notifications">
             <Card>
               <CardHeader>
@@ -365,7 +551,7 @@ export default function AdminSettings() {
                     </div>
                     <Switch
                       checked={notificationSettings.emailNewOrder}
-                      onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, emailNewOrder: checked })}
+                      onCheckedChange={(checked) => updateNotification({ emailNewOrder: checked })}
                     />
                   </div>
 
@@ -378,7 +564,7 @@ export default function AdminSettings() {
                     </div>
                     <Switch
                       checked={notificationSettings.emailOrderStatus}
-                      onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, emailOrderStatus: checked })}
+                      onCheckedChange={(checked) => updateNotification({ emailOrderStatus: checked })}
                     />
                   </div>
 
@@ -391,7 +577,7 @@ export default function AdminSettings() {
                     </div>
                     <Switch
                       checked={notificationSettings.emailLowStock}
-                      onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, emailLowStock: checked })}
+                      onCheckedChange={(checked) => updateNotification({ emailLowStock: checked })}
                     />
                   </div>
 
@@ -404,7 +590,7 @@ export default function AdminSettings() {
                     </div>
                     <Switch
                       checked={notificationSettings.emailNewPartner}
-                      onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, emailNewPartner: checked })}
+                      onCheckedChange={(checked) => updateNotification({ emailNewPartner: checked })}
                     />
                   </div>
                 </div>
@@ -414,7 +600,7 @@ export default function AdminSettings() {
                   <Input
                     type="number"
                     value={notificationSettings.stockAlertThreshold}
-                    onChange={(e) => setNotificationSettings({ ...notificationSettings, stockAlertThreshold: Number(e.target.value) })}
+                    onChange={(e) => updateNotification({ stockAlertThreshold: Number(e.target.value) })}
                     className="w-32"
                   />
                   <p className="text-xs text-muted-foreground">
@@ -425,87 +611,119 @@ export default function AdminSettings() {
             </Card>
           </TabsContent>
 
-          {/* Integrations */}
+          {/* ── Integrations ──────────────────────────────────────────────── */}
           <TabsContent value="integrations">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="w-5 h-5" />
-                    Stripe (Paiements)
-                  </CardTitle>
-                  <CardDescription>
-                    Configuration de l'intégration Stripe pour les paiements
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-emerald-500 dark:bg-emerald-400 rounded-full" />
-                      <span className="font-medium text-emerald-800 dark:text-emerald-400">Connecté (Mode test)</span>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      Configurer
-                    </Button>
-                  </div>
-                  <p className="text-xs md:text-sm text-muted-foreground">
-                    Les paiements sont actuellement en mode test. Aucun paiement réel ne sera traité.
-                  </p>
-                </CardContent>
-              </Card>
+            {integrationsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+                <IntegrationCard
+                  title="Stripe (Paiements)"
+                  description="Traitement des paiements et acomptes"
+                  icon={CreditCard}
+                  connected={integrations?.stripe?.connected ?? false}
+                  statusLabel={
+                    integrations?.stripe?.connected
+                      ? `Connecté (Mode ${integrations.stripe.mode === "live" ? "production" : "test"})`
+                      : "Non connecté"
+                  }
+                  details={
+                    integrations?.stripe?.connected
+                      ? integrations.stripe.mode === "test"
+                        ? "Les paiements sont en mode test. Aucun paiement réel ne sera traité."
+                        : "Mode production actif. Les paiements réels sont traités."
+                      : "Configurez la clé API Stripe dans les secrets pour activer les paiements."
+                  }
+                />
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Mail className="w-5 h-5" />
-                    Service d'emails
-                  </CardTitle>
-                  <CardDescription>
-                    Configuration du service d'envoi d'emails transactionnels
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/20 dark:border-amber-500/30 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-amber-500 dark:bg-amber-400 rounded-full" />
-                      <span className="font-medium text-amber-800 dark:text-amber-400">Non configuré</span>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      Configurer
-                    </Button>
-                  </div>
-                  <p className="text-xs md:text-sm text-muted-foreground">
-                    Connectez un service SMTP (SendGrid, Mailgun, etc.) pour activer les emails automatiques.
-                  </p>
-                </CardContent>
-              </Card>
+                <IntegrationCard
+                  title="Resend (Emails)"
+                  description="Service d'envoi d'emails transactionnels"
+                  icon={Mail}
+                  connected={integrations?.resend?.connected ?? false}
+                  statusLabel={
+                    integrations?.resend?.connected
+                      ? "Connecté"
+                      : "Non configuré"
+                  }
+                  details={
+                    integrations?.resend?.connected
+                      ? `Emails envoyés depuis : ${integrations.resend.from || "adresse par défaut"}`
+                      : "Configurez la clé API Resend dans les secrets pour activer les emails automatiques."
+                  }
+                />
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    Odoo (Facturation)
-                  </CardTitle>
-                  <CardDescription>
-                    Intégration avec Odoo pour la gestion comptable
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted/30 border border-border dark:border-border rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-gray-400 rounded-full" />
-                      <span className="font-medium text-muted-foreground dark:text-muted-foreground">Non connecté</span>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      Connecter
-                    </Button>
-                  </div>
-                  <p className="text-xs md:text-sm text-muted-foreground">
-                    Connectez votre instance Odoo pour synchroniser les factures et contacts.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+                <IntegrationCard
+                  title="Meta Ads (Leads)"
+                  description="Intégration Meta Lead Ads pour la génération de leads"
+                  icon={Megaphone}
+                  connected={integrations?.meta?.connected ?? false}
+                  statusLabel={
+                    integrations?.meta?.connected
+                      ? "Connecté"
+                      : "Non connecté"
+                  }
+                  details={
+                    integrations?.meta?.connected
+                      ? "Les leads Meta sont automatiquement importés et distribués aux partenaires."
+                      : "Connectez votre compte Meta Ads depuis le dashboard Marketing."
+                  }
+                />
+
+                <IntegrationCard
+                  title="Google Ads"
+                  description="Suivi des campagnes Google Ads"
+                  icon={BarChart3}
+                  connected={integrations?.googleAds?.connected ?? false}
+                  statusLabel={
+                    integrations?.googleAds?.connected
+                      ? "Connecté"
+                      : "Non connecté"
+                  }
+                  details={
+                    integrations?.googleAds?.connected
+                      ? "Les données Google Ads sont synchronisées automatiquement."
+                      : "Connectez votre compte Google Ads depuis le dashboard Marketing."
+                  }
+                />
+
+                <IntegrationCard
+                  title="Google Analytics 4"
+                  description="Analyse du trafic et des conversions"
+                  icon={BarChart3}
+                  connected={integrations?.ga4?.connected ?? false}
+                  statusLabel={
+                    integrations?.ga4?.connected
+                      ? `Connecté (Property: ${integrations.ga4.propertyId})`
+                      : "Non connecté"
+                  }
+                  details={
+                    integrations?.ga4?.connected
+                      ? "Les données GA4 sont disponibles dans le dashboard Marketing."
+                      : "Configurez le GA4 Property ID dans les secrets pour activer l'analytics."
+                  }
+                />
+
+                <IntegrationCard
+                  title="Shopify"
+                  description="Synchronisation avec votre boutique Shopify"
+                  icon={ShoppingBag}
+                  connected={integrations?.shopify?.connected ?? false}
+                  statusLabel={
+                    integrations?.shopify?.connected
+                      ? `Connecté (${integrations.shopify.storeDomain})`
+                      : "Non connecté"
+                  }
+                  details={
+                    integrations?.shopify?.connected
+                      ? "Les commandes et produits Shopify sont synchronisés."
+                      : "Configurez les identifiants Shopify dans les secrets pour activer la synchronisation."
+                  }
+                />
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

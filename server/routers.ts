@@ -5061,5 +5061,89 @@ export const appRouter = router({
         }
       }),
   }),
+
+  // ============================================
+  // SYSTEM SETTINGS
+  // ============================================
+  settings: router({
+    // Get all settings (admin only)
+    getAll: adminProcedure.query(async () => {
+      return await db.getAllSystemSettings();
+    }),
+
+    // Get a single setting by key
+    get: adminProcedure
+      .input(z.object({ key: z.string() }))
+      .query(async ({ input }) => {
+        const value = await db.getSystemSetting(input.key);
+        if (value === null) return null;
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      }),
+
+    // Update a single setting
+    update: adminProcedure
+      .input(z.object({
+        key: z.string(),
+        value: z.any(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const jsonValue = typeof input.value === "string" ? input.value : JSON.stringify(input.value);
+        await db.upsertSystemSetting(input.key, jsonValue, ctx.user.id, input.description);
+        return { success: true };
+      }),
+
+    // Update multiple settings at once
+    updateMultiple: adminProcedure
+      .input(z.object({
+        settings: z.array(z.object({
+          key: z.string(),
+          value: z.any(),
+          description: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const mapped = input.settings.map((s) => ({
+          key: s.key,
+          value: typeof s.value === "string" ? s.value : JSON.stringify(s.value),
+          description: s.description,
+        }));
+        await db.upsertMultipleSystemSettings(mapped, ctx.user.id);
+        return { success: true };
+      }),
+
+    // Get integration statuses (checks env vars)
+    integrationStatus: adminProcedure.query(async () => {
+      return {
+        stripe: {
+          connected: !!process.env.STRIPE_SECRET_KEY,
+          mode: process.env.STRIPE_SECRET_KEY?.startsWith("sk_live") ? "live" : "test",
+        },
+        resend: {
+          connected: !!process.env.RESEND_API_KEY,
+          from: process.env.EMAIL_FROM || null,
+        },
+        meta: {
+          connected: !!process.env.META_PAGE_ACCESS_TOKEN,
+          appId: process.env.META_APP_ID ? true : false,
+        },
+        googleAds: {
+          connected: !!process.env.GOOGLE_ADS_DEVELOPER_TOKEN,
+        },
+        ga4: {
+          connected: !!process.env.GA4_PROPERTY_ID,
+          propertyId: process.env.GA4_PROPERTY_ID || null,
+        },
+        shopify: {
+          connected: !!process.env.SHOPIFY_STORE_DOMAIN,
+          storeDomain: process.env.SHOPIFY_STORE_DOMAIN || null,
+        },
+      };
+    }),
+  }),
 });
 export type AppRouter = typeof appRouter;

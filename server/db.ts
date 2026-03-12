@@ -4600,3 +4600,63 @@ export async function deleteShopifyAccount(userId: number): Promise<void> {
   if (!db) return;
   await db.execute(sql`DELETE FROM shopify_accounts WHERE user_id = ${userId}`);
 }
+
+
+// ============================================
+// SYSTEM SETTINGS QUERIES
+// ============================================
+
+export async function getSystemSetting(key: string): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const { systemSettings } = await import("../drizzle/schema");
+  const result = await db.select().from(systemSettings).where(eq(systemSettings.key, key)).limit(1);
+  return result.length > 0 ? result[0].value : null;
+}
+
+export async function getAllSystemSettings(): Promise<Record<string, any>> {
+  const db = await getDb();
+  if (!db) return {};
+  const { systemSettings } = await import("../drizzle/schema");
+  const rows = await db.select().from(systemSettings);
+  const result: Record<string, any> = {};
+  for (const row of rows) {
+    try {
+      result[row.key] = JSON.parse(row.value);
+    } catch {
+      result[row.key] = row.value;
+    }
+  }
+  return result;
+}
+
+export async function upsertSystemSetting(key: string, value: string, userId?: number, description?: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  const { systemSettings } = await import("../drizzle/schema");
+  
+  // Check if setting exists
+  const existing = await db.select().from(systemSettings).where(eq(systemSettings.key, key)).limit(1);
+  
+  if (existing.length > 0) {
+    await db.update(systemSettings)
+      .set({ value, updatedBy: userId ?? null })
+      .where(eq(systemSettings.key, key));
+  } else {
+    await db.insert(systemSettings).values({
+      key,
+      value,
+      description: description ?? null,
+      updatedBy: userId ?? null,
+    });
+  }
+}
+
+export async function upsertMultipleSystemSettings(
+  settings: Array<{ key: string; value: string; description?: string }>,
+  userId?: number
+): Promise<void> {
+  for (const setting of settings) {
+    await upsertSystemSetting(setting.key, setting.value, userId, setting.description);
+  }
+}

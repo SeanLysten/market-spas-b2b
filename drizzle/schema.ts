@@ -2602,3 +2602,27 @@ export const ga4Accounts = mysqlTable(
 
 export type Ga4Account = typeof ga4Accounts.$inferSelect;
 export type InsertGa4Account = typeof ga4Accounts.$inferInsert;
+
+
+// ============================================
+// SYSTEM SETTINGS (Configuration plateforme)
+// ============================================
+
+export const systemSettings = mysqlTable(
+  "system_settings",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    key: varchar("key", { length: 100 }).notNull().unique(),
+    value: text("value").notNull(), // JSON string
+    description: varchar("description", { length: 255 }),
+    updatedBy: int("updatedBy"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    keyIdx: index("ss_key_idx").on(table.key),
+  })
+);
+
+export type SystemSetting = typeof systemSettings.$inferSelect;
+export type InsertSystemSetting = typeof systemSettings.$inferInsert;
