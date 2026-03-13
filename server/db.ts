@@ -2764,111 +2764,86 @@ export async function incrementTopicViewCount(topicId: number) {
  * - Incoming stock (scheduled arrivals)
  * - Preorders (reserved stock from incoming)
  */
-export async function getStockForecast(weeks: number = 8) {
+export async function getStockForecast() {
   const db = await getDb();
   if (!db) return [];
 
-  // Get current week and year
-  const now = new Date();
-  const currentWeek = getWeekNumber(now);
-  const currentYear = now.getFullYear();
+  // Get all products
+  const allProducts = await db.select().from(products).orderBy(asc(products.sortOrder), desc(products.createdAt));
 
-  // Get all products with their current stock
-  const allProducts = await db.select().from(products);
+  // Get all variants with stock data
+  const allVariants = await db.select().from(productVariants);
 
-  // Get all incoming stock (PENDING)
-  const allIncomingStock = await db
-    .select()
-    .from(incomingStock)
-    .where(eq(incomingStock.status, "PENDING"));
+  // Get variant options for color info
+  const allOptions = await db.select().from(variantOptions);
 
-  // Get all preorders (orders with isPreorder = true)
-  const preorders = await db
-    .select({
-      productId: orderItems.productId,
-      variantId: orderItems.variantId,
-      quantity: orderItems.quantity,
-      incomingStockId: sql<number>`NULL`, // TODO: Add this field to orderItems table
-    })
-    .from(orderItems)
-    .innerJoin(orders, eq(orderItems.orderId, orders.id))
-    .where(eq(orders.status, "PENDING_APPROVAL"));
+  // Get last supplier API log
+  const lastLog = await db.execute(sql`SELECT createdAt, matchedItems, totalItems FROM supplier_api_logs ORDER BY createdAt DESC LIMIT 1`);
+  const lastUpdate = (lastLog as any)?.[0]?.[0] || null;
 
-  // Build forecast for each product
-  const forecasts = [];
+  // Build stock overview for each product
+  const stockOverview = [];
 
   for (const product of allProducts) {
-    const forecast = {
+    const variants = allVariants.filter((v) => v.productId === product.id);
+    const totalStock = variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
+    const totalTransit = variants.reduce((sum, v) => sum + (v.inTransitQuantity || 0), 0);
+    const totalReserved = variants.reduce((sum, v) => sum + (v.stockReserved || 0), 0);
+    const availableStock = totalStock - totalReserved;
+
+    // Determine status
+    let status: string;
+    if (totalStock > 0) {
+      status = "EN_STOCK";
+    } else if (totalTransit > 0) {
+      status = "EN_TRANSIT";
+    } else {
+      status = "RUPTURE";
+    }
+
+    // Build variant details
+    const variantDetails = variants.map((v) => {
+      const options = allOptions.filter((o) => o.variantId === v.id);
+      const colorOption = options.find((o) => o.optionName === "Couleur" || o.optionName === "Color");
+      return {
+        id: v.id,
+        sku: v.sku,
+        supplierProductCode: v.supplierProductCode,
+        color: colorOption?.optionValue || null,
+        stockQuantity: v.stockQuantity || 0,
+        inTransitQuantity: v.inTransitQuantity || 0,
+        stockReserved: v.stockReserved || 0,
+        available: (v.stockQuantity || 0) - (v.stockReserved || 0),
+        lowStockThreshold: v.lowStockThreshold || 5,
+        isLowStock: (v.stockQuantity || 0) > 0 && (v.stockQuantity || 0) <= (v.lowStockThreshold || 5),
+      };
+    });
+
+    stockOverview.push({
       productId: product.id,
       productName: product.name,
       productSku: product.sku,
-      currentStock: product.stockQuantity,
-      weeks: [] as Array<{
-        weekNumber: number;
-        year: number;
-        weekLabel: string;
-        projectedStock: number;
-        incomingQuantity: number;
-        preorderQuantity: number;
-        alerts: string[];
-      }>,
-    };
-
-    let runningStock: number = product.stockQuantity || 0;
-
-    // Calculate for each week
-    for (let i = 0; i < weeks; i++) {
-      const { week, year } = addWeeks(currentWeek, currentYear, i);
-      
-      // Find incoming stock for this week
-      const incoming = allIncomingStock.filter(
-        (stock: any) =>
-          stock.productId === product.id &&
-          stock.expectedWeek === week &&
-          stock.expectedYear === year
-      );
-
-      const incomingQuantity = incoming.reduce((sum: number, stock: any) => sum + (stock.quantity || 0), 0);
-
-      // Find preorders for this week (approximation - we don't have exact week data)
-      // For now, we'll distribute preorders evenly across weeks
-      const productPreorders = preorders.filter((po: any) => po.productId === product.id);
-      const preorderQuantity = 0; // TODO: Calculate based on expected delivery week
-
-      // Calculate projected stock
-      runningStock += incomingQuantity - preorderQuantity;
-
-      // Generate alerts
-      const alerts: string[] = [];
-      if (runningStock < 0) {
-        alerts.push("RUPTURE");
-      } else if (runningStock < 5) {
-        alerts.push("STOCK_CRITIQUE");
-      } else if (runningStock < 10) {
-        alerts.push("STOCK_BAS");
-      }
-
-      forecast.weeks.push({
-        weekNumber: week,
-        year,
-        weekLabel: `S${week} ${year}`,
-        projectedStock: runningStock,
-        incomingQuantity,
-        preorderQuantity,
-        alerts,
-      });
-    }
-
-    forecasts.push(forecast);
+      supplierProductCode: product.supplierProductCode || null,
+      variantCount: variants.length,
+      totalStock,
+      totalTransit,
+      totalReserved,
+      availableStock,
+      status,
+      variants: variantDetails,
+    });
   }
 
-  return forecasts;
+  return {
+    products: stockOverview,
+    lastSupplierUpdate: lastUpdate,
+  };
 }
 
 /**
  * Get detailed forecast for a specific product
  */
-export async function getProductForecast(productId: number, weeks: number = 8) {
+export async function getProductForecast(productId: number, _weeks: number = 8) {
   const db = await getDb();
   if (!db) return null;
 
@@ -2876,143 +2851,77 @@ export async function getProductForecast(productId: number, weeks: number = 8) {
   const product = await db.select().from(products).where(eq(products.id, productId)).limit(1);
   if (!product.length) return null;
 
-  // Get current week and year
-  const now = new Date();
-  const currentWeek = getWeekNumber(now);
-  const currentYear = now.getFullYear();
+  // Get variants for this product
+  const variants = await db.select().from(productVariants).where(eq(productVariants.productId, productId));
 
-  // Get incoming stock for this product
-  const productIncomingStock = await db
-    .select()
-    .from(incomingStock)
-    .where(
-      and(
-        eq(incomingStock.productId, productId),
-        eq(incomingStock.status, "PENDING")
-      )
-    );
+  // Get variant options for color info
+  const variantIds = variants.map((v) => v.id);
+  const options = variantIds.length > 0
+    ? await db.select().from(variantOptions).where(inArray(variantOptions.variantId, variantIds))
+    : [];
 
-  // Build weekly forecast
-  const weeklyForecast = [];
-  let runningStock: number = product[0].stockQuantity || 0;
+  // Get supplier API logs for this product's variants
+  const supplierCodes = variants.map((v) => v.supplierProductCode).filter(Boolean);
 
-  for (let i = 0; i < weeks; i++) {
-    const { week, year } = addWeeks(currentWeek, currentYear, i);
+  // Build variant details
+  const variantDetails = variants.map((v) => {
+    const varOpts = options.filter((o) => o.variantId === v.id);
+    const colorOption = varOpts.find((o) => o.optionName === "Couleur" || o.optionName === "Color");
+    return {
+      id: v.id,
+      sku: v.sku,
+      supplierProductCode: v.supplierProductCode,
+      color: colorOption?.optionValue || null,
+      stockQuantity: v.stockQuantity || 0,
+      inTransitQuantity: v.inTransitQuantity || 0,
+      stockReserved: v.stockReserved || 0,
+      available: (v.stockQuantity || 0) - (v.stockReserved || 0),
+      lowStockThreshold: v.lowStockThreshold || 5,
+      isLowStock: (v.stockQuantity || 0) > 0 && (v.stockQuantity || 0) <= (v.lowStockThreshold || 5),
+    };
+  });
 
-    // Find incoming for this week
-    const weekIncoming = productIncomingStock.filter(
-      (stock: any) => stock.expectedWeek === week && stock.expectedYear === year
-    );
-
-    const incomingQuantity = weekIncoming.reduce((sum: number, stock: any) => sum + (stock.quantity || 0), 0);
-
-    // Update running stock
-    runningStock += incomingQuantity;
-
-    // Generate alerts
-    const alerts: string[] = [];
-    if (runningStock < 0) {
-      alerts.push("RUPTURE");
-    } else if (runningStock < 5) {
-      alerts.push("STOCK_CRITIQUE");
-    } else if (runningStock < 10) {
-      alerts.push("STOCK_BAS");
-    }
-
-    weeklyForecast.push({
-      weekNumber: week,
-      year,
-      weekLabel: `S${week} ${year}`,
-      projectedStock: runningStock,
-      incomingQuantity,
-      incoming: (weekIncoming || []).map((stock: any) => ({
-        id: stock.id,
-        quantity: stock.quantity,
-        notes: stock.notes,
-      })),
-      alerts,
-    });
-  }
+  const totalStock = variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
+  const totalTransit = variants.reduce((sum, v) => sum + (v.inTransitQuantity || 0), 0);
 
   return {
     product: product[0],
-    currentStock: product[0].stockQuantity,
-    forecast: weeklyForecast,
+    totalStock,
+    totalTransit,
+    variants: variantDetails,
   };
 }
 
 /**
  * Get summary statistics for stock forecast
  */
-export async function getStockForecastSummary(weeks: number = 8) {
-  const forecasts = await getStockForecast(weeks);
+export async function getStockForecastSummary() {
+  const data = await getStockForecast();
+  if (!data || !('products' in data)) return null;
 
-  const summary = {
-    totalProducts: forecasts.length,
-    productsWithAlerts: 0,
-    productsWithRupture: 0,
-    productsWithLowStock: 0,
-    totalIncomingQuantity: 0,
-    weeklyBreakdown: [] as Array<{
-      weekLabel: string;
-      totalIncoming: number;
-      productsWithAlerts: number;
-    }>,
+  const productsList = data.products;
+
+  const totalStock = productsList.reduce((sum: number, p: any) => sum + p.totalStock, 0);
+  const totalTransit = productsList.reduce((sum: number, p: any) => sum + p.totalTransit, 0);
+  const totalReserved = productsList.reduce((sum: number, p: any) => sum + p.totalReserved, 0);
+  const productsInStock = productsList.filter((p: any) => p.status === "EN_STOCK").length;
+  const productsInTransit = productsList.filter((p: any) => p.status === "EN_TRANSIT").length;
+  const productsInRupture = productsList.filter((p: any) => p.status === "RUPTURE").length;
+  const productsWithLowStock = productsList.filter((p: any) =>
+    p.variants.some((v: any) => v.isLowStock)
+  ).length;
+
+  return {
+    totalProducts: productsList.length,
+    totalStock,
+    totalTransit,
+    totalReserved,
+    productsInStock,
+    productsInTransit,
+    productsInRupture,
+    productsWithLowStock,
+    lastSupplierUpdate: data.lastSupplierUpdate,
   };
-
-  // Calculate summary stats
-  for (const forecast of forecasts) {
-    let hasAlerts = false;
-    let hasRupture = false;
-    let hasLowStock = false;
-
-    for (const week of forecast.weeks) {
-      summary.totalIncomingQuantity += week.incomingQuantity;
-
-      if (week.alerts.includes("RUPTURE")) {
-        hasRupture = true;
-        hasAlerts = true;
-      } else if (week.alerts.includes("STOCK_CRITIQUE") || week.alerts.includes("STOCK_BAS")) {
-        hasLowStock = true;
-        hasAlerts = true;
-      }
-    }
-
-    if (hasAlerts) summary.productsWithAlerts++;
-    if (hasRupture) summary.productsWithRupture++;
-    if (hasLowStock) summary.productsWithLowStock++;
-  }
-
-  // Build weekly breakdown
-  const now = new Date();
-  const currentWeek = getWeekNumber(now);
-  const currentYear = now.getFullYear();
-
-  for (let i = 0; i < weeks; i++) {
-    const { week, year } = addWeeks(currentWeek, currentYear, i);
-    const weekLabel = `S${week} ${year}`;
-
-    let totalIncoming = 0;
-    let productsWithAlerts = 0;
-
-    for (const forecast of forecasts) {
-      const weekData = forecast.weeks[i];
-      if (weekData) {
-        totalIncoming += weekData.incomingQuantity;
-        if (weekData.alerts.length > 0) {
-          productsWithAlerts++;
-        }
-      }
-    }
-
-    summary.weeklyBreakdown.push({
-      weekLabel,
-      totalIncoming,
-      productsWithAlerts,
-    });
-  }
-
-  return summary;
 }
 
 /**

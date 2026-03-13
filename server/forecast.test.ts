@@ -23,118 +23,98 @@ describe("admin.forecast", () => {
   });
 
   it("should get stock forecast summary", async () => {
-    const result = await caller.admin.forecast.getSummary({ weeks: 8 });
+    const result = await caller.admin.forecast.getSummary();
 
-    expect(result).toBeDefined();
-    expect(result.totalProducts).toBeGreaterThanOrEqual(0);
-    expect(result.weeklyBreakdown).toHaveLength(8);
-    expect(result.weeklyBreakdown[0]).toHaveProperty("weekLabel");
-    expect(result.weeklyBreakdown[0]).toHaveProperty("totalIncoming");
-    expect(result.weeklyBreakdown[0]).toHaveProperty("productsWithAlerts");
+    // Can be null if no products exist
+    if (result) {
+      expect(result).toHaveProperty("totalProducts");
+      expect(result).toHaveProperty("totalStock");
+      expect(result).toHaveProperty("totalTransit");
+      expect(result).toHaveProperty("productsInStock");
+      expect(result).toHaveProperty("productsInTransit");
+      expect(result).toHaveProperty("productsInRupture");
+    }
   });
 
   it("should get all product forecasts", async () => {
-    const result = await caller.admin.forecast.getAll({ weeks: 8 });
+    const result = await caller.admin.forecast.getAll();
 
     expect(result).toBeDefined();
-    expect(Array.isArray(result)).toBe(true);
+    // Result is an object with products array and lastSupplierUpdate
+    if (result && 'products' in result) {
+      expect(Array.isArray(result.products)).toBe(true);
 
-    if (result.length > 0) {
-      const forecast = result[0];
-      expect(forecast).toHaveProperty("productId");
-      expect(forecast).toHaveProperty("productName");
-      expect(forecast).toHaveProperty("productSku");
-      expect(forecast).toHaveProperty("currentStock");
-      expect(forecast).toHaveProperty("weeks");
-      expect(forecast.weeks).toHaveLength(8);
-
-      const week = forecast.weeks[0];
-      expect(week).toHaveProperty("weekNumber");
-      expect(week).toHaveProperty("year");
-      expect(week).toHaveProperty("weekLabel");
-      expect(week).toHaveProperty("projectedStock");
-      expect(week).toHaveProperty("incomingQuantity");
-      expect(week).toHaveProperty("preorderQuantity");
-      expect(week).toHaveProperty("alerts");
-      expect(Array.isArray(week.alerts)).toBe(true);
+      if (result.products.length > 0) {
+        const product = result.products[0];
+        expect(product).toHaveProperty("productId");
+        expect(product).toHaveProperty("productName");
+        expect(product).toHaveProperty("totalStock");
+        expect(product).toHaveProperty("totalTransit");
+        expect(product).toHaveProperty("status");
+        expect(product).toHaveProperty("variants");
+        expect(Array.isArray(product.variants)).toBe(true);
+      }
     }
   });
 
   it("should get product forecast with valid productId", async () => {
-    // First get all products to find a valid ID
-    const allForecasts = await caller.admin.forecast.getAll({ weeks: 4 });
+    const allForecasts = await caller.admin.forecast.getAll();
 
-    if (allForecasts.length > 0) {
-      const productId = allForecasts[0].productId;
-      const result = await caller.admin.forecast.getProduct({ productId, weeks: 4 });
+    if (allForecasts && 'products' in allForecasts && allForecasts.products.length > 0) {
+      const productId = allForecasts.products[0].productId;
+      const result = await caller.admin.forecast.getProduct({ productId });
 
       expect(result).toBeDefined();
-      expect(result?.product).toHaveProperty("id");
-      expect(result?.product.id).toBe(productId);
-      expect(result?.currentStock).toBeDefined();
-      expect(result?.forecast).toHaveLength(4);
-
-      const week = result!.forecast[0];
-      expect(week).toHaveProperty("weekNumber");
-      expect(week).toHaveProperty("year");
-      expect(week).toHaveProperty("weekLabel");
-      expect(week).toHaveProperty("projectedStock");
-      expect(week).toHaveProperty("incomingQuantity");
-      expect(week).toHaveProperty("incoming");
-      expect(week).toHaveProperty("alerts");
-      expect(Array.isArray(week.incoming)).toBe(true);
-      expect(Array.isArray(week.alerts)).toBe(true);
+      if (result) {
+        expect(result).toHaveProperty("product");
+        expect(result).toHaveProperty("totalStock");
+        expect(result).toHaveProperty("totalTransit");
+        expect(result).toHaveProperty("variants");
+        expect(Array.isArray(result.variants)).toBe(true);
+      }
     }
   });
 
   it("should return null for invalid productId", async () => {
-    const result = await caller.admin.forecast.getProduct({ productId: 999999, weeks: 4 });
-
+    const result = await caller.admin.forecast.getProduct({ productId: 999999 });
     expect(result).toBeNull();
   });
 
-  it("should handle different week horizons", async () => {
-    const result4 = await caller.admin.forecast.getSummary({ weeks: 4 });
-    const result12 = await caller.admin.forecast.getSummary({ weeks: 12 });
+  it("should have correct variant structure", async () => {
+    const allForecasts = await caller.admin.forecast.getAll();
 
-    expect(result4.weeklyBreakdown).toHaveLength(4);
-    expect(result12.weeklyBreakdown).toHaveLength(12);
+    if (allForecasts && 'products' in allForecasts && allForecasts.products.length > 0) {
+      const productWithVariants = allForecasts.products.find((p: any) => p.variants.length > 0);
+      if (productWithVariants) {
+        const variant = productWithVariants.variants[0];
+        expect(variant).toHaveProperty("id");
+        expect(variant).toHaveProperty("sku");
+        expect(variant).toHaveProperty("stockQuantity");
+        expect(variant).toHaveProperty("inTransitQuantity");
+        expect(variant).toHaveProperty("available");
+      }
+    }
   });
 
-  it("should calculate alerts correctly", async () => {
-    const result = await caller.admin.forecast.getAll({ weeks: 8 });
+  it("should correctly identify product status", async () => {
+    const allForecasts = await caller.admin.forecast.getAll();
 
-    if (result.length > 0) {
-      for (const forecast of result) {
-        for (const week of forecast.weeks) {
-          // Check alert logic
-          if (week.projectedStock < 0) {
-            expect(week.alerts).toContain("RUPTURE");
-          } else if (week.projectedStock < 5) {
-            expect(week.alerts).toContain("STOCK_CRITIQUE");
-          } else if (week.projectedStock < 10) {
-            expect(week.alerts).toContain("STOCK_BAS");
-          } else {
-            expect(week.alerts).toHaveLength(0);
-          }
+    if (allForecasts && 'products' in allForecasts) {
+      for (const product of allForecasts.products) {
+        if (product.totalStock > 0) {
+          expect(product.status).toBe("EN_STOCK");
+        } else if (product.totalTransit > 0) {
+          expect(product.status).toBe("EN_TRANSIT");
+        } else {
+          expect(product.status).toBe("RUPTURE");
         }
       }
     }
   });
 
-  it("should include incoming stock in projections", async () => {
-    const result = await caller.admin.forecast.getAll({ weeks: 8 });
-
-    if (result.length > 0) {
-      for (const forecast of result) {
-        let runningStock = forecast.currentStock;
-
-        for (const week of forecast.weeks) {
-          // Projected stock should account for incoming
-          runningStock += week.incomingQuantity - week.preorderQuantity;
-          expect(week.projectedStock).toBe(runningStock);
-        }
-      }
-    }
+  it("should get supplier logs", async () => {
+    const result = await caller.admin.forecast.getSupplierLogs({ limit: 5 });
+    expect(result).toBeDefined();
+    expect(Array.isArray(result)).toBe(true);
   });
 });

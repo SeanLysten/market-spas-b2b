@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { Search, Package, ShoppingCart, Filter, ArrowLeft, Euro, TrendingUp, Minus, Plus, Heart, Truck } from "lucide-react";
+import { Search, Package, ShoppingCart, Filter, ArrowLeft, Euro, TrendingUp, Minus, Plus, Heart, Truck, CalendarClock } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -47,6 +47,25 @@ function isLightColor(hex: string): boolean {
   return (r * 299 + g * 587 + b * 114) / 1000 > 186;
 }
 
+// Format estimated arrival from YYYYWW to readable string
+function formatArrival(yyyyww: string | null | undefined): string | null {
+  if (!yyyyww || yyyyww === "0") return null;
+  const str = yyyyww.toString();
+  if (str.length < 5) return null;
+  const year = str.slice(0, 4);
+  const week = str.slice(4);
+  return `S${parseInt(week)} ${year}`;
+}
+
+// Get the earliest estimated arrival from variants
+function getEarliestArrival(variants: any[]): string | null {
+  const arrivals = variants
+    .map((v: any) => v.estimatedArrival)
+    .filter((a: any) => a && a !== "0")
+    .sort();
+  return arrivals.length > 0 ? arrivals[0] : null;
+}
+
 // Component for a single product card with variant color dots
 function ProductCard({ product, onOpenDialog }: {
   product: any;
@@ -86,6 +105,10 @@ function ProductCard({ product, onOpenDialog }: {
   const productStock = activeVariants.length > 0 ? totalStock : (product.stockQuantity || 0);
   const productTransit = activeVariants.length > 0 ? totalTransit : (product.inTransitQuantity || 0);
 
+  // Get earliest arrival date from variants
+  const earliestArrival = getEarliestArrival(activeVariants);
+  const arrivalLabel = formatArrival(earliestArrival);
+
   return (
     <Card className="overflow-hidden flex flex-col">
       {/* Product Image */}
@@ -113,6 +136,12 @@ function ProductCard({ product, onOpenDialog }: {
             <Badge className="bg-amber-500 text-white text-xs gap-1">
               <Truck className="w-3 h-3" />
               En transit ({productTransit})
+            </Badge>
+          )}
+          {arrivalLabel && (
+            <Badge className="bg-blue-600 text-white text-xs gap-1">
+              <CalendarClock className="w-3 h-3" />
+              Arrivage {arrivalLabel}
             </Badge>
           )}
           {productStock === 0 && productTransit === 0 && (
@@ -179,6 +208,11 @@ function ProductCard({ product, onOpenDialog }: {
                     <span className="text-amber-600 font-medium flex items-center gap-0.5">
                       <Truck className="w-3 h-3" />
                       {selectedVariant.inTransitQuantity} en transit
+                      {selectedVariant.estimatedArrival && formatArrival(selectedVariant.estimatedArrival) && (
+                        <span className="text-blue-600 ml-1">
+                          (arrivage {formatArrival(selectedVariant.estimatedArrival)})
+                        </span>
+                      )}
                     </span>
                   )}
                   {(selectedVariant.stockQuantity || 0) === 0 && (selectedVariant.inTransitQuantity || 0) === 0 && (

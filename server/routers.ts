@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -1849,26 +1850,34 @@ export const appRouter = router({
     // Stock forecast
     forecast: router({
       getAll: adminProcedure
-        .input(z.object({ weeks: z.number().optional().default(8) }))
-        .query(async ({ input }) => {
-          return await db.getStockForecast(input.weeks);
+        .query(async () => {
+          return await db.getStockForecast();
         }),
 
       getProduct: adminProcedure
         .input(
           z.object({
             productId: z.number(),
-            weeks: z.number().optional().default(8),
           })
         )
         .query(async ({ input }) => {
-          return await db.getProductForecast(input.productId, input.weeks);
+          return await db.getProductForecast(input.productId);
         }),
 
       getSummary: adminProcedure
-        .input(z.object({ weeks: z.number().optional().default(8) }))
+        .query(async () => {
+          return await db.getStockForecastSummary();
+        }),
+
+      getSupplierLogs: adminProcedure
+        .input(z.object({ limit: z.number().optional().default(20) }))
         .query(async ({ input }) => {
-          return await db.getStockForecastSummary(input.weeks);
+          const dbConn = await db.getDb();
+          if (!dbConn) return [];
+          const logs = await dbConn.execute(
+            sql`SELECT id, ipAddress, totalItems, matchedItems, unmatchedItems, createdAt FROM supplier_api_logs ORDER BY createdAt DESC LIMIT ${input.limit}`
+          );
+          return (logs as any)?.[0] || [];
         }),
     }),
 

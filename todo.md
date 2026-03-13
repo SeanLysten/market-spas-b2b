@@ -2805,3 +2805,18 @@
 ## Améliorations admin produits v2
 - [x] Afficher stock et transit total par produit sans déplier (ligne produit)
 - [x] Corriger le bug d'affichage du prix dans l'admin produits
+
+## Refonte Prévisions Stock
+- [x] Analyser la page actuelle et le schéma DB
+- [x] Concevoir la nouvelle page cohérente avec le système fournisseur
+- [x] Implémenter le backend (routes tRPC, requêtes DB)
+- [ ] Implémenter le frontend (nouvelle page Prévisions Stock)
+- [ ] Tests et vérification
+
+## Intégration DelaiAppro fournisseur
+- [x] Ajouter colonne estimatedArrival (varchar YYYYWW) dans productVariants
+- [x] Modifier l'endpoint API fournisseur pour traiter le champ DelaiAppro
+- [x] Afficher la semaine d'arrivée dans le catalogue pour les produits en transit
+- [x] Permettre la réservation par semaine d'arrivée dans le catalogue
+- [x] Corriger la page Stock Fournisseur admin (erreur 500 noms de colonnes)
+- [x] Tester la connexion API avec le nouveau JSON

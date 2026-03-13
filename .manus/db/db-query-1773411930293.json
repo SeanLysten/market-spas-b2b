@@ -1,0 +1,22 @@
+{
+  "query": "SELECT 'incoming_stock' as tbl, COUNT(*) as cnt FROM incoming_stock UNION ALL SELECT 'variants_with_stock' as tbl, COUNT(*) as cnt FROM product_variants WHERE stockQuantity > 0 UNION ALL SELECT 'variants_with_transit' as tbl, COUNT(*) as cnt FROM product_variants WHERE inTransitQuantity > 0;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT 'incoming_stock' as tbl, COUNT(*) as cnt FROM incoming_stock UNION ALL SELECT 'variants_with_stock' as tbl, COUNT(*) as cnt FROM product_variants WHERE stockQuantity > 0 UNION ALL SELECT 'variants_with_transit' as tbl, COUNT(*) as cnt FROM product_variants WHERE inTransitQuantity > 0;",
+  "rows": [
+    {
+      "tbl": "variants_with_transit",
+      "cnt": "14"
+    },
+    {
+      "tbl": "variants_with_stock",
+      "cnt": "0"
+    },
+    {
+      "tbl": "incoming_stock",
+      "cnt": "5"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\tcnt\nvariants_with_transit\t14\nvariants_with_stock\t0\nincoming_stock\t5\n",
+  "stderr": "",
+  "execution_time_ms": 121
+}

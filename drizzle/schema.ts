@@ -567,6 +567,12 @@ export const productVariants = mysqlTable(
     supplierProductCode: varchar("supplierProductCode", { length: 50 }),
     ean13: varchar("ean13", { length: 20 }),
 
+    // Supplier delivery estimate (format: YYYYWW, e.g. 202611 = year 2026, week 11)
+    estimatedArrival: varchar("estimatedArrival", { length: 10 }),
+
+    // Low stock threshold
+    lowStockThreshold: int("lowStockThreshold").default(5),
+
     // Image
     imageUrl: text("imageUrl"),
 

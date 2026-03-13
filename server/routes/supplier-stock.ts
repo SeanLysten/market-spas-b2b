@@ -50,6 +50,7 @@ interface SupplierStockItem {
   CodeProduit: string;
   EnStock: number;
   EnTransit: number;
+  DelaiAppro?: number | string;
 }
 
 interface SupplierStockPayload {
@@ -125,6 +126,9 @@ router.post("/api/supplier/stock/import", async (req, res) => {
       const ean13 = item.Ean13?.toString().trim() || "";
       const enStock = typeof item.EnStock === "number" ? item.EnStock : 0;
       const enTransit = typeof item.EnTransit === "number" ? item.EnTransit : 0;
+      const delaiAppro = item.DelaiAppro ? item.DelaiAppro.toString() : null;
+      // Convert DelaiAppro to estimatedArrival format (YYYYWW string, e.g. "202611")
+      const estimatedArrival = delaiAppro && delaiAppro !== "0" ? delaiAppro : null;
 
       const result: StockUpdateResult = {
         codeProduit,
@@ -160,7 +164,7 @@ router.post("/api/supplier/stock/import", async (req, res) => {
           const previousTransit = (matchedVariant as any).inTransitQuantity || 0;
           await db
             .update(productVariants)
-            .set({ stockQuantity: enStock, inTransitQuantity: enTransit })
+            .set({ stockQuantity: enStock, inTransitQuantity: enTransit, estimatedArrival: estimatedArrival })
             .where(eq(productVariants.id, matchedVariant.id));
 
           result.matched = true;
