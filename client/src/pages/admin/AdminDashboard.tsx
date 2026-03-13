@@ -330,9 +330,6 @@ function StockDashboardSection() {
   const { data: incomingStock } = trpc.admin.incomingStock.list.useQuery();
   const incomingStockSafe = useSafeQuery(incomingStock);
 
-  const lowStock = products.filter((p: any) => (p.stockQuantity || 0) <= 5);
-  const outOfStock = products.filter((p: any) => (p.stockQuantity || 0) === 0);
-  const totalStockValue = products.reduce((sum: number, p: any) => sum + ((p.stockQuantity || 0) * (parseFloat(p.priceHT) || 0)), 0);
   const pendingArrivals = incomingStockSafe.filter((s: any) => s.status === "PENDING" || s.status === "IN_TRANSIT");
 
   return (
@@ -354,26 +351,6 @@ function StockDashboardSection() {
               <p className="text-xs text-muted-foreground mt-1">Références au catalogue</p>
             </CardContent>
           </Card>
-          <Card className={lowStock.length > 0 ? "border-orange-500/30" : ""}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Stock critique</CardTitle>
-              <AlertTriangle className={`w-4 h-4 ${lowStock.length > 0 ? "text-orange-600" : "text-muted-foreground"}`} />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${lowStock.length > 0 ? "text-orange-600" : ""}`}>{lowStock.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">dont {outOfStock.length} en rupture</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Valeur du stock</CardTitle>
-              <Euro className="w-4 h-4 text-emerald-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalStockValue.toLocaleString("fr-FR", { maximumFractionDigits: 0 })} €</div>
-              <p className="text-xs text-muted-foreground mt-1">Valeur HT estimée</p>
-            </CardContent>
-          </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Arrivages prévus</CardTitle>
@@ -387,51 +364,7 @@ function StockDashboardSection() {
         </div>
       </div>
 
-      {/* Low Stock Alert */}
-      <Card className={lowStock.length > 0 ? "border-orange-500/20" : ""}>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className={`w-5 h-5 ${lowStock.length > 0 ? "text-orange-600" : ""}`} />
-              Alertes de stock
-            </CardTitle>
-            <CardDescription>Produits avec stock bas (&le; 5 unités)</CardDescription>
-          </div>
-          <Link href="/admin/products">
-            <Button variant="ghost" size="sm" className="gap-1">Gérer <ArrowRight className="w-4 h-4" /></Button>
-          </Link>
-        </CardHeader>
-        <CardContent>
-          {lowStock.length > 0 ? (
-            <div className="space-y-3">
-              {lowStock.slice(0, 8).map((product: any) => (
-                <div key={product.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                      <Package className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
-                    </div>
-                  </div>
-                  <Badge variant="destructive" className={`${(product.stockQuantity || 0) === 0 ? "bg-red-600" : "bg-orange-600"}`}>
-                    {product.stockQuantity || 0} en stock
-                  </Badge>
-                </div>
-              ))}
-              {lowStock.length > 8 && (
-                <p className="text-sm text-center text-muted-foreground">+{lowStock.length - 8} autres produits en stock bas</p>
-              )}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-emerald-500 opacity-70" />
-              <p>Tous les stocks sont à niveau</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+
 
       {/* Stock Quick Actions */}
       <div>
@@ -879,11 +812,8 @@ function FullAdminDashboardSection() {
   const { data: stats, isLoading } = trpc.dashboard.stats.useQuery();
   const { data: recentOrders } = trpc.orders.list.useQuery({ limit: 5 });
   const recentOrdersSafe = useSafeQuery(recentOrders);
-  const { data: lowStockProducts } = trpc.products.list.useQuery({ limit: 100 });
   const { data: salesData } = trpc.admin.analytics.salesByMonth.useQuery({ months: 6 });
   const { data: topProductsData } = trpc.admin.analytics.topProducts.useQuery({ limit: 5 });
-
-  const lowStock = lowStockProducts?.filter((p: any) => (p.stockQuantity || 0) <= 5) || [];
 
   const formatPrice = (price: number | string | null) => {
     if (!price) return "0.00 €";
@@ -937,10 +867,10 @@ function FullAdminDashboardSection() {
       bgColor: "bg-purple-500/10 dark:bg-purple-500/20",
     },
     {
-      title: "Produits en stock",
+      title: "Produits au catalogue",
       value: stats?.totalProducts || 0,
       icon: Package,
-      description: `${lowStock.length} en stock bas`,
+      description: "Au catalogue",
       color: "text-orange-600 dark:text-orange-400",
       bgColor: "bg-orange-500/10 dark:bg-orange-500/20",
     },
@@ -1004,32 +934,7 @@ function FullAdminDashboardSection() {
           </CardContent>
         </Card>
 
-        <Card className={lowStock.length > 0 ? "border-orange-500/20" : ""}>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2"><AlertTriangle className={`w-5 h-5 ${lowStock.length > 0 ? "text-orange-600" : ""}`} />Alertes de stock</CardTitle>
-              <CardDescription>Produits avec stock bas (&le; 5 unités)</CardDescription>
-            </div>
-            <Link href="/admin/products"><Button variant="ghost" size="sm" className="gap-1">Gérer <ArrowRight className="w-4 h-4" /></Button></Link>
-          </CardHeader>
-          <CardContent>
-            {lowStock.length > 0 ? (
-              <div className="space-y-3">
-                {lowStock.slice(0, 5).map((product: any) => (
-                  <div key={product.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center"><Package className="w-5 h-5 text-orange-600" /></div>
-                      <div><p className="font-medium text-sm">{product.name}</p><p className="text-xs text-muted-foreground">SKU: {product.sku}</p></div>
-                    </div>
-                    <Badge variant="destructive" className="bg-orange-600">{product.stockQuantity || 0} en stock</Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground"><CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-emerald-500 opacity-70" /><p>Tous les stocks sont à niveau</p></div>
-            )}
-          </CardContent>
-        </Card>
+
       </div>
 
       {/* Charts */}
@@ -1209,8 +1114,7 @@ function CustomRoleDashboard({ canOrders, canPartners, canProducts, canStock, ca
   const { data: stats } = trpc.dashboard.stats.useQuery();
   const { data: recentOrders } = trpc.orders.list.useQuery({ limit: 5 }, { enabled: canOrders });
   const recentOrdersSafe = useSafeQuery(recentOrders);
-  const { data: allProducts } = trpc.products.list.useQuery({ limit: 100 }, { enabled: canStock || canProducts });
-  const lowStock = allProducts?.filter((p: any) => (p.stockQuantity || 0) <= 5) || [];
+
 
   const formatPrice = (price: number | string | null) => {
     if (!price) return "0.00 €";
@@ -1283,24 +1187,7 @@ function CustomRoleDashboard({ canOrders, canPartners, canProducts, canStock, ca
           </Card>
         )}
 
-        {(canStock || canProducts) && lowStock.length > 0 && (
-          <Card className="border-orange-500/20">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div><CardTitle className="flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-orange-600" />Alertes stock</CardTitle></div>
-              <Link href="/admin/products"><Button variant="ghost" size="sm" className="gap-1">Gérer <ArrowRight className="w-4 h-4" /></Button></Link>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {lowStock.slice(0, 5).map((p: any) => (
-                  <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div><p className="font-medium text-sm">{p.name}</p><p className="text-xs text-muted-foreground">SKU: {p.sku}</p></div>
-                    <Badge variant="destructive" className="bg-orange-600">{p.stockQuantity || 0}</Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+
       </div>
 
       {/* Quick Actions */}

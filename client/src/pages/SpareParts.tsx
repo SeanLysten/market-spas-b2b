@@ -344,17 +344,7 @@ function PartsList({
                           <span className="text-lg font-bold">{parseFloat(part.priceHT).toFixed(2)} €</span>
                           <span className="text-xs text-muted-foreground">HT</span>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          {part.stockQuantity > 0 ? (
-                            <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 dark:bg-emerald-950 text-xs">
-                              <Check className="w-3 h-3 mr-1" /> En stock
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-red-600 border-red-200 bg-red-50 dark:text-red-400 dark:border-red-800 dark:bg-red-950 text-xs">
-                              <AlertCircle className="w-3 h-3 mr-1" /> Rupture
-                            </Badge>
-                          )}
-                        </div>
+
                       </div>
                     </CardContent>
                   </Card>
@@ -409,18 +399,7 @@ function PartsList({
                   <Label className="text-muted-foreground">TVA</Label>
                   <p className="font-medium">{detailPart.vatRate || 21}%</p>
                 </div>
-                <div>
-                  <Label className="text-muted-foreground">Stock</Label>
-                  <p className="font-medium">{detailPart.stockQuantity} unité(s)</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Disponibilité</Label>
-                  {detailPart.stockQuantity > 0 ? (
-                    <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 border-0">En stock</Badge>
-                  ) : (
-                    <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-0">Rupture</Badge>
-                  )}
-                </div>
+
               </div>
               {detailPart.description && (
                 <div>

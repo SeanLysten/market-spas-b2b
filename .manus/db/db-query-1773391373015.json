@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, name, \"supplierProductCode\", ean13, \"stockQuantity\" FROM product_variants WHERE \"supplierProductCode\" IS NOT NULL LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, name, \"supplierProductCode\", ean13, \"stockQuantity\" FROM product_variants WHERE \"supplierProductCode\" IS NOT NULL LIMIT 5;",
+  "rows": [
+    {
+      "id": "30002",
+      "name": "Easy Relax - Sterling Marble",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "3364549284640",
+      "stockQuantity": "stockQuantity"
+    },
+    {
+      "id": "30005",
+      "name": "Kos - Sterling Marble",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL",
+      "stockQuantity": "stockQuantity"
+    },
+    {
+      "id": "30007",
+      "name": "Kos - Midnight Opal",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL",
+      "stockQuantity": "stockQuantity"
+    },
+    {
+      "id": "30008",
+      "name": "Kos - Odyssey",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL",
+      "stockQuantity": "stockQuantity"
+    },
+    {
+      "id": "30010",
+      "name": "Mykonos - Sterling Marble",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "3364549284749",
+      "stockQuantity": "stockQuantity"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tsupplierProductCode\tean13\tstockQuantity\n30002\tEasy Relax - Sterling Marble\tsupplierProductCode\t3364549284640\tstockQuantity\n30005\tKos - Sterling Marble\tsupplierProductCode\tNULL\tstockQuantity\n30007\tKos - Midnight Opal\tsupplierProductCode\tNULL\tstockQuantity\n30008\tKos - Odyssey\tsupplierProductCode\tNULL\tstockQuantity\n30010\tMykonos - Sterling Marble\tsupplierProductCode\t3364549284749\tstockQuantity\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

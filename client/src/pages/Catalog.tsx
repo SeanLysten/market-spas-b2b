@@ -69,11 +69,6 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
   // Determine the image to display: selected variant image > product image > placeholder
   const displayImage = selectedVariant?.imageUrl || product.imageUrl;
 
-  // Calculate stock based on selected variant or sum of all active variants
-  const totalVariantsStock = activeVariants?.reduce((sum: number, v: any) => sum + (v.stockQuantity || 0), 0) || 0;
-  const variantStock = selectedVariant ? (selectedVariant.stockQuantity || 0) : totalVariantsStock;
-  const hasStock = variantStock > 0;
-
   const getPartnerPrice = () => {
     return Number(product.pricePartnerHT || product.pricePublicHT || 0);
   };
@@ -103,17 +98,8 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
             <Package className="w-16 h-16 text-muted-foreground" />
           </div>
         )}
-        {/* Stock Badge */}
+        {/* Incoming Stock Badge */}
         <div className="absolute top-2 right-2 flex flex-col gap-1">
-          {hasStock ? (
-            <Badge variant="default" className="bg-emerald-600 dark:bg-emerald-500">
-              En stock ({variantStock})
-            </Badge>
-          ) : (
-            <Badge variant="secondary">
-              Rupture
-            </Badge>
-          )}
           {hasIncomingStock && (
             <Badge className="bg-amber-500 dark:bg-amber-400 hover:bg-yellow-600 text-white">
               <TruckIcon className="mr-1 h-3 w-3" />
@@ -144,8 +130,6 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
                 const colorHex = getColorHex(variant.color || variant.name || "");
                 const isSelected = selectedVariantId === variant.id;
                 const isLight = isLightColor(colorHex);
-                const vStock = variant.stockQuantity || 0;
-
                 return (
                   <button
                     key={variant.id}
@@ -159,7 +143,7 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
                         : "ring-1 ring-border hover:ring-2 hover:ring-primary/50 hover:scale-105"
                     }`}
                     style={{ backgroundColor: colorHex }}
-                    title={`${variant.color || variant.name} — Stock: ${vStock}`}
+                    title={`${variant.color || variant.name}`}
                   >
                     {isSelected && (
                       <span className={`absolute inset-0 flex items-center justify-center text-xs font-bold ${isLight ? "text-gray-800" : "text-white"}`}>
@@ -173,9 +157,7 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
             {selectedVariant && (
               <p className="text-xs text-muted-foreground">
                 {selectedVariant.color || selectedVariant.name}
-                {selectedVariant.stockQuantity != null && (
-                  <span className="ml-1">— Stock: {selectedVariant.stockQuantity}</span>
-                )}
+
               </p>
             )}
           </div>
@@ -196,7 +178,7 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
           onClick={() => onOpenDialog(product)}
         >
           <ShoppingCart className="w-4 h-4" />
-          {hasStock ? "Ajouter au panier" : "Pré-commander"}
+          Ajouter au panier
         </Button>
       </CardFooter>
     </Card>

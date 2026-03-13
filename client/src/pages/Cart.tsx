@@ -119,7 +119,7 @@ export default function Cart() {
                   <CardHeader>
                     <div className="flex items-center gap-2">
                       <Package className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                      <CardTitle>Produits en stock</CardTitle>
+                      <CardTitle>Produits au catalogue</CardTitle>
                       <Badge variant="default" className="bg-emerald-600 dark:bg-emerald-500">
                         {inStockItems.length}
                       </Badge>

@@ -137,22 +137,12 @@ export default function Favorites() {
                       </div>
                       
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                        <span className={`text-sm ${
-                          (fav.product.stockQuantity || 0) > 0 
-                            ? "text-emerald-600 dark:text-emerald-400" 
-                            : "text-destructive dark:text-destructive"
-                        }`}>
-                          {(fav.product.stockQuantity || 0) > 0 
-                            ? `${fav.product.stockQuantity} en stock` 
-                            : "Rupture de stock"}
-                        </span>
-                        
                         <Button
                           size="sm"
                           onClick={() => handleAddToCart(fav.productId)}
-                          disabled={(fav.product.stockQuantity || 0) === 0}
                         >
-                          <ShoppingCart className="h-4 w-4" />
+                          <ShoppingCart className="h-4 w-4 mr-1" />
+                          Ajouter au panier
                         </Button>
                       </div>
                     </div>

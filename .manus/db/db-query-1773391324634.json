@@ -1,0 +1,52 @@
+{
+  "query": "SELECT id, name, sku, \"supplierProductCode\", ean13 FROM products ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, name, sku, \"supplierProductCode\", ean13 FROM products ORDER BY id;",
+  "rows": [
+    {
+      "id": "60001",
+      "name": "Easy Relax",
+      "sku": "SPA-EASYRELAX",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL"
+    },
+    {
+      "id": "60002",
+      "name": "Kos",
+      "sku": "SPA-KOS",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL"
+    },
+    {
+      "id": "60003",
+      "name": "Mykonos",
+      "sku": "SPA-MYKONOS",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL"
+    },
+    {
+      "id": "60004",
+      "name": "Neptune V2",
+      "sku": "SPA-NEPTUNE",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL"
+    },
+    {
+      "id": "60005",
+      "name": "Volcano",
+      "sku": "SPA-VOLCANO",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL"
+    },
+    {
+      "id": "90001",
+      "name": "Twin Plug & Play",
+      "sku": "SPA-TWIN-PLUG-PLAY",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tsku\tsupplierProductCode\tean13\n60001\tEasy Relax\tSPA-EASYRELAX\tsupplierProductCode\tNULL\n60002\tKos\tSPA-KOS\tsupplierProductCode\tNULL\n60003\tMykonos\tSPA-MYKONOS\tsupplierProductCode\tNULL\n60004\tNeptune V2\tSPA-NEPTUNE\tsupplierProductCode\tNULL\n60005\tVolcano\tSPA-VOLCANO\tsupplierProductCode\tNULL\n90001\tTwin Plug & Play\tSPA-TWIN-PLUG-PLAY\tsupplierProductCode\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

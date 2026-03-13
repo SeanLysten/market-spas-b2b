@@ -1,0 +1,90 @@
+{
+  "query": "SELECT id, name, sku, \"supplierProductCode\", ean13, \"stockQuantity\" FROM product_variants WHERE \"supplierProductCode\" IS NOT NULL OR ean13 IS NOT NULL LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, name, sku, \"supplierProductCode\", ean13, \"stockQuantity\" FROM product_variants WHERE \"supplierProductCode\" IS NOT NULL OR ean13 IS NOT NULL LIMIT 10;",
+  "rows": [
+    {
+      "id": "30002",
+      "name": "Easy Relax - Sterling Marble",
+      "sku": "SPA-EASYRELAX-STERLING-SILVER",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "3364549284640",
+      "stockQuantity": "stockQuantity"
+    },
+    {
+      "id": "30005",
+      "name": "Kos - Sterling Marble",
+      "sku": "SPA-KOS-BLANC",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL",
+      "stockQuantity": "stockQuantity"
+    },
+    {
+      "id": "30007",
+      "name": "Kos - Midnight Opal",
+      "sku": "SPA-KOS-NOIR",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL",
+      "stockQuantity": "stockQuantity"
+    },
+    {
+      "id": "30008",
+      "name": "Kos - Odyssey",
+      "sku": "SPA-KOS-GRIS",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL",
+      "stockQuantity": "stockQuantity"
+    },
+    {
+      "id": "30010",
+      "name": "Mykonos - Sterling Marble",
+      "sku": "SPA-MYKONOS-STERLING-SILVER",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "3364549284749",
+      "stockQuantity": "stockQuantity"
+    },
+    {
+      "id": "30014",
+      "name": "Neptune V2 - Sterling Marble",
+      "sku": "SPA-NEPTUNE-STERLING-SILVER",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "3364549284619",
+      "stockQuantity": "stockQuantity"
+    },
+    {
+      "id": "30018",
+      "name": "Volcano - Sterling Marble",
+      "sku": "SPA-VOLCANO-STERLING-SILVER",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "3364549284718",
+      "stockQuantity": "stockQuantity"
+    },
+    {
+      "id": "30021",
+      "name": "Euphoria - Sterling Marble",
+      "sku": "SPA-DELIGHT-BLANC",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL",
+      "stockQuantity": "stockQuantity"
+    },
+    {
+      "id": "30023",
+      "name": "Euphoria - Midnight Opal",
+      "sku": "SPA-DELIGHT-NOIR",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL",
+      "stockQuantity": "stockQuantity"
+    },
+    {
+      "id": "30024",
+      "name": "Euphoria - Odyssey",
+      "sku": "SPA-DELIGHT-GRIS",
+      "supplierProductCode": "supplierProductCode",
+      "ean13": "NULL",
+      "stockQuantity": "stockQuantity"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tsku\tsupplierProductCode\tean13\tstockQuantity\n30002\tEasy Relax - Sterling Marble\tSPA-EASYRELAX-STERLING-SILVER\tsupplierProductCode\t3364549284640\tstockQuantity\n30005\tKos - Sterling Marble\tSPA-KOS-BLANC\tsupplierProductCode\tNULL\tstockQuantity\n30007\tKos - Midnight Opal\tSPA-KOS-NOIR\tsupplierProductCode\tNULL\tstockQuantity\n30008\tKos - Odyssey\tSPA-KOS-GRIS\tsupplierProductCode\tNULL\tstockQuantity\n30010\tMykonos - Sterling Marble\tSPA-MYKONOS-STERLING-SILVER\tsupplierProductCode\t3364549284749\tstockQuantity\n30014\tNeptune V2 - Sterling Marble\tSPA-NEPTUNE-STERLING-SILVER\tsupplierProductCode\t3364549284619\tstockQuantity\n30018\tVolcano - Sterling Marble\tSPA-VOLCANO-STERLING-SILVER\tsupplierProductCode\t3364549284718\tstockQuantity\n30021\tEuphoria - Sterling Marble\tSPA-DELIGHT-BLANC\tsupplierProductCode\tNULL\tstockQuantity\n30023\tEuphoria - Midnight Opal\tSPA-DELIGHT-NOIR\tsupplierProductCode\tNULL\tstockQuantity\n30024\tEuphoria - Odyssey\tSPA-DELIGHT-GRIS\tsupplierProductCode\tNULL\tstockQuantity\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

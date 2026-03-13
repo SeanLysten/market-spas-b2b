@@ -2744,3 +2744,12 @@
 - [x] Persister l'ordre en base de données après chaque réorganisation
 - [x] Utiliser le sortOrder pour trier les produits côté utilisateur (catalogue)
 - [x] Écrire les tests Vitest
+
+## Test API POST fournisseur et retrait du stock local
+- [x] Tester l'API POST fournisseur avec les vrais codes produit (supplierProductCode)
+- [x] Retirer la colonne "Stock total" de la table admin produits
+- [x] Retirer l'édition inline du stock dans les variantes (ExpandedVariantsRow)
+- [x] Retirer le champ stockQuantity du formulaire de création/édition de produit
+- [x] Retirer le stock du catalogue utilisateur (page produits)
+- [x] Retirer le composant ProductStockCell
+- [x] Écrire les tests Vitest

@@ -65,7 +65,6 @@ export default function AdminProducts() {
     category: "OTHER" as "SPAS" | "SWIM_SPAS" | "MAINTENANCE" | "COVERS" | "ACCESSORIES" | "OTHER",
     priceHT: "",
     vatRate: "21",
-    stockQuantity: "0",
     weight: "",
     imageUrl: "",
     supplierProductCode: "",
@@ -81,7 +80,6 @@ export default function AdminProducts() {
     size: "",
     voltage: "",
     material: "",
-    stockQuantity: "0",
     imageUrl: "",
     supplierProductCode: "",
     ean13: "",
@@ -140,7 +138,6 @@ export default function AdminProducts() {
         description: productForm.description || undefined,
         priceHT: parseFloat(productForm.priceHT),
         vatRate: parseFloat(productForm.vatRate),
-        stockQuantity: parseInt(productForm.stockQuantity),
         weight: productForm.weight ? parseFloat(productForm.weight) : undefined,
         imageUrl: productForm.imageUrl || undefined,
         supplierProductCode: productForm.supplierProductCode || undefined,
@@ -177,7 +174,6 @@ export default function AdminProducts() {
       category: "OTHER" as "SPAS" | "SWIM_SPAS" | "MAINTENANCE" | "COVERS" | "ACCESSORIES" | "OTHER",
       priceHT: "",
       vatRate: "21",
-      stockQuantity: "0",
       weight: "",
       imageUrl: "",
       supplierProductCode: "",
@@ -196,7 +192,6 @@ export default function AdminProducts() {
       category: product.category || "OTHER",
       priceHT: product.pricePublicHT?.toString() || "",
       vatRate: product.vatRate?.toString() || "21",
-      stockQuantity: product.stockQuantity?.toString() || "0",
       weight: product.weight?.toString() || "",
       imageUrl: product.imageUrl || "",
       supplierProductCode: product.supplierProductCode || "",
@@ -241,7 +236,7 @@ export default function AdminProducts() {
 
         <Tabs defaultValue="products" className="w-full">
           <TabsList>
-            <TabsTrigger value="products">Produits en stock</TabsTrigger>
+            <TabsTrigger value="products">Produits au catalogue</TabsTrigger>
             <TabsTrigger value="incoming">Arrivages programmés</TabsTrigger>
           </TabsList>
 
@@ -346,15 +341,7 @@ export default function AdminProducts() {
                       onChange={(e) => setProductForm({ ...productForm, vatRate: e.target.value })}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="stockQuantity">Stock</Label>
-                    <Input
-                      id="stockQuantity"
-                      type="number"
-                      value={productForm.stockQuantity}
-                      onChange={(e) => setProductForm({ ...productForm, stockQuantity: e.target.value })}
-                    />
-                  </div>
+
                 </div>
 
                 <div>
@@ -423,7 +410,6 @@ export default function AdminProducts() {
                               <TableHead>Nom</TableHead>
                               <TableHead>EAN13</TableHead>
                               <TableHead>Prix HT</TableHead>
-                              <TableHead>Stock total</TableHead>
                               <TableHead>Statut</TableHead>
                               <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
@@ -476,7 +462,7 @@ export default function AdminProducts() {
                             <div className="flex items-center justify-between mt-3 pt-3 border-t">
                               <div className="flex items-center gap-4">
                                 <span className="text-sm font-semibold">{Number(product.pricePublicHT || 0).toFixed(2)} €</span>
-                                <span className="text-xs text-muted-foreground"><ProductStockCell productId={product.id} /></span>
+
                               </div>
                               <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                                 <Button size="sm" variant="outline" onClick={() => handleEditProduct(product)}>
@@ -576,9 +562,6 @@ function SortableProductRow({ product, expandedProductId, onToggleExpand, onEdit
         <TableCell className="font-mono text-xs">{product.ean13 || <span className="text-muted-foreground italic">\u2014</span>}</TableCell>
         <TableCell>{Number(product.pricePublicHT || 0).toFixed(2)} \u20ac</TableCell>
         <TableCell>
-          <ProductStockCell productId={product.id} />
-        </TableCell>
-        <TableCell>
           {product.isActive ? (
             <Badge variant="default">Actif</Badge>
           ) : (
@@ -605,7 +588,7 @@ function SortableProductRow({ product, expandedProductId, onToggleExpand, onEdit
       </TableRow>
       {expandedProductId === product.id && (
         <TableRow className="bg-muted/10 hover:bg-muted/10">
-          <TableCell colSpan={9} className="p-0">
+          <TableCell colSpan={8} className="p-0">
             <ExpandedVariantsRow productId={product.id} />
           </TableCell>
         </TableRow>
@@ -632,25 +615,10 @@ const ADMIN_COLOR_MAP: Record<string, string> = {
   "brown": "#6B3A2A",
 };
 
-function ProductStockCell({ productId }: { productId: number }) {
-  const { data: variantsData } = trpc.admin.products.getVariants.useQuery({ productId });
-  const variants = useSafeQuery(variantsData);
-  
-  const totalStock = variants?.reduce((sum: number, v: any) => sum + (v.stockQuantity || 0), 0) || 0;
-  
-  return (
-    <Badge variant={totalStock > 0 ? "default" : "secondary"}>
-      {totalStock}
-    </Badge>
-  );
-}
-
 function ExpandedVariantsRow({ productId }: { productId: number }) {
   const { data: variantsData, refetch } = trpc.admin.products.getVariants.useQuery({ productId });
   const variants = useSafeQuery(variantsData);
   const updateMutation = trpc.admin.products.updateVariant.useMutation();
-  const [editingVariantId, setEditingVariantId] = useState<number | null>(null);
-  const [editStockValue, setEditStockValue] = useState("");
   const [uploadingVariantId, setUploadingVariantId] = useState<number | null>(null);
   const [editingCodeVariantId, setEditingCodeVariantId] = useState<number | null>(null);
   const [editCodeField, setEditCodeField] = useState<'supplierProductCode' | 'ean13' | null>(null);
@@ -683,30 +651,6 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
     setEditingCodeVariantId(null);
     setEditCodeField(null);
     setEditCodeValue("");
-  };
-
-  const handleStartEdit = (variant: any) => {
-    setEditingVariantId(variant.id);
-    setEditStockValue(variant.stockQuantity?.toString() || "0");
-  };
-
-  const handleSaveStock = async (variantId: number) => {
-    try {
-      await updateMutation.mutateAsync({
-        id: variantId,
-        stockQuantity: parseInt(editStockValue) || 0,
-      });
-      toast.success("Stock mis \u00e0 jour");
-      setEditingVariantId(null);
-      refetch();
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la mise \u00e0 jour du stock");
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingVariantId(null);
-    setEditStockValue("");
   };
 
   const handleImageUploaded = async (variantId: number, url: string) => {
@@ -757,12 +701,10 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
     );
   }
 
-  const totalStock = variants.reduce((sum: number, v: any) => sum + (v.stockQuantity || 0), 0);
-
   return (
     <div className="px-6 py-3">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Variantes &mdash; Stock total : {totalStock}</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Variantes</p>
       </div>
       <div className="rounded-lg border border-border/50 overflow-hidden">
         <table className="w-full text-sm">
@@ -773,7 +715,6 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">Couleur</th>
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">Code Produit</th>
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">EAN13</th>
-              <th className="text-left px-4 py-2 font-medium text-muted-foreground">Stock</th>
             </tr>
           </thead>
           <tbody>
@@ -909,46 +850,6 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
                     </div>
                   )}
                 </td>
-                <td className="px-4 py-2">
-                  {editingVariantId === variant.id ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        min="0"
-                        value={editStockValue}
-                        onChange={(e) => setEditStockValue(e.target.value)}
-                        className="w-20 h-7 text-sm"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleSaveStock(variant.id);
-                          }
-                          if (e.key === "Escape") handleCancelEdit();
-                        }}
-                      />
-                      <Button size="sm" variant="ghost" className="h-7 px-1.5 w-full sm:w-auto" onClick={() => handleSaveStock(variant.id)}>
-                        <CheckCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                      </Button>
-                      <Button size="sm" variant="ghost" className="h-7 px-1.5 w-full sm:w-auto" onClick={handleCancelEdit}>
-                        <span className="text-xs">&times;</span>
-                      </Button>
-                    </div>
-                  ) : (
-                    <div
-                      className="flex items-center gap-2 cursor-pointer group"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleStartEdit(variant);
-                      }}
-                    >
-                      <Badge variant={variant.stockQuantity > 0 ? "default" : "secondary"} className="text-xs">
-                        {variant.stockQuantity || 0}
-                      </Badge>
-                      <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  )}
-                </td>
               </tr>
             ))}
           </tbody>
@@ -991,8 +892,6 @@ function ProductVariantsManager({ product, onBack }: { product: any; onBack: () 
 
 function VariantsTab({ productId }: { productId: number }) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingVariantId, setEditingVariantId] = useState<number | null>(null);
-  const [editStockValue, setEditStockValue] = useState("");
   const [form, setForm] = useState({
     sku: "",
     name: "",
@@ -1000,7 +899,6 @@ function VariantsTab({ productId }: { productId: number }) {
     size: "",
     voltage: "",
     material: "",
-    stockQuantity: "0",
     imageUrl: "",
     supplierProductCode: "",
     ean13: "",
@@ -1028,7 +926,6 @@ function VariantsTab({ productId }: { productId: number }) {
         productId,
         sku: autoVariantSku,
         name: form.name,
-        stockQuantity: parseInt(form.stockQuantity),
         supplierProductCode: form.supplierProductCode || undefined,
         ean13: form.ean13 || undefined,
         options,
@@ -1043,7 +940,6 @@ function VariantsTab({ productId }: { productId: number }) {
         size: "",
         voltage: "",
         material: "",
-        stockQuantity: "0",
         imageUrl: "",
         supplierProductCode: "",
         ean13: "",
@@ -1052,30 +948,6 @@ function VariantsTab({ productId }: { productId: number }) {
     } catch (error: any) {
       toast.error(error.message || "Erreur");
     }
-  };
-
-  const handleStartEditStock = (variant: any) => {
-    setEditingVariantId(variant.id);
-    setEditStockValue(variant.stockQuantity?.toString() || "0");
-  };
-
-  const handleSaveStock = async (variantId: number) => {
-    try {
-      await updateMutation.mutateAsync({
-        id: variantId,
-        stockQuantity: parseInt(editStockValue) || 0,
-      });
-      toast.success("Stock mis à jour");
-      setEditingVariantId(null);
-      refetch();
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la mise à jour du stock");
-    }
-  };
-
-  const handleCancelEditStock = () => {
-    setEditingVariantId(null);
-    setEditStockValue("");
   };
 
   const handleDelete = async (id: number) => {
@@ -1090,9 +962,6 @@ function VariantsTab({ productId }: { productId: number }) {
     }
   };
 
-  // Compute total stock across all variants
-  const totalStock = variants?.reduce((sum: number, v: any) => sum + (v.stockQuantity || 0), 0) || 0;
-
   return (
     <Card>
       <CardHeader>
@@ -1100,7 +969,7 @@ function VariantsTab({ productId }: { productId: number }) {
           <div>
             <CardTitle>Variantes du produit</CardTitle>
             <CardDescription>
-              Gérez les différentes variantes (couleurs, tailles, etc.) — Stock total : <strong>{totalStock}</strong>
+              Gérez les différentes variantes (couleurs, tailles, etc.)
             </CardDescription>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -1180,15 +1049,7 @@ function VariantsTab({ productId }: { productId: number }) {
                     />
                   </div>
                 </div>
-                <div>
-                  <Label htmlFor="variant-stock">Stock initial</Label>
-                  <Input
-                    id="variant-stock"
-                    type="number"
-                    value={form.stockQuantity}
-                    onChange={(e) => setForm({ ...form, stockQuantity: e.target.value })}
-                  />
-                </div>
+
 
                 <div>
                   <Label>Image de la variante</Label>
@@ -1221,7 +1082,6 @@ function VariantsTab({ productId }: { productId: number }) {
                 <TableHead>EAN13</TableHead>
                 <TableHead>Nom</TableHead>
                 <TableHead>Couleur</TableHead>
-                <TableHead>Stock</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -1236,40 +1096,6 @@ function VariantsTab({ productId }: { productId: number }) {
                       <Badge variant="outline">{variant.color}</Badge>
                     ) : (
                       <span className="text-muted-foreground text-sm">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingVariantId === variant.id ? (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min="0"
-                          value={editStockValue}
-                          onChange={(e) => setEditStockValue(e.target.value)}
-                          className="w-20 h-8"
-                          autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleSaveStock(variant.id);
-                            }
-                            if (e.key === "Escape") handleCancelEditStock();
-                          }}
-                        />
-                        <Button size="sm" variant="ghost" className="h-8 px-2 w-full sm:w-auto" onClick={() => handleSaveStock(variant.id)}>
-                          <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-8 px-2 w-full sm:w-auto" onClick={handleCancelEditStock}>
-                          ✕
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 cursor-pointer group" onClick={() => handleStartEditStock(variant)}>
-                        <Badge variant={variant.stockQuantity > 0 ? "default" : "secondary"}>
-                          {variant.stockQuantity || 0}
-                        </Badge>
-                        <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
@@ -1386,7 +1212,7 @@ function IncomingStockTab({ productId }: { productId: number }) {
                       <option value="">Global (toutes variantes)</option>
                       {variants.map((v: any) => (
                         <option key={v.id} value={v.id}>
-                          {v.name} {v.color ? `(${v.color})` : ""} — Stock: {v.stockQuantity || 0}
+                          {v.name} {v.color ? `(${v.color})` : ""}
                         </option>
                       ))}
                     </select>
@@ -1703,7 +1529,7 @@ function GlobalIncomingStockView() {
                       <option value="">Toutes les variantes (global)</option>
                       {variantsList.map((v: any) => (
                         <option key={v.id} value={v.id}>
-                          {v.name} {v.color ? `(${v.color})` : ""} — Stock: {v.stockQuantity || 0}
+                          {v.name} {v.color ? `(${v.color})` : ""}
                         </option>
                       ))}
                     </select>

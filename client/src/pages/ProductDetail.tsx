@@ -56,13 +56,6 @@ export default function ProductDetail() {
 
   const selectedVariant = variants?.find((v: any) => v.id === selectedVariantId);
   
-  const getStock = () => {
-    if (selectedVariant) {
-      return selectedVariant.stockQuantity || 0;
-    }
-    return product?.stockQuantity || 0;
-  };
-
   const getPrice = () => {
     if (selectedVariant?.pricePartnerHT) {
       return parseFloat(selectedVariant.pricePartnerHT);
@@ -70,13 +63,10 @@ export default function ProductDetail() {
     return parseFloat(product?.pricePartnerHT || product?.pricePublicHT || "0");
   };
 
-  const stock = getStock();
-  const hasStock = stock > 0;
   const price = getPrice();
 
   const handleQuantityChange = (newQty: number) => {
-    const maxQty = hasStock ? stock : 100; // Allow up to 100 for preorders
-    setQuantity(Math.max(1, Math.min(newQty, maxQty)));
+    setQuantity(Math.max(1, Math.min(newQty, 100)));
   };
 
   const handleAddToCart = async (isPreorder: boolean = false) => {
@@ -233,11 +223,7 @@ export default function ProductDetail() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="outline" className="font-mono">{product.ean13 ? `EAN: ${product.ean13}` : (product.supplierProductCode || product.sku)}</Badge>
-                {hasStock ? (
-                  <Badge className="bg-emerald-600 dark:bg-emerald-500">En stock ({stock})</Badge>
-                ) : (
-                  <Badge variant="secondary">Rupture de stock</Badge>
-                )}
+
               </div>
               <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
               {selectedVariant && (
@@ -277,7 +263,7 @@ export default function ProductDetail() {
                     <SelectItem value="default">Standard</SelectItem>
                     {variants.map((variant: any) => (
                       <SelectItem key={variant.id} value={variant.id.toString()}>
-                        {variant.name} - Stock: {variant.stockQuantity || 0}
+                        {variant.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -300,7 +286,7 @@ export default function ProductDetail() {
                 <Input
                   type="number"
                   min="1"
-                  max={hasStock ? stock : 100}
+                  max={100}
                   value={quantity}
                   onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
                   className="w-24 text-center"
@@ -309,7 +295,7 @@ export default function ProductDetail() {
                   variant="outline"
                   size="icon"
                   onClick={() => handleQuantityChange(quantity + 1)}
-                  disabled={hasStock && quantity >= stock}
+                  disabled={quantity >= 100}
                 >
                   <Plus className="w-4 h-4" />
                 </Button>
@@ -318,7 +304,6 @@ export default function ProductDetail() {
 
             {/* Add to Cart */}
             <div className="space-y-3">
-              {hasStock ? (
                 <Button
                   size="lg"
                   className="w-full gap-2"
@@ -327,17 +312,6 @@ export default function ProductDetail() {
                   <ShoppingCart className="w-5 h-5" />
                   Ajouter au panier
                 </Button>
-              ) : (
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full gap-2"
-                  onClick={() => handleAddToCart(true)}
-                >
-                  <Truck className="w-5 h-5" />
-                  Pré-réserver
-                </Button>
-              )}
             </div>
 
             {/* Incoming Stock */}

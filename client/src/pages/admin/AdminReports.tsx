@@ -113,10 +113,9 @@ export default function AdminReports() {
             "Catégorie": product.category?.name || "N/A",
             "Prix Public HT": formatPrice(product.pricePublicHT),
             "Prix Partenaire HT": formatPrice(product.pricePartnerHT),
-            "Stock": product.stockQuantity || 0,
             "Actif": product.isActive ? "Oui" : "Non",
           }));
-          headers = ["SKU", "Nom", "Catégorie", "Prix Public HT", "Prix Partenaire HT", "Stock", "Actif"];
+          headers = ["SKU", "Nom", "Catégorie", "Prix Public HT", "Prix Partenaire HT", "Actif"];
           filename = "rapport_produits";
           break;
 
@@ -350,7 +349,7 @@ export default function AdminReports() {
                       <th className="text-left p-2">SKU</th>
                       <th className="text-left p-2">Nom</th>
                       <th className="text-right p-2">Prix HT</th>
-                      <th className="text-right p-2">Stock</th>
+
                     </tr>
                   </thead>
                   <tbody>
@@ -359,7 +358,7 @@ export default function AdminReports() {
                         <td className="p-2 font-mono">{product.sku}</td>
                         <td className="p-2">{product.name}</td>
                         <td className="p-2 text-right">{formatPrice(product.pricePartnerHT)} €</td>
-                        <td className="p-2 text-right">{product.stockQuantity || 0}</td>
+
                       </tr>
                     ))}
                   </tbody>
