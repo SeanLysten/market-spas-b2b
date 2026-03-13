@@ -278,7 +278,7 @@ export default function Cart() {
                       <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
                         <span className="flex items-center gap-1">
                           <BadgePercent className="w-3.5 h-3.5" />
-                          Remise {(cart as any).partnerLevel || "partenaire"} ({cart.discountPercent}%)
+                          Remise partenaire ({cart.discountPercent.toFixed(1)}%)
                         </span>
                         <span>-{formatPrice(cart.discountAmount)} €</span>
                       </div>
@@ -306,12 +306,12 @@ export default function Cart() {
                     </div>
                   </div>
 
-                  {/* Partner Level Badge */}
-                  {(cart as any)?.partnerLevel && cart.discountPercent > 0 && (
+                  {/* Partner Discount Info */}
+                  {cart.discountPercent > 0 && (
                     <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
                       <p className="text-xs text-muted-foreground">
                         <BadgePercent className="w-4 h-4 inline mr-1 text-primary" />
-                        Votre niveau <strong className="text-primary">{(cart as any).partnerLevel}</strong> vous donne droit à une remise de <strong className="text-primary">{cart.discountPercent}%</strong> sur tous les produits.
+                        Votre remise partenaire de <strong className="text-primary">{cart.discountPercent.toFixed(1)}%</strong> est appliquée automatiquement.
                       </p>
                     </div>
                   )}

@@ -309,7 +309,7 @@ export default function AdminResources() {
       formData.append("category", "CATALOG");
       formData.append("language", "fr");
       formData.append("isPublic", "false");
-      formData.append("requiredPartnerLevel", "BRONZE");
+      formData.append("requiredPartnerLevel", "ALL");
       if (targetFolderId !== null && targetFolderId !== undefined) {
         formData.append("folderId", String(targetFolderId));
       }

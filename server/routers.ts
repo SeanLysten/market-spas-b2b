@@ -209,7 +209,7 @@ export const appRouter = router({
             primaryContactPhone: input.phone || '',
             website: input.website || null,
             status: 'PENDING',
-            partnerLevel: 'BRONZE',
+
           } as any);
           invitationPartnerId = partnerResult?.partnerId || null;
         }
@@ -949,15 +949,24 @@ export const appRouter = router({
           throw new Error("Vous devez être associé à un partenaire pour passer commande");
         }
 
-        // Get partner discount from system settings (level-based) or custom override
-        const { discountPercent, partnerLevel, source: discountSource } = await db.resolvePartnerDiscount(ctx.user.partnerId);
+        // Get per-product discounts for this partner
+        const partnerProductDiscounts = await db.getPartnerProductDiscounts(ctx.user.partnerId);
+        const productDiscountsMap = new Map<number, number>();
+        for (const ppd of partnerProductDiscounts) {
+          productDiscountsMap.set(ppd.productId, ppd.discountPercent);
+        }
+        // Get partner's global fallback discount
+        const partnerInfo = await db.getPartnerById(ctx.user.partnerId);
+        const partnerGlobalDiscount = partnerInfo?.discountPercent ? parseFloat(partnerInfo.discountPercent) : 0;
 
         // Get dynamic VAT rate from system settings
         const taxConfig = await db.getTaxConfig();
         const dynamicVatRate = taxConfig.vatRate;
 
-        // Build order items with product details
+        // Build order items with product details and per-product discounts
         const orderItems = [];
+        let totalDiscountWeighted = 0;
+        let totalItemsValue = 0;
         for (const item of input.items) {
           const product = await db.getProductById(item.productId);
           if (!product) {
@@ -981,6 +990,12 @@ export const appRouter = router({
             }
           }
 
+          // Per-product discount takes priority, then partner global discount
+          const itemDiscount = productDiscountsMap.get(item.productId) ?? partnerGlobalDiscount;
+          const lineValue = unitPriceHT * item.quantity;
+          totalDiscountWeighted += (lineValue * itemDiscount) / 100;
+          totalItemsValue += lineValue;
+
           orderItems.push({
             productId: item.productId,
             variantId: item.variantId,
@@ -989,10 +1004,13 @@ export const appRouter = router({
             quantity: item.quantity,
             unitPriceHT,
             vatRate,
-            discountPercent,
+            discountPercent: itemDiscount,
             isPreorder: item.isPreorder,
           });
         }
+
+        // Weighted average discount for the order
+        const avgDiscountPercent = totalItemsValue > 0 ? Math.round((totalDiscountWeighted / totalItemsValue) * 10000) / 100 : 0;
 
         // Create the order with dynamic shipping
         const result = await db.createOrder({
@@ -1003,7 +1021,7 @@ export const appRouter = router({
           paymentMethod: input.paymentMethod,
           shippingType: input.shippingType || "standard",
           customerNotes: input.customerNotes,
-          discountPercent,
+          discountPercent: avgDiscountPercent,
         });
 
         // Clear the cart after successful order
@@ -1021,8 +1039,7 @@ export const appRouter = router({
           totalTTC: result.totalTTC,
           shippingHT: result.shippingHT,
           depositAmount: result.depositAmount,
-          discountPercent,
-          partnerLevel,
+          discountPercent: avgDiscountPercent,
           message: "Commande créée avec succès",
         };
       }),
@@ -2011,6 +2028,47 @@ export const appRouter = router({
           const count = await db.reactivateUsersByPartnerId(input.id);
           if (count > 0) {
           }
+          return { success: true };
+        }),
+
+      // ── Per-product discounts management ──────────────────────
+      getProductDiscounts: adminProcedure
+        .input(z.object({ partnerId: z.number() }))
+        .query(async ({ input }) => {
+          return await db.getPartnerProductDiscounts(input.partnerId);
+        }),
+
+      upsertProductDiscount: adminProcedure
+        .input(z.object({
+          partnerId: z.number(),
+          productId: z.number(),
+          discountPercent: z.number().min(0).max(100),
+        }))
+        .mutation(async ({ input }) => {
+          await db.upsertPartnerProductDiscount(input.partnerId, input.productId, input.discountPercent);
+          return { success: true };
+        }),
+
+      bulkUpsertProductDiscounts: adminProcedure
+        .input(z.object({
+          partnerId: z.number(),
+          discounts: z.array(z.object({
+            productId: z.number(),
+            discountPercent: z.number().min(0).max(100),
+          })),
+        }))
+        .mutation(async ({ input }) => {
+          await db.bulkUpsertPartnerProductDiscounts(input.partnerId, input.discounts);
+          return { success: true };
+        }),
+
+      deleteProductDiscount: adminProcedure
+        .input(z.object({
+          partnerId: z.number(),
+          productId: z.number(),
+        }))
+        .mutation(async ({ input }) => {
+          await db.deletePartnerProductDiscount(input.partnerId, input.productId);
           return { success: true };
         }),
     }),

@@ -126,13 +126,12 @@ export default function AdminReports() {
             "Email": partner.contactEmail || "N/A",
             "Téléphone": partner.contactPhone || "N/A",
             "TVA": partner.vatNumber || "N/A",
-            "Niveau": partner.partnerLevel || "Bronze",
             "Statut": partner.status,
-            "Remise %": partner.discountPercent || 0,
+            "Remise globale %": partner.discountPercent || 0,
             "Total commandes": partner.totalOrders || 0,
             "Date inscription": formatDate(partner.createdAt),
           }));
-          headers = ["Entreprise", "Contact", "Email", "Téléphone", "TVA", "Niveau", "Statut", "Remise %", "Total commandes", "Date inscription"];
+          headers = ["Entreprise", "Contact", "Email", "Téléphone", "TVA", "Statut", "Remise globale %", "Total commandes", "Date inscription"];
           filename = "rapport_partenaires";
           break;
 
@@ -371,7 +370,7 @@ export default function AdminReports() {
                     <tr className="border-b">
                       <th className="text-left p-2">Entreprise</th>
                       <th className="text-left p-2">Contact</th>
-                      <th className="text-left p-2">Niveau</th>
+                      <th className="text-left p-2">Remise</th>
                       <th className="text-left p-2">Statut</th>
                     </tr>
                   </thead>
@@ -380,7 +379,7 @@ export default function AdminReports() {
                       <tr key={partner.id} className="border-b">
                         <td className="p-2">{partner.companyName}</td>
                         <td className="p-2">{partner.contactEmail || "N/A"}</td>
-                        <td className="p-2">{partner.partnerLevel || "Bronze"}</td>
+                        <td className="p-2">{partner.discountPercent || 0}%</td>
                         <td className="p-2">{partner.status}</td>
                       </tr>
                     ))}

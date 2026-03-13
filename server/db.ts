@@ -1,6 +1,6 @@
 import { eq, and, desc, sql, or, like, lte, gte, asc, ne, gt, lt, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, technicalResourceFolders, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts, ga4Accounts, partnerTerritories, scheduledNewsletters, savedRoutes, resourceFavorites } from "../drizzle/schema";
+import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, technicalResourceFolders, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts, ga4Accounts, partnerTerritories, scheduledNewsletters, savedRoutes, resourceFavorites, partnerProductDiscounts } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -780,27 +780,48 @@ export async function getCart(userId: number) {
     }
   }
 
-  // Get user's partner discount from system settings (level-based)
+  // Get user's partner info for per-product discounts
   const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  let discountPercent = 0;
-  let partnerLevel = "BRONZE";
-  let discountSource: "level" | "custom" | "none" = "none";
+  const partnerId = user[0]?.partnerId;
   
-  if (user[0]?.partnerId) {
-    const resolved = await resolvePartnerDiscount(user[0].partnerId);
-    discountPercent = resolved.discountPercent;
-    partnerLevel = resolved.partnerLevel;
-    discountSource = resolved.source;
+  // Load per-product discounts for this partner
+  let productDiscountsMap: Map<number, number> = new Map();
+  let partnerGlobalDiscount = 0;
+  if (partnerId) {
+    const partner = await getPartnerById(partnerId);
+    if (partner) {
+      partnerGlobalDiscount = partner.discountPercent ? parseFloat(partner.discountPercent) : 0;
+    }
+    const ppDiscounts = await getPartnerProductDiscounts(partnerId);
+    for (const ppd of ppDiscounts) {
+      productDiscountsMap.set(ppd.productId, ppd.discountPercent);
+    }
   }
 
-  // Calculate totals
+  // Calculate totals with per-product discounts
   let subtotalHT = 0;
-  for (const item of items) {
+  let totalDiscountAmount = 0;
+  const itemsWithDiscounts = items.map(item => {
     const price = typeof item.unitPriceHT === 'string' ? parseFloat(item.unitPriceHT) : item.unitPriceHT;
-    subtotalHT += price * item.quantity;
-  }
+    const lineTotal = price * item.quantity;
+    
+    // Per-product discount takes priority, then partner global discount
+    const productDiscount = productDiscountsMap.get(item.productId) ?? partnerGlobalDiscount;
+    const itemDiscountAmount = (lineTotal * productDiscount) / 100;
+    
+    subtotalHT += lineTotal;
+    totalDiscountAmount += itemDiscountAmount;
+    
+    return {
+      ...item,
+      discountPercent: productDiscount,
+      discountAmount: itemDiscountAmount,
+    };
+  });
 
-  const discountAmount = (subtotalHT * discountPercent) / 100;
+  // Weighted average discount percent for display
+  const discountPercent = subtotalHT > 0 ? (totalDiscountAmount / subtotalHT) * 100 : 0;
+  const discountAmount = totalDiscountAmount;
   const subtotalAfterDiscount = subtotalHT - discountAmount;
   
   // Calculate shipping from system settings
@@ -817,12 +838,10 @@ export async function getCart(userId: number) {
   const totalTTC = subtotalWithShipping + totalVAT;
 
   return {
-    items,
+    items: itemsWithDiscounts,
     subtotalHT,
-    discountPercent,
+    discountPercent: Math.round(discountPercent * 100) / 100,
     discountAmount,
-    partnerLevel,
-    discountSource,
     shippingHT,
     shippingVAT,
     vatRate: taxConfig.vatRate,
@@ -4784,6 +4803,87 @@ export interface PartnerLevelConfig {
   minOrders: number;
 }
 
+// ============================================
+// PARTNER PRODUCT DISCOUNTS (per-product, per-partner)
+// ============================================
+
+export async function getPartnerProductDiscounts(partnerId: number): Promise<Array<{ productId: number; discountPercent: number }>> {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db
+    .select()
+    .from(partnerProductDiscounts)
+    .where(eq(partnerProductDiscounts.partnerId, partnerId));
+  return rows.map(r => ({
+    productId: r.productId,
+    discountPercent: parseFloat(r.discountPercent),
+  }));
+}
+
+export async function getPartnerProductDiscount(partnerId: number, productId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const rows = await db
+    .select()
+    .from(partnerProductDiscounts)
+    .where(and(
+      eq(partnerProductDiscounts.partnerId, partnerId),
+      eq(partnerProductDiscounts.productId, productId)
+    ))
+    .limit(1);
+  if (rows.length === 0) return 0;
+  return parseFloat(rows[0].discountPercent);
+}
+
+export async function upsertPartnerProductDiscount(partnerId: number, productId: number, discountPercent: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await db
+    .select()
+    .from(partnerProductDiscounts)
+    .where(and(
+      eq(partnerProductDiscounts.partnerId, partnerId),
+      eq(partnerProductDiscounts.productId, productId)
+    ))
+    .limit(1);
+  if (existing.length > 0) {
+    await db
+      .update(partnerProductDiscounts)
+      .set({ discountPercent: discountPercent.toFixed(2), updatedAt: new Date() })
+      .where(eq(partnerProductDiscounts.id, existing[0].id));
+  } else {
+    await db.insert(partnerProductDiscounts).values({
+      partnerId,
+      productId,
+      discountPercent: discountPercent.toFixed(2),
+    });
+  }
+}
+
+export async function deletePartnerProductDiscount(partnerId: number, productId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .delete(partnerProductDiscounts)
+    .where(and(
+      eq(partnerProductDiscounts.partnerId, partnerId),
+      eq(partnerProductDiscounts.productId, productId)
+    ));
+}
+
+export async function bulkUpsertPartnerProductDiscounts(
+  partnerId: number,
+  discounts: Array<{ productId: number; discountPercent: number }>
+): Promise<void> {
+  for (const d of discounts) {
+    if (d.discountPercent > 0) {
+      await upsertPartnerProductDiscount(partnerId, d.productId, d.discountPercent);
+    } else {
+      await deletePartnerProductDiscount(partnerId, d.productId);
+    }
+  }
+}
+
 export interface ShippingConfig {
   defaultShippingCost: number;
   expressShippingCost: number;
@@ -4877,25 +4977,49 @@ export async function calculateShippingCost(
 
 /**
  * Resolve the effective discount for a partner:
- * 1. Use the level-based discount from system_settings (partner_levels)
- * 2. If the partner has a custom discountPercent override, use the higher of the two
+ * Uses the partner's global discountPercent field (custom override).
+ * Per-product discounts are handled separately in getCart and createOrder.
  */
 export async function resolvePartnerDiscount(partnerId: number): Promise<{
   discountPercent: number;
-  partnerLevel: string;
-  source: "level" | "custom" | "none";
+  source: "custom" | "none";
 }> {
   const partner = await getPartnerById(partnerId);
-  if (!partner) return { discountPercent: 0, partnerLevel: "BRONZE", source: "none" };
+  if (!partner) return { discountPercent: 0, source: "none" };
 
-  const levelDiscount = await getDiscountForPartnerLevel(partner.level);
+  // Use the partner's global custom discount as the default/fallback
   const customDiscount = partner.discountPercent ? parseFloat(partner.discountPercent) : 0;
 
-  // Use the higher discount (level-based or custom override)
-  if (customDiscount > 0 && customDiscount > levelDiscount) {
-    return { discountPercent: customDiscount, partnerLevel: partner.level, source: "custom" };
+  if (customDiscount > 0) {
+    return { discountPercent: customDiscount, source: "custom" };
   }
-  return { discountPercent: levelDiscount, partnerLevel: partner.level, source: "level" };
+  return { discountPercent: 0, source: "none" };
+}
+
+/**
+ * Resolve per-product discount for a partner.
+ * Priority: per-product discount > partner global discount > 0
+ */
+export async function resolveProductDiscountForPartner(
+  partnerId: number,
+  productId: number
+): Promise<{ discountPercent: number; source: "product" | "partner" | "none" }> {
+  // 1. Check per-product discount
+  const productDiscount = await getPartnerProductDiscount(partnerId, productId);
+  if (productDiscount > 0) {
+    return { discountPercent: productDiscount, source: "product" };
+  }
+
+  // 2. Fallback to partner's global discount
+  const partner = await getPartnerById(partnerId);
+  if (partner) {
+    const globalDiscount = partner.discountPercent ? parseFloat(partner.discountPercent) : 0;
+    if (globalDiscount > 0) {
+      return { discountPercent: globalDiscount, source: "partner" };
+    }
+  }
+
+  return { discountPercent: 0, source: "none" };
 }
 
 

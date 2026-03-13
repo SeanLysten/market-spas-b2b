@@ -355,23 +355,10 @@ export default function Profile() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Niveau partenaire</Label>
+                        <Label>Remise partenaire</Label>
                         <div className="flex items-center gap-2">
-                          <span
-                            className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              partner.level === "PLATINUM" || partner.level === "VIP"
-                                ? "bg-purple-500/15 dark:bg-purple-500/25 text-purple-700 dark:text-purple-400"
-                                : partner.level === "GOLD"
-                                ? "bg-amber-500/15 dark:bg-amber-500/25 text-amber-700 dark:text-amber-400"
-                                : partner.level === "SILVER"
-                                ? "bg-muted dark:bg-muted/50 text-foreground dark:text-foreground"
-                                : "bg-orange-500/15 dark:bg-orange-500/25 text-orange-700 dark:text-orange-400"
-                            }`}
-                          >
-                            {partner.level}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            ({partner.discountPercent}% de remise)
+                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400">
+                            {partner.discountPercent || 0}% de remise globale
                           </span>
                         </div>
                       </div>

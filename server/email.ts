@@ -234,7 +234,7 @@ const templates = {
               <span class="feature-icon">💰</span>
               <div>
                 <strong>Prix préférentiels</strong>
-                <p style="margin: 0; color: #64748b;">Bénéficiez de remises exclusives niveau {{partnerLevel}}</p>
+                <p style="margin: 0; color: #64748b;">Bénéficiez de remises exclusives partenaires</p>
               </div>
             </div>
             

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -57,21 +57,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const levelColors: Record<string, string> = {
-  BRONZE: "bg-amber-700 text-white",
-  SILVER: "bg-gray-400 text-white",
-  GOLD: "bg-amber-500 dark:bg-amber-400 text-white",
-  PLATINUM: "bg-gray-600 text-white",
-  VIP: "bg-purple-600 dark:bg-purple-400 text-white",
-};
 
-const levelDiscounts: Record<string, number> = {
-  BRONZE: 0,
-  SILVER: 5,
-  GOLD: 10,
-  PLATINUM: 15,
-  VIP: 20,
-};
 
 const statusColors: Record<string, string> = {
   PENDING: "bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400",
@@ -90,12 +76,14 @@ const statusLabels: Record<string, string> = {
 export default function AdminPartners() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [levelFilter, setLevelFilter] = useState<string>("all");
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<any>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [partnerToDelete, setPartnerToDelete] = useState<number | null>(null);
+  const [productDiscountPartnerId, setProductDiscountPartnerId] = useState<number | null>(null);
+  const [productDiscountPartnerName, setProductDiscountPartnerName] = useState<string>("");
 
   const [formData, setFormData] = useState({
     companyName: "",
@@ -108,7 +96,6 @@ export default function AdminPartners() {
     primaryContactName: "",
     primaryContactEmail: "",
     primaryContactPhone: "",
-    level: "BRONZE",
     discountPercent: "0",
     status: "PENDING",
     internalNotes: "",
@@ -117,7 +104,7 @@ export default function AdminPartners() {
   const { data: partners, isLoading, refetch } = trpc.admin.partners.list.useQuery({
     search: searchQuery || undefined,
     status: statusFilter !== "all" ? statusFilter : undefined,
-    level: levelFilter !== "all" ? levelFilter : undefined,
+
   });
 
   const createPartnerMutation = trpc.admin.partners.create.useMutation({
@@ -176,7 +163,6 @@ export default function AdminPartners() {
       primaryContactName: "",
       primaryContactEmail: "",
       primaryContactPhone: "",
-      level: "BRONZE",
       discountPercent: "0",
       status: "PENDING",
       internalNotes: "",
@@ -200,7 +186,6 @@ export default function AdminPartners() {
       primaryContactName: formData.primaryContactName,
       primaryContactEmail: formData.primaryContactEmail,
       primaryContactPhone: formData.primaryContactPhone,
-      level: formData.level as any,
       discountPercent: parseFloat(formData.discountPercent),
       status: formData.status as any,
       internalNotes: formData.internalNotes || undefined,
@@ -220,7 +205,6 @@ export default function AdminPartners() {
       primaryContactName: partner.primaryContactName || "",
       primaryContactEmail: partner.primaryContactEmail || "",
       primaryContactPhone: partner.primaryContactPhone || "",
-      level: partner.level || "BRONZE",
       discountPercent: partner.discountPercent?.toString() || "0",
       status: partner.status || "PENDING",
       internalNotes: partner.internalNotes || "",
@@ -243,7 +227,6 @@ export default function AdminPartners() {
       primaryContactName: formData.primaryContactName,
       primaryContactEmail: formData.primaryContactEmail,
       primaryContactPhone: formData.primaryContactPhone,
-      level: formData.level as any,
       discountPercent: parseFloat(formData.discountPercent),
       status: formData.status as any,
       internalNotes: formData.internalNotes || undefined,
@@ -389,41 +372,21 @@ export default function AdminPartners() {
 
       <Separator />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="level">Niveau partenaire</Label>
-          <Select
-            value={formData.level}
-            onValueChange={(value) => {
-              setFormData({ 
-                ...formData, 
-                level: value,
-                discountPercent: levelDiscounts[value]?.toString() || "0"
-              });
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="BRONZE">Bronze (0%)</SelectItem>
-              <SelectItem value="SILVER">Silver (5%)</SelectItem>
-              <SelectItem value="GOLD">Gold (10%)</SelectItem>
-              <SelectItem value="PLATINUM">Platinum (15%)</SelectItem>
-              <SelectItem value="VIP">VIP (20%)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="discountPercent">Remise personnalisée (%)</Label>
+          <Label htmlFor="discountPercent">Remise globale par défaut (%)</Label>
           <Input
             id="discountPercent"
             type="number"
             min="0"
             max="50"
+            step="0.5"
             value={formData.discountPercent}
             onChange={(e) => setFormData({ ...formData, discountPercent: e.target.value })}
           />
+          <p className="text-xs text-muted-foreground">
+            Appliquée sur tous les produits sauf ceux avec une remise spécifique
+          </p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="status">Statut</Label>
@@ -526,12 +489,12 @@ export default function AdminPartners() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Niveaux VIP/Platinum</CardTitle>
+              <CardTitle className="text-sm font-medium">Avec remise</CardTitle>
               <Award className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl text-display text-display font-bold text-purple-600 dark:text-purple-400">
-                {partners?.filter((p: any) => p.level === "VIP" || p.level === "PLATINUM").length || 0}
+                {partners?.filter((p: any) => parseFloat(p.discountPercent || 0) > 0).length || 0}
               </div>
             </CardContent>
           </Card>
@@ -562,19 +525,7 @@ export default function AdminPartners() {
                   <SelectItem value="TERMINATED">Résilié</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={levelFilter} onValueChange={setLevelFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Niveau" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les niveaux</SelectItem>
-                  <SelectItem value="BRONZE">Bronze</SelectItem>
-                  <SelectItem value="SILVER">Silver</SelectItem>
-                  <SelectItem value="GOLD">Gold</SelectItem>
-                  <SelectItem value="PLATINUM">Platinum</SelectItem>
-                  <SelectItem value="VIP">VIP</SelectItem>
-                </SelectContent>
-              </Select>
+
             </div>
           </CardContent>
         </Card>
@@ -601,8 +552,7 @@ export default function AdminPartners() {
                       </Badge>
                     </div>
                     <div className="flex flex-wrap gap-1.5 mt-2">
-                      <Badge variant="outline" className="text-[10px]">{partner.partnerLevel}</Badge>
-                      <Badge variant="outline" className="text-[10px]">{partner.discountRate}% remise</Badge>
+                      <Badge variant="outline" className="text-[10px]">{partner.discountPercent || 0}% remise</Badge>
                       <Badge variant="outline" className="text-[10px]">{partner.orderCount || 0} cmd</Badge>
                     </div>
                     <div className="flex gap-1 mt-3">
@@ -618,8 +568,7 @@ export default function AdminPartners() {
                   <TableRow>
                     <TableHead>Entreprise</TableHead>
                     <TableHead>Contact</TableHead>
-                    <TableHead>Niveau</TableHead>
-                    <TableHead>Remise</TableHead>
+                    <TableHead>Remise globale</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead>Commandes</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -647,12 +596,7 @@ export default function AdminPartners() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={levelColors[partner.level] || "bg-muted dark:bg-muted/50"}>
-                          {partner.level}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-medium">{partner.discountPercent || 0}%</span>
+                        <span className="font-medium text-emerald-600 dark:text-emerald-400">{partner.discountPercent || 0}%</span>
                       </TableCell>
                       <TableCell>
                         <Badge className={statusColors[partner.status] || "bg-muted dark:bg-muted/50"}>
@@ -724,6 +668,28 @@ export default function AdminPartners() {
               </DialogDescription>
             </DialogHeader>
             <PartnerForm />
+            {selectedPartner && (
+              <div className="border rounded-lg p-4 bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Réductions par produit</p>
+                    <p className="text-xs text-muted-foreground">Gérer les remises spécifiques pour chaque produit</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setProductDiscountPartnerId(selectedPartner.id);
+                      setProductDiscountPartnerName(selectedPartner.companyName);
+                      setIsEditDialogOpen(false);
+                    }}
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    Gérer
+                  </Button>
+                </div>
+              </div>
+            )}
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Annuler
@@ -734,6 +700,16 @@ export default function AdminPartners() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Product Discounts Dialog */}
+        <ProductDiscountsDialog
+          partnerId={productDiscountPartnerId}
+          partnerName={productDiscountPartnerName}
+          open={!!productDiscountPartnerId}
+          onOpenChange={(open) => {
+            if (!open) setProductDiscountPartnerId(null);
+          }}
+        />
 
         {/* Delete Confirmation Dialog with Impact Preview */}
         <DeleteConfirmDialog
@@ -928,5 +904,163 @@ function ImpactCard({
         {total !== undefined && total !== count && ` (${total} total)`}
       </p>
     </div>
+  );
+}
+
+// ============================================
+// PRODUCT DISCOUNTS DIALOG
+// ============================================
+
+function ProductDiscountsDialog({
+  partnerId,
+  partnerName,
+  open,
+  onOpenChange,
+}: {
+  partnerId: number | null;
+  partnerName: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [searchProduct, setSearchProduct] = useState("");
+  const [editingDiscounts, setEditingDiscounts] = useState<Record<number, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Fetch all products
+  const { data: productsData } = trpc.products.list.useQuery(
+    { search: searchProduct || undefined },
+    { enabled: open }
+  );
+
+  // Fetch existing discounts for this partner
+  const { data: existingDiscounts, refetch: refetchDiscounts } = trpc.admin.partners.getProductDiscounts.useQuery(
+    { partnerId: partnerId! },
+    { enabled: open && !!partnerId }
+  );
+
+  const bulkUpsertMutation = trpc.admin.partners.bulkUpsertProductDiscounts.useMutation({
+    onSuccess: () => {
+      toast.success("Réductions enregistrées avec succès");
+      refetchDiscounts();
+      setIsSaving(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erreur lors de la sauvegarde");
+      setIsSaving(false);
+    },
+  });
+
+  // Initialize editing state from existing discounts
+  useEffect(() => {
+    if (existingDiscounts) {
+      const map: Record<number, string> = {};
+      for (const d of existingDiscounts) {
+        map[d.productId] = d.discountPercent.toString();
+      }
+      setEditingDiscounts(map);
+    }
+  }, [existingDiscounts]);
+
+  const handleSave = () => {
+    if (!partnerId) return;
+    setIsSaving(true);
+    const discounts = Object.entries(editingDiscounts)
+      .map(([productId, percent]) => ({
+        productId: parseInt(productId),
+        discountPercent: parseFloat(percent) || 0,
+      }));
+    bulkUpsertMutation.mutate({ partnerId, discounts });
+  };
+
+  const products = (productsData as any)?.products || productsData || [];
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl w-[95vw] sm:w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Réductions par produit — {partnerName}</DialogTitle>
+          <DialogDescription>
+            Définissez une remise spécifique pour chaque produit. Les produits sans remise spécifique utiliseront la remise globale du partenaire.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher un produit..."
+            value={searchProduct}
+            onChange={(e) => setSearchProduct(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        <div className="flex-1 overflow-y-auto min-h-0 border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Produit</TableHead>
+                <TableHead className="w-[100px]">Prix HT</TableHead>
+                <TableHead className="w-[140px]">Remise (%)</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.isArray(products) && products.map((product: any) => (
+                <TableRow key={product.id}>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium text-sm">{product.name}</p>
+                      <p className="text-xs text-muted-foreground">{product.sku}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {parseFloat(product.pricePartnerHT || 0).toFixed(2)} €
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.5"
+                      placeholder="0"
+                      value={editingDiscounts[product.id] || ""}
+                      onChange={(e) => {
+                        setEditingDiscounts(prev => ({
+                          ...prev,
+                          [product.id]: e.target.value,
+                        }));
+                      }}
+                      className="h-8 w-24"
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+              {(!products || products.length === 0) && (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                    Aucun produit trouvé
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        <DialogFooter className="flex-col sm:flex-row gap-2 pt-3">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Annuler
+          </Button>
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                Enregistrement...
+              </>
+            ) : (
+              "Enregistrer les réductions"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

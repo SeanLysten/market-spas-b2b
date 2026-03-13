@@ -37,7 +37,7 @@ export default function Checkout() {
   const subtotalHT = cartData?.subtotalHT || 0;
   const discountPercent = cartData?.discountPercent || 0;
   const discountAmount = cartData?.discountAmount || 0;
-  const partnerLevel = (cartData as any)?.partnerLevel || "";
+
   const shippingHT = (cartData as any)?.shippingHT || 0;
   const vatRate = (cartData as any)?.vatRate ?? 0;
   const vatLabel = (cartData as any)?.vatLabel || "TVA";
@@ -377,7 +377,7 @@ export default function Checkout() {
                     <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
                       <span className="flex items-center gap-1">
                         <BadgePercent className="w-3.5 h-3.5" />
-                        Remise {partnerLevel} ({discountPercent}%)
+                        Remise partenaire ({discountPercent.toFixed(1)}%)
                       </span>
                       <span>-{formatPrice(discountAmount)} €</span>
                     </div>
@@ -403,12 +403,12 @@ export default function Checkout() {
                   </div>
                 </div>
 
-                {/* Partner Level Info */}
+                {/* Partner Discount Info */}
                 {discountPercent > 0 && (
                   <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
                     <p className="text-xs text-emerald-700 dark:text-emerald-400">
                       <BadgePercent className="w-4 h-4 inline mr-1" />
-                      Remise <strong>{partnerLevel}</strong> de {discountPercent}% appliquée automatiquement.
+                      Remise partenaire de {discountPercent.toFixed(1)}% appliquée automatiquement.
                     </p>
                   </div>
                 )}

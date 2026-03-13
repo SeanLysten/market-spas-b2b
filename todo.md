@@ -2785,4 +2785,15 @@
 - [x] Tests Vitest pour le système de logs
 - [x] Sécuriser l'API fournisseur avec authentification API Key (header X-API-Key)
 - [x] Générer une clé API sécurisée et la stocker en variable d'environnement
-- [ ] Fournir les identifiants d'accès API au user
+- [x] Fournir les identifiants d'accès API au user
+
+## Remplacement système niveaux partenaires par réductions par produit/revendeur
+- [x] Audit complet des fichiers utilisant le système de niveaux (Bronze/Silver/Gold/Platinum)
+- [x] Créer table partner_product_discounts en DB
+- [x] Modifier le calcul des prix backend pour utiliser les réductions par produit/revendeur
+- [x] Modifier les routes tRPC pour CRUD des réductions personnalisées
+- [x] Interface admin super admin pour gérer les réductions par produit et par revendeur
+- [x] Modifier le catalogue pour afficher les prix avec réductions personnalisées
+- [x] Modifier le panier et la logique de commande
+- [x] Nettoyer les références à l'ancien système de niveaux
+- [x] Tests Vitest pour le nouveau système de réductions

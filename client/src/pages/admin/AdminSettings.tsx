@@ -54,12 +54,6 @@ interface CompanySettings {
   website: string;
 }
 
-interface PartnerLevel {
-  level: string;
-  discount: number;
-  minOrders: number;
-}
-
 interface NotificationSettings {
   emailNewOrder: boolean;
   emailOrderStatus: boolean;
@@ -92,14 +86,6 @@ const DEFAULT_COMPANY: CompanySettings = {
   website: "",
 };
 
-const DEFAULT_LEVELS: PartnerLevel[] = [
-  { level: "BRONZE", discount: 0, minOrders: 0 },
-  { level: "SILVER", discount: 5, minOrders: 5 },
-  { level: "GOLD", discount: 10, minOrders: 15 },
-  { level: "PLATINUM", discount: 15, minOrders: 30 },
-  { level: "VIP", discount: 20, minOrders: 50 },
-];
-
 const DEFAULT_NOTIFICATIONS: NotificationSettings = {
   emailNewOrder: true,
   emailOrderStatus: true,
@@ -127,7 +113,7 @@ export default function AdminSettings() {
 
   // State for each settings group
   const [companySettings, setCompanySettings] = useState<CompanySettings>(DEFAULT_COMPANY);
-  const [partnerLevels, setPartnerLevels] = useState<PartnerLevel[]>(DEFAULT_LEVELS);
+
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATIONS);
   const [shippingSettings, setShippingSettings] = useState<ShippingSettings>(DEFAULT_SHIPPING);
   const [taxSettings, setTaxSettings] = useState<TaxSettings>(DEFAULT_TAX);
@@ -145,9 +131,7 @@ export default function AdminSettings() {
       if (allSettings.company) {
         setCompanySettings({ ...DEFAULT_COMPANY, ...allSettings.company });
       }
-      if (allSettings.partner_levels && Array.isArray(allSettings.partner_levels)) {
-        setPartnerLevels(allSettings.partner_levels);
-      }
+
       if (allSettings.notifications) {
         setNotificationSettings({ ...DEFAULT_NOTIFICATIONS, ...allSettings.notifications });
       }
@@ -165,15 +149,6 @@ export default function AdminSettings() {
   // Track changes
   const updateCompany = (patch: Partial<CompanySettings>) => {
     setCompanySettings((prev) => ({ ...prev, ...patch }));
-    setHasChanges(true);
-  };
-
-  const updateLevel = (index: number, field: "discount" | "minOrders", value: number) => {
-    setPartnerLevels((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
-      return updated;
-    });
     setHasChanges(true);
   };
 
@@ -200,7 +175,7 @@ export default function AdminSettings() {
       await updateMultipleMutation.mutateAsync({
         settings: [
           { key: "company", value: companySettings, description: "Informations entreprise" },
-          { key: "partner_levels", value: partnerLevels, description: "Niveaux partenaires et remises" },
+
           { key: "shipping", value: shippingSettings, description: "Paramètres de livraison" },
           { key: "tax", value: taxSettings, description: "Paramètres de TVA" },
           { key: "notifications", value: notificationSettings, description: "Paramètres de notifications" },
@@ -471,37 +446,36 @@ export default function AdminSettings() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Percent className="w-5 h-5" />
-                  Niveaux partenaires et remises
+                  Réductions partenaires
                 </CardTitle>
                 <CardDescription>
-                  Configurez les remises accordées à chaque niveau de partenaire
+                  Le système de réductions est géré par produit et par revendeur
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {(partnerLevels || []).map((level, index) => (
-                    <div key={level.level} className="flex items-center gap-4 p-4 border rounded-lg">
-                      <div className="w-24 font-semibold">{level.level}</div>
-                      <div className="flex-1 grid gap-4 grid-cols-1 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label>Remise (%)</Label>
-                          <Input
-                            type="number"
-                            value={level.discount}
-                            onChange={(e) => updateLevel(index, "discount", Number(e.target.value))}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Commandes min. requises</Label>
-                          <Input
-                            type="number"
-                            value={level.minOrders}
-                            onChange={(e) => updateLevel(index, "minOrders", Number(e.target.value))}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                  <div className="p-4 border rounded-lg bg-muted/30">
+                    <h4 className="font-medium mb-2">Comment fonctionnent les réductions ?</h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-500 mt-0.5">&bull;</span>
+                        <span><strong>Remise globale</strong> : chaque partenaire a une remise par défaut appliquée sur tous les produits.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-500 mt-0.5">&bull;</span>
+                        <span><strong>Remise par produit</strong> : vous pouvez définir une remise spécifique pour chaque produit et chaque partenaire. Elle remplace la remise globale.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-500 mt-0.5">&bull;</span>
+                        <span><strong>Priorité</strong> : remise produit spécifique &gt; remise globale du partenaire.</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      Pour gérer les réductions, allez dans <strong>Partenaires</strong> &rarr; <strong>Modifier</strong> un partenaire &rarr; <strong>Réductions par produit</strong>.
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

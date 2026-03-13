@@ -2720,3 +2720,28 @@ export const supplierApiLogs = mysqlTable(
 );
 export type SupplierApiLog = typeof supplierApiLogs.$inferSelect;
 export type InsertSupplierApiLog = typeof supplierApiLogs.$inferInsert;
+
+
+// ============================================
+// PARTNER PRODUCT DISCOUNTS
+// Per-product, per-partner discount percentages (replaces level-based system)
+// ============================================
+
+export const partnerProductDiscounts = mysqlTable(
+  "partner_product_discounts",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    partnerId: int("partnerId").notNull(),
+    productId: int("productId").notNull(),
+    discountPercent: decimal("discountPercent", { precision: 5, scale: 2 }).notNull().default("0"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    partnerProductIdx: index("ppd_partner_product_idx").on(table.partnerId, table.productId),
+    partnerIdx: index("ppd_partner_idx").on(table.partnerId),
+    productIdx: index("ppd_product_idx").on(table.productId),
+  })
+);
+export type PartnerProductDiscount = typeof partnerProductDiscounts.$inferSelect;
+export type InsertPartnerProductDiscount = typeof partnerProductDiscounts.$inferInsert;

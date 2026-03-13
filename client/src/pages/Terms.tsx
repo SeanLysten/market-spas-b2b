@@ -80,7 +80,7 @@ export default function Terms() {
             5. Prix et Remises
           </h2>
           <p className="text-slate-700 leading-relaxed mb-4">
-            Les prix et remises appliqués dépendent de votre niveau partenaire (Bronze, Silver, Gold, Platinum, VIP). 
+            Les prix et remises appliqués dépendent de votre profil partenaire et des réductions négociées. 
             Market Spas se réserve le droit de modifier les prix et les conditions tarifaires à tout moment, 
             avec notification préalable aux partenaires.
           </p>
