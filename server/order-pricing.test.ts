@@ -202,10 +202,8 @@ describe("resolvePartnerDiscount", () => {
   it("returns a valid result structure", async () => {
     const result = await resolvePartnerDiscount(999999);
     expect(result).toHaveProperty("discountPercent");
-    expect(result).toHaveProperty("partnerLevel");
     expect(result).toHaveProperty("source");
     expect(typeof result.discountPercent).toBe("number");
-    expect(typeof result.partnerLevel).toBe("string");
-    expect(["level", "custom", "none"]).toContain(result.source);
+    expect(["custom", "none"]).toContain(result.source);
   });
 });

@@ -2797,3 +2797,7 @@
 - [x] Modifier le panier et la logique de commande
 - [x] Nettoyer les références à l'ancien système de niveaux
 - [x] Tests Vitest pour le nouveau système de réductions
+
+## Corrections catalogue et admin produits
+- [x] Masquer les codes produits dans le catalogue côté utilisateur
+- [x] Afficher les stocks et transit fournisseur dans la gestion admin des produits

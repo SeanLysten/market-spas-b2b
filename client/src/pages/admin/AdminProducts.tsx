@@ -693,6 +693,8 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">Couleur</th>
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">Code Produit</th>
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">EAN13</th>
+              <th className="text-center px-4 py-2 font-medium text-muted-foreground">Stock</th>
+              <th className="text-center px-4 py-2 font-medium text-muted-foreground">Transit</th>
             </tr>
           </thead>
           <tbody>
@@ -827,6 +829,24 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
                       <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   )}
+                </td>
+                <td className="px-4 py-2 text-center">
+                  <span className={`inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    (variant.stockQuantity || 0) > 0
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {variant.stockQuantity || 0}
+                  </span>
+                </td>
+                <td className="px-4 py-2 text-center">
+                  <span className={`inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    (variant.inTransitQuantity || 0) > 0
+                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {variant.inTransitQuantity || 0}
+                  </span>
                 </td>
               </tr>
             ))}

@@ -128,11 +128,7 @@ function ProductCard({ product, onOpenDialog }: {
         <CardDescription className="line-clamp-2">
           {product.description || "Aucune description"}
         </CardDescription>
-        {(product.ean13 || product.supplierProductCode) && (
-          <div className="text-sm text-muted-foreground mt-1 font-mono">
-            {product.ean13 ? `EAN: ${product.ean13}` : product.supplierProductCode}
-          </div>
-        )}
+
       </CardHeader>
 
       <CardContent className="space-y-3 pt-0">
