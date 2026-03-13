@@ -392,8 +392,10 @@ export default function AdminProducts() {
                               <TableHead>Code Produit</TableHead>
                               <TableHead>Nom</TableHead>
                               <TableHead>EAN13</TableHead>
-                              <TableHead>Prix HT</TableHead>
-                              <TableHead>Statut</TableHead>
+              <TableHead className="whitespace-nowrap">Prix HT</TableHead>
+              <TableHead className="text-center whitespace-nowrap">Stock</TableHead>
+              <TableHead className="text-center whitespace-nowrap">Transit</TableHead>
+              <TableHead>Statut</TableHead>
                               <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
@@ -445,7 +447,22 @@ export default function AdminProducts() {
                             <div className="flex items-center justify-between mt-3 pt-3 border-t">
                               <div className="flex items-center gap-4">
                                 <span className="text-sm font-semibold">{Number(product.pricePublicHT || 0).toFixed(2)} €</span>
-
+                              <div className="flex items-center gap-1.5">
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                                  (product.totalStock || 0) > 0
+                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
+                                    : 'bg-muted text-muted-foreground'
+                                }`}>
+                                  S: {product.totalStock || 0}
+                                </span>
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                                  (product.totalTransit || 0) > 0
+                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
+                                    : 'bg-muted text-muted-foreground'
+                                }`}>
+                                  T: {product.totalTransit || 0}
+                                </span>
+                              </div>
                               </div>
                               <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                                 <Button size="sm" variant="outline" onClick={() => handleEditProduct(product)}>
@@ -523,7 +540,7 @@ function SortableProductRow({ product, expandedProductId, onToggleExpand, onEdit
             {...attributes}
             {...listeners}
             className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted/80 touch-none"
-            title="Glisser pour r\u00e9organiser"
+            title="Glisser pour réorganiser"
           >
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </button>
@@ -535,10 +552,28 @@ function SortableProductRow({ product, expandedProductId, onToggleExpand, onEdit
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           )}
         </TableCell>
-        <TableCell className="font-mono text-sm">{product.supplierProductCode || <span className="text-muted-foreground italic">Non d\u00e9fini</span>}</TableCell>
+        <TableCell className="font-mono text-sm">{product.supplierProductCode || <span className="text-muted-foreground italic">Non défini</span>}</TableCell>
         <TableCell className="font-medium">{product.name}</TableCell>
-        <TableCell className="font-mono text-xs">{product.ean13 || <span className="text-muted-foreground italic">\u2014</span>}</TableCell>
-        <TableCell>{Number(product.pricePublicHT || 0).toFixed(2)} \u20ac</TableCell>
+        <TableCell className="font-mono text-xs">{product.ean13 || <span className="text-muted-foreground italic">—</span>}</TableCell>
+        <TableCell className="whitespace-nowrap">{Number(product.pricePublicHT || 0).toFixed(2)} €</TableCell>
+        <TableCell className="text-center">
+          <span className={`inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-full text-xs font-semibold ${
+            (product.totalStock || 0) > 0
+              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
+              : 'bg-muted text-muted-foreground'
+          }`}>
+            {product.totalStock || 0}
+          </span>
+        </TableCell>
+        <TableCell className="text-center">
+          <span className={`inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-full text-xs font-semibold ${
+            (product.totalTransit || 0) > 0
+              ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
+              : 'bg-muted text-muted-foreground'
+          }`}>
+            {product.totalTransit || 0}
+          </span>
+        </TableCell>
         <TableCell>
           {product.isActive ? (
             <Badge variant="default">Actif</Badge>
@@ -566,7 +601,7 @@ function SortableProductRow({ product, expandedProductId, onToggleExpand, onEdit
       </TableRow>
       {expandedProductId === product.id && (
         <TableRow className="bg-muted/10 hover:bg-muted/10">
-          <TableCell colSpan={8} className="p-0">
+          <TableCell colSpan={10} className="p-0">
             <ExpandedVariantsRow productId={product.id} />
           </TableCell>
         </TableRow>

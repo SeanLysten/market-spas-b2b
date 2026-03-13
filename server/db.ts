@@ -1,4 +1,4 @@
-import { eq, and, desc, sql, or, like, lte, gte, asc, ne, gt, lt, isNull } from "drizzle-orm";
+import { eq, and, desc, sql, or, like, lte, gte, asc, ne, gt, lt, isNull, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, partners, products, orders, notifications, resources, productVariants, variantOptions, incomingStock, cartItems, favorites, events, leads, leadStatusHistory, payments, technicalResources, technicalResourceFolders, forumTopics, forumReplies, invitationTokens, metaAdAccounts, googleAdAccounts, ga4Accounts, partnerTerritories, scheduledNewsletters, savedRoutes, resourceFavorites, partnerProductDiscounts } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -303,7 +303,36 @@ export async function getAllProducts(filters?: {
     query = query.offset(filters.offset) as any;
   }
 
-  return await query;
+  const productsList = await query;
+
+  // Aggregate stock/transit totals from variants for each product
+  if (productsList.length > 0) {
+    const productIds = productsList.map((p: any) => p.id);
+    const allVariants = await db
+      .select({
+        productId: productVariants.productId,
+        stockQuantity: productVariants.stockQuantity,
+        inTransitQuantity: productVariants.inTransitQuantity,
+      })
+      .from(productVariants)
+      .where(inArray(productVariants.productId, productIds));
+
+    const stockMap = new Map<number, { totalStock: number; totalTransit: number }>();
+    for (const v of allVariants) {
+      const existing = stockMap.get(v.productId) || { totalStock: 0, totalTransit: 0 };
+      existing.totalStock += (v.stockQuantity || 0);
+      existing.totalTransit += (v.inTransitQuantity || 0);
+      stockMap.set(v.productId, existing);
+    }
+
+    return productsList.map((p: any) => ({
+      ...p,
+      totalStock: stockMap.get(p.id)?.totalStock || 0,
+      totalTransit: stockMap.get(p.id)?.totalTransit || 0,
+    }));
+  }
+
+  return productsList;
 }
 
 // ============================================

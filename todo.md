@@ -2801,3 +2801,7 @@
 ## Corrections catalogue et admin produits
 - [x] Masquer les codes produits dans le catalogue côté utilisateur
 - [x] Afficher les stocks et transit fournisseur dans la gestion admin des produits
+
+## Améliorations admin produits v2
+- [x] Afficher stock et transit total par produit sans déplier (ligne produit)
+- [x] Corriger le bug d'affichage du prix dans l'admin produits
