@@ -2825,3 +2825,6 @@
 - [x] Corriger le total transit (doit être la somme de toutes les variantes, pas juste une)
 - [x] Afficher la semaine d'arrivage spécifique à chaque couleur/variante sélectionnée
 - [x] Permettre de choisir l'arrivage (semaine) lors de la réservation dans le dialogue
+
+## Bug encodage Unicode catalogue
+- [x] Corriger les \u00e9 \u20ac \u00e8 non interprétés dans ProductAddToCartDialog.tsx et Catalog.tsx

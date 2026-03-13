@@ -59,7 +59,7 @@ export default function ProductAddToCartDialog({
   const addToCartMutation = trpc.cart.add.useMutation({
     onSuccess: () => {
       const isReservation = stockAvailable === 0 && transitAvailable > 0;
-      toast.success(isReservation ? "Produit r\u00e9serv\u00e9 (en transit)" : "Produit ajout\u00e9 au panier");
+      toast.success(isReservation ? "Produit réservé (en transit)" : "Produit ajouté au panier");
       onOpenChange(false);
       resetForm();
     },
@@ -119,7 +119,7 @@ export default function ProductAddToCartDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isReservation ? "R\u00e9server un produit en transit" : "Ajouter au panier"}</DialogTitle>
+          <DialogTitle>{isReservation ? "Réserver un produit en transit" : "Ajouter au panier"}</DialogTitle>
           <DialogDescription>{product.name}</DialogDescription>
         </DialogHeader>
 
@@ -170,9 +170,9 @@ export default function ProductAddToCartDialog({
                 <p className="text-amber-700 dark:text-amber-400 mt-0.5">
                   Ce produit est actuellement en cours d'acheminement.
                   {arrivalLabel && (
-                    <span className="font-semibold"> Arriv\u00e9e pr\u00e9vue : {arrivalLabel}.</span>
+                    <span className="font-semibold"> Arrivée prévue : {arrivalLabel}.</span>
                   )}
-                  {" "}Vous pouvez le r\u00e9server d\u00e8s maintenant.
+                  {" "}Vous pouvez le réserver dès maintenant.
                 </p>
               </div>
             </div>
@@ -260,7 +260,7 @@ export default function ProductAddToCartDialog({
 
           {/* Quantity */}
           <div className="space-y-2">
-            <Label htmlFor="quantity">Quantit\u00e9</Label>
+            <Label htmlFor="quantity">Quantité</Label>
             <div className="flex items-center gap-2">
               <Button
                 type="button"
@@ -294,13 +294,13 @@ export default function ProductAddToCartDialog({
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Prix unitaire HT</span>
               <span className="font-medium">
-                {product.pricePartnerHT || 0} \u20ac
+                {product.pricePartnerHT || 0} €
               </span>
             </div>
             <div className="flex items-center justify-between text-base font-semibold text-display mt-2">
               <span>Total HT</span>
               <span>
-                {((product.pricePartnerHT || 0) * quantity).toFixed(2)} \u20ac
+                {((product.pricePartnerHT || 0) * quantity).toFixed(2)} €
               </span>
             </div>
           </div>
@@ -322,7 +322,7 @@ export default function ProductAddToCartDialog({
             {isReservation ? (
               <>
                 <Truck className="w-4 h-4" />
-                R\u00e9server{arrivalLabel ? ` (${arrivalLabel})` : " (en transit)"}
+                Réserver{arrivalLabel ? ` (${arrivalLabel})` : " (en transit)"}
               </>
             ) : (
               <>

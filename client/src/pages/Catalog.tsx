@@ -141,7 +141,7 @@ function ProductCard({ product, onOpenDialog }: {
           {arrivalLabel && (
             <Badge className="bg-blue-600 text-white text-xs gap-1">
               <CalendarClock className="w-3 h-3" />
-              Arrivage d\u00e8s {arrivalLabel}
+              Arrivage dès {arrivalLabel}
             </Badge>
           )}
           {productStock === 0 && productTransit === 0 && (
