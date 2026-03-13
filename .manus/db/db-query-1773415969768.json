@@ -1,0 +1,136 @@
+{
+  "query": "SELECT pv.id, p.name, pv.supplierProductCode, pv.inTransitQuantity, pv.estimatedArrival, vo.optionName, vo.optionValue FROM product_variants pv JOIN products p ON pv.productId = p.id LEFT JOIN variant_options vo ON vo.variantId = pv.id WHERE pv.inTransitQuantity > 0 ORDER BY pv.estimatedArrival, p.name LIMIT 30",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT pv.id, p.name, pv.supplierProductCode, pv.inTransitQuantity, pv.estimatedArrival, vo.optionName, vo.optionValue FROM product_variants pv JOIN products p ON pv.productId = p.id LEFT JOIN variant_options vo ON vo.variantId = pv.id WHERE pv.inTransitQuantity > 0 ORDER BY pv.estimatedArrival, p.name LIMIT 30",
+  "rows": [
+    {
+      "id": "30002",
+      "name": "Easy Relax",
+      "supplierProductCode": "662600 078 38",
+      "inTransitQuantity": "56",
+      "estimatedArrival": "202611",
+      "optionName": "NULL",
+      "optionValue": "NULL"
+    },
+    {
+      "id": "30014",
+      "name": "Neptune V2",
+      "supplierProductCode": "662201 078 38",
+      "inTransitQuantity": "154",
+      "estimatedArrival": "202611",
+      "optionName": "NULL",
+      "optionValue": "NULL"
+    },
+    {
+      "id": "60002",
+      "name": "Neptune V2",
+      "supplierProductCode": "662201 080 38",
+      "inTransitQuantity": "28",
+      "estimatedArrival": "202611",
+      "optionName": "NULL",
+      "optionValue": "NULL"
+    },
+    {
+      "id": "30018",
+      "name": "Volcano",
+      "supplierProductCode": "662700 078 38",
+      "inTransitQuantity": "24",
+      "estimatedArrival": "202611",
+      "optionName": "NULL",
+      "optionValue": "NULL"
+    },
+    {
+      "id": "60003",
+      "name": "Easy Relax",
+      "supplierProductCode": "662600 079 38",
+      "inTransitQuantity": "14",
+      "estimatedArrival": "202620",
+      "optionName": "NULL",
+      "optionValue": "NULL"
+    },
+    {
+      "id": "60007",
+      "name": "Mykonos",
+      "supplierProductCode": "662800 079 38",
+      "inTransitQuantity": "8",
+      "estimatedArrival": "202620",
+      "optionName": "NULL",
+      "optionValue": "NULL"
+    },
+    {
+      "id": "30010",
+      "name": "Mykonos",
+      "supplierProductCode": "662800 078 38",
+      "inTransitQuantity": "15",
+      "estimatedArrival": "202620",
+      "optionName": "NULL",
+      "optionValue": "NULL"
+    },
+    {
+      "id": "60008",
+      "name": "Mykonos",
+      "supplierProductCode": "662800 080 38",
+      "inTransitQuantity": "7",
+      "estimatedArrival": "202620",
+      "optionName": "NULL",
+      "optionValue": "NULL"
+    },
+    {
+      "id": "60001",
+      "name": "Neptune V2",
+      "supplierProductCode": "662201 079 38",
+      "inTransitQuantity": "28",
+      "estimatedArrival": "202620",
+      "optionName": "NULL",
+      "optionValue": "NULL"
+    },
+    {
+      "id": "60009",
+      "name": "Twin Plug & Play",
+      "supplierProductCode": "662900 078 38",
+      "inTransitQuantity": "14",
+      "estimatedArrival": "202620",
+      "optionName": "NULL",
+      "optionValue": "NULL"
+    },
+    {
+      "id": "60010",
+      "name": "Twin Plug & Play",
+      "supplierProductCode": "662900 079 38",
+      "inTransitQuantity": "7",
+      "estimatedArrival": "202620",
+      "optionName": "NULL",
+      "optionValue": "NULL"
+    },
+    {
+      "id": "60011",
+      "name": "Twin Plug & Play",
+      "supplierProductCode": "662900 080 38",
+      "inTransitQuantity": "7",
+      "estimatedArrival": "202620",
+      "optionName": "NULL",
+      "optionValue": "NULL"
+    },
+    {
+      "id": "60006",
+      "name": "Volcano",
+      "supplierProductCode": "662700 080 38",
+      "inTransitQuantity": "12",
+      "estimatedArrival": "202620",
+      "optionName": "NULL",
+      "optionValue": "NULL"
+    },
+    {
+      "id": "60005",
+      "name": "Volcano",
+      "supplierProductCode": "662700 079 38",
+      "inTransitQuantity": "12",
+      "estimatedArrival": "202620",
+      "optionName": "NULL",
+      "optionValue": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tsupplierProductCode\tinTransitQuantity\testimatedArrival\toptionName\toptionValue\n30002\tEasy Relax\t662600 078 38\t56\t202611\tNULL\tNULL\n30014\tNeptune V2\t662201 078 38\t154\t202611\tNULL\tNULL\n60002\tNeptune V2\t662201 080 38\t28\t202611\tNULL\tNULL\n30018\tVolcano\t662700 078 38\t24\t202611\tNULL\tNULL\n60003\tEasy Relax\t662600 079 38\t14\t202620\tNULL\tNULL\n60007\tMykonos\t662800 079 38\t8\t202620\tNULL\tNULL\n30010\tMykonos\t662800 078 38\t15\t202620\tNULL\tNULL\n60008\tMykonos\t662800 080 38\t7\t202620\tNULL\tNULL\n60001\tNeptune V2\t662201 079 38\t28\t202620\tNULL\tNULL\n60009\tTwin Plug & Play\t662900 078 38\t14\t202620\tNULL\tNULL\n60010\tTwin Plug & Play\t662900 079 38\t7\t202620\tNULL\tNULL\n60011\tTwin Plug & Play\t662900 080 38\t7\t202620\tNULL\tNULL\n60006\tVolcano\t662700 080 38\t12\t202620\tNULL\tNULL\n60005\tVolcano\t662700 079 38\t12\t202620\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

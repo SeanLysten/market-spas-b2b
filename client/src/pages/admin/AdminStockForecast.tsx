@@ -20,15 +20,25 @@ import {
   PackageX,
   Clock,
   ArrowUpDown,
+  CalendarClock,
+  Calendar,
 } from "lucide-react";
 
-type SortField = "name" | "stock" | "transit" | "status";
+type SortField = "name" | "stock" | "transit" | "arrival" | "status";
 type SortDir = "asc" | "desc";
+
+function formatArrivalWeek(code: string | null): string {
+  if (!code || code.length < 5) return "—";
+  const year = code.substring(0, 4);
+  const week = code.substring(4);
+  return `S${parseInt(week)} ${year}`;
+}
 
 export default function AdminStockForecast() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedProductId, setExpandedProductId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [arrivalFilter, setArrivalFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
@@ -42,8 +52,13 @@ export default function AdminStockForecast() {
     refetchStock();
   };
 
-  // Filter and sort products
+  // Extract all unique arrival weeks across all products
   const products = (stockData as any)?.products || [];
+  const allArrivalWeeks: string[] = [...new Set(
+    products.flatMap((p: any) => p.arrivalWeeks || [])
+  )].sort() as string[];
+
+  // Filter and sort products
   const filteredProducts = products
     .filter((p: any) => {
       const matchesSearch =
@@ -51,7 +66,8 @@ export default function AdminStockForecast() {
         p.productSku.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (p.supplierProductCode || "").toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === "all" || p.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      const matchesArrival = arrivalFilter === "all" || (p.arrivalWeeks || []).includes(arrivalFilter);
+      return matchesSearch && matchesStatus && matchesArrival;
     })
     .sort((a: any, b: any) => {
       let cmp = 0;
@@ -64,6 +80,11 @@ export default function AdminStockForecast() {
           break;
         case "transit":
           cmp = a.totalTransit - b.totalTransit;
+          break;
+        case "arrival":
+          const aWeek = (a.arrivalWeeks || [])[0] || "9999";
+          const bWeek = (b.arrivalWeeks || [])[0] || "9999";
+          cmp = aWeek.localeCompare(bWeek);
           break;
         case "status":
           const statusOrder: Record<string, number> = { RUPTURE: 0, EN_TRANSIT: 1, EN_STOCK: 2 };
@@ -82,11 +103,35 @@ export default function AdminStockForecast() {
     }
   };
 
+  // Build arrivals by week for the "Arrivages" tab
+  const arrivalsByWeek: Record<string, { week: string; label: string; variants: any[]; totalUnits: number }> = {};
+  for (const product of products) {
+    for (const v of (product.variants || [])) {
+      if (v.estimatedArrival && v.inTransitQuantity > 0) {
+        if (!arrivalsByWeek[v.estimatedArrival]) {
+          arrivalsByWeek[v.estimatedArrival] = {
+            week: v.estimatedArrival,
+            label: formatArrivalWeek(v.estimatedArrival),
+            variants: [],
+            totalUnits: 0,
+          };
+        }
+        arrivalsByWeek[v.estimatedArrival].variants.push({
+          ...v,
+          productName: product.productName,
+          productId: product.productId,
+        });
+        arrivalsByWeek[v.estimatedArrival].totalUnits += v.inTransitQuantity;
+      }
+    }
+  }
+  const sortedArrivals = Object.values(arrivalsByWeek).sort((a, b) => a.week.localeCompare(b.week));
+
   const handleExport = () => {
     if (!products.length) return;
 
     const rows: string[] = [
-      ["Code Fournisseur", "Produit", "SKU Variante", "Code Variante", "Couleur", "Stock", "En Transit", "Réservé", "Disponible", "Statut"].join(","),
+      ["Code Fournisseur", "Produit", "SKU Variante", "Code Variante", "Couleur", "Stock", "En Transit", "Réservé", "Disponible", "Arrivage", "Statut"].join(","),
     ];
 
     for (const product of products) {
@@ -102,6 +147,7 @@ export default function AdminStockForecast() {
             variant.inTransitQuantity,
             variant.stockReserved,
             variant.available,
+            variant.estimatedArrival ? formatArrivalWeek(variant.estimatedArrival) : "",
             variant.stockQuantity > 0 ? "En stock" : variant.inTransitQuantity > 0 ? "En transit" : "Rupture",
           ].join(",")
         );
@@ -148,8 +194,8 @@ export default function AdminStockForecast() {
         <div className="p-4 md:p-8">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-muted rounded w-1/3"></div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map((i) => (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="h-28 bg-muted rounded"></div>
               ))}
             </div>
@@ -169,7 +215,7 @@ export default function AdminStockForecast() {
             <div>
               <h1 className="text-2xl md:text-3xl font-bold">Stock Fournisseur</h1>
               <p className="text-muted-foreground mt-1 text-sm md:text-base">
-                Vue d'ensemble des stocks et transit — données synchronisées via l'API fournisseur
+                Suivi des stocks, transit et arrivages — synchronisé via l'API fournisseur
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -199,7 +245,7 @@ export default function AdminStockForecast() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs md:text-sm font-medium">Produits suivis</CardTitle>
@@ -208,7 +254,7 @@ export default function AdminStockForecast() {
             <CardContent>
               <div className="text-xl md:text-2xl font-bold">{summary?.totalProducts || 0}</div>
               <p className="text-[10px] md:text-xs text-muted-foreground mt-1">
-                {filteredProducts.reduce((sum: number, p: any) => sum + p.variantCount, 0)} variantes au total
+                {products.reduce((sum: number, p: any) => sum + p.variantCount, 0)} variantes
               </p>
             </CardContent>
           </Card>
@@ -241,6 +287,19 @@ export default function AdminStockForecast() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xs md:text-sm font-medium">Arrivages</CardTitle>
+              <CalendarClock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400">{sortedArrivals.length}</div>
+              <p className="text-[10px] md:text-xs text-muted-foreground mt-1">
+                semaine(s) prévue(s)
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs md:text-sm font-medium">Rupture</CardTitle>
               <AlertTriangle className="h-4 w-4 text-destructive" />
             </CardHeader>
@@ -253,24 +312,31 @@ export default function AdminStockForecast() {
           </Card>
         </div>
 
-        {/* Tabs: Stock Overview + Supplier Logs */}
+        {/* Tabs */}
         <Tabs defaultValue="stock" className="space-y-4">
           <TabsList>
             <TabsTrigger value="stock">Vue des stocks</TabsTrigger>
+            <TabsTrigger value="arrivals">
+              <CalendarClock className="mr-1 h-4 w-4" />
+              Arrivages ({sortedArrivals.length})
+            </TabsTrigger>
             <TabsTrigger value="logs">Historique imports</TabsTrigger>
           </TabsList>
 
+          {/* TAB 1: Vue des stocks */}
           <TabsContent value="stock" className="space-y-4">
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher par nom, SKU ou code fournisseur..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher par nom, SKU ou code fournisseur..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
               <div className="flex gap-2 flex-wrap">
                 <Button
@@ -307,6 +373,31 @@ export default function AdminStockForecast() {
                   <PackageX className="mr-1 h-3 w-3" />
                   Rupture ({products.filter((p: any) => p.status === "RUPTURE").length})
                 </Button>
+                {allArrivalWeeks.length > 0 && (
+                  <>
+                    <span className="text-muted-foreground self-center mx-1">|</span>
+                    <Button
+                      variant={arrivalFilter === "all" ? "secondary" : "outline"}
+                      size="sm"
+                      onClick={() => setArrivalFilter("all")}
+                    >
+                      <Calendar className="mr-1 h-3 w-3" />
+                      Toutes semaines
+                    </Button>
+                    {allArrivalWeeks.map((week) => (
+                      <Button
+                        key={week}
+                        variant={arrivalFilter === week ? "secondary" : "outline"}
+                        size="sm"
+                        onClick={() => setArrivalFilter(week)}
+                        className={arrivalFilter === week ? "" : "text-amber-600 border-amber-200 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-800 dark:hover:bg-amber-950"}
+                      >
+                        <CalendarClock className="mr-1 h-3 w-3" />
+                        {formatArrivalWeek(week)}
+                      </Button>
+                    ))}
+                  </>
+                )}
               </div>
             </div>
 
@@ -327,8 +418,8 @@ export default function AdminStockForecast() {
                             <ArrowUpDown className="h-3 w-3" />
                           </div>
                         </th>
-                        <th className="text-left p-3 font-medium text-sm">Code fournisseur</th>
-                        <th className="text-center p-3 font-medium text-sm">Variantes</th>
+                        <th className="text-left p-3 font-medium text-sm">Code fourn.</th>
+                        <th className="text-center p-3 font-medium text-sm">Var.</th>
                         <th
                           className="text-center p-3 font-medium text-sm cursor-pointer hover:text-foreground"
                           onClick={() => handleSort("stock")}
@@ -343,11 +434,20 @@ export default function AdminStockForecast() {
                           onClick={() => handleSort("transit")}
                         >
                           <div className="flex items-center justify-center gap-1">
-                            En transit
+                            Transit
                             <ArrowUpDown className="h-3 w-3" />
                           </div>
                         </th>
                         <th className="text-center p-3 font-medium text-sm">Réservé</th>
+                        <th
+                          className="text-center p-3 font-medium text-sm cursor-pointer hover:text-foreground"
+                          onClick={() => handleSort("arrival")}
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            Arrivage
+                            <ArrowUpDown className="h-3 w-3" />
+                          </div>
+                        </th>
                         <th
                           className="text-center p-3 font-medium text-sm cursor-pointer hover:text-foreground"
                           onClick={() => handleSort("status")}
@@ -407,23 +507,38 @@ export default function AdminStockForecast() {
                                 {product.totalReserved}
                               </span>
                             </td>
+                            <td className="p-3 text-center">
+                              {(product.arrivalWeeks || []).length > 0 ? (
+                                <div className="flex flex-wrap justify-center gap-1">
+                                  {(product.arrivalWeeks as string[]).map((w: string) => (
+                                    <Badge key={w} className="bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border-0 text-xs">
+                                      <CalendarClock className="mr-1 h-3 w-3" />
+                                      {formatArrivalWeek(w)}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </td>
                             <td className="p-3 text-center">{getStatusBadge(product.status)}</td>
                           </tr>
                           {expandedProductId === product.productId && (
                             <tr key={`${product.productId}-detail`} className="bg-muted/10">
-                              <td colSpan={8} className="p-0">
+                              <td colSpan={9} className="p-0">
                                 <div className="p-4 pl-12">
                                   <h4 className="text-sm font-semibold mb-3">Détail par variante</h4>
                                   <table className="w-full text-sm">
                                     <thead>
                                       <tr className="border-b">
-                                        <th className="text-left p-2 font-medium text-xs text-muted-foreground">Code fournisseur</th>
+                                        <th className="text-left p-2 font-medium text-xs text-muted-foreground">Code fourn.</th>
                                         <th className="text-left p-2 font-medium text-xs text-muted-foreground">SKU</th>
                                         <th className="text-left p-2 font-medium text-xs text-muted-foreground">Couleur</th>
                                         <th className="text-center p-2 font-medium text-xs text-muted-foreground">Stock</th>
-                                        <th className="text-center p-2 font-medium text-xs text-muted-foreground">En transit</th>
+                                        <th className="text-center p-2 font-medium text-xs text-muted-foreground">Transit</th>
                                         <th className="text-center p-2 font-medium text-xs text-muted-foreground">Réservé</th>
-                                        <th className="text-center p-2 font-medium text-xs text-muted-foreground">Disponible</th>
+                                        <th className="text-center p-2 font-medium text-xs text-muted-foreground">Dispo</th>
+                                        <th className="text-center p-2 font-medium text-xs text-muted-foreground">Arrivage</th>
                                         <th className="text-center p-2 font-medium text-xs text-muted-foreground">Alerte</th>
                                       </tr>
                                     </thead>
@@ -450,6 +565,15 @@ export default function AdminStockForecast() {
                                           </td>
                                           <td className="p-2 text-center font-semibold">{v.available}</td>
                                           <td className="p-2 text-center">
+                                            {v.estimatedArrival ? (
+                                              <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border-0 text-xs">
+                                                {formatArrivalWeek(v.estimatedArrival)}
+                                              </Badge>
+                                            ) : (
+                                              <span className="text-muted-foreground">—</span>
+                                            )}
+                                          </td>
+                                          <td className="p-2 text-center">
                                             {v.isLowStock ? (
                                               <Badge variant="secondary" className="text-xs">
                                                 <AlertTriangle className="mr-1 h-3 w-3" />
@@ -473,7 +597,7 @@ export default function AdminStockForecast() {
                       ))}
                       {filteredProducts.length === 0 && (
                         <tr>
-                          <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                          <td colSpan={9} className="p-8 text-center text-muted-foreground">
                             Aucun produit ne correspond aux critères de recherche
                           </td>
                         </tr>
@@ -510,7 +634,7 @@ export default function AdminStockForecast() {
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 text-xs">
+                        <div className="flex items-center gap-3 text-xs flex-wrap">
                           <div className="flex items-center gap-1">
                             <span className="text-muted-foreground">Stock:</span>
                             <span className={`font-semibold ${product.totalStock > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
@@ -523,10 +647,14 @@ export default function AdminStockForecast() {
                               {product.totalTransit}
                             </span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">Variantes:</span>
-                            <span className="font-semibold">{product.variantCount}</span>
-                          </div>
+                          {(product.arrivalWeeks || []).length > 0 && (
+                            <div className="flex items-center gap-1">
+                              <CalendarClock className="h-3 w-3 text-amber-600" />
+                              <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                                {(product.arrivalWeeks as string[]).map((w: string) => formatArrivalWeek(w)).join(", ")}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -539,7 +667,7 @@ export default function AdminStockForecast() {
                                 <span className="font-mono font-medium">{v.supplierProductCode || v.sku || "—"}</span>
                                 {v.color && <span className="text-muted-foreground">{v.color}</span>}
                               </div>
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 flex-wrap">
                                 <span>
                                   S: <strong className={v.stockQuantity > 0 ? "text-emerald-600 dark:text-emerald-400" : ""}>{v.stockQuantity}</strong>
                                 </span>
@@ -549,6 +677,11 @@ export default function AdminStockForecast() {
                                 <span>
                                   R: <strong className={v.stockReserved > 0 ? "text-orange-600 dark:text-orange-400" : ""}>{v.stockReserved}</strong>
                                 </span>
+                                {v.estimatedArrival && (
+                                  <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border-0 text-[10px] px-1 py-0">
+                                    {formatArrivalWeek(v.estimatedArrival)}
+                                  </Badge>
+                                )}
                                 {v.isLowStock && (
                                   <Badge variant="secondary" className="text-[10px] px-1 py-0">Stock bas</Badge>
                                 )}
@@ -569,6 +702,92 @@ export default function AdminStockForecast() {
             </Card>
           </TabsContent>
 
+          {/* TAB 2: Arrivages par semaine */}
+          <TabsContent value="arrivals" className="space-y-4">
+            {sortedArrivals.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center text-muted-foreground">
+                  <CalendarClock className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                  <p className="font-medium">Aucun arrivage prévu</p>
+                  <p className="text-sm mt-1">Les arrivages apparaîtront ici quand le fournisseur enverra des données avec le champ DelaiAppro</p>
+                </CardContent>
+              </Card>
+            ) : (
+              sortedArrivals.map((arrival) => (
+                <Card key={arrival.week}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
+                          <CalendarClock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">Arrivage {arrival.label}</CardTitle>
+                          <CardDescription>
+                            {arrival.variants.length} variante(s) — {arrival.totalUnits} unité(s) en transit
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border-0 text-base px-3 py-1">
+                        {arrival.totalUnits} unités
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Desktop table */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b bg-muted/30">
+                            <th className="text-left p-2 font-medium text-xs text-muted-foreground">Produit</th>
+                            <th className="text-left p-2 font-medium text-xs text-muted-foreground">Code fourn.</th>
+                            <th className="text-left p-2 font-medium text-xs text-muted-foreground">Couleur</th>
+                            <th className="text-center p-2 font-medium text-xs text-muted-foreground">Quantité transit</th>
+                            <th className="text-center p-2 font-medium text-xs text-muted-foreground">Réservé</th>
+                            <th className="text-center p-2 font-medium text-xs text-muted-foreground">Disponible</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {arrival.variants.map((v: any) => (
+                            <tr key={v.id} className="border-b last:border-0 hover:bg-muted/20">
+                              <td className="p-2 font-medium">{v.productName}</td>
+                              <td className="p-2 font-mono text-xs">{v.supplierProductCode || "—"}</td>
+                              <td className="p-2">{v.color || "—"}</td>
+                              <td className="p-2 text-center">
+                                <span className="font-semibold text-blue-600 dark:text-blue-400">{v.inTransitQuantity}</span>
+                              </td>
+                              <td className="p-2 text-center">
+                                <span className={v.stockReserved > 0 ? "font-semibold text-orange-600 dark:text-orange-400" : "text-muted-foreground"}>
+                                  {v.stockReserved}
+                                </span>
+                              </td>
+                              <td className="p-2 text-center font-semibold">{v.available}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {/* Mobile */}
+                    <div className="md:hidden space-y-2">
+                      {arrival.variants.map((v: any) => (
+                        <div key={v.id} className="p-3 border rounded-lg text-sm">
+                          <div className="font-medium">{v.productName}</div>
+                          <div className="text-xs text-muted-foreground font-mono">{v.supplierProductCode || "—"} {v.color ? `· ${v.color}` : ""}</div>
+                          <div className="flex items-center gap-3 mt-2 text-xs">
+                            <span>Transit: <strong className="text-blue-600 dark:text-blue-400">{v.inTransitQuantity}</strong></span>
+                            <span>Réservé: <strong className={v.stockReserved > 0 ? "text-orange-600" : ""}>{v.stockReserved}</strong></span>
+                            <span>Dispo: <strong>{v.available}</strong></span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+
+          {/* TAB 3: Historique imports */}
           <TabsContent value="logs" className="space-y-4">
             <Card>
               <CardHeader>

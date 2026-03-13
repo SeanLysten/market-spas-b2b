@@ -2810,8 +2810,8 @@
 - [x] Analyser la page actuelle et le schéma DB
 - [x] Concevoir la nouvelle page cohérente avec le système fournisseur
 - [x] Implémenter le backend (routes tRPC, requêtes DB)
-- [ ] Implémenter le frontend (nouvelle page Prévisions Stock)
-- [ ] Tests et vérification
+- [x] Implémenter le frontend (nouvelle page Prévisions Stock)
+- [x] Tests et vérification
 
 ## Intégration DelaiAppro fournisseur
 - [x] Ajouter colonne estimatedArrival (varchar YYYYWW) dans productVariants
@@ -2828,3 +2828,7 @@
 
 ## Bug encodage Unicode catalogue
 - [x] Corriger les \u00e9 \u20ac \u00e8 non interprétés dans ProductAddToCartDialog.tsx et Catalog.tsx
+
+## Refonte Prévisions Stock v2
+- [x] Réécrire les routes backend pour les données stock fournisseur
+- [x] Réécrire la page AdminStockForecast avec stock/transit par arrivage, codes produits, logs API

@@ -1,0 +1,122 @@
+{
+  "query": "SELECT pv.id, p.name, pv.supplierProductCode, pv.sku, pv.inTransitQuantity, pv.estimatedArrival FROM product_variants pv JOIN products p ON pv.productId = p.id WHERE pv.inTransitQuantity > 0 ORDER BY pv.estimatedArrival, p.name LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT pv.id, p.name, pv.supplierProductCode, pv.sku, pv.inTransitQuantity, pv.estimatedArrival FROM product_variants pv JOIN products p ON pv.productId = p.id WHERE pv.inTransitQuantity > 0 ORDER BY pv.estimatedArrival, p.name LIMIT 20",
+  "rows": [
+    {
+      "id": "30002",
+      "name": "Easy Relax",
+      "supplierProductCode": "662600 078 38",
+      "sku": "SPA-EASYRELAX-STERLING-SILVER",
+      "inTransitQuantity": "56",
+      "estimatedArrival": "202611"
+    },
+    {
+      "id": "30014",
+      "name": "Neptune V2",
+      "supplierProductCode": "662201 078 38",
+      "sku": "SPA-NEPTUNE-STERLING-SILVER",
+      "inTransitQuantity": "154",
+      "estimatedArrival": "202611"
+    },
+    {
+      "id": "60002",
+      "name": "Neptune V2",
+      "supplierProductCode": "662201 080 38",
+      "sku": "SPA-NEPTUNE-V2-MIDNIGHT-OPAL",
+      "inTransitQuantity": "28",
+      "estimatedArrival": "202611"
+    },
+    {
+      "id": "30018",
+      "name": "Volcano",
+      "supplierProductCode": "662700 078 38",
+      "sku": "SPA-VOLCANO-STERLING-SILVER",
+      "inTransitQuantity": "24",
+      "estimatedArrival": "202611"
+    },
+    {
+      "id": "60003",
+      "name": "Easy Relax",
+      "supplierProductCode": "662600 079 38",
+      "sku": "SPA-EASY-RELAX-ODYSSEY",
+      "inTransitQuantity": "14",
+      "estimatedArrival": "202620"
+    },
+    {
+      "id": "60007",
+      "name": "Mykonos",
+      "supplierProductCode": "662800 079 38",
+      "sku": "SPA-MYKONOS-ODYSSEY",
+      "inTransitQuantity": "8",
+      "estimatedArrival": "202620"
+    },
+    {
+      "id": "30010",
+      "name": "Mykonos",
+      "supplierProductCode": "662800 078 38",
+      "sku": "SPA-MYKONOS-STERLING-SILVER",
+      "inTransitQuantity": "15",
+      "estimatedArrival": "202620"
+    },
+    {
+      "id": "60008",
+      "name": "Mykonos",
+      "supplierProductCode": "662800 080 38",
+      "sku": "SPA-MYKONOS-MIDNIGHT-OPAL",
+      "inTransitQuantity": "7",
+      "estimatedArrival": "202620"
+    },
+    {
+      "id": "60001",
+      "name": "Neptune V2",
+      "supplierProductCode": "662201 079 38",
+      "sku": "SPA-NEPTUNE-V2-ODYSSEY",
+      "inTransitQuantity": "28",
+      "estimatedArrival": "202620"
+    },
+    {
+      "id": "60009",
+      "name": "Twin Plug & Play",
+      "supplierProductCode": "662900 078 38",
+      "sku": "SPA-TWIN-PLUG-PLAY-STERLING-SILVER",
+      "inTransitQuantity": "14",
+      "estimatedArrival": "202620"
+    },
+    {
+      "id": "60010",
+      "name": "Twin Plug & Play",
+      "supplierProductCode": "662900 079 38",
+      "sku": "SPA-TWIN-PLUG-PLAY-ODYSSEY",
+      "inTransitQuantity": "7",
+      "estimatedArrival": "202620"
+    },
+    {
+      "id": "60011",
+      "name": "Twin Plug & Play",
+      "supplierProductCode": "662900 080 38",
+      "sku": "SPA-TWIN-PLUG-PLAY-MIDNIGHT-OPAL",
+      "inTransitQuantity": "7",
+      "estimatedArrival": "202620"
+    },
+    {
+      "id": "60006",
+      "name": "Volcano",
+      "supplierProductCode": "662700 080 38",
+      "sku": "SPA-VOLCANO-MIDNIGHT-OPAL",
+      "inTransitQuantity": "12",
+      "estimatedArrival": "202620"
+    },
+    {
+      "id": "60005",
+      "name": "Volcano",
+      "supplierProductCode": "662700 079 38",
+      "sku": "SPA-VOLCANO-ODYSSEY",
+      "inTransitQuantity": "12",
+      "estimatedArrival": "202620"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tsupplierProductCode\tsku\tinTransitQuantity\testimatedArrival\n30002\tEasy Relax\t662600 078 38\tSPA-EASYRELAX-STERLING-SILVER\t56\t202611\n30014\tNeptune V2\t662201 078 38\tSPA-NEPTUNE-STERLING-SILVER\t154\t202611\n60002\tNeptune V2\t662201 080 38\tSPA-NEPTUNE-V2-MIDNIGHT-OPAL\t28\t202611\n30018\tVolcano\t662700 078 38\tSPA-VOLCANO-STERLING-SILVER\t24\t202611\n60003\tEasy Relax\t662600 079 38\tSPA-EASY-RELAX-ODYSSEY\t14\t202620\n60007\tMykonos\t662800 079 38\tSPA-MYKONOS-ODYSSEY\t8\t202620\n30010\tMykonos\t662800 078 38\tSPA-MYKONOS-STERLING-SILVER\t15\t202620\n60008\tMykonos\t662800 080 38\tSPA-MYKONOS-MIDNIGHT-OPAL\t7\t202620\n60001\tNeptune V2\t662201 079 38\tSPA-NEPTUNE-V2-ODYSSEY\t28\t202620\n60009\tTwin Plug & Play\t662900 078 38\tSPA-TWIN-PLUG-PLAY-STERLING-SILVER\t14\t202620\n60010\tTwin Plug & Play\t662900 079 38\tSPA-TWIN-PLUG-PLAY-ODYSSEY\t7\t202620\n60011\tTwin Plug & Play\t662900 080 38\tSPA-TWIN-PLUG-PLAY-MIDNIGHT-OPAL\t7\t202620\n60006\tVolcano\t662700 080 38\tSPA-VOLCANO-MIDNIGHT-OPAL\t12\t202620\n60005\tVolcano\t662700 079 38\tSPA-VOLCANO-ODYSSEY\t12\t202620\n",
+  "stderr": "",
+  "execution_time_ms": 95
+}

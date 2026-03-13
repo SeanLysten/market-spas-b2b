@@ -2805,19 +2805,34 @@ export async function getStockForecast() {
     const variantDetails = variants.map((v) => {
       const options = allOptions.filter((o) => o.variantId === v.id);
       const colorOption = options.find((o) => o.optionName === "Couleur" || o.optionName === "Color");
+      // Extract color from SKU if not in variant_options (e.g. SPA-NEPTUNE-STERLING-SILVER -> Sterling Silver)
+      let color = colorOption?.optionValue || null;
+      if (!color && v.sku && product.sku) {
+        const suffix = v.sku.replace(product.sku + "-", "").replace(product.sku.replace("SPA-", "SPA-") + "-", "");
+        if (suffix && suffix !== v.sku) {
+          color = suffix.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+        }
+      }
       return {
         id: v.id,
         sku: v.sku,
         supplierProductCode: v.supplierProductCode,
-        color: colorOption?.optionValue || null,
+        color,
         stockQuantity: v.stockQuantity || 0,
         inTransitQuantity: v.inTransitQuantity || 0,
         stockReserved: v.stockReserved || 0,
         available: (v.stockQuantity || 0) - (v.stockReserved || 0),
+        estimatedArrival: v.estimatedArrival || null,
         lowStockThreshold: v.lowStockThreshold || 5,
         isLowStock: (v.stockQuantity || 0) > 0 && (v.stockQuantity || 0) <= (v.lowStockThreshold || 5),
       };
     });
+
+    // Collect unique arrival weeks for this product
+    const arrivalWeeks = [...new Set(variantDetails
+      .filter((v) => v.estimatedArrival && v.inTransitQuantity > 0)
+      .map((v) => v.estimatedArrival!)
+    )].sort();
 
     stockOverview.push({
       productId: product.id,
@@ -2830,6 +2845,7 @@ export async function getStockForecast() {
       totalReserved,
       availableStock,
       status,
+      arrivalWeeks,
       variants: variantDetails,
     });
   }
@@ -2867,22 +2883,31 @@ export async function getProductForecast(productId: number, _weeks: number = 8) 
   const variantDetails = variants.map((v) => {
     const varOpts = options.filter((o) => o.variantId === v.id);
     const colorOption = varOpts.find((o) => o.optionName === "Couleur" || o.optionName === "Color");
-    return {
-      id: v.id,
-      sku: v.sku,
-      supplierProductCode: v.supplierProductCode,
-      color: colorOption?.optionValue || null,
-      stockQuantity: v.stockQuantity || 0,
-      inTransitQuantity: v.inTransitQuantity || 0,
-      stockReserved: v.stockReserved || 0,
-      available: (v.stockQuantity || 0) - (v.stockReserved || 0),
-      lowStockThreshold: v.lowStockThreshold || 5,
-      isLowStock: (v.stockQuantity || 0) > 0 && (v.stockQuantity || 0) <= (v.lowStockThreshold || 5),
-    };
-  });
+    // Extract color from SKU if not in variant_options
+    let color = colorOption?.optionValue || null;
+    if (!color && v.sku && product[0].sku) {
+      const suffix = v.sku.replace(product[0].sku + "-", "").replace(product[0].sku.replace("SPA-", "SPA-") + "-", "");
+      if (suffix && suffix !== v.sku) {
+        color = suffix.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+      }
+    }
+      return {
+        id: v.id,
+        sku: v.sku,
+        supplierProductCode: v.supplierProductCode,
+        color,
+        stockQuantity: v.stockQuantity || 0,
+        inTransitQuantity: v.inTransitQuantity || 0,
+        stockReserved: v.stockReserved || 0,
+        available: (v.stockQuantity || 0) - (v.stockReserved || 0),
+        estimatedArrival: v.estimatedArrival || null,
+        lowStockThreshold: v.lowStockThreshold || 5,
+        isLowStock: (v.stockQuantity || 0) > 0 && (v.stockQuantity || 0) <= (v.lowStockThreshold || 5),
+      };
+    });
 
-  const totalStock = variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
-  const totalTransit = variants.reduce((sum, v) => sum + (v.inTransitQuantity || 0), 0);
+    const totalStock = variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
+    const totalTransit = variants.reduce((sum, v) => sum + (v.inTransitQuantity || 0), 0);
 
   return {
     product: product[0],
