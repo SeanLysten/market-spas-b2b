@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getDb } from "../db";
-import { products, productVariants, orders, partners, users, orderItems, payments, incomingStock } from "../../drizzle/schema";
+import { products, productVariants, orders, partners, users, orderItems, payments } from "../../drizzle/schema";
 import { eq, or, sql, inArray, and } from "drizzle-orm";
 
 const router = Router();
@@ -97,11 +97,12 @@ router.post("/api/supplier/stock/import", async (req, res) => {
         }
 
         if (matchedVariant) {
-          // Update variant stock
+          // Update variant stock + transit directly on the variant
           const previousStock = matchedVariant.stockQuantity || 0;
+          const previousTransit = (matchedVariant as any).inTransitQuantity || 0;
           await db
             .update(productVariants)
-            .set({ stockQuantity: enStock })
+            .set({ stockQuantity: enStock, inTransitQuantity: enTransit })
             .where(eq(productVariants.id, matchedVariant.id));
 
           result.matched = true;
@@ -113,64 +114,21 @@ router.post("/api/supplier/stock/import", async (req, res) => {
           };
           result.previousStock = previousStock;
           result.newStock = enStock;
-          result.previousTransit = 0;
+          result.previousTransit = previousTransit;
           result.newTransit = enTransit;
           matched++;
 
-          // Also update the parent product's total stock
+          // Also update the parent product's totals
           const allVariants = await db
-            .select({ stockQuantity: productVariants.stockQuantity })
+            .select({ stockQuantity: productVariants.stockQuantity, inTransitQuantity: productVariants.inTransitQuantity })
             .from(productVariants)
             .where(eq(productVariants.productId, matchedVariant.productId));
           const totalVariantStock = allVariants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
+          const totalVariantTransit = allVariants.reduce((sum, v) => sum + (v.inTransitQuantity || 0), 0);
           await db
             .update(products)
-            .set({ stockQuantity: totalVariantStock })
+            .set({ stockQuantity: totalVariantStock, inTransitQuantity: totalVariantTransit })
             .where(eq(products.id, matchedVariant.productId));
-
-          // Handle transit (incoming stock)
-          if (enTransit > 0) {
-            const now = new Date();
-            const currentWeek = Math.ceil((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
-            const currentYear = now.getFullYear();
-            // Check if there's already a PENDING incoming stock for this variant
-            const existingIncoming = await db
-              .select()
-              .from(incomingStock)
-              .where(and(
-                eq(incomingStock.variantId, matchedVariant.id),
-                eq(incomingStock.status, "PENDING")
-              ))
-              .limit(1);
-            if (existingIncoming.length > 0) {
-              // Update existing incoming stock quantity
-              await db
-                .update(incomingStock)
-                .set({ quantity: enTransit })
-                .where(eq(incomingStock.id, existingIncoming[0].id));
-              result.previousTransit = existingIncoming[0].quantity;
-            } else {
-              // Create new incoming stock entry
-              await db.insert(incomingStock).values({
-                productId: matchedVariant.productId,
-                variantId: matchedVariant.id,
-                quantity: enTransit,
-                expectedWeek: currentWeek + 2, // Estimate 2 weeks from now
-                expectedYear: currentYear,
-                status: "PENDING",
-                notes: `Import automatique fournisseur (${payload.key})`,
-              });
-            }
-          } else {
-            // If transit is 0, mark any existing PENDING as ARRIVED
-            await db
-              .update(incomingStock)
-              .set({ status: "ARRIVED", arrivedAt: new Date() })
-              .where(and(
-                eq(incomingStock.variantId, matchedVariant.id),
-                eq(incomingStock.status, "PENDING")
-              ));
-          }
 
           continue;
         }
@@ -198,9 +156,10 @@ router.post("/api/supplier/stock/import", async (req, res) => {
 
         if (matchedProduct) {
           const previousStock = matchedProduct.stockQuantity || 0;
+          const previousTransit = (matchedProduct as any).inTransitQuantity || 0;
           await db
             .update(products)
-            .set({ stockQuantity: enStock })
+            .set({ stockQuantity: enStock, inTransitQuantity: enTransit })
             .where(eq(products.id, matchedProduct.id));
 
           result.matched = true;
@@ -212,48 +171,9 @@ router.post("/api/supplier/stock/import", async (req, res) => {
           };
           result.previousStock = previousStock;
           result.newStock = enStock;
-          result.previousTransit = 0;
+          result.previousTransit = previousTransit;
           result.newTransit = enTransit;
           matched++;
-
-          // Handle transit (incoming stock) for product-level match
-          if (enTransit > 0) {
-            const now = new Date();
-            const currentWeek = Math.ceil((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
-            const currentYear = now.getFullYear();
-            const existingIncoming = await db
-              .select()
-              .from(incomingStock)
-              .where(and(
-                eq(incomingStock.productId, matchedProduct.id),
-                eq(incomingStock.status, "PENDING")
-              ))
-              .limit(1);
-            if (existingIncoming.length > 0) {
-              await db
-                .update(incomingStock)
-                .set({ quantity: enTransit })
-                .where(eq(incomingStock.id, existingIncoming[0].id));
-              result.previousTransit = existingIncoming[0].quantity;
-            } else {
-              await db.insert(incomingStock).values({
-                productId: matchedProduct.id,
-                quantity: enTransit,
-                expectedWeek: currentWeek + 2,
-                expectedYear: now.getFullYear(),
-                status: "PENDING",
-                notes: `Import automatique fournisseur (${payload.key})`,
-              });
-            }
-          } else {
-            await db
-              .update(incomingStock)
-              .set({ status: "ARRIVED", arrivedAt: new Date() })
-              .where(and(
-                eq(incomingStock.productId, matchedProduct.id),
-                eq(incomingStock.status, "PENDING")
-              ));
-          }
         } else {
           unmatched++;
         }

@@ -64,7 +64,7 @@ export default function Dashboard() {
       href: "/catalog",
       icon: Package,
       title: "Catalogue Produits",
-      description: "Stock en temps réel et arrivages programmés",
+      description: "Consultez et commandez vos produits",
       color: "bg-primary/10",
       iconColor: "text-primary",
     });

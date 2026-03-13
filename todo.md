@@ -2753,3 +2753,14 @@
 - [x] Retirer le stock du catalogue utilisateur (page produits)
 - [x] Retirer le composant ProductStockCell
 - [x] Écrire les tests Vitest
+
+## Adaptation API fournisseur au format JSON réel et retrait arrivages locaux
+- [x] Adapter l'API POST pour accepter le format JSON fournisseur (key, data: [{Ean13, CodeProduit, EnStock, EnTransit}])
+- [x] Mapper EnStock → stockQuantity et EnTransit → inTransitQuantity sur les variantes
+- [x] Retirer l'onglet "Arrivages programmés" de la page admin produits
+- [x] Retirer la section arrivages du catalogue utilisateur et détail produit
+- [x] Retirer le cron job processArrivedStock
+- [x] Retirer les routes tRPC incoming stock (admin et utilisateur)
+- [x] Retirer le badge "Arrivage" et les références incoming du frontend
+- [x] Tester l'API avec le vrai JSON fournisseur (format accepté, 0 match car codes pas encore renseignés)
+- [x] Mettre à jour les tests Vitest (882 tests passent)

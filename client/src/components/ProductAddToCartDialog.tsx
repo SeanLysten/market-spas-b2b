@@ -9,19 +9,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { useSafeQuery } from "@/hooks/useSafeQuery";
 import { toast } from "sonner";
-import { Package, Calendar, Check } from "lucide-react";
+import { Package, Check } from "lucide-react";
 
 interface ProductAddToCartDialogProps {
   open: boolean;
@@ -47,8 +40,7 @@ export default function ProductAddToCartDialog({
   product,
 }: ProductAddToCartDialogProps) {
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
-  const [sourceType, setSourceType] = useState<"stock" | "incoming">("stock");
-  const [selectedIncomingId, setSelectedIncomingId] = useState<string>("");
+
   const [quantity, setQuantity] = useState(1);
 
   // Fetch variants for this product
@@ -57,12 +49,6 @@ export default function ProductAddToCartDialog({
     { enabled: open && !!product?.id }
   );
   const variants = useSafeQuery(variantsData) || [];
-
-  // Fetch incoming stock for this product
-  const { data: incomingStock } = trpc.products.getIncomingStock.useQuery(
-    { productId: product.id },
-    { enabled: open && !!product.id }
-  );
 
   const addToCartMutation = trpc.cart.add.useMutation({
     onSuccess: () => {
@@ -77,8 +63,6 @@ export default function ProductAddToCartDialog({
 
   const resetForm = () => {
     setSelectedVariantId(null);
-    setSourceType("stock");
-    setSelectedIncomingId("");
     setQuantity(1);
   };
 
@@ -103,17 +87,13 @@ export default function ProductAddToCartDialog({
   const handleAddToCart = () => {
     if (!product) return;
 
-    const isPreorder = sourceType === "incoming";
-
     addToCartMutation.mutate({
       productId: product.id,
       quantity,
-      isPreorder,
     });
   };
 
   const hasVariants = activeVariants && activeVariants.length > 0;
-  const hasIncomingStock = incomingStock && incomingStock.length > 0;
   
   const selectedVariant = variants?.find((v: any) => v.id === selectedVariantId);
   
@@ -125,7 +105,6 @@ export default function ProductAddToCartDialog({
   // Get the image to display: variant image > product image > null
   const displayImage = selectedVariant?.imageUrl || product.imageUrl;
 
-  const pendingIncoming = incomingStock?.filter((s) => s.status === "PENDING") || [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -191,72 +170,6 @@ export default function ProductAddToCartDialog({
             </div>
           )}
 
-          {/* Source Type Selection */}
-          <div className="space-y-3">
-            <Label>Source</Label>
-            <RadioGroup value={sourceType} onValueChange={(value: any) => setSourceType(value)}>
-              {/* Stock Option */}
-              <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors">
-                <RadioGroupItem value="stock" id="stock" />
-                <Label htmlFor="stock" className="flex-1 cursor-pointer">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Package className="w-4 h-4 text-green-600" />
-                      <span className="font-medium">Stock disponible</span>
-                    </div>
-                    <Badge variant={stockAvailable > 0 ? "default" : "secondary"}>
-                      {stockAvailable} unités
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Expédition immédiate
-                  </p>
-                </Label>
-              </div>
-
-              {/* Incoming Stock Option */}
-              {hasIncomingStock && pendingIncoming.length > 0 && (
-                <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors">
-                  <RadioGroupItem value="incoming" id="incoming" />
-                  <Label htmlFor="incoming" className="flex-1 cursor-pointer">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-blue-600" />
-                        <span className="font-medium">Arrivage programmé</span>
-                      </div>
-                      <Badge variant="outline">{pendingIncoming.length} arrivages</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Précommande avec date d'arrivée estimée
-                    </p>
-                  </Label>
-                </div>
-              )}
-            </RadioGroup>
-          </div>
-
-          {/* Incoming Stock Selection */}
-          {sourceType === "incoming" && hasIncomingStock && (
-            <div className="space-y-2">
-              <Label>Semaine d'arrivage</Label>
-              <Select value={selectedIncomingId} onValueChange={setSelectedIncomingId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionnez une semaine" />
-                </SelectTrigger>
-                <SelectContent>
-                  {pendingIncoming.map((incoming) => (
-                    <SelectItem key={incoming.id} value={incoming.id.toString()}>
-                      Semaine {incoming.expectedWeek} - {incoming.expectedYear}
-                      <span className="text-muted-foreground ml-2">
-                        ({incoming.quantity} unités disponibles)
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
           {/* Quantity */}
           <div className="space-y-2">
             <Label htmlFor="quantity">Quantité</Label>
@@ -313,9 +226,7 @@ export default function ProductAddToCartDialog({
             onClick={handleAddToCart}
             disabled={
               addToCartMutation.isPending ||
-              (hasVariants && !selectedVariantId) ||
-              (sourceType === "incoming" && !selectedIncomingId) ||
-              (sourceType === "stock" && stockAvailable < quantity)
+              (hasVariants && !selectedVariantId)
             }
             className="gap-2"
           >

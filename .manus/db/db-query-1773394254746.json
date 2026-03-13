@@ -1,0 +1,150 @@
+{
+  "query": "SELECT id, name, sku, supplierProductCode, ean13 FROM product_variants LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, name, sku, supplierProductCode, ean13 FROM product_variants LIMIT 20",
+  "rows": [
+    {
+      "id": "30002",
+      "name": "Easy Relax - Sterling Marble",
+      "sku": "SPA-EASYRELAX-STERLING-SILVER",
+      "supplierProductCode": "662600 078 38",
+      "ean13": "3364549284640"
+    },
+    {
+      "id": "30005",
+      "name": "Kos - Sterling Marble",
+      "sku": "SPA-KOS-BLANC",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30007",
+      "name": "Kos - Midnight Opal",
+      "sku": "SPA-KOS-NOIR",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30008",
+      "name": "Kos - Odyssey",
+      "sku": "SPA-KOS-GRIS",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30010",
+      "name": "Mykonos - Sterling Marble",
+      "sku": "SPA-MYKONOS-STERLING-SILVER",
+      "supplierProductCode": "662800 078 38",
+      "ean13": "3364549284749"
+    },
+    {
+      "id": "30014",
+      "name": "Neptune V2 - Sterling Marble",
+      "sku": "SPA-NEPTUNE-STERLING-SILVER",
+      "supplierProductCode": "662201 078 38",
+      "ean13": "3364549284619"
+    },
+    {
+      "id": "30018",
+      "name": "Volcano - Sterling Marble",
+      "sku": "SPA-VOLCANO-STERLING-SILVER",
+      "supplierProductCode": "662700 078 38",
+      "ean13": "3364549284718"
+    },
+    {
+      "id": "30021",
+      "name": "Euphoria - Sterling Marble",
+      "sku": "SPA-DELIGHT-BLANC",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30023",
+      "name": "Euphoria - Midnight Opal",
+      "sku": "SPA-DELIGHT-NOIR",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30024",
+      "name": "Euphoria - Odyssey",
+      "sku": "SPA-DELIGHT-GRIS",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30025",
+      "name": "Happy - Sterling Marble",
+      "sku": "SPA-DEVOTION-BLANC",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30027",
+      "name": "Happy - Midnight Opal",
+      "sku": "SPA-DEVOTION-NOIR",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30028",
+      "name": "Happy - Odyssey",
+      "sku": "SPA-DEVOTION-GRIS",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30029",
+      "name": "Ecstatic - Sterling Marble",
+      "sku": "SPA-ECSTATIC-BLANC",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30031",
+      "name": "Ecstatic - Midnight Opal",
+      "sku": "SPA-ECSTATIC-NOIR",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30032",
+      "name": "Ecstatic - Odyssey",
+      "sku": "SPA-ECSTATIC-GRIS",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30033",
+      "name": "Euphoria - Sterling Marble",
+      "sku": "SPA-EUPHORIA-BLANC",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30035",
+      "name": "Euphoria - Midnight Opal",
+      "sku": "SPA-EUPHORIA-NOIR",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30036",
+      "name": "Euphoria - Odyssey",
+      "sku": "SPA-EUPHORIA-GRIS",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30037",
+      "name": "Happy - Sterling Marble",
+      "sku": "SPA-HAPPY-BLANC",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tsku\tsupplierProductCode\tean13\n30002\tEasy Relax - Sterling Marble\tSPA-EASYRELAX-STERLING-SILVER\t662600 078 38\t3364549284640\n30005\tKos - Sterling Marble\tSPA-KOS-BLANC\tNULL\tNULL\n30007\tKos - Midnight Opal\tSPA-KOS-NOIR\tNULL\tNULL\n30008\tKos - Odyssey\tSPA-KOS-GRIS\tNULL\tNULL\n30010\tMykonos - Sterling Marble\tSPA-MYKONOS-STERLING-SILVER\t662800 078 38\t3364549284749\n30014\tNeptune V2 - Sterling Marble\tSPA-NEPTUNE-STERLING-SILVER\t662201 078 38\t3364549284619\n30018\tVolcano - Sterling Marble\tSPA-VOLCANO-STERLING-SILVER\t662700 078 38\t3364549284718\n30021\tEuphoria - Sterling Marble\tSPA-DELIGHT-BLANC\tNULL\tNULL\n30023\tEuphoria - Midnight Opal\tSPA-DELIGHT-NOIR\tNULL\tNULL\n30024\tEuphoria - Odyssey\tSPA-DELIGHT-GRIS\tNULL\tNULL\n30025\tHappy - Sterling Marble\tSPA-DEVOTION-BLANC\tNULL\tNULL\n30027\tHappy - Midnight Opal\tSPA-DEVOTION-NOIR\tNULL\tNULL\n30028\tHappy - Odyssey\tSPA-DEVOTION-GRIS\tNULL\tNULL\n30029\tEcstatic - Sterling Marble\tSPA-ECSTATIC-BLANC\tNULL\tNULL\n30031\tEcstatic - Midnight Opal\tSPA-ECSTATIC-NOIR\tNULL\tNULL\n30032\tEcstatic - Odyssey\tSPA-ECSTATIC-GRIS\tNULL\tNULL\n30033\tEuphoria - Sterling Marble\tSPA-EUPHORIA-BLANC\tNULL\tNULL\n30035\tEuphoria - Midnight Opal\tSPA-EUPHORIA-NOIR\tNULL\tNULL\n30036\tEuphoria - Odyssey\tSPA-EUPHORIA-GRIS\tNULL\tNULL\n30037\tHappy - Sterling Marble\tSPA-HAPPY-BLANC\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

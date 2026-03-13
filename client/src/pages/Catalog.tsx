@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { Search, Package, ShoppingCart, Filter, ArrowLeft, Euro, TrendingUp, TruckIcon, Minus, Plus, Heart } from "lucide-react";
+import { Search, Package, ShoppingCart, Filter, ArrowLeft, Euro, TrendingUp, Minus, Plus, Heart } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -48,9 +48,8 @@ function isLightColor(hex: string): boolean {
 }
 
 // Component for a single product card with variant color dots
-function ProductCard({ product, allIncomingStock, onOpenDialog }: {
+function ProductCard({ product, onOpenDialog }: {
   product: any;
-  allIncomingStock: any[] | undefined;
   onOpenDialog: (product: any) => void;
 }) {
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
@@ -79,9 +78,6 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
 
   const partnerPrice = getPartnerPrice();
 
-  const hasIncomingStock = allIncomingStock?.some(
-    (incoming: any) => incoming.productId === product.id && incoming.status === "PENDING"
-  );
 
   return (
     <Card className="overflow-hidden flex flex-col">
@@ -98,15 +94,7 @@ function ProductCard({ product, allIncomingStock, onOpenDialog }: {
             <Package className="w-16 h-16 text-muted-foreground" />
           </div>
         )}
-        {/* Incoming Stock Badge */}
-        <div className="absolute top-2 right-2 flex flex-col gap-1">
-          {hasIncomingStock && (
-            <Badge className="bg-amber-500 dark:bg-amber-400 hover:bg-yellow-600 text-white">
-              <TruckIcon className="mr-1 h-3 w-3" />
-              Arrivage
-            </Badge>
-          )}
-        </div>
+
       </div>
 
       <CardHeader className="flex-1 pb-2">
@@ -199,7 +187,7 @@ export default function Catalog() {
   });
 
   // Fetch all incoming stock for badge display
-  const { data: allIncomingStock } = trpc.admin.incomingStock.list.useQuery({});
+
 
   const handleOpenDialog = (product: any) => {
     setSelectedProduct(product);
@@ -334,7 +322,7 @@ export default function Catalog() {
               <ProductCard
                 key={product.id}
                 product={product}
-                allIncomingStock={allIncomingStock}
+
                 onOpenDialog={handleOpenDialog}
               />
             ))}

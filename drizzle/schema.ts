@@ -489,6 +489,7 @@ export const products = mysqlTable(
     trackStock: boolean("trackStock").default(true),
     stockQuantity: int("stockQuantity").default(0),
     stockReserved: int("stockReserved").default(0),
+    inTransitQuantity: int("inTransitQuantity").default(0),
     lowStockThreshold: int("lowStockThreshold").default(5),
 
     // Shipping
@@ -556,6 +557,7 @@ export const productVariants = mysqlTable(
     // Stock
     stockQuantity: int("stockQuantity").default(0),
     stockReserved: int("stockReserved").default(0),
+    inTransitQuantity: int("inTransitQuantity").default(0),
 
     // External
     sheetsRowId: int("sheetsRowId"),

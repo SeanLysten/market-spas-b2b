@@ -36,7 +36,6 @@ import {
   Zap,
   Send,
   LayoutGrid,
-  Truck,
   Timer,
   Shield,
   BookOpen,
@@ -327,10 +326,6 @@ function StockDashboardSection() {
   const { data: stats } = trpc.dashboard.stats.useQuery();
   const { data: allProducts } = trpc.products.list.useQuery({ limit: 200 });
   const products = useSafeQuery(allProducts);
-  const { data: incomingStock } = trpc.admin.incomingStock.list.useQuery();
-  const incomingStockSafe = useSafeQuery(incomingStock);
-
-  const pendingArrivals = incomingStockSafe.filter((s: any) => s.status === "PENDING" || s.status === "IN_TRANSIT");
 
   return (
     <div className="space-y-6">
@@ -351,16 +346,7 @@ function StockDashboardSection() {
               <p className="text-xs text-muted-foreground mt-1">Références au catalogue</p>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Arrivages prévus</CardTitle>
-              <Truck className="w-4 h-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{pendingArrivals.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">En attente ou en transit</p>
-            </CardContent>
-          </Card>
+
         </div>
       </div>
 

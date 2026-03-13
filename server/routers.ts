@@ -340,20 +340,6 @@ export const appRouter = router({
   // CRON JOBS (public with secret key)
   // ============================================
   cron: router({
-    processArrivedStock: publicProcedure
-      .input(z.object({ secret: z.string() }))
-      .mutation(async ({ input }) => {
-        // Vérifier la clé secrète
-        const CRON_SECRET = process.env.CRON_SECRET || 'default-secret-change-me';
-        if (input.secret !== CRON_SECRET) {
-          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid secret key' });
-        }
-        
-        // Exécuter la conversion des arrivages
-        const result = await db.processArrivedStock();
-        return { success: true, result };
-      }),
-
     // Process deposit reminders for orders pending deposit > 48h
     processDepositReminders: publicProcedure
       .input(z.object({ 
@@ -854,12 +840,6 @@ export const appRouter = router({
       .input(z.object({ productId: z.number() }))
       .query(async ({ input }) => {
         return await db.getProductVariants(input.productId);
-      }),
-
-    getIncomingStock: protectedProcedure
-      .input(z.object({ productId: z.number() }))
-      .query(async ({ input }) => {
-        return await db.getIncomingStock({ productId: input.productId, status: "PENDING" });
       }),
 
     // Quick search by SKU or name
@@ -1846,64 +1826,6 @@ export const appRouter = router({
           }
 
           return { success: true, url };
-        }),
-    }),
-
-    incomingStock: router({
-      list: adminProcedure
-        .input(
-          z.object({
-            productId: z.number().optional(),
-            variantId: z.number().optional(),
-            status: z.string().optional(),
-          })
-        )
-        .query(async ({ input }) => {
-          return await db.getIncomingStock(input);
-        }),
-
-      create: adminProcedure
-        .input(
-          z.object({
-            productId: z.number().optional(),
-            variantId: z.number().optional(),
-            quantity: z.number(),
-            expectedWeek: z.number().min(1).max(53),
-            expectedYear: z.number(),
-            notes: z.string().optional(),
-          })
-        )
-        .mutation(async ({ input }) => {
-          return await db.createIncomingStock(input);
-        }),
-
-      update: adminProcedure
-        .input(
-          z.object({
-            id: z.number(),
-            quantity: z.number().optional(),
-            expectedWeek: z.number().min(1).max(53).optional(),
-            expectedYear: z.number().optional(),
-            status: z.string().optional(),
-            notes: z.string().optional(),
-          })
-        )
-        .mutation(async ({ input }) => {
-          const { id, ...data } = input;
-          await db.updateIncomingStock(id, data);
-          return { success: true };
-        }),
-
-      delete: adminProcedure
-        .input(z.object({ id: z.number() }))
-        .mutation(async ({ input }) => {
-          await db.deleteIncomingStock(input.id);
-          return { success: true };
-        }),
-
-      processArrived: adminProcedure
-        .mutation(async () => {
-          return await db.processArrivedStock();
         }),
     }),
 

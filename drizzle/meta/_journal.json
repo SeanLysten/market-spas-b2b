@@ -281,6 +281,13 @@
       "when": 1773323405531,
       "tag": "0039_soft_speedball",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "5",
+      "when": 1773392982229,
+      "tag": "0040_soft_masked_marvel",
+      "breakpoints": true
     }
   ]
 }

@@ -22,8 +22,6 @@ import {
   ShoppingCart,
   Minus,
   Plus,
-  Truck,
-  Calendar,
   CheckCircle,
   Info,
 } from "lucide-react";
@@ -47,10 +45,6 @@ export default function ProductDetail() {
     { enabled: productId > 0 }
   );
 
-  const { data: incomingStock } = trpc.products.getIncomingStock.useQuery(
-    { productId },
-    { enabled: productId > 0 }
-  );
 
   const addToCartMutation = trpc.cart.add.useMutation();
 
@@ -314,31 +308,7 @@ export default function ProductDetail() {
                 </Button>
             </div>
 
-            {/* Incoming Stock */}
-            {incomingStock && incomingStock.length > 0 && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    Arrivages programmés
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {incomingStock.map((stock: any) => (
-                    <div
-                      key={stock.id}
-                      className="flex items-center justify-between text-sm bg-info/10 dark:bg-info-light rounded-lg p-3"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Truck className="w-4 h-4 text-info dark:text-info-dark" />
-                        <span>Semaine {stock.expectedWeek}</span>
-                      </div>
-                      <Badge variant="secondary">{stock.quantity} unités</Badge>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
+
           </div>
         </div>
 
