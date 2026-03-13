@@ -1,0 +1,17 @@
+{
+  "query": "SELECT SUM(stockQuantity) AS total_stock, SUM(inTransitQuantity) AS total_transit, COUNT(*) AS total_variants, COUNT(CASE WHEN stockQuantity > 0 THEN 1 END) AS variants_with_stock, COUNT(CASE WHEN inTransitQuantity > 0 THEN 1 END) AS variants_with_transit FROM product_variants;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT SUM(stockQuantity) AS total_stock, SUM(inTransitQuantity) AS total_transit, COUNT(*) AS total_variants, COUNT(CASE WHEN stockQuantity > 0 THEN 1 END) AS variants_with_stock, COUNT(CASE WHEN inTransitQuantity > 0 THEN 1 END) AS variants_with_transit FROM product_variants;",
+  "rows": [
+    {
+      "total_stock": "0",
+      "total_transit": "386",
+      "total_variants": "45",
+      "variants_with_stock": "0",
+      "variants_with_transit": "14"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_stock\ttotal_transit\ttotal_variants\tvariants_with_stock\tvariants_with_transit\n0\t386\t45\t0\t14\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

@@ -2692,3 +2692,31 @@ export const resourceFavorites = mysqlTable(
 );
 export type ResourceFavorite = typeof resourceFavorites.$inferSelect;
 export type InsertResourceFavorite = typeof resourceFavorites.$inferInsert;
+
+// ============================================
+// SUPPLIER API LOGS
+// ============================================
+export const supplierApiLogs = mysqlTable(
+  "supplier_api_logs",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    importKey: varchar("importKey", { length: 255 }),
+    rawPayload: text("rawPayload").notNull(),
+    totalItems: int("totalItems").notNull().default(0),
+    matchedItems: int("matchedItems").notNull().default(0),
+    unmatchedItems: int("unmatchedItems").notNull().default(0),
+    errorItems: int("errorItems").notNull().default(0),
+    resultsJson: text("resultsJson"),
+    ipAddress: varchar("ipAddress", { length: 100 }),
+    userAgent: varchar("userAgent", { length: 500 }),
+    success: boolean("success").notNull().default(true),
+    errorMessage: text("errorMessage"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    createdAtIdx: index("sal_created_at_idx").on(table.createdAt),
+    importKeyIdx: index("sal_import_key_idx").on(table.importKey),
+  })
+);
+export type SupplierApiLog = typeof supplierApiLogs.$inferSelect;
+export type InsertSupplierApiLog = typeof supplierApiLogs.$inferInsert;

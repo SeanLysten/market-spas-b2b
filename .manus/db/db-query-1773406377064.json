@@ -1,0 +1,170 @@
+{
+  "query": "SELECT p.name, pv.name as variant_name, pv.supplierProductCode, pv.ean13, pv.stockQuantity, pv.inTransitQuantity FROM product_variants pv JOIN products p ON pv.productId = p.id ORDER BY pv.stockQuantity DESC, pv.inTransitQuantity DESC LIMIT 50;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT p.name, pv.name as variant_name, pv.supplierProductCode, pv.ean13, pv.stockQuantity, pv.inTransitQuantity FROM product_variants pv JOIN products p ON pv.productId = p.id ORDER BY pv.stockQuantity DESC, pv.inTransitQuantity DESC LIMIT 50;",
+  "rows": [
+    {
+      "name": "Easy Relax",
+      "variant_name": "Easy Relax - Sterling Marble",
+      "supplierProductCode": "662600 078 38",
+      "ean13": "3364549284640",
+      "stockQuantity": "0",
+      "inTransitQuantity": "56"
+    },
+    {
+      "name": "Neptune V2",
+      "variant_name": "Neptune V2 - Odyssey",
+      "supplierProductCode": "662201 079 38",
+      "ean13": "3364549284626",
+      "stockQuantity": "0",
+      "inTransitQuantity": "28"
+    },
+    {
+      "name": "Neptune V2",
+      "variant_name": "Neptune V2 - Midnight Opal",
+      "supplierProductCode": "662201 080 38",
+      "ean13": "3364549284633",
+      "stockQuantity": "0",
+      "inTransitQuantity": "28"
+    },
+    {
+      "name": "Volcano",
+      "variant_name": "Volcano - Sterling Marble",
+      "supplierProductCode": "662700 078 38",
+      "ean13": "3364549284718",
+      "stockQuantity": "0",
+      "inTransitQuantity": "24"
+    },
+    {
+      "name": "Mykonos",
+      "variant_name": "Mykonos - Sterling Marble",
+      "supplierProductCode": "662800 078 38",
+      "ean13": "3364549284749",
+      "stockQuantity": "0",
+      "inTransitQuantity": "15"
+    },
+    {
+      "name": "Twin Plug & Play",
+      "variant_name": "Twin Plug & Play - Sterling Marble",
+      "supplierProductCode": "662900 078 38",
+      "ean13": "3364549284770",
+      "stockQuantity": "0",
+      "inTransitQuantity": "14"
+    },
+    {
+      "name": "Easy Relax",
+      "variant_name": "Easy Relax - Odyssey",
+      "supplierProductCode": "662600 079 38",
+      "ean13": "3364549284657",
+      "stockQuantity": "0",
+      "inTransitQuantity": "14"
+    },
+    {
+      "name": "Volcano",
+      "variant_name": "Volcano - Midnight Opal",
+      "supplierProductCode": "662700 080 38",
+      "ean13": "3364549284732",
+      "stockQuantity": "0",
+      "inTransitQuantity": "12"
+    },
+    {
+      "name": "Volcano",
+      "variant_name": "Volcano - Odyssey",
+      "supplierProductCode": "662700 079 38",
+      "ean13": "3364549284725",
+      "stockQuantity": "0",
+      "inTransitQuantity": "12"
+    },
+    {
+      "name": "Mykonos",
+      "variant_name": "Mykonos - Odyssey",
+      "supplierProductCode": "662800 079 38",
+      "ean13": "3364549284756",
+      "stockQuantity": "0",
+      "inTransitQuantity": "8"
+    },
+    {
+      "name": "Mykonos",
+      "variant_name": "Mykonos - Midnight Opal",
+      "supplierProductCode": "662800 080 38",
+      "ean13": "3364549284763",
+      "stockQuantity": "0",
+      "inTransitQuantity": "7"
+    },
+    {
+      "name": "Twin Plug & Play",
+      "variant_name": "Twin Plug & Play - Midnight Opal",
+      "supplierProductCode": "662900 080 38",
+      "ean13": "3364549284794",
+      "stockQuantity": "0",
+      "inTransitQuantity": "7"
+    },
+    {
+      "name": "Twin Plug & Play",
+      "variant_name": "Twin Plug & Play - Odyssey",
+      "supplierProductCode": "662900 079 38",
+      "ean13": "3364549284787",
+      "stockQuantity": "0",
+      "inTransitQuantity": "7"
+    },
+    {
+      "name": "Kos",
+      "variant_name": "Kos - Brun",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL",
+      "stockQuantity": "0",
+      "inTransitQuantity": "0"
+    },
+    {
+      "name": "Easy Relax",
+      "variant_name": "Easy Relax - Midnight Opal",
+      "supplierProductCode": "662600 080 38",
+      "ean13": "3364549284664",
+      "stockQuantity": "0",
+      "inTransitQuantity": "0"
+    },
+    {
+      "name": "Neptune V2",
+      "variant_name": "Neptune V2 - Sterling Marble",
+      "supplierProductCode": "662201 078 38",
+      "ean13": "3364549284619",
+      "stockQuantity": "0",
+      "inTransitQuantity": "0"
+    },
+    {
+      "name": "Kos",
+      "variant_name": "Kos - Sterling Marble",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL",
+      "stockQuantity": "0",
+      "inTransitQuantity": "0"
+    },
+    {
+      "name": "Kos",
+      "variant_name": "Kos - Beige",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL",
+      "stockQuantity": "0",
+      "inTransitQuantity": "0"
+    },
+    {
+      "name": "Kos",
+      "variant_name": "Kos - Midnight Opal",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL",
+      "stockQuantity": "0",
+      "inTransitQuantity": "0"
+    },
+    {
+      "name": "Kos",
+      "variant_name": "Kos - Odyssey",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL",
+      "stockQuantity": "0",
+      "inTransitQuantity": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\tvariant_name\tsupplierProductCode\tean13\tstockQuantity\tinTransitQuantity\nEasy Relax\tEasy Relax - Sterling Marble\t662600 078 38\t3364549284640\t0\t56\nNeptune V2\tNeptune V2 - Odyssey\t662201 079 38\t3364549284626\t0\t28\nNeptune V2\tNeptune V2 - Midnight Opal\t662201 080 38\t3364549284633\t0\t28\nVolcano\tVolcano - Sterling Marble\t662700 078 38\t3364549284718\t0\t24\nMykonos\tMykonos - Sterling Marble\t662800 078 38\t3364549284749\t0\t15\nTwin Plug & Play\tTwin Plug & Play - Sterling Marble\t662900 078 38\t3364549284770\t0\t14\nEasy Relax\tEasy Relax - Odyssey\t662600 079 38\t3364549284657\t0\t14\nVolcano\tVolcano - Midnight Opal\t662700 080 38\t3364549284732\t0\t12\nVolcano\tVolcano - Odyssey\t662700 079 38\t3364549284725\t0\t12\nMykonos\tMykonos - Odyssey\t662800 079 38\t3364549284756\t0\t8\nMykonos\tMykonos - Midnight Opal\t662800 080 38\t3364549284763\t0\t7\nTwin Plug & Play\tTwin Plug & Play - Midnight Opal\t662900 080 38\t3364549284794\t0\t7\nTwin Plug & Play\tTwin Plug & Play - Odyssey\t662900 079 38\t3364549284787\t0\t7\nKos\tKos - Brun\tNULL\tNULL\t0\t0\nEasy Relax\tEasy Relax - Midnight Opal\t662600 080 38\t3364549284664\t0\t0\nNeptune V2\tNeptune V2 - Sterling Marble\t662201 078 38\t3364549284619\t0\t0\nKos\tKos - Sterling Marble\tNULL\tNULL\t0\t0\nKos\tKos - Beige\tNULL\tNULL\t0\t0\nKos\tKos - Midnight Opal\tNULL\tNULL\t0\t0\nKos\tKos - Odyssey\tNULL\tNULL\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

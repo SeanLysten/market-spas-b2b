@@ -1,0 +1,73 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'product_variants' AND TABLE_SCHEMA = DATABASE() ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'product_variants' AND TABLE_SCHEMA = DATABASE() ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "productId"
+    },
+    {
+      "COLUMN_NAME": "sku"
+    },
+    {
+      "COLUMN_NAME": "name"
+    },
+    {
+      "COLUMN_NAME": "color"
+    },
+    {
+      "COLUMN_NAME": "size"
+    },
+    {
+      "COLUMN_NAME": "voltage"
+    },
+    {
+      "COLUMN_NAME": "material"
+    },
+    {
+      "COLUMN_NAME": "pricePublicHT"
+    },
+    {
+      "COLUMN_NAME": "pricePartnerHT"
+    },
+    {
+      "COLUMN_NAME": "stockQuantity"
+    },
+    {
+      "COLUMN_NAME": "stockReserved"
+    },
+    {
+      "COLUMN_NAME": "sheetsRowId"
+    },
+    {
+      "COLUMN_NAME": "odooProductId"
+    },
+    {
+      "COLUMN_NAME": "isActive"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    },
+    {
+      "COLUMN_NAME": "updatedAt"
+    },
+    {
+      "COLUMN_NAME": "imageUrl"
+    },
+    {
+      "COLUMN_NAME": "supplierProductCode"
+    },
+    {
+      "COLUMN_NAME": "ean13"
+    },
+    {
+      "COLUMN_NAME": "inTransitQuantity"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\nproductId\nsku\nname\ncolor\nsize\nvoltage\nmaterial\npricePublicHT\npricePartnerHT\nstockQuantity\nstockReserved\nsheetsRowId\nodooProductId\nisActive\ncreatedAt\nupdatedAt\nimageUrl\nsupplierProductCode\nean13\ninTransitQuantity\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

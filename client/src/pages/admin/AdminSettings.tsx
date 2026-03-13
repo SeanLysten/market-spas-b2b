@@ -27,6 +27,15 @@ import {
   Code,
   Copy,
   ExternalLink,
+  History,
+  Clock,
+  CheckCircle,
+  XOctagon,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  Key,
+  Shield,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -806,6 +815,21 @@ export default function AdminSettings() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {/* Authentication */}
+                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-blue-600" />
+                      <h4 className="font-semibold text-sm text-blue-800 dark:text-blue-300">Authentification requise</h4>
+                    </div>
+                    <p className="text-xs text-blue-700 dark:text-blue-400">
+                      Tous les endpoints nécessitent le header <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded font-mono">X-API-Key</code> avec la clé API fournie.
+                    </p>
+                    <div className="bg-white dark:bg-slate-900 rounded p-2 flex items-center justify-between">
+                      <code className="text-xs font-mono text-blue-800 dark:text-blue-300">X-API-Key: ••••••••••••••••</code>
+                      <span className="text-xs text-muted-foreground ml-2">(Clé fournie séparément)</span>
+                    </div>
+                  </div>
+
                   {/* POST Import Stock */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
@@ -928,6 +952,7 @@ export default function AdminSettings() {
                       <pre className="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto">
 {`curl -X POST ${window.location.origin}/api/supplier/stock/import \\
   -H "Content-Type: application/json" \\
+  -H "X-API-Key: VOTRE_CLE_API" \\
   -d '{
     "key": "ExportStockVotreSociete",
     "data": [
@@ -945,7 +970,7 @@ export default function AdminSettings() {
                         size="sm"
                         className="absolute top-2 right-2 text-slate-400 hover:text-white"
                         onClick={() => {
-                          const curl = `curl -X POST ${window.location.origin}/api/supplier/stock/import -H "Content-Type: application/json" -d '{"key":"ExportStockVotreSociete","data":[{"Ean13":3700691427168,"CodeProduit":"662200 077 38","EnStock":5,"EnTransit":2}]}'`;
+                          const curl = `curl -X POST ${window.location.origin}/api/supplier/stock/import -H "Content-Type: application/json" -H "X-API-Key: VOTRE_CLE_API" -d '{"key":"ExportStockVotreSociete","data":[{"Ean13":3700691427168,"CodeProduit":"662200 077 38","EnStock":5,"EnTransit":2}]}'`;
                           navigator.clipboard.writeText(curl);
                           toast.success("Commande cURL copiée dans le presse-papier");
                         }}
@@ -956,11 +981,285 @@ export default function AdminSettings() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Supplier API Logs */}
+              <SupplierApiLogsCard />
               </>
             )}
           </TabsContent>
         </Tabs>
       </div>
     </AdminLayout>
+  );
+}
+
+
+// ─── Supplier API Logs Component ─────────────────────────────────────────────
+
+function SupplierApiLogsCard() {
+  const [page, setPage] = useState(0);
+  const [selectedLogId, setSelectedLogId] = useState<number | null>(null);
+  const pageSize = 10;
+
+  const { data: logsData, isLoading } = trpc.supplierApiLogs.list.useQuery({
+    limit: pageSize,
+    offset: page * pageSize,
+  });
+
+  const { data: selectedLog } = trpc.supplierApiLogs.getById.useQuery(
+    { id: selectedLogId! },
+    { enabled: !!selectedLogId }
+  );
+
+  const logs = logsData?.logs ?? [];
+  const total = logsData?.total ?? 0;
+  const totalPages = Math.ceil(total / pageSize);
+
+  const formatDate = (date: string | Date | null) => {
+    if (!date) return "—";
+    const d = new Date(date);
+    return d.toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
+
+  return (
+    <Card className="mt-6 lg:col-span-2">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <History className="w-5 h-5" />
+          Historique des appels API Fournisseur
+        </CardTitle>
+        <CardDescription>
+          Journal de tous les appels POST reçus sur l'endpoint d'import stock
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : logs.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <History className="w-10 h-10 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">Aucun appel API enregistré pour le moment</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Logs Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left">
+                    <th className="pb-2 pr-3 font-medium text-muted-foreground text-xs">Date</th>
+                    <th className="pb-2 pr-3 font-medium text-muted-foreground text-xs">Clé</th>
+                    <th className="pb-2 pr-3 font-medium text-muted-foreground text-xs text-center">Total</th>
+                    <th className="pb-2 pr-3 font-medium text-muted-foreground text-xs text-center">Matchés</th>
+                    <th className="pb-2 pr-3 font-medium text-muted-foreground text-xs text-center">Non matchés</th>
+                    <th className="pb-2 pr-3 font-medium text-muted-foreground text-xs text-center">Statut</th>
+                    <th className="pb-2 font-medium text-muted-foreground text-xs text-center">Détail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.map((log: any) => (
+                    <tr key={log.id} className="border-b last:border-0 hover:bg-muted/30">
+                      <td className="py-2 pr-3 text-xs whitespace-nowrap">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-muted-foreground" />
+                          {formatDate(log.createdAt)}
+                        </div>
+                      </td>
+                      <td className="py-2 pr-3 text-xs font-mono truncate max-w-[150px]">
+                        {log.importKey || "—"}
+                      </td>
+                      <td className="py-2 pr-3 text-xs text-center font-medium">
+                        {log.totalItems}
+                      </td>
+                      <td className="py-2 pr-3 text-xs text-center">
+                        <span className="text-green-600 font-medium">{log.matchedItems}</span>
+                      </td>
+                      <td className="py-2 pr-3 text-xs text-center">
+                        {log.unmatchedItems > 0 ? (
+                          <span className="text-amber-600 font-medium">{log.unmatchedItems}</span>
+                        ) : (
+                          <span className="text-muted-foreground">0</span>
+                        )}
+                      </td>
+                      <td className="py-2 pr-3 text-center">
+                        {log.success ? (
+                          <CheckCircle className="w-4 h-4 text-green-500 mx-auto" />
+                        ) : (
+                          <XOctagon className="w-4 h-4 text-red-500 mx-auto" />
+                        )}
+                      </td>
+                      <td className="py-2 text-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={() => setSelectedLogId(log.id === selectedLogId ? null : log.id)}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-2">
+                <p className="text-xs text-muted-foreground">
+                  {total} appel{total > 1 ? "s" : ""} au total
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7"
+                    disabled={page === 0}
+                    onClick={() => setPage(p => p - 1)}
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </Button>
+                  <span className="text-xs text-muted-foreground">
+                    {page + 1} / {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7"
+                    disabled={page >= totalPages - 1}
+                    onClick={() => setPage(p => p + 1)}
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Selected Log Detail */}
+            {selectedLogId && selectedLog && (
+              <div className="mt-4 border rounded-lg p-4 space-y-3 bg-muted/20">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <Eye className="w-4 h-4" />
+                    Détail de l'appel #{selectedLog.id}
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7"
+                    onClick={() => setSelectedLogId(null)}
+                  >
+                    ✕
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                  <div>
+                    <span className="text-muted-foreground">Date :</span>
+                    <p className="font-medium">{formatDate(selectedLog.createdAt)}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Clé d'import :</span>
+                    <p className="font-mono font-medium">{selectedLog.importKey || "—"}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">IP :</span>
+                    <p className="font-mono font-medium">{selectedLog.ipAddress || "—"}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Résultat :</span>
+                    <p className="font-medium">
+                      <span className="text-green-600">{selectedLog.matchedItems} matchés</span>
+                      {selectedLog.unmatchedItems > 0 && (
+                        <>, <span className="text-amber-600">{selectedLog.unmatchedItems} non matchés</span></>
+                      )}
+                      {selectedLog.errorItems > 0 && (
+                        <>, <span className="text-red-600">{selectedLog.errorItems} erreurs</span></>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedLog.errorMessage && (
+                  <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded p-2">
+                    <p className="text-xs text-red-700 dark:text-red-400">
+                      <strong>Erreur :</strong> {selectedLog.errorMessage}
+                    </p>
+                  </div>
+                )}
+
+                {/* Raw Payload */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-medium text-muted-foreground">Données JSON reçues :</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6"
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedLog.rawPayload);
+                        toast.success("JSON copié dans le presse-papier");
+                      }}
+                    >
+                      <Copy className="w-3 h-3 mr-1" />
+                      <span className="text-xs">Copier</span>
+                    </Button>
+                  </div>
+                  <pre className="bg-slate-900 text-slate-100 rounded-lg p-3 text-xs overflow-x-auto max-h-[300px] overflow-y-auto">
+                    {(() => {
+                      try {
+                        return JSON.stringify(JSON.parse(selectedLog.rawPayload), null, 2);
+                      } catch {
+                        return selectedLog.rawPayload;
+                      }
+                    })()}
+                  </pre>
+                </div>
+
+                {/* Results */}
+                {selectedLog.resultsJson && (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-muted-foreground">Résultats du matching :</p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6"
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedLog.resultsJson!);
+                          toast.success("Résultats copiés dans le presse-papier");
+                        }}
+                      >
+                        <Copy className="w-3 h-3 mr-1" />
+                        <span className="text-xs">Copier</span>
+                      </Button>
+                    </div>
+                    <pre className="bg-slate-900 text-slate-100 rounded-lg p-3 text-xs overflow-x-auto max-h-[300px] overflow-y-auto">
+                      {(() => {
+                        try {
+                          return JSON.stringify(JSON.parse(selectedLog.resultsJson), null, 2);
+                        } catch {
+                          return selectedLog.resultsJson;
+                        }
+                      })()}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

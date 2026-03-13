@@ -1,0 +1,49 @@
+{
+  "query": "SELECT concat(p.name, ' | ', pv.name, ' | SKU: ', pv.sku, ' | Code: ', COALESCE(pv.supplierProductCode, 'N/A'), ' | EAN: ', COALESCE(pv.ean13, 'N/A'), ' | Stock: ', pv.stockQuantity, ' | Transit: ', pv.inTransitQuantity) as info FROM product_variants pv JOIN products p ON pv.productId = p.id WHERE pv.stockQuantity > 0 OR pv.inTransitQuantity > 0 ORDER BY p.name, pv.name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT concat(p.name, ' | ', pv.name, ' | SKU: ', pv.sku, ' | Code: ', COALESCE(pv.supplierProductCode, 'N/A'), ' | EAN: ', COALESCE(pv.ean13, 'N/A'), ' | Stock: ', pv.stockQuantity, ' | Transit: ', pv.inTransitQuantity) as info FROM product_variants pv JOIN products p ON pv.productId = p.id WHERE pv.stockQuantity > 0 OR pv.inTransitQuantity > 0 ORDER BY p.name, pv.name;",
+  "rows": [
+    {
+      "info": "Easy Relax | Easy Relax - Odyssey | SKU: SPA-EASY-RELAX-ODYSSEY | Code: 662600 079 38 | EAN: 3364549284657 | Stock: 0 | Transit: 14"
+    },
+    {
+      "info": "Easy Relax | Easy Relax - Sterling Marble | SKU: SPA-EASYRELAX-STERLING-SILVER | Code: 662600 078 38 | EAN: 3364549284640 | Stock: 0 | Transit: 56"
+    },
+    {
+      "info": "Mykonos | Mykonos - Midnight Opal | SKU: SPA-MYKONOS-MIDNIGHT-OPAL | Code: 662800 080 38 | EAN: 3364549284763 | Stock: 0 | Transit: 7"
+    },
+    {
+      "info": "Mykonos | Mykonos - Odyssey | SKU: SPA-MYKONOS-ODYSSEY | Code: 662800 079 38 | EAN: 3364549284756 | Stock: 0 | Transit: 8"
+    },
+    {
+      "info": "Mykonos | Mykonos - Sterling Marble | SKU: SPA-MYKONOS-STERLING-SILVER | Code: 662800 078 38 | EAN: 3364549284749 | Stock: 0 | Transit: 15"
+    },
+    {
+      "info": "Neptune V2 | Neptune V2 - Midnight Opal | SKU: SPA-NEPTUNE-V2-MIDNIGHT-OPAL | Code: 662201 080 38 | EAN: 3364549284633 | Stock: 0 | Transit: 28"
+    },
+    {
+      "info": "Neptune V2 | Neptune V2 - Odyssey | SKU: SPA-NEPTUNE-V2-ODYSSEY | Code: 662201 079 38 | EAN: 3364549284626 | Stock: 0 | Transit: 28"
+    },
+    {
+      "info": "Twin Plug & Play | Twin Plug & Play - Midnight Opal | SKU: SPA-TWIN-PLUG-PLAY-MIDNIGHT-OPAL | Code: 662900 080 38 | EAN: 3364549284794 | Stock: 0 | Transit: 7"
+    },
+    {
+      "info": "Twin Plug & Play | Twin Plug & Play - Odyssey | SKU: SPA-TWIN-PLUG-PLAY-ODYSSEY | Code: 662900 079 38 | EAN: 3364549284787 | Stock: 0 | Transit: 7"
+    },
+    {
+      "info": "Twin Plug & Play | Twin Plug & Play - Sterling Marble | SKU: SPA-TWIN-PLUG-PLAY-STERLING-SILVER | Code: 662900 078 38 | EAN: 3364549284770 | Stock: 0 | Transit: 14"
+    },
+    {
+      "info": "Volcano | Volcano - Midnight Opal | SKU: SPA-VOLCANO-MIDNIGHT-OPAL | Code: 662700 080 38 | EAN: 3364549284732 | Stock: 0 | Transit: 12"
+    },
+    {
+      "info": "Volcano | Volcano - Odyssey | SKU: SPA-VOLCANO-ODYSSEY | Code: 662700 079 38 | EAN: 3364549284725 | Stock: 0 | Transit: 12"
+    },
+    {
+      "info": "Volcano | Volcano - Sterling Marble | SKU: SPA-VOLCANO-STERLING-SILVER | Code: 662700 078 38 | EAN: 3364549284718 | Stock: 0 | Transit: 24"
+    }
+  ],
+  "messages": [],
+  "stdout": "info\nEasy Relax | Easy Relax - Odyssey | SKU: SPA-EASY-RELAX-ODYSSEY | Code: 662600 079 38 | EAN: 3364549284657 | Stock: 0 | Transit: 14\nEasy Relax | Easy Relax - Sterling Marble | SKU: SPA-EASYRELAX-STERLING-SILVER | Code: 662600 078 38 | EAN: 3364549284640 | Stock: 0 | Transit: 56\nMykonos | Mykonos - Midnight Opal | SKU: SPA-MYKONOS-MIDNIGHT-OPAL | Code: 662800 080 38 | EAN: 3364549284763 | Stock: 0 | Transit: 7\nMykonos | Mykonos - Odyssey | SKU: SPA-MYKONOS-ODYSSEY | Code: 662800 079 38 | EAN: 3364549284756 | Stock: 0 | Transit: 8\nMykonos | Mykonos - Sterling Marble | SKU: SPA-MYKONOS-STERLING-SILVER | Code: 662800 078 38 | EAN: 3364549284749 | Stock: 0 | Transit: 15\nNeptune V2 | Neptune V2 - Midnight Opal | SKU: SPA-NEPTUNE-V2-MIDNIGHT-OPAL | Code: 662201 080 38 | EAN: 3364549284633 | Stock: 0 | Transit: 28\nNeptune V2 | Neptune V2 - Odyssey | SKU: SPA-NEPTUNE-V2-ODYSSEY | Code: 662201 079 38 | EAN: 3364549284626 | Stock: 0 | Transit: 28\nTwin Plug & Play | Twin Plug & Play - Midnight Opal | SKU: SPA-TWIN-PLUG-PLAY-MIDNIGHT-OPAL | Code: 662900 080 38 | EAN: 3364549284794 | Stock: 0 | Transit: 7\nTwin Plug & Play | Twin Plug & Play - Odyssey | SKU: SPA-TWIN-PLUG-PLAY-ODYSSEY | Code: 662900 079 38 | EAN: 3364549284787 | Stock: 0 | Transit: 7\nTwin Plug & Play | Twin Plug & Play - Sterling Marble | SKU: SPA-TWIN-PLUG-PLAY-STERLING-SILVER | Code: 662900 078 38 | EAN: 3364549284770 | Stock: 0 | Transit: 14\nVolcano | Volcano - Midnight Opal | SKU: SPA-VOLCANO-MIDNIGHT-OPAL | Code: 662700 080 38 | EAN: 3364549284732 | Stock: 0 | Transit: 12\nVolcano | Volcano - Odyssey | SKU: SPA-VOLCANO-ODYSSEY | Code: 662700 079 38 | EAN: 3364549284725 | Stock: 0 | Transit: 12\nVolcano | Volcano - Sterling Marble | SKU: SPA-VOLCANO-STERLING-SILVER | Code: 662700 078 38 | EAN: 3364549284718 | Stock: 0 | Transit: 24\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

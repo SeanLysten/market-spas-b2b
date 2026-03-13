@@ -1,0 +1,55 @@
+{
+  "query": "SELECT concat(p.name, ' | ', pv.name, ' | Code:', pv.supplierProductCode, ' | Transit:', pv.inTransitQuantity) as detail FROM product_variants pv JOIN products p ON pv.productId = p.id WHERE pv.supplierProductCode IN ('066200 078 38','662201 078 38','662201 079 38','662201 080 38','662600 078 38','662600 079 38','662600 080 38','662650 302 38','662700 078 38','662700 079 38','662700 080 38','662800 078 38','662800 079 38','662800 080 38','662900 078 38','662900 079 38','662900 080 38');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT concat(p.name, ' | ', pv.name, ' | Code:', pv.supplierProductCode, ' | Transit:', pv.inTransitQuantity) as detail FROM product_variants pv JOIN products p ON pv.productId = p.id WHERE pv.supplierProductCode IN ('066200 078 38','662201 078 38','662201 079 38','662201 080 38','662600 078 38','662600 079 38','662600 080 38','662650 302 38','662700 078 38','662700 079 38','662700 080 38','662800 078 38','662800 079 38','662800 080 38','662900 078 38','662900 079 38','662900 080 38');",
+  "rows": [
+    {
+      "detail": "Easy Relax | Easy Relax - Midnight Opal | Code:662600 080 38 | Transit:0"
+    },
+    {
+      "detail": "Easy Relax | Easy Relax - Odyssey | Code:662600 079 38 | Transit:14"
+    },
+    {
+      "detail": "Easy Relax | Easy Relax - Sterling Marble | Code:662600 078 38 | Transit:56"
+    },
+    {
+      "detail": "Mykonos | Mykonos - Midnight Opal | Code:662800 080 38 | Transit:7"
+    },
+    {
+      "detail": "Mykonos | Mykonos - Odyssey | Code:662800 079 38 | Transit:8"
+    },
+    {
+      "detail": "Mykonos | Mykonos - Sterling Marble | Code:662800 078 38 | Transit:15"
+    },
+    {
+      "detail": "Neptune V2 | Neptune V2 - Midnight Opal | Code:662201 080 38 | Transit:28"
+    },
+    {
+      "detail": "Neptune V2 | Neptune V2 - Odyssey | Code:662201 079 38 | Transit:28"
+    },
+    {
+      "detail": "Neptune V2 | Neptune V2 - Sterling Marble | Code:662201 078 38 | Transit:2"
+    },
+    {
+      "detail": "Volcano | Volcano - Midnight Opal | Code:662700 080 38 | Transit:12"
+    },
+    {
+      "detail": "Volcano | Volcano - Odyssey | Code:662700 079 38 | Transit:12"
+    },
+    {
+      "detail": "Volcano | Volcano - Sterling Marble | Code:662700 078 38 | Transit:24"
+    },
+    {
+      "detail": "Twin Plug & Play | Twin Plug & Play - Midnight Opal | Code:662900 080 38 | Transit:7"
+    },
+    {
+      "detail": "Twin Plug & Play | Twin Plug & Play - Odyssey | Code:662900 079 38 | Transit:7"
+    },
+    {
+      "detail": "Twin Plug & Play | Twin Plug & Play - Sterling Marble | Code:662900 078 38 | Transit:14"
+    }
+  ],
+  "messages": [],
+  "stdout": "detail\nEasy Relax | Easy Relax - Midnight Opal | Code:662600 080 38 | Transit:0\nEasy Relax | Easy Relax - Odyssey | Code:662600 079 38 | Transit:14\nEasy Relax | Easy Relax - Sterling Marble | Code:662600 078 38 | Transit:56\nMykonos | Mykonos - Midnight Opal | Code:662800 080 38 | Transit:7\nMykonos | Mykonos - Odyssey | Code:662800 079 38 | Transit:8\nMykonos | Mykonos - Sterling Marble | Code:662800 078 38 | Transit:15\nNeptune V2 | Neptune V2 - Midnight Opal | Code:662201 080 38 | Transit:28\nNeptune V2 | Neptune V2 - Odyssey | Code:662201 079 38 | Transit:28\nNeptune V2 | Neptune V2 - Sterling Marble | Code:662201 078 38 | Transit:2\nVolcano | Volcano - Midnight Opal | Code:662700 080 38 | Transit:12\nVolcano | Volcano - Odyssey | Code:662700 079 38 | Transit:12\nVolcano | Volcano - Sterling Marble | Code:662700 078 38 | Transit:24\nTwin Plug & Play | Twin Plug & Play - Midnight Opal | Code:662900 080 38 | Transit:7\nTwin Plug & Play | Twin Plug & Play - Odyssey | Code:662900 079 38 | Transit:7\nTwin Plug & Play | Twin Plug & Play - Sterling Marble | Code:662900 078 38 | Transit:14\n",
+  "stderr": "",
+  "execution_time_ms": 65
+}

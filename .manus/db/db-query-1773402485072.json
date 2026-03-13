@@ -1,0 +1,100 @@
+{
+  "query": "SELECT p.name AS produit, pv.name AS variante, pv.color, pv.stockQuantity, pv.inTransitQuantity, pv.supplierProductCode, pv.ean13 FROM products p JOIN product_variants pv ON p.id = pv.productId WHERE pv.stockQuantity > 0 OR pv.inTransitQuantity > 0 ORDER BY p.name, pv.name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT p.name AS produit, pv.name AS variante, pv.color, pv.stockQuantity, pv.inTransitQuantity, pv.supplierProductCode, pv.ean13 FROM products p JOIN product_variants pv ON p.id = pv.productId WHERE pv.stockQuantity > 0 OR pv.inTransitQuantity > 0 ORDER BY p.name, pv.name;",
+  "rows": [
+    {
+      "produit": "Easy Relax",
+      "variante": "Easy Relax - Midnight Opal",
+      "color": "Midnight Opal",
+      "stockQuantity": "2",
+      "inTransitQuantity": "0",
+      "supplierProductCode": "662600 080 38",
+      "ean13": "3364549284664"
+    },
+    {
+      "produit": "Easy Relax",
+      "variante": "Easy Relax - Odyssey",
+      "color": "Odyssey",
+      "stockQuantity": "4",
+      "inTransitQuantity": "0",
+      "supplierProductCode": "662600 079 38",
+      "ean13": "3364549284657"
+    },
+    {
+      "produit": "Easy Relax",
+      "variante": "Easy Relax - Sterling Marble",
+      "color": "Sterling Marble",
+      "stockQuantity": "8",
+      "inTransitQuantity": "0",
+      "supplierProductCode": "662600 078 38",
+      "ean13": "3364549284640"
+    },
+    {
+      "produit": "Kos",
+      "variante": "Kos - Midnight Opal",
+      "color": "Midnight Opal",
+      "stockQuantity": "5",
+      "inTransitQuantity": "0",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "produit": "Kos",
+      "variante": "Kos - Odyssey",
+      "color": "Odyssey",
+      "stockQuantity": "12",
+      "inTransitQuantity": "0",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "produit": "Kos",
+      "variante": "Kos - Sterling Marble",
+      "color": "Sterling Marble",
+      "stockQuantity": "32",
+      "inTransitQuantity": "0",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "produit": "Neptune V2",
+      "variante": "Neptune V2 - Midnight Opal",
+      "color": "Midnight Opal",
+      "stockQuantity": "12",
+      "inTransitQuantity": "0",
+      "supplierProductCode": "662201 080 38",
+      "ean13": "3364549284633"
+    },
+    {
+      "produit": "Neptune V2",
+      "variante": "Neptune V2 - Odyssey",
+      "color": "Odyssey",
+      "stockQuantity": "3",
+      "inTransitQuantity": "0",
+      "supplierProductCode": "662201 079 38",
+      "ean13": "3364549284626"
+    },
+    {
+      "produit": "Neptune V2",
+      "variante": "Neptune V2 - Sterling Marble",
+      "color": "Sterling Marble",
+      "stockQuantity": "8",
+      "inTransitQuantity": "0",
+      "supplierProductCode": "662201 078 38",
+      "ean13": "3364549284619"
+    },
+    {
+      "produit": "Twin Plug & Play",
+      "variante": "Twin Plug & Play - Sterling Marble",
+      "color": "Sterling Marble",
+      "stockQuantity": "2",
+      "inTransitQuantity": "0",
+      "supplierProductCode": "662900 078 38",
+      "ean13": "3364549284770"
+    }
+  ],
+  "messages": [],
+  "stdout": "produit\tvariante\tcolor\tstockQuantity\tinTransitQuantity\tsupplierProductCode\tean13\nEasy Relax\tEasy Relax - Midnight Opal\tMidnight Opal\t2\t0\t662600 080 38\t3364549284664\nEasy Relax\tEasy Relax - Odyssey\tOdyssey\t4\t0\t662600 079 38\t3364549284657\nEasy Relax\tEasy Relax - Sterling Marble\tSterling Marble\t8\t0\t662600 078 38\t3364549284640\nKos\tKos - Midnight Opal\tMidnight Opal\t5\t0\tNULL\tNULL\nKos\tKos - Odyssey\tOdyssey\t12\t0\tNULL\tNULL\nKos\tKos - Sterling Marble\tSterling Marble\t32\t0\tNULL\tNULL\nNeptune V2\tNeptune V2 - Midnight Opal\tMidnight Opal\t12\t0\t662201 080 38\t3364549284633\nNeptune V2\tNeptune V2 - Odyssey\tOdyssey\t3\t0\t662201 079 38\t3364549284626\nNeptune V2\tNeptune V2 - Sterling Marble\tSterling Marble\t8\t0\t662201 078 38\t3364549284619\nTwin Plug & Play\tTwin Plug & Play - Sterling Marble\tSterling Marble\t2\t0\t662900 078 38\t3364549284770\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

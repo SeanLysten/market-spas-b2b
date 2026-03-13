@@ -5194,5 +5194,54 @@ export const appRouter = router({
       return await getUserFavoriteResources(ctx.user.id);
     }),
   }),
+
+  // ============================================
+  // SUPPLIER API LOGS (SUPER_ADMIN only)
+  // ============================================
+  supplierApiLogs: router({
+    list: superAdminProcedure
+      .input(
+        z.object({
+          limit: z.number().optional().default(20),
+          offset: z.number().optional().default(0),
+        }).optional()
+      )
+      .query(async ({ input }) => {
+        const { supplierApiLogs } = await import("../drizzle/schema");
+        const { getDb } = await import("./db");
+        const { desc, sql } = await import("drizzle-orm");
+        const database = await getDb();
+        if (!database) return { logs: [], total: 0 };
+        const limit = input?.limit ?? 20;
+        const offset = input?.offset ?? 0;
+        const logs = await database
+          .select()
+          .from(supplierApiLogs)
+          .orderBy(desc(supplierApiLogs.createdAt))
+          .limit(limit)
+          .offset(offset);
+        const countResult = await database
+          .select({ count: sql<number>`count(*)` })
+          .from(supplierApiLogs);
+        const total = countResult[0]?.count ?? 0;
+        return { logs, total };
+      }),
+
+    getById: superAdminProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const { supplierApiLogs } = await import("../drizzle/schema");
+        const { getDb } = await import("./db");
+        const { eq } = await import("drizzle-orm");
+        const database = await getDb();
+        if (!database) return null;
+        const rows = await database
+          .select()
+          .from(supplierApiLogs)
+          .where(eq(supplierApiLogs.id, input.id))
+          .limit(1);
+        return rows[0] || null;
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;

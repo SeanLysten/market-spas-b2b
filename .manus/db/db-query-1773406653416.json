@@ -1,0 +1,88 @@
+{
+  "query": "SELECT p.name, pv.name as variant, pv.stockQuantity as stock, pv.inTransitQuantity as transit FROM product_variants pv JOIN products p ON pv.productId = p.id WHERE pv.inTransitQuantity > 0 OR pv.stockQuantity > 0;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT p.name, pv.name as variant, pv.stockQuantity as stock, pv.inTransitQuantity as transit FROM product_variants pv JOIN products p ON pv.productId = p.id WHERE pv.inTransitQuantity > 0 OR pv.stockQuantity > 0;",
+  "rows": [
+    {
+      "name": "Easy Relax",
+      "variant": "Easy Relax - Sterling Marble",
+      "stock": "0",
+      "transit": "56"
+    },
+    {
+      "name": "Mykonos",
+      "variant": "Mykonos - Sterling Marble",
+      "stock": "0",
+      "transit": "15"
+    },
+    {
+      "name": "Volcano",
+      "variant": "Volcano - Sterling Marble",
+      "stock": "0",
+      "transit": "24"
+    },
+    {
+      "name": "Neptune V2",
+      "variant": "Neptune V2 - Odyssey",
+      "stock": "0",
+      "transit": "28"
+    },
+    {
+      "name": "Neptune V2",
+      "variant": "Neptune V2 - Midnight Opal",
+      "stock": "0",
+      "transit": "28"
+    },
+    {
+      "name": "Easy Relax",
+      "variant": "Easy Relax - Odyssey",
+      "stock": "0",
+      "transit": "14"
+    },
+    {
+      "name": "Volcano",
+      "variant": "Volcano - Odyssey",
+      "stock": "0",
+      "transit": "12"
+    },
+    {
+      "name": "Volcano",
+      "variant": "Volcano - Midnight Opal",
+      "stock": "0",
+      "transit": "12"
+    },
+    {
+      "name": "Mykonos",
+      "variant": "Mykonos - Odyssey",
+      "stock": "0",
+      "transit": "8"
+    },
+    {
+      "name": "Mykonos",
+      "variant": "Mykonos - Midnight Opal",
+      "stock": "0",
+      "transit": "7"
+    },
+    {
+      "name": "Twin Plug & Play",
+      "variant": "Twin Plug & Play - Sterling Marble",
+      "stock": "0",
+      "transit": "14"
+    },
+    {
+      "name": "Twin Plug & Play",
+      "variant": "Twin Plug & Play - Odyssey",
+      "stock": "0",
+      "transit": "7"
+    },
+    {
+      "name": "Twin Plug & Play",
+      "variant": "Twin Plug & Play - Midnight Opal",
+      "stock": "0",
+      "transit": "7"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\tvariant\tstock\ttransit\nEasy Relax\tEasy Relax - Sterling Marble\t0\t56\nMykonos\tMykonos - Sterling Marble\t0\t15\nVolcano\tVolcano - Sterling Marble\t0\t24\nNeptune V2\tNeptune V2 - Odyssey\t0\t28\nNeptune V2\tNeptune V2 - Midnight Opal\t0\t28\nEasy Relax\tEasy Relax - Odyssey\t0\t14\nVolcano\tVolcano - Odyssey\t0\t12\nVolcano\tVolcano - Midnight Opal\t0\t12\nMykonos\tMykonos - Odyssey\t0\t8\nMykonos\tMykonos - Midnight Opal\t0\t7\nTwin Plug & Play\tTwin Plug & Play - Sterling Marble\t0\t14\nTwin Plug & Play\tTwin Plug & Play - Odyssey\t0\t7\nTwin Plug & Play\tTwin Plug & Play - Midnight Opal\t0\t7\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

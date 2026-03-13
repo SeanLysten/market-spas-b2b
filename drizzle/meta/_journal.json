@@ -288,6 +288,13 @@
       "when": 1773392982229,
       "tag": "0040_soft_masked_marvel",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "5",
+      "when": 1773406480213,
+      "tag": "0041_boring_masque",
+      "breakpoints": true
     }
   ]
 }

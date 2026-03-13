@@ -1,14 +1,48 @@
 import { Router } from "express";
 import { getDb } from "../db";
-import { products, productVariants, orders, partners, users, orderItems, payments } from "../../drizzle/schema";
-import { eq, or, sql, inArray, and } from "drizzle-orm";
+import { products, productVariants, orders, partners, users, orderItems, payments, supplierApiLogs } from "../../drizzle/schema";
+import { eq, or, sql, inArray, and, desc } from "drizzle-orm";
 
 const router = Router();
+
+// ============================================
+// API Key Authentication Middleware
+// ============================================
+
+function validateApiKey(req: any, res: any): boolean {
+  const apiKey = req.headers["x-api-key"] || req.query.apiKey;
+  const expectedKey = process.env.SUPPLIER_API_KEY;
+
+  if (!expectedKey) {
+    console.error("[SupplierStock] SUPPLIER_API_KEY not configured in environment");
+    res.status(500).json({ success: false, error: "Configuration serveur manquante" });
+    return false;
+  }
+
+  if (!apiKey) {
+    res.status(401).json({
+      success: false,
+      error: "Authentification requise. Ajoutez le header 'X-API-Key' avec votre clé API.",
+    });
+    return false;
+  }
+
+  if (apiKey !== expectedKey) {
+    res.status(403).json({
+      success: false,
+      error: "Clé API invalide.",
+    });
+    return false;
+  }
+
+  return true;
+}
 
 // ============================================
 // Supplier Stock Import API
 // POST /api/supplier/stock/import
 // Receives JSON from supplier system to update stock and transit quantities
+// Requires X-API-Key header for authentication
 // ============================================
 
 interface SupplierStockItem {
@@ -41,18 +75,42 @@ interface StockUpdateResult {
 }
 
 router.post("/api/supplier/stock/import", async (req, res) => {
+  // Authenticate
+  if (!validateApiKey(req, res)) return;
+
+  const db = await getDb();
+
   try {
     const payload = req.body as SupplierStockPayload;
 
     // Validate payload structure
     if (!payload || !payload.data || !Array.isArray(payload.data)) {
+      // Log failed attempt
+      if (db) {
+        try {
+          await db.insert(supplierApiLogs).values({
+            importKey: payload?.key || null,
+            rawPayload: JSON.stringify(req.body || {}),
+            totalItems: 0,
+            matchedItems: 0,
+            unmatchedItems: 0,
+            errorItems: 0,
+            resultsJson: null,
+            ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+            userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+            success: false,
+            errorMessage: "Format invalide",
+          });
+        } catch (logErr) {
+          console.error("[SupplierStock] Failed to log error:", logErr);
+        }
+      }
       return res.status(400).json({
         success: false,
         error: "Format invalide. Attendu: { key: string, data: [{ Ean13, CodeProduit, EnStock, EnTransit }] }",
       });
     }
 
-    const db = await getDb();
     if (!db) {
       return res.status(500).json({ success: false, error: "Base de données non disponible" });
     }
@@ -130,6 +188,7 @@ router.post("/api/supplier/stock/import", async (req, res) => {
             .set({ stockQuantity: totalVariantStock, inTransitQuantity: totalVariantTransit })
             .where(eq(products.id, matchedVariant.productId));
 
+          results.push(result);
           continue;
         }
 
@@ -185,10 +244,29 @@ router.post("/api/supplier/stock/import", async (req, res) => {
       results.push(result);
     }
 
-    // Log the import
+    // Log the import to console
     console.log(
       `[SupplierStock] Import completed: ${matched} matched, ${unmatched} unmatched, ${errors} errors out of ${payload.data.length} items (key: ${payload.key})`
     );
+
+    // Log the import to database
+    try {
+      await db.insert(supplierApiLogs).values({
+        importKey: payload.key || null,
+        rawPayload: JSON.stringify(payload),
+        totalItems: payload.data.length,
+        matchedItems: matched,
+        unmatchedItems: unmatched,
+        errorItems: errors,
+        resultsJson: JSON.stringify(results),
+        ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+        userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+        success: true,
+        errorMessage: null,
+      });
+    } catch (logErr) {
+      console.error("[SupplierStock] Failed to save import log:", logErr);
+    }
 
     return res.json({
       success: true,
@@ -204,6 +282,28 @@ router.post("/api/supplier/stock/import", async (req, res) => {
     });
   } catch (error: any) {
     console.error("[SupplierStock] Import error:", error);
+
+    // Log the error to database
+    if (db) {
+      try {
+        await db.insert(supplierApiLogs).values({
+          importKey: null,
+          rawPayload: JSON.stringify(req.body || {}),
+          totalItems: 0,
+          matchedItems: 0,
+          unmatchedItems: 0,
+          errorItems: 0,
+          resultsJson: null,
+          ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+          userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+          success: false,
+          errorMessage: error.message || "Erreur interne du serveur",
+        });
+      } catch (logErr) {
+        console.error("[SupplierStock] Failed to log error:", logErr);
+      }
+    }
+
     return res.status(500).json({
       success: false,
       error: error.message || "Erreur interne du serveur",
@@ -215,9 +315,13 @@ router.post("/api/supplier/stock/import", async (req, res) => {
 // Supplier Stock Export API
 // GET /api/supplier/orders/export
 // Returns orders, payments and client information for the supplier
+// Requires X-API-Key header for authentication
 // ============================================
 
 router.get("/api/supplier/orders/export", async (req, res) => {
+  // Authenticate
+  if (!validateApiKey(req, res)) return;
+
   try {
     const db = await getDb();
     if (!db) {

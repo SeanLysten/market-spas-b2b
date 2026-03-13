@@ -2778,3 +2778,11 @@
 - [x] Afficher l'URL complète de l'endpoint POST et GET
 - [x] Afficher le format JSON attendu avec exemple
 - [x] Ajouter des boutons pour copier l'URL, l'exemple JSON et la commande cURL
+## Historique API Fournisseur
+- [x] Table supplier_api_logs en DB pour stocker chaque appel
+- [x] Enregistrer chaque POST avec JSON brut, date, résultats de matching
+- [x] Interface admin pour consulter les logs API fournisseur
+- [x] Tests Vitest pour le système de logs
+- [x] Sécuriser l'API fournisseur avec authentification API Key (header X-API-Key)
+- [x] Générer une clé API sécurisée et la stocker en variable d'environnement
+- [ ] Fournir les identifiants d'accès API au user
