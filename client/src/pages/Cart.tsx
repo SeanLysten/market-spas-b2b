@@ -16,11 +16,15 @@ export default function Cart() {
   const updateQuantityMutation = trpc.cart.updateQuantity.useMutation();
   const removeItemMutation = trpc.cart.removeItem.useMutation();
 
-  const handleUpdateQuantity = async (productId: number, quantity: number) => {
+  const handleUpdateQuantity = async (productId: number, quantity: number, variantId?: number) => {
     if (quantity < 1) return;
     
     try {
-      await updateQuantityMutation.mutateAsync({ productId, quantity });
+      const result: any = await updateQuantityMutation.mutateAsync({ productId, quantity, variantId });
+      if (result && result.success === false) {
+        toast.error(result.error || "Stock insuffisant");
+        return;
+      }
       refetch();
       toast.success("Quantité mise à jour");
     } catch (error: any) {
@@ -28,9 +32,9 @@ export default function Cart() {
     }
   };
 
-  const handleRemoveItem = async (productId: number) => {
+  const handleRemoveItem = async (productId: number, variantId?: number) => {
     try {
-      await removeItemMutation.mutateAsync({ productId });
+      await removeItemMutation.mutateAsync({ productId, variantId });
       toast.success("Produit retiré du panier");
       refetch();
     } catch (error: any) {
@@ -162,7 +166,7 @@ export default function Cart() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
+                              onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1, item.variantId)}
                               disabled={item.quantity <= 1}
                             >
                               <Minus className="w-4 h-4" />
@@ -171,13 +175,13 @@ export default function Cart() {
                               type="number"
                               min="1"
                               value={item.quantity}
-                              onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value) || 1)}
+                              onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value) || 1, item.variantId)}
                               className="w-16 text-center"
                             />
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}
+                              onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1, item.variantId)}
                             >
                               <Plus className="w-4 h-4" />
                             </Button>
@@ -185,7 +189,7 @@ export default function Cart() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleRemoveItem(item.productId)}
+                            onClick={() => handleRemoveItem(item.productId, item.variantId)}
                             className="text-destructive hover:text-destructive"
                           >
                             <Trash2 className="w-4 h-4 mr-1" />
@@ -240,15 +244,15 @@ export default function Cart() {
                         </div>
                         <div className="flex flex-col items-end gap-2">
                           <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)} disabled={item.quantity <= 1}>
+                            <Button variant="outline" size="sm" onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1, item.variantId)} disabled={item.quantity <= 1}>
                               <Minus className="w-4 h-4" />
                             </Button>
-                            <Input type="number" min="1" value={item.quantity} onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value) || 1)} className="w-16 text-center" />
-                            <Button variant="outline" size="sm" onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}>
+                            <Input type="number" min="1" value={item.quantity} onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value) || 1, item.variantId)} className="w-16 text-center" />
+                            <Button variant="outline" size="sm" onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1, item.variantId)}>
                               <Plus className="w-4 h-4" />
                             </Button>
                           </div>
-                          <Button variant="ghost" size="sm" onClick={() => handleRemoveItem(item.productId)} className="text-destructive hover:text-destructive">
+                          <Button variant="ghost" size="sm" onClick={() => handleRemoveItem(item.productId, item.variantId)} className="text-destructive hover:text-destructive">
                             <Trash2 className="w-4 h-4 mr-1" />
                             Retirer
                           </Button>

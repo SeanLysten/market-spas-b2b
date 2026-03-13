@@ -1404,6 +1404,12 @@ export const appRouter = router({
       return await db.getCart(ctx.user.id);
     }),
 
+    availableQuantity: protectedProcedure
+      .input(z.object({ productId: z.number(), variantId: z.number().optional() }))
+      .query(async ({ input }) => {
+        return await db.getAvailableQuantity(input.productId, input.variantId);
+      }),
+
     add: protectedProcedure
       .input(z.object({ 
         productId: z.number(),
@@ -1416,15 +1422,15 @@ export const appRouter = router({
       }),
 
     updateQuantity: protectedProcedure
-      .input(z.object({ productId: z.number(), quantity: z.number().min(1) }))
+      .input(z.object({ productId: z.number(), variantId: z.number().optional(), quantity: z.number().min(1) }))
       .mutation(async ({ ctx, input }) => {
-        return await db.updateCartQuantity(ctx.user.id, input.productId, input.quantity);
+        return await db.updateCartQuantity(ctx.user.id, input.productId, input.quantity, input.variantId);
       }),
 
     removeItem: protectedProcedure
-      .input(z.object({ productId: z.number() }))
+      .input(z.object({ productId: z.number(), variantId: z.number().optional() }))
       .mutation(async ({ ctx, input }) => {
-        return await db.removeFromCart(ctx.user.id, input.productId);
+        return await db.removeFromCart(ctx.user.id, input.productId, input.variantId);
       }),
 
     clear: protectedProcedure.mutation(async ({ ctx }) => {

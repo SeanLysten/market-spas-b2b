@@ -2832,3 +2832,11 @@
 ## Refonte Prévisions Stock v2
 - [x] Réécrire les routes backend pour les données stock fournisseur
 - [x] Réécrire la page AdminStockForecast avec stock/transit par arrivage, codes produits, logs API
+
+## Limite de réservation (anti-surréservation)
+- [x] Analyser le code actuel du panier et de la création de commande
+- [x] Backend : vérifier la quantité disponible lors de l'ajout au panier
+- [x] Backend : vérifier la quantité disponible lors de la création de commande
+- [x] Frontend : afficher la quantité max disponible et limiter le sélecteur de quantité
+- [x] Frontend : message d'erreur clair si quantité demandée > disponible
+- [x] Tests Vitest pour les vérifications de stock

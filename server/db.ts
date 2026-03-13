@@ -880,11 +880,45 @@ export async function getCart(userId: number) {
   };
 }
 
+export async function getAvailableQuantity(productId: number, variantId?: number): Promise<{ stock: number; transit: number; reserved: number; available: number }> {
+  const db = await getDb();
+  if (!db) return { stock: 0, transit: 0, reserved: 0, available: 0 };
+
+  if (variantId) {
+    const variant = await db.select().from(productVariants).where(eq(productVariants.id, variantId)).limit(1);
+    if (!variant[0]) return { stock: 0, transit: 0, reserved: 0, available: 0 };
+    const stock = variant[0].stockQuantity || 0;
+    const transit = variant[0].inTransitQuantity || 0;
+    const reserved = variant[0].stockReserved || 0;
+    // Available = stock + transit - already reserved
+    const available = Math.max(0, stock + transit - reserved);
+    return { stock, transit, reserved, available };
+  } else {
+    const product = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+    if (!product[0]) return { stock: 0, transit: 0, reserved: 0, available: 0 };
+    const stock = product[0].stockQuantity || 0;
+    const transit = 0;
+    const reserved = product[0].stockReserved || 0;
+    const available = Math.max(0, stock - reserved);
+    return { stock, transit, reserved, available };
+  }
+}
+
 export async function addToCart(userId: number, productId: number, quantity: number, isPreorder: boolean = false, variantId?: number) {
   const db = await getDb();
   if (!db) return { success: false, error: "Database not available" };
 
   try {
+    // Check available quantity
+    const availability = await getAvailableQuantity(productId, variantId);
+    if (quantity > availability.available) {
+      return {
+        success: false,
+        error: `Quantit\u00e9 demand\u00e9e (${quantity}) sup\u00e9rieure \u00e0 la quantit\u00e9 disponible (${availability.available})`,
+        availableQuantity: availability.available,
+      };
+    }
+
     // Check if item already exists in cart
     const existing = await db.select().from(cartItems).where(
       and(
@@ -910,7 +944,7 @@ export async function addToCart(userId: number, productId: number, quantity: num
       });
     }
 
-    return { success: true };
+    return { success: true, availableQuantity: availability.available };
   } catch (error: any) {
     console.error("Error adding to cart:", error);
     return { success: false, error: error.message };
@@ -919,9 +953,19 @@ export async function addToCart(userId: number, productId: number, quantity: num
 
 export async function updateCartQuantity(userId: number, productId: number, quantity: number, variantId?: number) {
   const db = await getDb();
-  if (!db) return { success: false };
+  if (!db) return { success: false, error: "Database not available" };
 
   try {
+    // Check available quantity
+    const availability = await getAvailableQuantity(productId, variantId);
+    if (quantity > availability.available) {
+      return {
+        success: false,
+        error: `Quantit\u00e9 demand\u00e9e (${quantity}) sup\u00e9rieure \u00e0 la quantit\u00e9 disponible (${availability.available})`,
+        availableQuantity: availability.available,
+      };
+    }
+
     await db.update(cartItems)
       .set({ quantity })
       .where(
@@ -931,10 +975,10 @@ export async function updateCartQuantity(userId: number, productId: number, quan
           variantId ? eq(cartItems.variantId, variantId) : sql`${cartItems.variantId} IS NULL`
         )
       );
-    return { success: true };
-  } catch (error) {
+    return { success: true, availableQuantity: availability.available };
+  } catch (error: any) {
     console.error("Error updating cart quantity:", error);
-    return { success: false };
+    return { success: false, error: error.message };
   }
 }
 
@@ -1495,6 +1539,18 @@ export async function createOrder(input: CreateOrderInput) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
+  // Verify stock availability for all items before creating order
+  const stockErrors: string[] = [];
+  for (const item of input.items) {
+    const availability = await getAvailableQuantity(item.productId, item.variantId);
+    if (item.quantity > availability.available) {
+      stockErrors.push(`${item.name}: ${item.quantity} demand\u00e9(s), ${availability.available} disponible(s)`);
+    }
+  }
+  if (stockErrors.length > 0) {
+    throw new Error(`Stock insuffisant pour: ${stockErrors.join("; ")}`);
+  }
+
   // Generate order number
   const orderNumber = await generateOrderNumber();
 
@@ -1597,9 +1653,10 @@ export async function createOrder(input: CreateOrderInput) {
       totalTTC: item.totalTTC.toFixed(2),
     });
 
-    // Update stock if not a preorder
-    if (!item.isPreorder) {
-      if (item.variantId) {
+    // Update stock and reservation tracking
+    if (item.variantId) {
+      if (!item.isPreorder) {
+        // In-stock item: decrement stock directly
         await db
           .update(productVariants)
           .set({
@@ -1607,15 +1664,33 @@ export async function createOrder(input: CreateOrderInput) {
           })
           .where(eq(productVariants.id, item.variantId));
       } else {
+        // Transit/preorder item: increment reserved counter
+        await db
+          .update(productVariants)
+          .set({
+            stockReserved: sql`${productVariants.stockReserved} + ${item.quantity}`,
+          })
+          .where(eq(productVariants.id, item.variantId));
+      }
+    } else {
+      if (!item.isPreorder) {
         await db
           .update(products)
           .set({
             stockQuantity: sql`${products.stockQuantity} - ${item.quantity}`,
           })
           .where(eq(products.id, item.productId));
+      } else {
+        await db
+          .update(products)
+          .set({
+            stockReserved: sql`${products.stockReserved} + ${item.quantity}`,
+          })
+          .where(eq(products.id, item.productId));
       }
-    } else if (item.isPreorder && item.incomingStockId) {
-      // Décrémenter le stock d'arrivage programmé pour les précommandes
+    }
+    // Also decrement incoming stock if linked
+    if (item.isPreorder && item.incomingStockId) {
       await db
         .update(incomingStock)
         .set({

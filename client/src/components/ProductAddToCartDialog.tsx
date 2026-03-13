@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { useSafeQuery } from "@/hooks/useSafeQuery";
 import { toast } from "sonner";
-import { Package, Truck, ShoppingCart, CalendarClock } from "lucide-react";
+import { Package, Truck, ShoppingCart, CalendarClock, AlertTriangle } from "lucide-react";
 
 interface ProductAddToCartDialogProps {
   open: boolean;
@@ -56,10 +56,25 @@ export default function ProductAddToCartDialog({
   );
   const variants = useSafeQuery(variantsData) || [];
 
+  // Query available quantity for the selected variant
+  const { data: availabilityData } = trpc.cart.availableQuantity.useQuery(
+    { productId: product?.id, variantId: selectedVariantId || undefined },
+    { enabled: open && !!product?.id && !!selectedVariantId }
+  );
+  const availability = useSafeQuery(availabilityData);
+
+  const utils = trpc.useUtils();
+
   const addToCartMutation = trpc.cart.add.useMutation({
-    onSuccess: () => {
+    onSuccess: (result: any) => {
+      if (result && result.success === false) {
+        toast.error(result.error || "Erreur lors de l'ajout au panier");
+        return;
+      }
       const isReservation = stockAvailable === 0 && transitAvailable > 0;
       toast.success(isReservation ? "Produit réservé (en transit)" : "Produit ajouté au panier");
+      utils.cart.get.invalidate();
+      utils.cart.availableQuantity.invalidate();
       onOpenChange(false);
       resetForm();
     },
@@ -89,8 +104,17 @@ export default function ProductAddToCartDialog({
     }
   }, [activeVariants, selectedVariantId]);
 
+  // Reset quantity when variant changes
+  useEffect(() => {
+    setQuantity(1);
+  }, [selectedVariantId]);
+
   const handleAddToCart = () => {
     if (!product) return;
+    if (maxQuantity > 0 && quantity > maxQuantity) {
+      toast.error(`Quantité maximale disponible : ${maxQuantity}`);
+      return;
+    }
     const isPreorder = stockAvailable === 0 && transitAvailable > 0;
     addToCartMutation.mutate({
       productId: product.id,
@@ -111,9 +135,14 @@ export default function ProductAddToCartDialog({
     ? (selectedVariant.inTransitQuantity || 0)
     : (product.inTransitQuantity || 0);
 
+  // Max quantity from availability check (stock + transit - reserved)
+  const maxQuantity = availability?.available ?? (stockAvailable + transitAvailable);
+  const reserved = availability?.reserved ?? 0;
+
   const displayImage = selectedVariant?.imageUrl || product.imageUrl;
   const isReservation = stockAvailable === 0 && transitAvailable > 0;
   const arrivalLabel = selectedVariant ? formatArrival(selectedVariant.estimatedArrival) : null;
+  const isOverLimit = quantity > maxQuantity;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -188,18 +217,21 @@ export default function ProductAddToCartDialog({
                   const colorHex = COLOR_MAP[variant.color?.toLowerCase()] || "#e5e5e5";
                   const varStock = variant.stockQuantity || 0;
                   const varTransit = variant.inTransitQuantity || 0;
+                  const varReserved = variant.stockReserved || 0;
+                  const varAvailable = Math.max(0, varStock + varTransit - varReserved);
                   const varArrival = formatArrival(variant.estimatedArrival);
-                  const isAvailable = varStock > 0 || varTransit > 0;
+                  const isAvailable = varAvailable > 0;
                   return (
                     <button
                       key={variant.id}
                       onClick={() => setSelectedVariantId(variant.id)}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg border-2 transition-all cursor-pointer text-left ${
+                      disabled={!isAvailable}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg border-2 transition-all text-left ${
                         isSelected
                           ? "border-primary bg-primary/5 shadow-sm"
                           : isAvailable
-                            ? "border-border hover:border-primary/50"
-                            : "border-border/50 opacity-60"
+                            ? "border-border hover:border-primary/50 cursor-pointer"
+                            : "border-border/50 opacity-50 cursor-not-allowed"
                       }`}
                     >
                       {/* Color dot */}
@@ -231,25 +263,27 @@ export default function ProductAddToCartDialog({
                               Arrivage {varArrival}
                             </span>
                           )}
+                          {varReserved > 0 && (
+                            <span className="text-xs text-orange-600 font-medium">
+                              {varReserved} déjà réservé(s)
+                            </span>
+                          )}
                           {!isAvailable && (
-                            <span className="text-xs text-muted-foreground">Indisponible</span>
+                            <span className="text-xs text-red-500 font-medium">Tout réservé</span>
                           )}
                         </div>
                       </div>
 
-                      {/* Badges compact */}
-                      <div className="flex flex-col gap-1 flex-shrink-0">
-                        {varStock > 0 && (
-                          <Badge variant="default" className="text-[10px] px-1.5 py-0 bg-green-600">
-                            {varStock}
-                          </Badge>
-                        )}
-                        {varTransit > 0 && (
-                          <Badge variant="default" className="text-[10px] px-1.5 py-0 bg-amber-500 gap-0.5">
-                            <Truck className="w-2.5 h-2.5" />
-                            {varTransit}
-                          </Badge>
-                        )}
+                      {/* Available badge */}
+                      <div className="flex flex-col gap-1 flex-shrink-0 items-end">
+                        <Badge
+                          variant="default"
+                          className={`text-[10px] px-1.5 py-0 ${
+                            varAvailable > 0 ? "bg-green-600" : "bg-gray-400"
+                          }`}
+                        >
+                          {varAvailable} dispo.
+                        </Badge>
                       </div>
                     </button>
                   );
@@ -258,15 +292,23 @@ export default function ProductAddToCartDialog({
             </div>
           )}
 
-          {/* Quantity */}
+          {/* Quantity with max limit */}
           <div className="space-y-2">
-            <Label htmlFor="quantity">Quantité</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="quantity">Quantité</Label>
+              {maxQuantity > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {maxQuantity} disponible(s)
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={quantity <= 1}
               >
                 -
               </Button>
@@ -274,19 +316,44 @@ export default function ProductAddToCartDialog({
                 id="quantity"
                 type="number"
                 min="1"
+                max={maxQuantity > 0 ? maxQuantity : undefined}
                 value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-center"
+                onChange={(e) => {
+                  const val = Math.max(1, parseInt(e.target.value) || 1);
+                  setQuantity(val);
+                }}
+                className={`flex h-10 w-full rounded-lg border bg-background px-3 py-2 text-sm text-center ${
+                  isOverLimit ? "border-red-500 text-red-600" : "border-input"
+                }`}
               />
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                onClick={() => setQuantity(quantity + 1)}
+                onClick={() => setQuantity(Math.min(quantity + 1, maxQuantity > 0 ? maxQuantity : quantity + 1))}
+                disabled={maxQuantity > 0 && quantity >= maxQuantity}
               >
                 +
               </Button>
             </div>
+
+            {/* Warning if over limit */}
+            {isOverLimit && (
+              <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <span>
+                  Quantité maximale disponible : <strong>{maxQuantity}</strong>
+                  {reserved > 0 && ` (${reserved} déjà réservé(s) par d'autres partenaires)`}
+                </span>
+              </div>
+            )}
+
+            {/* Info about reserved stock */}
+            {reserved > 0 && !isOverLimit && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {reserved} unité(s) déjà réservée(s) sur ce produit.
+              </p>
+            )}
           </div>
 
           {/* Price Summary */}
@@ -294,7 +361,7 @@ export default function ProductAddToCartDialog({
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Prix unitaire HT</span>
               <span className="font-medium">
-                {product.pricePartnerHT || 0} €
+                {(product.pricePartnerHT || 0).toFixed(2)} €
               </span>
             </div>
             <div className="flex items-center justify-between text-base font-semibold text-display mt-2">
@@ -315,7 +382,9 @@ export default function ProductAddToCartDialog({
             disabled={
               addToCartMutation.isPending ||
               (hasVariants && !selectedVariantId) ||
-              (stockAvailable === 0 && transitAvailable === 0)
+              (stockAvailable === 0 && transitAvailable === 0) ||
+              isOverLimit ||
+              maxQuantity === 0
             }
             className={`gap-2 ${isReservation ? "bg-amber-600 hover:bg-amber-700" : ""}`}
           >
