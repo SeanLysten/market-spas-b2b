@@ -2820,3 +2820,8 @@
 - [x] Permettre la réservation par semaine d'arrivée dans le catalogue
 - [x] Corriger la page Stock Fournisseur admin (erreur 500 noms de colonnes)
 - [x] Tester la connexion API avec le nouveau JSON
+
+## Corrections catalogue - arrivages par variante
+- [x] Corriger le total transit (doit être la somme de toutes les variantes, pas juste une)
+- [x] Afficher la semaine d'arrivage spécifique à chaque couleur/variante sélectionnée
+- [x] Permettre de choisir l'arrivage (semaine) lors de la réservation dans le dialogue

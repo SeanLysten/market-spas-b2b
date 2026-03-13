@@ -135,13 +135,13 @@ function ProductCard({ product, onOpenDialog }: {
           {productTransit > 0 && (
             <Badge className="bg-amber-500 text-white text-xs gap-1">
               <Truck className="w-3 h-3" />
-              En transit ({productTransit})
+              {productTransit} en transit
             </Badge>
           )}
           {arrivalLabel && (
             <Badge className="bg-blue-600 text-white text-xs gap-1">
               <CalendarClock className="w-3 h-3" />
-              Arrivage {arrivalLabel}
+              Arrivage d\u00e8s {arrivalLabel}
             </Badge>
           )}
           {productStock === 0 && productTransit === 0 && (
@@ -197,8 +197,8 @@ function ProductCard({ product, onOpenDialog }: {
             </div>
             {selectedVariant && (
               <div className="text-xs text-muted-foreground space-y-0.5">
-                <p>{selectedVariant.color || selectedVariant.name}</p>
-                <div className="flex items-center gap-2">
+                <p className="font-medium text-foreground">{selectedVariant.color || selectedVariant.name}</p>
+                <div className="flex items-center gap-2 flex-wrap">
                   {(selectedVariant.stockQuantity || 0) > 0 && (
                     <span className="text-green-600 font-medium">
                       {selectedVariant.stockQuantity} en stock
@@ -208,11 +208,12 @@ function ProductCard({ product, onOpenDialog }: {
                     <span className="text-amber-600 font-medium flex items-center gap-0.5">
                       <Truck className="w-3 h-3" />
                       {selectedVariant.inTransitQuantity} en transit
-                      {selectedVariant.estimatedArrival && formatArrival(selectedVariant.estimatedArrival) && (
-                        <span className="text-blue-600 ml-1">
-                          (arrivage {formatArrival(selectedVariant.estimatedArrival)})
-                        </span>
-                      )}
+                    </span>
+                  )}
+                  {selectedVariant.estimatedArrival && formatArrival(selectedVariant.estimatedArrival) && (
+                    <span className="text-blue-600 font-medium flex items-center gap-0.5">
+                      <CalendarClock className="w-3 h-3" />
+                      Arrivage {formatArrival(selectedVariant.estimatedArrival)}
                     </span>
                   )}
                   {(selectedVariant.stockQuantity || 0) === 0 && (selectedVariant.inTransitQuantity || 0) === 0 && (
