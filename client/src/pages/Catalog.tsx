@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { Search, Package, ShoppingCart, Filter, ArrowLeft, Euro, TrendingUp, Minus, Plus, Heart } from "lucide-react";
+import { Search, Package, ShoppingCart, Filter, ArrowLeft, Euro, TrendingUp, Minus, Plus, Heart, Truck } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -78,6 +78,13 @@ function ProductCard({ product, onOpenDialog }: {
 
   const partnerPrice = getPartnerPrice();
 
+  // Calculate total stock and transit across all active variants
+  const totalStock = activeVariants.reduce((sum: number, v: any) => sum + (v.stockQuantity || 0), 0);
+  const totalTransit = activeVariants.reduce((sum: number, v: any) => sum + (v.inTransitQuantity || 0), 0);
+
+  // If no variants, use product-level stock
+  const productStock = activeVariants.length > 0 ? totalStock : (product.stockQuantity || 0);
+  const productTransit = activeVariants.length > 0 ? totalTransit : (product.inTransitQuantity || 0);
 
   return (
     <Card className="overflow-hidden flex flex-col">
@@ -95,6 +102,25 @@ function ProductCard({ product, onOpenDialog }: {
           </div>
         )}
 
+        {/* Stock / Transit badges */}
+        <div className="absolute top-2 right-2 flex flex-col gap-1">
+          {productStock > 0 && (
+            <Badge className="bg-green-600 text-white text-xs">
+              En stock ({productStock})
+            </Badge>
+          )}
+          {productTransit > 0 && (
+            <Badge className="bg-amber-500 text-white text-xs gap-1">
+              <Truck className="w-3 h-3" />
+              En transit ({productTransit})
+            </Badge>
+          )}
+          {productStock === 0 && productTransit === 0 && (
+            <Badge variant="secondary" className="text-xs">
+              Indisponible
+            </Badge>
+          )}
+        </div>
       </div>
 
       <CardHeader className="flex-1 pb-2">
@@ -110,7 +136,7 @@ function ProductCard({ product, onOpenDialog }: {
       </CardHeader>
 
       <CardContent className="space-y-3 pt-0">
-        {/* Color Swatches */}
+        {/* Color Swatches with stock indicators */}
         {activeVariants && activeVariants.length > 0 && (
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
@@ -118,6 +144,8 @@ function ProductCard({ product, onOpenDialog }: {
                 const colorHex = getColorHex(variant.color || variant.name || "");
                 const isSelected = selectedVariantId === variant.id;
                 const isLight = isLightColor(colorHex);
+                const varStock = variant.stockQuantity || 0;
+                const varTransit = variant.inTransitQuantity || 0;
                 return (
                   <button
                     key={variant.id}
@@ -131,7 +159,7 @@ function ProductCard({ product, onOpenDialog }: {
                         : "ring-1 ring-border hover:ring-2 hover:ring-primary/50 hover:scale-105"
                     }`}
                     style={{ backgroundColor: colorHex }}
-                    title={`${variant.color || variant.name}`}
+                    title={`${variant.color || variant.name} — Stock: ${varStock}${varTransit > 0 ? ` | Transit: ${varTransit}` : ''}`}
                   >
                     {isSelected && (
                       <span className={`absolute inset-0 flex items-center justify-center text-xs font-bold ${isLight ? "text-gray-800" : "text-white"}`}>
@@ -143,10 +171,25 @@ function ProductCard({ product, onOpenDialog }: {
               })}
             </div>
             {selectedVariant && (
-              <p className="text-xs text-muted-foreground">
-                {selectedVariant.color || selectedVariant.name}
-
-              </p>
+              <div className="text-xs text-muted-foreground space-y-0.5">
+                <p>{selectedVariant.color || selectedVariant.name}</p>
+                <div className="flex items-center gap-2">
+                  {(selectedVariant.stockQuantity || 0) > 0 && (
+                    <span className="text-green-600 font-medium">
+                      {selectedVariant.stockQuantity} en stock
+                    </span>
+                  )}
+                  {(selectedVariant.inTransitQuantity || 0) > 0 && (
+                    <span className="text-amber-600 font-medium flex items-center gap-0.5">
+                      <Truck className="w-3 h-3" />
+                      {selectedVariant.inTransitQuantity} en transit
+                    </span>
+                  )}
+                  {(selectedVariant.stockQuantity || 0) === 0 && (selectedVariant.inTransitQuantity || 0) === 0 && (
+                    <span className="text-muted-foreground">Indisponible</span>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -166,7 +209,7 @@ function ProductCard({ product, onOpenDialog }: {
           onClick={() => onOpenDialog(product)}
         >
           <ShoppingCart className="w-4 h-4" />
-          Ajouter au panier
+          {productStock > 0 ? "Ajouter au panier" : productTransit > 0 ? "Réserver" : "Commander"}
         </Button>
       </CardFooter>
     </Card>
@@ -185,9 +228,6 @@ export default function Catalog() {
     category: selectedCategory,
     limit: 50,
   });
-
-  // Fetch all incoming stock for badge display
-
 
   const handleOpenDialog = (product: any) => {
     setSelectedProduct(product);
@@ -322,7 +362,6 @@ export default function Catalog() {
               <ProductCard
                 key={product.id}
                 product={product}
-
                 onOpenDialog={handleOpenDialog}
               />
             ))}

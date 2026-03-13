@@ -24,6 +24,7 @@ import {
   Plus,
   CheckCircle,
   Info,
+  Truck,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -49,7 +50,21 @@ export default function ProductDetail() {
   const addToCartMutation = trpc.cart.add.useMutation();
 
   const selectedVariant = variants?.find((v: any) => v.id === selectedVariantId);
-  
+
+  // Stock and transit info
+  const activeVariants = variants?.filter((v: any) => v.isActive !== false) || [];
+  const stockAvailable = selectedVariant
+    ? (selectedVariant.stockQuantity || 0)
+    : activeVariants.length > 0
+      ? activeVariants.reduce((sum: number, v: any) => sum + (v.stockQuantity || 0), 0)
+      : (product?.stockQuantity || 0);
+  const transitAvailable = selectedVariant
+    ? (selectedVariant.inTransitQuantity || 0)
+    : activeVariants.length > 0
+      ? activeVariants.reduce((sum: number, v: any) => sum + (v.inTransitQuantity || 0), 0)
+      : (product?.inTransitQuantity || 0);
+  const isReservation = stockAvailable === 0 && transitAvailable > 0;
+
   const getPrice = () => {
     if (selectedVariant?.pricePartnerHT) {
       return parseFloat(selectedVariant.pricePartnerHT);
@@ -227,8 +242,42 @@ export default function ProductDetail() {
               )}
             </div>
 
+            {/* Stock / Transit Status */}
+            <div className="flex flex-wrap gap-2">
+              {stockAvailable > 0 && (
+                <Badge className="bg-green-600 text-white gap-1 px-3 py-1">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  En stock ({stockAvailable})
+                </Badge>
+              )}
+              {transitAvailable > 0 && (
+                <Badge className="bg-amber-500 text-white gap-1 px-3 py-1">
+                  <Truck className="w-3.5 h-3.5" />
+                  En transit ({transitAvailable})
+                </Badge>
+              )}
+              {stockAvailable === 0 && transitAvailable === 0 && (
+                <Badge variant="secondary" className="px-3 py-1">
+                  Indisponible
+                </Badge>
+              )}
+            </div>
+
+            {/* Transit reservation info */}
+            {isReservation && (
+              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-start gap-3">
+                <Truck className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="font-medium text-amber-800 dark:text-amber-300">Produit en transit</p>
+                  <p className="text-amber-700 dark:text-amber-400 mt-0.5">
+                    Ce produit est en cours d'acheminement. Réservez-le maintenant pour le recevoir dès son arrivée.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Price */}
-            <div className="bg-info/10 dark:bg-info-light rounded-xl p-4 md:p-4 md:p-6">
+            <div className="bg-info/10 dark:bg-info-light rounded-xl p-4 md:p-6">
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-info dark:text-info-dark">
                   {formatPrice(price)} €
@@ -240,7 +289,7 @@ export default function ProductDetail() {
               </p>
             </div>
 
-            {/* Variants Selector */}
+            {/* Variants Selector with stock/transit */}
             {variants && variants.length > 0 && (
               <div className="space-y-2">
                 <Label>Variante</Label>
@@ -255,11 +304,18 @@ export default function ProductDetail() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="default">Standard</SelectItem>
-                    {variants.map((variant: any) => (
-                      <SelectItem key={variant.id} value={variant.id.toString()}>
-                        {variant.name}
-                      </SelectItem>
-                    ))}
+                    {variants.map((variant: any) => {
+                      const vs = variant.stockQuantity || 0;
+                      const vt = variant.inTransitQuantity || 0;
+                      return (
+                        <SelectItem key={variant.id} value={variant.id.toString()}>
+                          {variant.name}
+                          {vs > 0 ? ` (${vs} en stock)` : ''}
+                          {vt > 0 ? ` (${vt} en transit)` : ''}
+                          {vs === 0 && vt === 0 ? ' (indisponible)' : ''}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -296,8 +352,9 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Add to Cart */}
+            {/* Add to Cart / Reserve */}
             <div className="space-y-3">
+              {stockAvailable > 0 ? (
                 <Button
                   size="lg"
                   className="w-full gap-2"
@@ -306,6 +363,25 @@ export default function ProductDetail() {
                   <ShoppingCart className="w-5 h-5" />
                   Ajouter au panier
                 </Button>
+              ) : transitAvailable > 0 ? (
+                <Button
+                  size="lg"
+                  className="w-full gap-2 bg-amber-600 hover:bg-amber-700"
+                  onClick={() => handleAddToCart(true)}
+                >
+                  <Truck className="w-5 h-5" />
+                  Réserver (en transit)
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  className="w-full gap-2"
+                  disabled
+                >
+                  <Package className="w-5 h-5" />
+                  Indisponible
+                </Button>
+              )}
             </div>
 
 

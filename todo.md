@@ -2764,3 +2764,11 @@
 - [x] Retirer le badge "Arrivage" et les références incoming du frontend
 - [x] Tester l'API avec le vrai JSON fournisseur (format accepté, 0 match car codes pas encore renseignés)
 - [x] Mettre à jour les tests Vitest (882 tests passent)
+
+## Affichage stock et transit dans le catalogue client
+- [x] Exposer stockQuantity et inTransitQuantity dans les routes tRPC utilisateur (catalogue/produits)
+- [x] Afficher les badges "En stock" / "En transit" sur les cartes produit du catalogue
+- [x] Afficher le détail stock/transit par variante sur la page détail produit
+- [x] Permettre la réservation des spas en transit (ajout au panier avec mention "Réservation")
+- [x] Adapter le dialog d'ajout au panier pour stock/transit/réservation
+- [x] Écrire les tests Vitest (15 tests stock-transit-display)
