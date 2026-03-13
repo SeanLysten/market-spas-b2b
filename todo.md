@@ -2772,3 +2772,9 @@
 - [x] Permettre la réservation des spas en transit (ajout au panier avec mention "Réservation")
 - [x] Adapter le dialog d'ajout au panier pour stock/transit/réservation
 - [x] Écrire les tests Vitest (15 tests stock-transit-display)
+
+## Documentation API Fournisseur dans l'onglet Intégrations
+- [x] Ajouter une carte API Fournisseur dans l'onglet Intégrations de AdminSettings
+- [x] Afficher l'URL complète de l'endpoint POST et GET
+- [x] Afficher le format JSON attendu avec exemple
+- [x] Ajouter des boutons pour copier l'URL, l'exemple JSON et la commande cURL

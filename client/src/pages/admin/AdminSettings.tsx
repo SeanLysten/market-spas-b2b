@@ -24,6 +24,9 @@ import {
   BarChart3,
   ShoppingBag,
   Megaphone,
+  Code,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -684,6 +687,7 @@ export default function AdminSettings() {
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
             ) : (
+              <>
               <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
                 <IntegrationCard
                   title="Stripe (Paiements)"
@@ -789,6 +793,170 @@ export default function AdminSettings() {
                   }
                 />
               </div>
+
+              {/* Supplier API Documentation */}
+              <Card className="mt-6 lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Code className="w-5 h-5" />
+                    API Fournisseur (Import Stock & Export Commandes)
+                  </CardTitle>
+                  <CardDescription>
+                    Documentation des endpoints API pour l'intégration avec le système fournisseur
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* POST Import Stock */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs font-bold rounded">POST</span>
+                      <h4 className="font-semibold text-sm">Import Stock</h4>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <code className="text-sm font-mono text-primary break-all">
+                          {window.location.origin}/api/supplier/stock/import
+                        </code>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="shrink-0 ml-2"
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/api/supplier/stock/import`);
+                            toast.success("URL copiée dans le presse-papier");
+                          }}
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Met à jour le stock et les quantités en transit des produits/variantes.
+                        Le matching se fait par <strong>CodeProduit</strong> (supplierProductCode) ou <strong>Ean13</strong>.
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-muted-foreground">Format JSON attendu :</p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const example = JSON.stringify({
+                              key: "ExportStockVotreSociete",
+                              data: [
+                                { Ean13: 3700691427168, CodeProduit: "662200 077 38", EnStock: 5, EnTransit: 2 },
+                                { Ean13: 3700691427175, CodeProduit: "662200 078 38", EnStock: 0, EnTransit: 3 }
+                              ]
+                            }, null, 2);
+                            navigator.clipboard.writeText(example);
+                            toast.success("Exemple JSON copié dans le presse-papier");
+                          }}
+                        >
+                          <Copy className="w-3.5 h-3.5 mr-1" />
+                          <span className="text-xs">Copier l'exemple</span>
+                        </Button>
+                      </div>
+                      <pre className="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto">
+{`{
+  "key": "ExportStockVotreSociete",
+  "data": [
+    {
+      "Ean13": 3700691427168,
+      "CodeProduit": "662200 077 38",
+      "EnStock": 5,
+      "EnTransit": 2
+    },
+    {
+      "Ean13": 3700691427175,
+      "CodeProduit": "662200 078 38",
+      "EnStock": 0,
+      "EnTransit": 3
+    }
+  ]
+}`}
+                      </pre>
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                      <p className="text-xs text-amber-800 dark:text-amber-300">
+                        <strong>Important :</strong> Le matching se fait d'abord par <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">CodeProduit</code> (champ "Code fournisseur" de chaque variante),
+                        puis par <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">Ean13</code> si aucun match par code.
+                        Assurez-vous que les codes fournisseur sont bien renseignés dans l'admin produits pour chaque variante.
+                      </p>
+                    </div>
+                  </div>
+
+                  <hr className="border-border" />
+
+                  {/* GET Export Orders */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs font-bold rounded">GET</span>
+                      <h4 className="font-semibold text-sm">Export Commandes</h4>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <code className="text-sm font-mono text-primary break-all">
+                          {window.location.origin}/api/supplier/orders/export
+                        </code>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="shrink-0 ml-2"
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/api/supplier/orders/export`);
+                            toast.success("URL copiée dans le presse-papier");
+                          }}
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Retourne les commandes, paiements et informations clients au format JSON.
+                        Paramètres optionnels : <code className="bg-muted px-1 rounded">?limit=50&offset=0</code>
+                      </p>
+                    </div>
+                  </div>
+
+                  <hr className="border-border" />
+
+                  {/* cURL Example */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-semibold text-sm">Exemple cURL (Import Stock)</h4>
+                    </div>
+                    <div className="relative">
+                      <pre className="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto">
+{`curl -X POST ${window.location.origin}/api/supplier/stock/import \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "key": "ExportStockVotreSociete",
+    "data": [
+      {
+        "Ean13": 3700691427168,
+        "CodeProduit": "662200 077 38",
+        "EnStock": 5,
+        "EnTransit": 2
+      }
+    ]
+  }'`}
+                      </pre>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-2 right-2 text-slate-400 hover:text-white"
+                        onClick={() => {
+                          const curl = `curl -X POST ${window.location.origin}/api/supplier/stock/import -H "Content-Type: application/json" -d '{"key":"ExportStockVotreSociete","data":[{"Ean13":3700691427168,"CodeProduit":"662200 077 38","EnStock":5,"EnTransit":2}]}'`;
+                          navigator.clipboard.writeText(curl);
+                          toast.success("Commande cURL copiée dans le presse-papier");
+                        }}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              </>
             )}
           </TabsContent>
         </Tabs>
