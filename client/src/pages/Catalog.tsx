@@ -125,31 +125,33 @@ function ProductCard({ product, onOpenDialog }: {
           </div>
         )}
 
-        {/* Stock / Transit badges */}
-        <div className="absolute top-2 right-2 flex flex-col gap-1">
-          {productStock > 0 && (
-            <Badge className="bg-green-600 text-white text-xs">
-              En stock ({productStock})
-            </Badge>
-          )}
-          {productTransit > 0 && (
-            <Badge className="bg-amber-500 text-white text-xs gap-1">
-              <Truck className="w-3 h-3" />
-              {productTransit} en transit
-            </Badge>
-          )}
-          {arrivalLabel && (
-            <Badge className="bg-blue-600 text-white text-xs gap-1">
-              <CalendarClock className="w-3 h-3" />
-              Arrivage dès {arrivalLabel}
-            </Badge>
-          )}
-          {productStock === 0 && productTransit === 0 && (
-            <Badge variant="secondary" className="text-xs">
-              Indisponible
-            </Badge>
-          )}
-        </div>
+      </div>
+
+      {/* Stock / Transit badges - below image */}
+      <div className="flex items-center gap-1.5 px-3 pt-2 flex-wrap">
+        {productStock > 0 && (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+            <Package className="w-3 h-3" />
+            {productStock} en stock
+          </span>
+        )}
+        {productTransit > 0 && (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+            <Truck className="w-3 h-3" />
+            {productTransit} en transit
+          </span>
+        )}
+        {arrivalLabel && (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5">
+            <CalendarClock className="w-3 h-3" />
+            {arrivalLabel}
+          </span>
+        )}
+        {productStock === 0 && productTransit === 0 && (
+          <span className="inline-flex items-center text-[11px] font-medium text-gray-500 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5">
+            Indisponible
+          </span>
+        )}
       </div>
 
       <CardHeader className="flex-1 pb-2">

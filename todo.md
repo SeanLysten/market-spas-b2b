@@ -2848,3 +2848,6 @@
 - [x] Séparer la sélection en 2 étapes : couleur puis source (stock vs arrivage Sxx)
 - [x] Chaque source a sa propre quantité disponible indépendante
 - [x] Responsive mobile
+
+## Design pastilles catalogue
+- [x] Déplacer les badges stock/transit/arrivage sous l'image du spa en petites pastilles discrètes
