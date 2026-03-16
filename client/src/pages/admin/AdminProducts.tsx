@@ -31,6 +31,9 @@ import { Plus, Edit, Trash2, Package, Palette, TruckIcon, Pencil, CheckCircle, C
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
+import { OnboardingTour } from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { adminProductsTour } from "@/config/onboarding-tours";
 import {
   DndContext,
   closestCenter,
@@ -213,10 +216,21 @@ export default function AdminProducts() {
     setExpandedProductId(expandedProductId === productId ? null : productId);
   };
 
+  const onboarding = useOnboarding("admin-products");
+
   return (
     <AdminLayout>
+      <OnboardingTour
+        steps={adminProductsTour}
+        isActive={onboarding.isActive}
+        currentStep={onboarding.currentStep}
+        onNext={onboarding.nextStep}
+        onPrev={onboarding.prevStep}
+        onSkip={onboarding.skipTour}
+        onComplete={onboarding.markCompleted}
+      />
       <div className="space-y-6">
-        <div>
+        <div data-tour="admin-products-header">
           <h1 className="text-2xl md:text-3xl font-bold">Gestion des produits</h1>
           <p className="text-muted-foreground mt-1">
             Gérez vos produits et variantes. Le stock et les quantités en transit sont mis à jour automatiquement via l'API fournisseur.
@@ -224,7 +238,7 @@ export default function AdminProducts() {
         </div>
 
         <div className="w-full space-y-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" data-tour="admin-products-actions">
               <div className="flex gap-2">
                 <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
                   <DialogTrigger asChild>

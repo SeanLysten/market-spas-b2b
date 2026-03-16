@@ -58,6 +58,9 @@ import {
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { Eye } from "lucide-react";
+import { OnboardingTour } from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { adminPartnersTour } from "@/config/onboarding-tours";
 
 
 
@@ -76,6 +79,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function AdminPartners() {
+  const onboarding = useOnboarding("admin-partners");
   const [, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -425,9 +429,18 @@ export default function AdminPartners() {
 
   return (
     <AdminLayout>
+      <OnboardingTour
+        steps={adminPartnersTour}
+        isActive={onboarding.isActive}
+        currentStep={onboarding.currentStep}
+        onNext={onboarding.nextStep}
+        onPrev={onboarding.prevStep}
+        onSkip={onboarding.skipTour}
+        onComplete={onboarding.markCompleted}
+      />
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" data-tour="admin-partners-header">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Gestion des partenaires</h1>
             <p className="text-muted-foreground">
@@ -462,7 +475,7 @@ export default function AdminPartners() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4" data-tour="admin-partners-stats">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total partenaires</CardTitle>

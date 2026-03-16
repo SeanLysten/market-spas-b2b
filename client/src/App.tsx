@@ -50,6 +50,7 @@ import ForumNewTopic from "./pages/ForumNewTopic";
 import ForumTopicDetail from "./pages/ForumTopicDetail";
 import AcceptInvitation from "./pages/AcceptInvitation";
 import NotificationPreferences from "./pages/NotificationPreferences";
+import Notifications from "./pages/Notifications";
 import TeamManagement from "./pages/TeamManagement";
 import CompanyProfile from "./pages/CompanyProfile";
 import Login from "./pages/Login";
@@ -97,6 +98,7 @@ function Router() {
       <Route path="/technical-resources/forum/new" component={ForumNewTopic} />
       <Route path="/technical-resources/forum/:id" component={ForumTopicDetail} />
       <Route path="/accept-invitation" component={AcceptInvitation} />
+      <Route path="/notifications" component={Notifications} />
       <Route path="/notification-preferences" component={NotificationPreferences} />
       <Route path="/team" component={TeamManagement} />
       <Route path="/company-profile" component={CompanyProfile} />

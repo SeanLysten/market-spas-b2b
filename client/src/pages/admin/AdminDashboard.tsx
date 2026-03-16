@@ -44,6 +44,9 @@ import { Link } from "wouter";
 import SalesChart from "@/components/charts/SalesChart";
 import TopProductsChart from "@/components/charts/TopProductsChart";
 import MiniCalendar from "@/components/MiniCalendar";
+import { OnboardingTour } from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { adminDashboardTour } from "@/config/onboarding-tours";
 
 // Helper to check admin module access
 function hasModule(
@@ -876,7 +879,7 @@ function FullAdminDashboardSection() {
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4" data-tour="admin-kpi-cards">
           {statsCards.map((stat) => {
             const Icon = stat.icon;
             return (
@@ -901,7 +904,7 @@ function FullAdminDashboardSection() {
           <Card className="h-full">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2"><Activity className="w-5 h-5" />Commandes récentes</CardTitle>
+                <CardTitle className="flex items-center gap-2" data-tour="admin-recent-orders"><Activity className="w-5 h-5" />Commandes récentes</CardTitle>
                 <CardDescription>Les 5 dernières commandes</CardDescription>
               </div>
               <Link href="/admin/orders"><Button variant="ghost" size="sm" className="gap-1">Voir tout <ArrowRight className="w-4 h-4" /></Button></Link>
@@ -1058,11 +1061,22 @@ export default function AdminDashboard() {
     />;
   };
 
+  const onboarding = useOnboarding("admin-dashboard");
+
   return (
     <AdminLayout>
+      <OnboardingTour
+        steps={adminDashboardTour}
+        isActive={onboarding.isActive}
+        currentStep={onboarding.currentStep}
+        onNext={onboarding.nextStep}
+        onPrev={onboarding.prevStep}
+        onSkip={onboarding.skipTour}
+        onComplete={onboarding.markCompleted}
+      />
       <div className="space-y-8">
         {/* Header */}
-        <div className="space-y-4">
+        <div className="space-y-4" data-tour="admin-dashboard-header">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Dashboard Administration</h1>
             <p className="text-muted-foreground mt-1 text-sm md:text-base">

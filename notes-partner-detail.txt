@@ -1,0 +1,5 @@
+AdminPartnerDetail page is working correctly at /admin/partners/90001
+Shows: Company name, status badge, level badge, KPIs (orders, revenue, discount, credit)
+Sections: Informations société, Contacts, Adresses, Conditions commerciales, Commandes récentes
+Buttons: Approuver, Modifier, Back arrow
+Page is fully functional.

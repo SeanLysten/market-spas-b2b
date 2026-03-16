@@ -178,6 +178,106 @@ export const resourcesTour: TourStep[] = [
   },
 ];
 
+// ============================================
+// ADMIN TOURS
+// ============================================
+
+export const adminDashboardTour: TourStep[] = [
+  {
+    target: '[data-tour="admin-dashboard-header"]',
+    title: "Tableau de bord administrateur",
+    description:
+      "Bienvenue dans l'espace d'administration. Ce tableau de bord centralise les indicateurs clés de votre activité : commandes, partenaires, chiffre d'affaires et alertes.",
+    position: "bottom",
+  },
+  {
+    target: '[data-tour="admin-kpi-cards"]',
+    title: "Indicateurs clés",
+    description:
+      "Ces cartes affichent en temps réel le nombre de commandes, le chiffre d'affaires, les partenaires actifs et les tickets SAV en cours. Cliquez sur un indicateur pour accéder à la section correspondante.",
+    position: "bottom",
+  },
+  {
+    target: '[data-tour="admin-recent-orders"]',
+    title: "Commandes récentes",
+    description:
+      "Les dernières commandes apparaissent ici avec leur statut. Vous pouvez rapidement accéder au détail de chaque commande pour la traiter.",
+    position: "top",
+  },
+];
+
+export const adminProductsTour: TourStep[] = [
+  {
+    target: '[data-tour="admin-products-header"]',
+    title: "Gestion des produits",
+    description:
+      "Gérez l'ensemble de votre catalogue produits. Ajoutez, modifiez ou désactivez des produits, gérez les prix, les stocks et les variantes de couleur.",
+    position: "bottom",
+  },
+  {
+    target: '[data-tour="admin-products-actions"]',
+    title: "Actions produits",
+    description:
+      "Utilisez les boutons d'action pour ajouter un nouveau produit, importer en masse depuis un fichier, ou exporter le catalogue complet.",
+    position: "bottom",
+  },
+];
+
+export const adminOrdersTour: TourStep[] = [
+  {
+    target: '[data-tour="admin-orders-header"]',
+    title: "Gestion des commandes",
+    description:
+      "Toutes les commandes de vos partenaires sont centralisées ici. Suivez chaque commande de la création à la livraison.",
+    position: "bottom",
+  },
+  {
+    target: '[data-tour="admin-orders-filters"]',
+    title: "Filtres et recherche",
+    description:
+      "Filtrez par statut, partenaire ou date pour retrouver rapidement une commande. Les compteurs par statut vous donnent une vue d'ensemble.",
+    position: "bottom",
+  },
+];
+
+export const adminPartnersTour: TourStep[] = [
+  {
+    target: '[data-tour="admin-partners-header"]',
+    title: "Gestion des partenaires",
+    description:
+      "Gérez vos partenaires revendeurs : approuvez les demandes, définissez les conditions commerciales, suivez les performances.",
+    position: "bottom",
+  },
+  {
+    target: '[data-tour="admin-partners-stats"]',
+    title: "Statistiques partenaires",
+    description:
+      "Les compteurs affichent le total de partenaires, ceux en attente d'approbation, les partenaires approuvés et ceux bénéficiant de remises spéciales.",
+    position: "bottom",
+  },
+];
+
+export const adminLeadsTour: TourStep[] = [
+  {
+    target: '[data-tour="admin-leads-header"]',
+    title: "Gestion des leads",
+    description:
+      "Tous les prospects reçus via Meta Ads, Google Ads ou le site web sont centralisés ici. Assignez-les à vos partenaires selon leur zone géographique.",
+    position: "bottom",
+  },
+  {
+    target: '[data-tour="admin-leads-actions"]',
+    title: "Actions sur les leads",
+    description:
+      "Assignez un lead à un partenaire, changez son statut, ou consultez les détails du prospect. Les leads non assignés sont mis en évidence.",
+    position: "bottom",
+  },
+];
+
+// ============================================
+// PARTNER TOURS
+// ============================================
+
 export const calendarTour: TourStep[] = [
   {
     target: '[data-tour="calendar-header"]',

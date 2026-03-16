@@ -27,6 +27,9 @@ import {
   Download
 } from "lucide-react";
 import { toast } from "sonner";
+import { OnboardingTour } from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { adminOrdersTour } from "@/config/onboarding-tours";
 
 type OrderStatus = "PENDING_APPROVAL" | "PENDING_DEPOSIT" | "DEPOSIT_PAID" | "IN_PRODUCTION" | "READY_TO_SHIP" | "SHIPPED" | "DELIVERED" | "COMPLETED" | "CANCELLED";
 
@@ -43,6 +46,7 @@ const ORDER_STATUSES: { value: OrderStatus; label: string; color: string; icon: 
 ];
 
 export default function AdminOrders() {
+  const onboarding = useOnboarding("admin-orders");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -129,9 +133,18 @@ export default function AdminOrders() {
 
   return (
     <AdminLayout>
+      <OnboardingTour
+        steps={adminOrdersTour}
+        isActive={onboarding.isActive}
+        currentStep={onboarding.currentStep}
+        onNext={onboarding.nextStep}
+        onPrev={onboarding.prevStep}
+        onSkip={onboarding.skipTour}
+        onComplete={onboarding.markCompleted}
+      />
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" data-tour="admin-orders-header">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Gestion des commandes</h1>
             <p className="text-muted-foreground mt-1">
@@ -187,7 +200,7 @@ export default function AdminOrders() {
         </div>
 
         {/* Filters */}
-        <Card>
+        <Card data-tour="admin-orders-filters">
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1">

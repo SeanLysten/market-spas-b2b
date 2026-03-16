@@ -2959,3 +2959,9 @@
 - [x] Corriger le système de déconnexion
 - [x] Nettoyer les variables d'environnement OAuth inutiles
 - [x] Lancer les tests et corriger les régressions - 990 tests passent
+
+## Améliorations en cours
+- [x] Vérifier la page AdminPartnerDetail et corriger si nécessaire
+- [x] Ajouter bouton "Relancer le guide" dans le profil utilisateur pour rejouer les tours d'onboarding
+- [x] Créer la page "Toutes les notifications" avec filtres par type et bulk "Tout marquer comme lu"
+- [x] Ajouter les tours d'onboarding pour les pages admin (Dashboard, Products, Orders, Partners, Leads)

@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { trpc } from "@/lib/trpc";
 // Note: Using alert for now, can be replaced with toast component
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   User,
   Building2,
@@ -19,8 +19,11 @@ import {
   ArrowLeft,
   Users,
   Edit,
+  RotateCcw,
+  HelpCircle,
 } from "lucide-react";
 import { Link } from "wouter";
+import { resetAllOnboarding } from "@/hooks/useOnboarding";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -528,6 +531,34 @@ export default function Profile() {
                       </div>
                       <Button variant="outline" size="sm">
                         Voir les sessions
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div>
+                        <h4 className="font-medium flex items-center gap-2">
+                          <HelpCircle className="w-4 h-4" />
+                          Guides d'utilisation
+                        </h4>
+                        <p className="text-xs md:text-sm text-muted-foreground">
+                          Relancez les guides interactifs pour redécouvrir les fonctionnalités du portail
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => {
+                          resetAllOnboarding();
+                          alert("Les guides ont été réinitialisés. Ils se relanceront automatiquement lors de votre prochaine visite sur chaque page.");
+                        }}
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        Relancer les guides
                       </Button>
                     </div>
                   </div>

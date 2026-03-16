@@ -47,6 +47,9 @@ import {
   Map
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from "recharts";
+import { OnboardingTour } from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { adminLeadsTour } from "@/config/onboarding-tours";
 
 // Types
 interface Lead {
@@ -124,6 +127,7 @@ const LEAD_STATUSES = {
 };
 
 export default function AdminLeads() {
+  const onboarding = useOnboarding("admin-leads");
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -622,9 +626,18 @@ export default function AdminLeads() {
 
   return (
     <AdminLayout>
+      <OnboardingTour
+        steps={adminLeadsTour}
+        isActive={onboarding.isActive}
+        currentStep={onboarding.currentStep}
+        onNext={onboarding.nextStep}
+        onPrev={onboarding.prevStep}
+        onSkip={onboarding.skipTour}
+        onComplete={onboarding.markCompleted}
+      />
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" data-tour="admin-leads-header">
           <div>
             <h1 className="text-2xl text-display text-display font-bold text-gray-900">Gestion des Leads</h1>
             <p className="text-muted-foreground dark:text-muted-foreground">Statistiques des campagnes Meta et suivi des prospects</p>
@@ -798,7 +811,7 @@ export default function AdminLeads() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList>
+          <TabsList data-tour="admin-leads-actions">
             <TabsTrigger value="leads">
               <Users className="w-4 h-4 mr-2" />
               Tous les leads
