@@ -828,6 +828,13 @@ export const orderItems = mysqlTable(
     totalVAT: decimal("totalVAT", { precision: 12, scale: 2 }).notNull(),
     totalTTC: decimal("totalTTC", { precision: 12, scale: 2 }).notNull(),
 
+    // Stock source tracking (for supplier export)
+    stockSource: varchar("stockSource", { length: 20 }),  // "STOCK" or "TRANSIT"
+    stockSourceArrivalWeek: varchar("stockSourceArrivalWeek", { length: 20 }),  // e.g. "202611" if transit
+    snapshotEnStock: int("snapshotEnStock"),  // stock qty at order time
+    snapshotEnTransit: int("snapshotEnTransit"),  // transit qty at order time
+    color: varchar("color", { length: 100 }),  // variant color at order time
+
     // Shipping
     quantityShipped: int("quantityShipped").default(0),
     quantityDelivered: int("quantityDelivered").default(0),

@@ -2857,3 +2857,17 @@
 
 ## UX - Animation de chargement catalogue
 - [x] Ajouter des skeleton loaders animés sur les cartes produits pendant le chargement des données
+
+## API Export Fournisseur - Corrections et améliorations
+- [x] Ajouter colonnes manquantes à order_items (stockSource, stockSourceArrivalWeek, snapshotEnStock, snapshotEnTransit, color)
+- [x] Migrer la DB avec les nouvelles colonnes
+- [x] Persister la source stock lors de createOrder (stockSource, arrivalWeek, enStock, enTransit, couleur)
+- [x] Corriger bug API export : p.partnerLevel → p.level
+- [x] Corriger bug API export : p.phone → p.primaryContactPhone
+- [x] Corriger bug API export : p.email → p.primaryContactEmail
+- [x] Corriger bug API export : p.siret → p.registrationNumber
+- [x] Aligner les noms de champs items sur ceux du fournisseur (CodeProduit, Ean13, etc.)
+- [x] Ajouter les champs commande manquants dans l'export (depositPaid, depositPaidAt, deliveryRequestedWeek, etc.)
+- [x] Ajouter les coordonnées complètes du partenaire (adresses, contacts)
+- [x] Ajouter les filtres API (status, since, depositPaid)
+- [x] Écrire les tests vitest pour l'API export

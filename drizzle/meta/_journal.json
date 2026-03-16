@@ -309,6 +309,13 @@
       "when": 1773413911297,
       "tag": "0043_parallel_vanisher",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "5",
+      "when": 1773653903415,
+      "tag": "0044_minor_karma",
+      "breakpoints": true
     }
   ]
 }

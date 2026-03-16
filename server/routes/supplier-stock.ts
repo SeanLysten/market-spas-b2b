@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getDb } from "../db";
-import { products, productVariants, orders, partners, users, orderItems, payments, supplierApiLogs } from "../../drizzle/schema";
+import { products, productVariants, orders, partners, users, orderItems, payments, supplierApiLogs, partnerContacts } from "../../drizzle/schema";
 import { eq, or, sql, inArray, and, desc } from "drizzle-orm";
 
 const router = Router();
@@ -335,11 +335,30 @@ router.get("/api/supplier/orders/export", async (req, res) => {
     // Parse query parameters
     const limit = parseInt(req.query.limit as string) || 50;
     const offset = parseInt(req.query.offset as string) || 0;
+    const filterStatus = req.query.status as string | undefined;
+    const filterSince = req.query.since as string | undefined;
+    const filterDepositPaid = req.query.depositPaid as string | undefined;
 
-    // Step 1: Get orders
+    // Step 1: Get orders with filters
     let orderRows: any[] = [];
     try {
-      orderRows = await db
+      const conditions: any[] = [];
+      if (filterStatus) {
+        conditions.push(eq(orders.status, filterStatus as any));
+      }
+      if (filterSince) {
+        const sinceDate = new Date(filterSince);
+        if (!isNaN(sinceDate.getTime())) {
+          conditions.push(sql`${orders.createdAt} >= ${sinceDate}`);
+        }
+      }
+      if (filterDepositPaid === "true") {
+        conditions.push(eq(orders.depositPaid, true));
+      } else if (filterDepositPaid === "false") {
+        conditions.push(eq(orders.depositPaid, false));
+      }
+
+      const query = db
         .select({
           orderId: orders.id,
           orderNumber: orders.orderNumber,
@@ -352,15 +371,35 @@ router.get("/api/supplier/orders/export", async (req, res) => {
           totalHT: orders.totalHT,
           totalVAT: orders.totalVAT,
           totalTTC: orders.totalTTC,
+          currency: orders.currency,
           depositPercent: orders.depositPercent,
           depositAmount: orders.depositAmount,
+          depositPaid: orders.depositPaid,
+          depositPaidAt: orders.depositPaidAt,
+          balanceAmount: orders.balanceAmount,
+          balancePaid: orders.balancePaid,
           shippingMethod: orders.shippingMethod,
-          internalNotes: orders.internalNotes,
+          paymentMethod: orders.paymentMethod,
           customerNotes: orders.customerNotes,
+          deliveryRequestedWeek: orders.deliveryRequestedWeek,
+          deliveryStreet: orders.deliveryStreet,
+          deliveryStreet2: orders.deliveryStreet2,
+          deliveryCity: orders.deliveryCity,
+          deliveryPostalCode: orders.deliveryPostalCode,
+          deliveryCountry: orders.deliveryCountry,
+          deliveryContactName: orders.deliveryContactName,
+          deliveryContactPhone: orders.deliveryContactPhone,
+          deliveryInstructions: orders.deliveryInstructions,
           partnerId: orders.partnerId,
           createdById: orders.createdById,
         })
-        .from(orders)
+        .from(orders);
+
+      const finalQuery = conditions.length > 0
+        ? query.where(and(...conditions))
+        : query;
+
+      orderRows = await finalQuery
         .orderBy(sql`${orders.createdAt} DESC`)
         .limit(limit)
         .offset(offset);
@@ -369,27 +408,42 @@ router.get("/api/supplier/orders/export", async (req, res) => {
       return res.status(500).json({ success: false, error: "Erreur lors de la récupération des commandes: " + e.message });
     }
 
-    // Step 2: Enrich with partner and user info
+    // Step 2: Enrich with partner, user, items, payments
     const exportData = [];
     for (const order of orderRows) {
-      let partnerInfo: any = {};
-      let userInfo: any = {};
+      let clientInfo: any = {};
       let orderItemsList: any[] = [];
       let paymentsList: any[] = [];
 
+      // --- Partner info (FIXED: use correct field names) ---
       try {
         if (order.partnerId) {
           const partnerRows = await db.select().from(partners).where(eq(partners.id, order.partnerId)).limit(1);
           if (partnerRows.length > 0) {
             const p = partnerRows[0];
-            partnerInfo = {
+            clientInfo = {
               partnerId: p.id,
-              companyName: p.companyName,
-              partnerLevel: p.partnerLevel,
-              vatNumber: p.vatNumber,
-              phone: p.phone,
-              email: p.email,
-              siret: p.siret,
+              company: {
+                name: p.companyName,
+                tradeName: p.tradeName || null,
+                legalForm: p.legalForm || null,
+                vatNumber: p.vatNumber,
+                registrationNumber: p.registrationNumber || null,
+              },
+              contact: {
+                name: p.primaryContactName,
+                email: p.primaryContactEmail,
+                phone: p.primaryContactPhone,
+                accountingEmail: p.accountingEmail || null,
+              },
+              billingAddress: {
+                street: p.billingAddressSame ? p.addressStreet : (p.billingStreet || p.addressStreet),
+                street2: p.billingAddressSame ? (p.addressStreet2 || null) : (p.billingStreet2 || null),
+                city: p.billingAddressSame ? p.addressCity : (p.billingCity || p.addressCity),
+                postalCode: p.billingAddressSame ? p.addressPostalCode : (p.billingPostalCode || p.addressPostalCode),
+                country: p.billingAddressSame ? (p.addressCountry || "BE") : (p.billingCountry || p.addressCountry || "BE"),
+              },
+              level: p.level,
             };
           }
         }
@@ -397,17 +451,22 @@ router.get("/api/supplier/orders/export", async (req, res) => {
         console.error("[SupplierOrders] Partner lookup error:", e.message);
       }
 
+      // --- User info ---
       try {
         if (order.createdById) {
           const userRows = await db.select().from(users).where(eq(users.id, order.createdById)).limit(1);
           if (userRows.length > 0) {
-            userInfo = { contactName: userRows[0].name, contactEmail: userRows[0].email };
+            clientInfo.orderedBy = {
+              name: userRows[0].name,
+              email: userRows[0].email,
+            };
           }
         }
       } catch (e: any) {
         console.error("[SupplierOrders] User lookup error:", e.message);
       }
 
+      // --- Order items with supplier field names (CodeProduit, Ean13, etc.) ---
       try {
         const items = await db
           .select({
@@ -418,13 +477,18 @@ router.get("/api/supplier/orders/export", async (req, res) => {
             totalHT: orderItems.totalHT,
             productId: orderItems.productId,
             variantId: orderItems.variantId,
+            stockSource: orderItems.stockSource,
+            stockSourceArrivalWeek: orderItems.stockSourceArrivalWeek,
+            snapshotEnStock: orderItems.snapshotEnStock,
+            snapshotEnTransit: orderItems.snapshotEnTransit,
+            color: orderItems.color,
           })
           .from(orderItems)
           .where(eq(orderItems.orderId, order.orderId));
 
         for (const item of items) {
-          let supplierCode = null;
-          let ean13 = null;
+          let supplierCode: string | null = null;
+          let ean13: string | number | null = null;
 
           if (item.variantId) {
             const variants = await db.select({ supplierProductCode: productVariants.supplierProductCode, ean13: productVariants.ean13 }).from(productVariants).where(eq(productVariants.id, item.variantId)).limit(1);
@@ -441,27 +505,38 @@ router.get("/api/supplier/orders/export", async (req, res) => {
             }
           }
 
+          // Convert EAN13 to number if possible (matching supplier import format)
+          let ean13Numeric: number | string | null = ean13;
+          if (ean13 && !isNaN(Number(ean13))) {
+            ean13Numeric = Number(ean13);
+          }
+
           orderItemsList.push({
-            name: item.itemName,
-            sku: item.itemSku,
-            quantity: item.quantity,
-            unitPriceHT: item.unitPriceHT,
-            totalHT: item.totalHT,
-            supplierProductCode: supplierCode,
-            ean13: ean13,
+            NomProduit: item.itemName,
+            SKU: item.itemSku,
+            CodeProduit: supplierCode,
+            Ean13: ean13Numeric,
+            Couleur: item.color || null,
+            QuantiteCommandee: item.quantity,
+            PrixUnitaireHT: item.unitPriceHT,
+            TotalHT: item.totalHT,
+            SourceStock: item.stockSource || null,
+            EnStock: item.snapshotEnStock ?? null,
+            EnTransit: item.snapshotEnTransit ?? null,
+            DelaiAppro: item.stockSourceArrivalWeek || null,
           });
         }
       } catch (e: any) {
         console.error("[SupplierOrders] Items lookup error:", e.message);
       }
 
+      // --- Payments ---
       try {
         const pmts = await db
           .select({
             amount: payments.amount,
             method: payments.method,
             status: payments.status,
-            stripePaymentIntentId: payments.stripePaymentIntentId,
             paidAt: payments.paidAt,
           })
           .from(payments)
@@ -485,12 +560,30 @@ router.get("/api/supplier/orders/export", async (req, res) => {
           totalHT: order.totalHT,
           totalVAT: order.totalVAT,
           totalTTC: order.totalTTC,
+          currency: order.currency,
           depositPercent: order.depositPercent,
           depositAmount: order.depositAmount,
+          depositPaid: order.depositPaid || false,
+          depositPaidAt: order.depositPaidAt || null,
+          depositPaymentMethod: order.paymentMethod || null,
+          balanceAmount: order.balanceAmount,
+          balancePaid: order.balancePaid || false,
+          customerNotes: order.customerNotes || null,
+          deliveryRequestedWeek: order.deliveryRequestedWeek || null,
         },
         items: orderItemsList,
         payments: paymentsList,
-        client: { ...partnerInfo, ...userInfo },
+        client: clientInfo,
+        deliveryAddress: {
+          street: order.deliveryStreet || null,
+          street2: order.deliveryStreet2 || null,
+          city: order.deliveryCity || null,
+          postalCode: order.deliveryPostalCode || null,
+          country: order.deliveryCountry || null,
+          contactName: order.deliveryContactName || null,
+          contactPhone: order.deliveryContactPhone || null,
+          instructions: order.deliveryInstructions || null,
+        },
       });
     }
 
@@ -498,6 +591,11 @@ router.get("/api/supplier/orders/export", async (req, res) => {
       success: true,
       exportedAt: new Date().toISOString(),
       count: exportData.length,
+      filters: {
+        status: filterStatus || null,
+        since: filterSince || null,
+        depositPaid: filterDepositPaid || null,
+      },
       data: exportData,
     });
   } catch (error: any) {

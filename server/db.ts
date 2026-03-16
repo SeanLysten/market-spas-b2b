@@ -1518,6 +1518,9 @@ export interface CreateOrderInput {
     discountPercent?: number;
     isPreorder?: boolean;
     incomingStockId?: number;
+    stockSource?: string;  // "STOCK" or "TRANSIT"
+    stockSourceArrivalWeek?: string;  // e.g. "202611"
+    color?: string;
   }>;
   deliveryAddress: {
     street: string;
@@ -1637,6 +1640,38 @@ export async function createOrder(input: CreateOrderInput) {
 
   // Create order items
   for (const item of itemsWithTotals) {
+    // Snapshot current stock/transit quantities and variant color for supplier export
+    let snapshotEnStock: number | null = null;
+    let snapshotEnTransit: number | null = null;
+    let itemColor: string | null = item.color || null;
+    let itemStockSource = item.stockSource || (item.isPreorder ? "TRANSIT" : "STOCK");
+    let itemArrivalWeek = item.stockSourceArrivalWeek || null;
+
+    if (item.variantId) {
+      const variantRows = await db.select({
+        stockQuantity: productVariants.stockQuantity,
+        inTransitQuantity: productVariants.inTransitQuantity,
+        estimatedArrival: productVariants.estimatedArrival,
+        color: productVariants.color,
+      }).from(productVariants).where(eq(productVariants.id, item.variantId)).limit(1);
+      if (variantRows.length > 0) {
+        snapshotEnStock = variantRows[0].stockQuantity || 0;
+        snapshotEnTransit = variantRows[0].inTransitQuantity || 0;
+        if (!itemColor) itemColor = variantRows[0].color || null;
+        if (!itemArrivalWeek && item.isPreorder && variantRows[0].estimatedArrival) {
+          itemArrivalWeek = variantRows[0].estimatedArrival;
+        }
+      }
+    } else if (item.productId) {
+      const productRows = await db.select({
+        stockQuantity: products.stockQuantity,
+      }).from(products).where(eq(products.id, item.productId)).limit(1);
+      if (productRows.length > 0) {
+        snapshotEnStock = productRows[0].stockQuantity || 0;
+        snapshotEnTransit = 0;
+      }
+    }
+
     await db.insert(orderItems).values({
       orderId,
       productId: item.productId,
@@ -1651,6 +1686,11 @@ export async function createOrder(input: CreateOrderInput) {
       vatRate: item.vatRate.toFixed(2),
       totalVAT: item.totalVAT.toFixed(2),
       totalTTC: item.totalTTC.toFixed(2),
+      stockSource: itemStockSource,
+      stockSourceArrivalWeek: itemArrivalWeek,
+      snapshotEnStock,
+      snapshotEnTransit,
+      color: itemColor,
     });
 
     // Update stock and reservation tracking
