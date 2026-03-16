@@ -2840,3 +2840,6 @@
 - [x] Frontend : afficher la quantité max disponible et limiter le sélecteur de quantité
 - [x] Frontend : message d'erreur clair si quantité demandée > disponible
 - [x] Tests Vitest pour les vérifications de stock
+
+## Bug fix - toFixed not a function
+- [x] Corriger TypeError: pricePartnerHT.toFixed is not a function dans ProductAddToCartDialog

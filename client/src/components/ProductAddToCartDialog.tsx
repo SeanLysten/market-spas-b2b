@@ -361,13 +361,13 @@ export default function ProductAddToCartDialog({
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Prix unitaire HT</span>
               <span className="font-medium">
-                {(product.pricePartnerHT || 0).toFixed(2)} €
+                {parseFloat(String(product.pricePartnerHT || 0)).toFixed(2)} €
               </span>
             </div>
             <div className="flex items-center justify-between text-base font-semibold text-display mt-2">
               <span>Total HT</span>
               <span>
-                {((product.pricePartnerHT || 0) * quantity).toFixed(2)} €
+                {(parseFloat(String(product.pricePartnerHT || 0)) * quantity).toFixed(2)} €
               </span>
             </div>
           </div>
