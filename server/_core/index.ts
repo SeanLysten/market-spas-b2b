@@ -19,6 +19,7 @@ import { getPrivacyHTML, getTermsHTML } from "../static-pages";
 import { inboundLeadsRouter } from "../routes/inbound-leads";
 import { uploadResourceRouter } from "../routes/upload-resource";
 import { supplierStockRouter } from "../routes/supplier-stock";
+import { orderPdfRouter } from "../routes/order-pdf";
 import { validateEnv } from "./env";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -326,6 +327,8 @@ async function startServer() {
   app.use(uploadResourceRouter);
   // Supplier stock integration API
   app.use(supplierStockRouter);
+  // Order PDF export
+  app.use(orderPdfRouter);
   // Download ZIP - multiple resources
   app.get("/api/resources/download-zip", async (req, res) => {
     try {

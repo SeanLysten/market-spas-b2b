@@ -19,6 +19,7 @@ import {
   FileText,
   AlertCircle,
   XCircle,
+  Download,
 } from "lucide-react";
 
 type OrderStatus = "PENDING_APPROVAL" | "PENDING_DEPOSIT" | "DEPOSIT_PAID" | "IN_PRODUCTION" | "READY_TO_SHIP" | "SHIPPED" | "DELIVERED" | "COMPLETED" | "CANCELLED";
@@ -166,9 +167,15 @@ export default function OrderTracking() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" className="gap-2 w-full sm:w-auto">
-                <FileText className="w-4 h-4" />
-                Télécharger le devis
+              <Link href={`/order/${orderId}/summary`}>
+                <Button variant="outline" className="gap-2 w-full sm:w-auto">
+                  <FileText className="w-4 h-4" />
+                  Récapitulatif
+                </Button>
+              </Link>
+              <Button variant="outline" className="gap-2 w-full sm:w-auto" onClick={() => window.open(`/api/orders/${orderId}/pdf`, '_blank')}>
+                <Download className="w-4 h-4" />
+                PDF
               </Button>
             </div>
           </div>

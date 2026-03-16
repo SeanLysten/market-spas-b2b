@@ -2874,3 +2874,10 @@
 
 ## Bug - Flash "pas les permissions" pour admin au rechargement
 - [x] Corriger le flash "vous n'avez pas les permissions" qui apparaît brièvement lors du rechargement de page pour les admins
+
+## Récapitulatif commande PDF pour partenaires
+- [x] Créer l'endpoint serveur GET /api/orders/:id/pdf pour générer le PDF
+- [x] Créer la page frontend /orders/:id/summary avec récapitulatif visuel complet
+- [x] Ajouter bouton export PDF sur la page récapitulatif
+- [x] Ajouter lien vers le récapitulatif depuis la liste des commandes et le tracking
+- [x] Écrire les tests vitest

@@ -234,9 +234,11 @@ export default function Orders() {
                             <RefreshCw className={`w-4 h-4 ${reorderMutation.isPending ? 'animate-spin' : ''}`} />
                           </Button>
                           {order.status !== "DRAFT" && (
-                            <Button variant="ghost" size="sm" title="Facture">
-                              <FileText className="w-4 h-4" />
-                            </Button>
+                            <Link href={`/order/${order.id}/summary`}>
+                              <Button variant="ghost" size="sm" title="Récapitulatif">
+                                <FileText className="w-4 h-4" />
+                              </Button>
+                            </Link>
                           )}
                         </div>
                       </TableCell>
@@ -297,9 +299,11 @@ export default function Orders() {
                         <RefreshCw className={`w-4 h-4 ${reorderMutation.isPending ? 'animate-spin' : ''}`} />
                       </Button>
                       {order.status !== "DRAFT" && (
-                        <Button variant="outline" size="sm">
-                          <FileText className="w-4 h-4" />
-                        </Button>
+                        <Link href={`/order/${order.id}/summary`}>
+                          <Button variant="outline" size="sm">
+                            <FileText className="w-4 h-4" />
+                          </Button>
+                        </Link>
                       )}
                     </div>
                   </CardContent>
