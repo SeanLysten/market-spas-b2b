@@ -2965,3 +2965,13 @@
 - [x] Ajouter bouton "Relancer le guide" dans le profil utilisateur pour rejouer les tours d'onboarding
 - [x] Créer la page "Toutes les notifications" avec filtres par type et bulk "Tout marquer comme lu"
 - [x] Ajouter les tours d'onboarding pour les pages admin (Dashboard, Products, Orders, Partners, Leads)
+
+## Cahier des charges - Application Mobile Market Spas
+- [x] Auditer les fonctionnalités existantes du portail web
+- [x] Rédiger le cahier des charges complet (architecture, écrans, fonctionnalités, contraintes stores)
+- [x] Livrer le document final
+
+## Bug - Upload de médias dans la médiathèque ne fonctionne pas
+- [x] Investiguer le bug d'upload (logs serveur, route upload, SDK S3)
+- [x] Corriger le bug - upload séquentiel fichier par fichier + timeouts serveur
+- [x] Tester et valider - 990 tests passent

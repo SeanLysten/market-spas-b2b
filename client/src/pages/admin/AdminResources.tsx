@@ -296,45 +296,58 @@ export default function AdminResources() {
 
   const rootFolders = (folders as MediaFolder[]).filter((f) => !f.parentId);
 
-  // Upload via FormData (supports large files like videos without JSON size limit)
+  // Upload files one by one (sequential) to avoid proxy timeout 503 errors
   const uploadFiles = useCallback(
     async (files: File[]) => {
       const targetFolderId = selectedFolderId === "all" ? null : selectedFolderId;
       setUploadProgress(files.map((f) => ({ name: f.name, done: false })));
 
-      const formData = new FormData();
-      for (const file of files) {
-        formData.append("files", file);
-      }
-      formData.append("category", "CATALOG");
-      formData.append("language", "fr");
-      formData.append("isPublic", "false");
-      formData.append("requiredPartnerLevel", "ALL");
-      if (targetFolderId !== null && targetFolderId !== undefined) {
-        formData.append("folderId", String(targetFolderId));
-      }
+      let successCount = 0;
+      let failCount = 0;
 
-      try {
-        const response = await fetch("/api/upload/resource", {
-          method: "POST",
-          body: formData,
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          let errMsg = `Erreur ${response.status}`;
-          try { const d = await response.json(); errMsg = d.error || errMsg; } catch {}
-          throw new Error(errMsg);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("category", "CATALOG");
+        formData.append("language", "fr");
+        formData.append("isPublic", "false");
+        formData.append("requiredPartnerLevel", "ALL");
+        if (targetFolderId !== null && targetFolderId !== undefined) {
+          formData.append("folderId", String(targetFolderId));
         }
 
-        const result = await response.json();
-        if (result.success) {
-          setUploadProgress((prev) => prev.map((p) => ({ ...p, done: true })));
-          toast.success(`${result.uploaded} fichier(s) importé(s)`);
+        try {
+          const response = await fetch("/api/upload/resource/single", {
+            method: "POST",
+            body: formData,
+            credentials: "include",
+          });
+
+          if (!response.ok) {
+            let errMsg = `Erreur ${response.status}`;
+            try { const d = await response.json(); errMsg = d.error || errMsg; } catch {}
+            throw new Error(errMsg);
+          }
+
+          const result = await response.json();
+          if (result.success) {
+            successCount++;
+            setUploadProgress((prev) =>
+              prev.map((p, idx) => idx === i ? { ...p, done: true } : p)
+            );
+          }
+        } catch (err: any) {
+          failCount++;
+          toast.error(`Échec: ${file.name} - ${err.message || "Erreur"}`);
+          setUploadProgress((prev) =>
+            prev.map((p, idx) => idx === i ? { ...p, done: true } : p)
+          );
         }
-      } catch (err: any) {
-        toast.error(err.message || "Erreur lors de l'upload");
-        setUploadProgress([]);
+      }
+
+      if (successCount > 0) {
+        toast.success(`${successCount} fichier(s) importé(s)${failCount > 0 ? `, ${failCount} en échec` : ""}`);
       }
 
       setTimeout(() => setUploadProgress([]), 2000);

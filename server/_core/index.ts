@@ -416,6 +416,11 @@ async function startServer() {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
+  // Extend server timeouts for large file uploads (5 minutes)
+  server.keepAliveTimeout = 300000;
+  server.headersTimeout = 305000;
+  server.timeout = 300000;
+
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
     
