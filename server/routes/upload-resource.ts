@@ -79,33 +79,37 @@ router.post(
         ? parseInt(req.body.folderId as string)
         : null;
 
-      // Insert into DB
-      const [created] = await db.insert(resources).values({
-        title,
-        description: null,
-        category,
-        language,
-        fileUrl: url,
-        fileType: file.mimetype,
-        fileSize: file.size,
-        isPublic,
-        isActive: true,
-        requiredPartnerLevel,
-        uploadedBy: user.id,
-        folderId,
-      });
+        // Validate requiredPartnerLevel against enum
+        const validLevels = ["BRONZE", "SILVER", "GOLD", "PLATINUM", "VIP"];
+        const resolvedLevel = validLevels.includes(requiredPartnerLevel) ? requiredPartnerLevel : "BRONZE";
 
-      return res.json({
-        success: true,
-        file: {
-          id: (created as any)?.insertId || null,
+        // Insert into DB
+        const [created] = await db.insert(resources).values({
           title,
+          description: null,
+          category: category as any,
+          language,
           fileUrl: url,
           fileType: file.mimetype,
           fileSize: file.size,
+          isPublic,
+          isActive: true,
+          requiredPartnerLevel: resolvedLevel as any,
+          uploadedById: user.id,
           folderId,
-        },
-      });
+        });
+
+        return res.json({
+          success: true,
+          file: {
+            id: (created as any)?.insertId || null,
+            title,
+            fileUrl: url,
+            fileType: file.mimetype,
+            fileSize: file.size,
+            folderId,
+          },
+        });
     } catch (error: any) {
       console.error("[upload-resource/single] Error:", error);
       if (error.code === "LIMIT_FILE_SIZE") {
@@ -171,19 +175,23 @@ router.post(
           ? parseInt(req.body.folderId as string)
           : null;
 
+        // Validate requiredPartnerLevel against enum
+        const validLevels = ["BRONZE", "SILVER", "GOLD", "PLATINUM", "VIP"];
+        const resolvedLevel = validLevels.includes(requiredPartnerLevel) ? requiredPartnerLevel : "BRONZE";
+
         // Insert into DB
         const [created] = await db.insert(resources).values({
           title,
           description: null,
-          category,
+          category: category as any,
           language,
           fileUrl: url,
           fileType: file.mimetype,
           fileSize: file.size,
           isPublic,
           isActive: true,
-          requiredPartnerLevel,
-          uploadedBy: user.id,
+          requiredPartnerLevel: resolvedLevel as any,
+          uploadedById: user.id,
           folderId,
         });
 

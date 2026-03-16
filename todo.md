@@ -2980,3 +2980,7 @@
 - [x] Barre de progression visuelle avec pourcentage réel (XMLHttpRequest progress events)
 - [x] File d'attente d'upload : drag & drop multiples sans annuler les uploads en cours
 - [x] UI flottante de progression persistante pendant les uploads
+
+## Bug Fix - Erreur SQL insert resources
+- [x] Corriger uploadedBy -> uploadedById dans upload-resource.ts
+- [x] Valider requiredPartnerLevel contre l'enum (ALL n'existe pas, fallback BRONZE)
