@@ -2891,3 +2891,8 @@
 - [x] Intégrer le logo dans le sidebar admin (AdminLayout)
 - [x] Intégrer le logo dans la page OrderConfirmation
 - [x] Intégrer le logo dans la page Register
+
+## Amélioration Agenda/Calendrier
+- [x] Supprimer tous les événements test de la base de données
+- [x] Rendre l'accès au calendrier plus facile (lien direct dans le sidebar, intégré dans DashboardLayout)
+- [x] Améliorer l'UX du calendrier (design revu, vue liste améliorée, indicateur aujourd'hui, états vides)

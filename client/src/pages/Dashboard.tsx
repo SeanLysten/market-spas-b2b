@@ -331,9 +331,15 @@ export default function Dashboard() {
                 <div className="text-center py-12">
                   <Calendar className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
                   <p className="text-muted-foreground">Aucun événement à venir</p>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-sm text-muted-foreground mt-1 mb-3">
                     Consultez le calendrier pour voir toutes les dates importantes
                   </p>
+                  <Link href="/calendar">
+                    <Button variant="outline" size="sm">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Ouvrir le calendrier
+                    </Button>
+                  </Link>
                 </div>
               )}
             </CardContent>

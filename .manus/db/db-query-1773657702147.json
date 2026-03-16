@@ -1,0 +1,82 @@
+{
+  "query": "SELECT id, title, type, startDate, endDate, isPublished, description FROM events ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, title, type, startDate, endDate, isPublished, description FROM events ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "title": "Promotion Nouvel An 2025",
+      "type": "PROMOTION",
+      "startDate": "2025-12-31 19:00:00",
+      "endDate": "2026-01-30 19:00:00",
+      "isPublished": "1",
+      "description": "Profitez de -15% sur tous les spas et jacuzzis jusqu'au 31 janvier. Code promo: NEWYEAR25"
+    },
+    {
+      "id": "2",
+      "title": "Formation Technique Saunas",
+      "type": "TRAINING",
+      "startDate": "2026-01-15 10:00:00",
+      "endDate": "2026-01-15 16:00:00",
+      "isPublished": "1",
+      "description": "Formation en ligne sur l'installation et la maintenance des saunas infrarouges. Inscription obligatoire."
+    },
+    {
+      "id": "3",
+      "title": "Webinaire: Nouveautés 2025",
+      "type": "WEBINAR",
+      "startDate": "2026-01-20 14:00:00",
+      "endDate": "2026-01-20 15:30:00",
+      "isPublished": "1",
+      "description": "Découvrez en avant-première les nouveaux modèles de spas et accessoires pour 2025."
+    },
+    {
+      "id": "4",
+      "title": "Salon Piscine & Spa Bruxelles",
+      "type": "EVENT",
+      "startDate": "2026-02-09 19:00:00",
+      "endDate": "2026-02-12 19:00:00",
+      "isPublished": "1",
+      "description": "Retrouvez-nous au salon Piscine & Spa de Bruxelles. Stand B12. Entrée gratuite pour les partenaires."
+    },
+    {
+      "id": "5",
+      "title": "Promotion Saint-Valentin",
+      "type": "PROMOTION",
+      "startDate": "2026-01-31 19:00:00",
+      "endDate": "2026-02-13 19:00:00",
+      "isPublished": "1",
+      "description": "Offre spéciale couples: -10% sur les spas 2 places. Code promo: LOVE25"
+    },
+    {
+      "id": "6",
+      "title": "Lancement Swim Spa 2025",
+      "type": "ANNOUNCEMENT",
+      "startDate": "2026-02-28 19:00:00",
+      "endDate": "NULL",
+      "isPublished": "1",
+      "description": "Présentation officielle du nouveau Swim Spa Pro 6m avec système de nage à contre-courant amélioré."
+    },
+    {
+      "id": "7",
+      "title": "Formation Installation Jacuzzis",
+      "type": "TRAINING",
+      "startDate": "2026-03-15 09:00:00",
+      "endDate": "2026-03-15 17:00:00",
+      "isPublished": "1",
+      "description": "Formation pratique sur l'installation des jacuzzis. Lieu: Centre de formation Market Spas, Bruxelles."
+    },
+    {
+      "id": "8",
+      "title": "Promotion Printemps",
+      "type": "PROMOTION",
+      "startDate": "2026-03-19 20:00:00",
+      "endDate": "2026-04-14 20:00:00",
+      "isPublished": "1",
+      "description": "Préparez la saison avec -20% sur les accessoires spa (couvertures, escaliers, produits d'entretien)."
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\ttype\tstartDate\tendDate\tisPublished\tdescription\n1\tPromotion Nouvel An 2025\tPROMOTION\t2025-12-31 19:00:00\t2026-01-30 19:00:00\t1\tProfitez de -15% sur tous les spas et jacuzzis jusqu'au 31 janvier. Code promo: NEWYEAR25\n2\tFormation Technique Saunas\tTRAINING\t2026-01-15 10:00:00\t2026-01-15 16:00:00\t1\tFormation en ligne sur l'installation et la maintenance des saunas infrarouges. Inscription obligatoire.\n3\tWebinaire: Nouveautés 2025\tWEBINAR\t2026-01-20 14:00:00\t2026-01-20 15:30:00\t1\tDécouvrez en avant-première les nouveaux modèles de spas et accessoires pour 2025.\n4\tSalon Piscine & Spa Bruxelles\tEVENT\t2026-02-09 19:00:00\t2026-02-12 19:00:00\t1\tRetrouvez-nous au salon Piscine & Spa de Bruxelles. Stand B12. Entrée gratuite pour les partenaires.\n5\tPromotion Saint-Valentin\tPROMOTION\t2026-01-31 19:00:00\t2026-02-13 19:00:00\t1\tOffre spéciale couples: -10% sur les spas 2 places. Code promo: LOVE25\n6\tLancement Swim Spa 2025\tANNOUNCEMENT\t2026-02-28 19:00:00\tNULL\t1\tPrésentation officielle du nouveau Swim Spa Pro 6m avec système de nage à contre-courant amélioré.\n7\tFormation Installation Jacuzzis\tTRAINING\t2026-03-15 09:00:00\t2026-03-15 17:00:00\t1\tFormation pratique sur l'installation des jacuzzis. Lieu: Centre de formation Market Spas, Bruxelles.\n8\tPromotion Printemps\tPROMOTION\t2026-03-19 20:00:00\t2026-04-14 20:00:00\t1\tPréparez la saison avec -20% sur les accessoires spa (couvertures, escaliers, produits d'entretien).\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}
