@@ -2984,3 +2984,8 @@
 ## Bug Fix - Erreur SQL insert resources
 - [x] Corriger uploadedBy -> uploadedById dans upload-resource.ts
 - [x] Valider requiredPartnerLevel contre l'enum (ALL n'existe pas, fallback BRONZE)
+
+## Bug Fix - Erreurs 503/413 upload images volumineuses (25-28 MB)
+- [x] Installer sharp et compresser les images côté serveur avant upload S3 (PNG→JPEG, max 4K)
+- [x] Augmenter les limites body size (100MB multer + express) et timeout (10 min)
+- [x] Ajouter bouton retry par fichier et "Tout réessayer" pour les erreurs

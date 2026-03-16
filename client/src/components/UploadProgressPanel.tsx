@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Upload, Check, X, AlertCircle, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Upload, Check, X, AlertCircle, ChevronDown, ChevronUp, Loader2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { UploadItem } from "@/hooks/useUploadQueue";
 
@@ -16,6 +16,8 @@ interface UploadProgressPanelProps {
   errorCount: number;
   totalCount: number;
   overallProgress: number;
+  onRetryFailed: () => void;
+  onRetrySingle: (itemId: string) => void;
   onDismissCompleted: () => void;
   onDismissAll: () => void;
 }
@@ -27,14 +29,14 @@ export default function UploadProgressPanel({
   errorCount,
   totalCount,
   overallProgress,
+  onRetryFailed,
+  onRetrySingle,
   onDismissCompleted,
   onDismissAll,
 }: UploadProgressPanelProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   if (items.length === 0) return null;
-
-  const activeCount = items.filter((i) => i.status === "uploading" || i.status === "queued").length;
 
   return (
     <div className="fixed bottom-4 right-4 z-50 w-96 max-h-[70vh] bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
@@ -97,7 +99,7 @@ export default function UploadProgressPanel({
           {items.map((item) => (
             <div
               key={item.id}
-              className="px-4 py-2.5 border-b border-gray-50 last:border-0 hover:bg-gray-25"
+              className="px-4 py-2.5 border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
             >
               <div className="flex items-center gap-2">
                 {/* Status icon */}
@@ -115,15 +117,31 @@ export default function UploadProgressPanel({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm text-gray-700 truncate">{item.name}</span>
-                    <span className="text-xs text-gray-400 flex-shrink-0">
-                      {item.status === "uploading"
-                        ? `${item.progress}%`
-                        : item.status === "queued"
-                        ? "En attente"
-                        : item.status === "error"
-                        ? ""
-                        : formatSize(item.size)}
-                    </span>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {item.status === "uploading" && (
+                        <span className="text-xs text-blue-600 font-medium">{item.progress}%</span>
+                      )}
+                      {item.status === "queued" && (
+                        <span className="text-xs text-gray-400">En attente</span>
+                      )}
+                      {item.status === "done" && (
+                        <span className="text-xs text-gray-400">{formatSize(item.size)}</span>
+                      )}
+                      {item.status === "error" && !isUploading && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRetrySingle(item.id);
+                          }}
+                        >
+                          <RotateCcw className="w-3 h-3 mr-1" />
+                          Réessayer
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Progress bar for uploading files */}
@@ -149,25 +167,40 @@ export default function UploadProgressPanel({
 
       {/* Footer actions */}
       {!isUploading && isExpanded && (
-        <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
-          {errorCount > 0 && completedCount > 0 && (
+        <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 flex justify-between">
+          <div>
+            {errorCount > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-7 text-blue-600 border-blue-200 hover:bg-blue-50"
+                onClick={onRetryFailed}
+              >
+                <RotateCcw className="w-3 h-3 mr-1" />
+                Tout réessayer ({errorCount})
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            {errorCount > 0 && completedCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs h-7"
+                onClick={onDismissCompleted}
+              >
+                Masquer terminés
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
               className="text-xs h-7"
-              onClick={onDismissCompleted}
+              onClick={onDismissAll}
             >
-              Masquer les terminés
+              Fermer
             </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs h-7"
-            onClick={onDismissAll}
-          >
-            Fermer
-          </Button>
+          </div>
         </div>
       )}
     </div>

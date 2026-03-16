@@ -805,6 +805,8 @@ export default function AdminResources() {
         errorCount={uploadQueue.errorCount}
         totalCount={uploadQueue.totalCount}
         overallProgress={uploadQueue.overallProgress}
+        onRetryFailed={uploadQueue.retryFailed}
+        onRetrySingle={uploadQueue.retrySingle}
         onDismissCompleted={uploadQueue.dismissCompleted}
         onDismissAll={uploadQueue.dismissAll}
       />

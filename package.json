@@ -92,6 +92,7 @@
     "react-resizable-panels": "^3.0.6",
     "recharts": "^2.15.4",
     "resend": "^6.7.0",
+    "sharp": "^0.34.5",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "sonner": "^2.0.7",
@@ -140,6 +141,9 @@
     },
     "overrides": {
       "tailwindcss>nanoid": "3.3.7"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "sharp"
+    ]
   }
 }
