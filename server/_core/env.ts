@@ -9,9 +9,8 @@ export const ENV = {
   // Database
   databaseUrl: process.env.DATABASE_URL ?? "",
   
-  // Auth
+  // Auth (local JWT sessions)
   cookieSecret: process.env.JWT_SECRET ?? "",
-  oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
   ownerOpenId: process.env.OWNER_OPEN_ID ?? "",
   ownerName: process.env.OWNER_NAME ?? "",
   

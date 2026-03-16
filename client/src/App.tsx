@@ -13,6 +13,7 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminStockForecast from "./pages/admin/AdminStockForecast";
 import AdminTerritories from "./pages/admin/AdminTerritories";
 import AdminPartners from "@/pages/admin/AdminPartners";
+import AdminPartnerDetail from "@/pages/admin/AdminPartnerDetail";
 import AdminReports from "@/pages/admin/AdminReports";
 import AdminOrders from "@/pages/admin/AdminOrders";
 import AdminSettings from "@/pages/admin/AdminSettings";
@@ -106,6 +107,7 @@ function Router() {
       <Route path="/admin/products" component={AdminProducts} />
       <Route path="/admin/forecast" component={AdminStockForecast} />
       <Route path="/admin/territories" component={AdminTerritories} />
+      <Route path="/admin/partners/:id" component={AdminPartnerDetail} />
       <Route path="/admin/partners" component={AdminPartners} />
       <Route path="/admin/reports" component={AdminReports} />
       <Route path="/admin/orders" component={AdminOrders} />

@@ -32,20 +32,18 @@ export function useAuth(options?: UseAuthOptions) {
         error instanceof TRPCClientError &&
         error.data?.code === "UNAUTHORIZED"
       ) {
-        return;
+        // Already logged out, ignore
       }
-      throw error;
     } finally {
+      // Clear cached auth data
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
+      // Redirect to login page
+      window.location.href = getLoginUrl();
     }
   }, [logoutMutation, utils]);
 
   const state = useMemo(() => {
-    localStorage.setItem(
-      "manus-runtime-user-info",
-      JSON.stringify(meQuery.data)
-    );
     return {
       user: meQuery.data ?? null,
       loading: meQuery.isLoading || logoutMutation.isPending,

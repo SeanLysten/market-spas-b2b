@@ -42,7 +42,7 @@ import { dashboardTour } from "@/config/onboarding-tours";
 import { Link } from "wouter";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const onboarding = useOnboarding("dashboard");
   const utils = trpc.useUtils();
   const { data: notificationsData, isLoading: notificationsLoading } = trpc.dashboard.notifications.useQuery({ limit: 5 });
@@ -234,11 +234,7 @@ export default function Dashboard() {
                 variant="outline"
                 size="sm"
                 className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => {
-                  fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
-                    .then(() => { window.location.href = '/'; })
-                    .catch(() => { window.location.href = '/'; });
-                }}
+                onClick={() => logout()}
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">Déconnexion</span>

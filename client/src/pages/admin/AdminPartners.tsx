@@ -56,6 +56,8 @@ import {
   MailX,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useLocation } from "wouter";
+import { Eye } from "lucide-react";
 
 
 
@@ -74,6 +76,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function AdminPartners() {
+  const [, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
@@ -556,7 +559,10 @@ export default function AdminPartners() {
                       <Badge variant="outline" className="text-[10px]">{partner.orderCount || 0} cmd</Badge>
                     </div>
                     <div className="flex gap-1 mt-3">
-                      <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => { setEditingPartner(partner); setIsDialogOpen(true); }}>Modifier</Button>
+                      <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => navigate(`/admin/partners/${partner.id}`)}>
+                        <Eye className="w-3 h-3 mr-1" />Fiche
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => handleEditPartner(partner)}>Modifier</Button>
                     </div>
                   </Card>
                 ))}
@@ -613,6 +619,14 @@ export default function AdminPartners() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/admin/partners/${partner.id}`)}
+                            title="Voir la fiche"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
                           {partner.status === "PENDING" && (
                             <Button
                               size="sm"

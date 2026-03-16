@@ -97,7 +97,7 @@ export const appRouter = router({
         // Update last login
         await db.updateUserLastLogin(user.id, ctx.req.ip || 'unknown');
 
-        // Create session using SDK (compatible with OAuth sessions)
+        // Create JWT session token
         const { sdk } = await import('./_core/sdk');
         const token = await sdk.createSessionToken(user.openId, {
           name: user.name || `${user.firstName} ${user.lastName}`,

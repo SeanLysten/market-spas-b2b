@@ -2938,3 +2938,24 @@
 ## Bug - Onboarding tips inaccessibles sur certaines pages
 - [x] Corriger le scroll automatique vers l'élément ciblé à chaque étape du tour
 - [x] S'assurer que le tooltip reste toujours visible dans la zone d'écran
+
+## Bug - Route /admin/partners/:id retourne 404
+- [x] Corriger l'erreur 404 sur /admin/partners/90001
+- [x] Créer la page AdminPartnerDetail (/admin/partners/:id) avec fiche complète
+- [x] Ajouter onglets : Informations, Commandes, SAV, Leads, Activité
+- [x] Ajouter boutons Fiche dans la liste des partenaires (desktop + mobile)
+- [x] Ajouter route dans App.tsx
+
+## Bug - Déconnexion ne fonctionne pas
+- [x] Le bouton Déconnexion recharge le dashboard sans déconnecter l'utilisateur
+- [x] Investiguer le mécanisme de logout (frontend + backend)
+- [x] Corriger le bug de déconnexion
+
+## Suppression complète de Manus OAuth
+- [x] Auditer toutes les références à Manus OAuth dans le codebase
+- [x] Supprimer les routes OAuth serveur (oauth.ts, callback, SDK)
+- [x] Supprimer les références OAuth côté client (boutons, liens, constantes)
+- [x] Adapter l'authentification pour reposer uniquement sur email/mot de passe local
+- [x] Corriger le système de déconnexion
+- [x] Nettoyer les variables d'environnement OAuth inutiles
+- [x] Lancer les tests et corriger les régressions - 990 tests passent

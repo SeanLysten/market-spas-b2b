@@ -209,8 +209,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }, []);
 
   const handleLogout = async () => {
-    await logoutMutation.mutateAsync();
-    window.location.href = "/";
+    try {
+      await logoutMutation.mutateAsync();
+    } catch {
+      // Ignore errors (already logged out)
+    } finally {
+      window.location.href = "/login";
+    }
   };
 
   // Auto-expand the group that contains the active page
