@@ -2843,3 +2843,8 @@
 
 ## Bug fix - toFixed not a function
 - [x] Corriger TypeError: pricePartnerHT.toFixed is not a function dans ProductAddToCartDialog
+
+## Refonte dialogue commande - séparation couleur/source
+- [x] Séparer la sélection en 2 étapes : couleur puis source (stock vs arrivage Sxx)
+- [x] Chaque source a sa propre quantité disponible indépendante
+- [x] Responsive mobile
