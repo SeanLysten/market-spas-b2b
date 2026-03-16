@@ -115,7 +115,7 @@ function saveExpanded(expanded: Record<string, boolean>) {
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>(getInitialExpanded);
@@ -240,7 +240,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     saveExpanded(newExpanded);
   };
 
-  // Vérifier que l'utilisateur est admin
+  // Attendre que l'authentification soit chargée avant de vérifier les permissions
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-3">
+          <div className="h-8 w-8 mx-auto animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Vérifier que l'utilisateur est admin (seulement après le chargement)
   if (!user || (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN")) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">

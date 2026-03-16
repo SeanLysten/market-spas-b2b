@@ -2871,3 +2871,6 @@
 - [x] Ajouter les coordonnées complètes du partenaire (adresses, contacts)
 - [x] Ajouter les filtres API (status, since, depositPaid)
 - [x] Écrire les tests vitest pour l'API export
+
+## Bug - Flash "pas les permissions" pour admin au rechargement
+- [x] Corriger le flash "vous n'avez pas les permissions" qui apparaît brièvement lors du rechargement de page pour les admins
