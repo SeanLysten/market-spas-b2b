@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc";
 import { Search, Package, ShoppingCart, Filter, ArrowLeft, Euro, TrendingUp, Minus, Plus, Heart, Truck, CalendarClock } from "lucide-react";
 import { Link } from "wouter";
@@ -380,12 +381,41 @@ export default function Catalog() {
         {isLoading ? (
           <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <Card key={i} className="overflow-hidden">
-                <div className="skeleton h-48 w-full bg-muted animate-pulse" />
-                <CardHeader>
-                  <div className="skeleton h-6 w-3/4 mb-2 bg-muted animate-pulse" />
-                  <div className="skeleton h-4 w-1/2 bg-muted animate-pulse" />
+              <Card key={i} className="overflow-hidden flex flex-col">
+                {/* Image skeleton */}
+                <Skeleton className="aspect-square w-full" />
+
+                {/* Stock badges skeleton */}
+                <div className="flex items-center gap-1.5 px-3 pt-2">
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <Skeleton className="h-5 w-24 rounded-full" />
+                </div>
+
+                {/* Title & description */}
+                <CardHeader className="flex-1 pb-2">
+                  <Skeleton className="h-5 w-4/5 mb-2" />
+                  <Skeleton className="h-4 w-3/5" />
                 </CardHeader>
+
+                <CardContent className="space-y-3 pt-0">
+                  {/* Color swatches skeleton */}
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="w-7 h-7 rounded-full" />
+                    <Skeleton className="w-7 h-7 rounded-full" />
+                    <Skeleton className="w-7 h-7 rounded-full" />
+                  </div>
+
+                  {/* Price skeleton */}
+                  <div className="flex items-baseline gap-2">
+                    <Skeleton className="h-7 w-28" />
+                    <Skeleton className="h-4 w-6" />
+                  </div>
+                </CardContent>
+
+                {/* Button skeleton */}
+                <CardFooter className="flex-col gap-2">
+                  <Skeleton className="h-10 w-full rounded-md" />
+                </CardFooter>
               </Card>
             ))}
           </div>

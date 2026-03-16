@@ -2854,3 +2854,6 @@
 
 ## Corrections bugs
 - [x] Fix erreur React "Each child in a list should have a unique key prop" dans AdminStockForecast (Fragment sans clé)
+
+## UX - Animation de chargement catalogue
+- [x] Ajouter des skeleton loaders animés sur les cartes produits pendant le chargement des données
