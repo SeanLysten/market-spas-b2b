@@ -1,6 +1,8 @@
 import { AdminLayout } from "@/components/AdminLayout";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
+import { useUploadQueue } from "@/hooks/useUploadQueue";
+import UploadProgressPanel from "@/components/UploadProgressPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -231,7 +233,7 @@ export default function AdminResources() {
   const [dragOverFolderId, setDragOverFolderId] = useState<number | null>(null);
   const [draggingFileIds, setDraggingFileIds] = useState<Set<number>>(new Set());
   const [previewResource, setPreviewResource] = useState<Resource | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<{ name: string; done: boolean }[]>([]);
+  // Upload queue with real progress tracking
 
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [createFolderParentId, setCreateFolderParentId] = useState<number | null>(null);
@@ -296,65 +298,15 @@ export default function AdminResources() {
 
   const rootFolders = (folders as MediaFolder[]).filter((f) => !f.parentId);
 
-  // Upload files one by one (sequential) to avoid proxy timeout 503 errors
-  const uploadFiles = useCallback(
-    async (files: File[]) => {
-      const targetFolderId = selectedFolderId === "all" ? null : selectedFolderId;
-      setUploadProgress(files.map((f) => ({ name: f.name, done: false })));
+  const uploadQueue = useUploadQueue({
+    folderId: selectedFolderId === "all" ? null : selectedFolderId,
+    onFileUploaded: () => refetchResources(),
+  });
 
-      let successCount = 0;
-      let failCount = 0;
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("category", "CATALOG");
-        formData.append("language", "fr");
-        formData.append("isPublic", "false");
-        formData.append("requiredPartnerLevel", "ALL");
-        if (targetFolderId !== null && targetFolderId !== undefined) {
-          formData.append("folderId", String(targetFolderId));
-        }
-
-        try {
-          const response = await fetch("/api/upload/resource/single", {
-            method: "POST",
-            body: formData,
-            credentials: "include",
-          });
-
-          if (!response.ok) {
-            let errMsg = `Erreur ${response.status}`;
-            try { const d = await response.json(); errMsg = d.error || errMsg; } catch {}
-            throw new Error(errMsg);
-          }
-
-          const result = await response.json();
-          if (result.success) {
-            successCount++;
-            setUploadProgress((prev) =>
-              prev.map((p, idx) => idx === i ? { ...p, done: true } : p)
-            );
-          }
-        } catch (err: any) {
-          failCount++;
-          toast.error(`Échec: ${file.name} - ${err.message || "Erreur"}`);
-          setUploadProgress((prev) =>
-            prev.map((p, idx) => idx === i ? { ...p, done: true } : p)
-          );
-        }
-      }
-
-      if (successCount > 0) {
-        toast.success(`${successCount} fichier(s) importé(s)${failCount > 0 ? `, ${failCount} en échec` : ""}`);
-      }
-
-      setTimeout(() => setUploadProgress([]), 2000);
-      refetchResources();
-    },
-    [selectedFolderId, refetchResources]
-  );
+  const uploadFiles = (files: File[]) => {
+    const targetFolderId = selectedFolderId === "all" ? null : selectedFolderId;
+    uploadQueue.addFiles(files, targetFolderId);
+  };
 
   const handleZoneDrop = async (e: React.DragEvent) => {
     e.preventDefault();
@@ -541,16 +493,16 @@ export default function AdminResources() {
             </div>
           )}
 
-          {/* Upload progress */}
-          {uploadProgress.length > 0 && (
-            <div className="bg-blue-50 border-b border-blue-200 px-4 py-2 space-y-1">
-              {uploadProgress.map((p) => (
-                <div key={p.name} className="flex items-center gap-2 text-sm">
-                  <Upload className="w-3.5 h-3.5 text-blue-500 animate-pulse" />
-                  <span className="text-blue-700 truncate flex-1">{p.name}</span>
-                  {p.done ? <Check className="w-3.5 h-3.5 text-green-500" /> : <span className="text-blue-500 text-xs">En cours...</span>}
-                </div>
-              ))}
+          {/* Upload progress - inline summary when uploading */}
+          {uploadQueue.isUploading && (
+            <div className="bg-blue-50 border-b border-blue-200 px-4 py-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Upload className="w-3.5 h-3.5 text-blue-500 animate-pulse" />
+                <span className="text-blue-700 flex-1">Import en cours ({uploadQueue.completedCount}/{uploadQueue.totalCount}) - {uploadQueue.overallProgress}%</span>
+              </div>
+              <div className="mt-1 h-1.5 bg-blue-100 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-500 rounded-full transition-all duration-300 ease-out" style={{ width: `${uploadQueue.overallProgress}%` }} />
+              </div>
             </div>
           )}
 
@@ -844,6 +796,18 @@ export default function AdminResources() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Floating upload progress panel */}
+      <UploadProgressPanel
+        items={uploadQueue.items}
+        isUploading={uploadQueue.isUploading}
+        completedCount={uploadQueue.completedCount}
+        errorCount={uploadQueue.errorCount}
+        totalCount={uploadQueue.totalCount}
+        overallProgress={uploadQueue.overallProgress}
+        onDismissCompleted={uploadQueue.dismissCompleted}
+        onDismissAll={uploadQueue.dismissAll}
+      />
     </AdminLayout>
   );
 }

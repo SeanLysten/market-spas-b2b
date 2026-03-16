@@ -2975,3 +2975,8 @@
 - [x] Investiguer le bug d'upload (logs serveur, route upload, SDK S3)
 - [x] Corriger le bug - upload séquentiel fichier par fichier + timeouts serveur
 - [x] Tester et valider - 990 tests passent
+
+## Amélioration - Upload médiathèque avec progression réelle
+- [x] Barre de progression visuelle avec pourcentage réel (XMLHttpRequest progress events)
+- [x] File d'attente d'upload : drag & drop multiples sans annuler les uploads en cours
+- [x] UI flottante de progression persistante pendant les uploads
