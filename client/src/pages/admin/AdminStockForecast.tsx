@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -461,9 +461,8 @@ export default function AdminStockForecast() {
                     </thead>
                     <tbody>
                       {filteredProducts.map((product: any) => (
-                        <>
+                        <React.Fragment key={product.productId}>
                           <tr
-                            key={product.productId}
                             className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
                             onClick={() =>
                               setExpandedProductId(
@@ -524,7 +523,7 @@ export default function AdminStockForecast() {
                             <td className="p-3 text-center">{getStatusBadge(product.status)}</td>
                           </tr>
                           {expandedProductId === product.productId && (
-                            <tr key={`${product.productId}-detail`} className="bg-muted/10">
+                            <tr className="bg-muted/10">
                               <td colSpan={9} className="p-0">
                                 <div className="p-4 pl-12">
                                   <h4 className="text-sm font-semibold mb-3">Détail par variante</h4>
@@ -593,7 +592,7 @@ export default function AdminStockForecast() {
                               </td>
                             </tr>
                           )}
-                        </>
+                        </React.Fragment>
                       ))}
                       {filteredProducts.length === 0 && (
                         <tr>

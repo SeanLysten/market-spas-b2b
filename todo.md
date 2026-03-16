@@ -2851,3 +2851,6 @@
 
 ## Design pastilles catalogue
 - [x] Déplacer les badges stock/transit/arrivage sous l'image du spa en petites pastilles discrètes
+
+## Corrections bugs
+- [x] Fix erreur React "Each child in a list should have a unique key prop" dans AdminStockForecast (Fragment sans clé)
