@@ -676,9 +676,11 @@ async function notifyPartnerNewLead(partnerId: number, lead: any): Promise<void>
   for (const user of partnerUsers) {
     await db.insert(notifications).values({
       userId: user.id,
-      type: "SYSTEM_ALERT",
+      type: "LEAD_ASSIGNED",
       title: "Nouveau lead reçu !",
       message: `Un nouveau prospect ${lead.firstName} ${lead.lastName} de ${lead.city || lead.postalCode} vous a été attribué.`,
+      linkUrl: "/leads",
+      linkText: "Voir mes leads",
       isRead: false,
     });
   }

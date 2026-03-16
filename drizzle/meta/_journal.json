@@ -316,6 +316,13 @@
       "when": 1773653903415,
       "tag": "0044_minor_karma",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "5",
+      "when": 1773660345240,
+      "tag": "0045_lumpy_norman_osborn",
+      "breakpoints": true
     }
   ]
 }

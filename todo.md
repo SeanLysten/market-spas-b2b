@@ -2899,3 +2899,20 @@
 
 ## Dashboard Admin - Vue calendrier Mois
 - [x] Ajouter un widget calendrier format "Mois" sur le dashboard admin (similaire au dashboard utilisateur)
+
+## Refonte système de notifications
+- [x] Créer la fonction createNotification dans notification-service.ts (re-exportée depuis db.ts)
+- [x] Créer un service centralisé notification-service.ts
+- [x] Brancher notifications : changement statut commande (tous statuts, pas seulement approbation)
+- [x] Brancher notifications : nouvelle commande créée (pour admins)
+- [x] Brancher notifications : paiement réussi (Stripe webhook)
+- [x] Brancher notifications : paiement échoué (Stripe webhook)
+- [x] Brancher notifications : remboursement (Stripe webhook)
+- [x] Brancher notifications : approbation partenaire
+- [x] Brancher notifications : suspension/résiliation partenaire
+- [x] Brancher notifications : nouveau ticket SAV créé (pour admins)
+- [x] Brancher notifications : changement statut SAV (pour partenaire)
+- [x] Brancher notifications : nouvelle ressource publiée (pour partenaires)
+- [x] Brancher notifications : nouveau lead attribué (type LEAD_ASSIGNED + linkUrl)
+- [x] Brancher notifications : rappel acompte impayé
+- [x] Écrire les tests vitest (21 tests, 990 total)

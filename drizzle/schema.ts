@@ -1028,7 +1028,13 @@ export const notifications = mysqlTable(
       "STOCK_LOW",
       "NEW_PARTNER",
       "PARTNER_APPROVED",
+      "PARTNER_SUSPENDED",
       "NEW_RESOURCE",
+      "SAV_CREATED",
+      "SAV_STATUS_CHANGED",
+      "LEAD_ASSIGNED",
+      "DEPOSIT_REMINDER",
+      "REFUND_PROCESSED",
       "SYSTEM_ALERT",
     ]).notNull(),
 

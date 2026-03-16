@@ -21,6 +21,7 @@ import * as spaModelsDb from "./spa-models-db";
 import * as shopifyApi from "./shopify-api";
 import * as ga4Api from "./ga4-api";
 import { analyzeWarranty, COMPONENTS_BY_BRAND, DEFECT_TYPES_BY_COMPONENT, PRODUCT_LINES_BY_BRAND, COMPONENT_TO_SPARE_CATEGORY, generateTrackingUrl, type WarrantyInput, type SavBrand, type UsageType } from "./warranty-engine";
+import * as notifService from "./notification-service";
 
 export const appRouter = router({
   system: systemRouter,
@@ -213,6 +214,11 @@ export const appRouter = router({
 
           } as any);
           invitationPartnerId = partnerResult?.partnerId || null;
+
+          // Persistent notification for admins
+          if (invitationPartnerId) {
+            try { await notifService.notifyNewPartnerRegistered(invitationPartnerId, input.companyName!); } catch (err) { console.error("Failed to notify new partner:", err); }
+          }
         }
 
         // Create user
@@ -1261,7 +1267,7 @@ export const appRouter = router({
         const fileKey = `resources/${Date.now()}-${input.fileName}`;
         const { url } = await storagePut(fileKey, buffer, input.fileType);
 
-        return await db.createResource({
+        const resource = await db.createResource({
           title: input.title,
           description: input.description || null,
           category: input.category,
@@ -1274,6 +1280,11 @@ export const appRouter = router({
           requiredPartnerLevel: input.requiredPartnerLevel,
           uploadedBy: ctx.user.id,
         });
+
+        // Persistent notification for all partner users
+        try { await notifService.notifyNewResourcePublished(input.title, input.category); } catch (err) { console.error("Failed to notify new resource:", err); }
+
+        return resource;
       }),
 
     delete: adminProcedure
@@ -2031,8 +2042,10 @@ export const appRouter = router({
           if (input.status) {
             if (input.status === 'SUSPENDED' || input.status === 'TERMINATED') {
               const count = await db.deactivateUsersByPartnerId(id);
+              try { await notifService.notifyPartnerSuspended(id); } catch (err) { console.error("Failed to notify partner suspended:", err); }
             } else if (input.status === 'APPROVED') {
               const count = await db.reactivateUsersByPartnerId(id);
+              try { await notifService.notifyPartnerApproved(id); } catch (err) { console.error("Failed to notify partner approved:", err); }
             }
           }
 
@@ -2057,8 +2070,8 @@ export const appRouter = router({
           await db.updatePartner(input.id, { status: "APPROVED" });
           // Cascade: réactiver les utilisateurs du partenaire approuvé
           const count = await db.reactivateUsersByPartnerId(input.id);
-          if (count > 0) {
-          }
+          // Persistent notification for partner
+          try { await notifService.notifyPartnerApproved(input.id); } catch (err) { console.error("Failed to notify partner approved:", err); }
           return { success: true };
         }),
 
@@ -3572,6 +3585,9 @@ export const appRouter = router({
           content: `Ticket: ${result.ticketNumber}\nMarque: ${input.brand || "N/A"}\nModèle: ${input.modelName || "N/A"}\nComposant: ${input.component || "N/A"}\nGarantie: ${warrantyResult?.status || "À analyser"}\nDescription: ${input.description.substring(0, 200)}`,
         }).catch(err => console.error("Failed to send SAV notification:", err));
 
+        // Persistent DB notification for admins
+        try { await notifService.notifySavTicketCreated(result.ticketNumber, partnerId, input.urgency, input.description); } catch (err) { console.error("Failed to create SAV notification:", err); }
+
         return { ...result, warrantyAnalysis: warrantyResult };
       }),
 
@@ -3656,6 +3672,9 @@ export const appRouter = router({
         } catch (err) {
           console.error("Failed to send WebSocket notification:", err);
         }
+
+        // Persistent DB notification for partner
+        try { await notifService.notifySavStatusChanged(service.service.ticketNumber, service.service.partnerId, previousStatus, input.status, input.resolutionNotes); } catch (err) { console.error("Failed to create SAV status notification:", err); }
 
         return { success: true };
       }),

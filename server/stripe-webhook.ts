@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { verifyWebhookSignature } from "./stripe";
 import * as db from "./db";
 import { sendPaymentConfirmationEmail, sendPaymentFailureEmail, sendRefundConfirmationEmail } from "./email";
+import { notifyPaymentReceived, notifyPaymentFailed, notifyRefundProcessed } from "./notification-service";
 
 /**
  * Handle Stripe webhook events
@@ -90,6 +91,14 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
       paymentMethod
     );
   }
+  // Persistent DB notification
+  try {
+    const paymentMethod = paymentIntent.payment_method_types?.[0] || "Carte bancaire";
+    await notifyPaymentReceived(orderId, paymentIntent.amount / 100, paymentMethod);
+  } catch (err) {
+    console.error("[Stripe Webhook] Failed to create payment notification:", err);
+  }
+
   console.log(`[Stripe Webhook] Order ${orderId} marked as PAID`);
 }
 
@@ -127,6 +136,14 @@ async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent) {
       reason
     );
   }
+  // Persistent DB notification
+  try {
+    const reason = paymentIntent.last_payment_error?.message || "Paiement refusé";
+    await notifyPaymentFailed(orderId, paymentIntent.amount / 100, reason);
+  } catch (err) {
+    console.error("[Stripe Webhook] Failed to create payment failure notification:", err);
+  }
+
   console.log(`[Stripe Webhook] Payment failure recorded for order ${orderId}`);
 }
 
@@ -180,5 +197,12 @@ async function handleRefund(charge: Stripe.Charge) {
       charge.amount_refunded / 100
     );
   }
+  // Persistent DB notification
+  try {
+    await notifyRefundProcessed(transaction.orderId, charge.amount_refunded / 100);
+  } catch (err) {
+    console.error("[Stripe Webhook] Failed to create refund notification:", err);
+  }
+
   console.log(`[Stripe Webhook] Refund recorded for order ${transaction.orderId}`);
 }

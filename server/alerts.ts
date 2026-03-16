@@ -2,6 +2,7 @@ import * as db from "./db";
 import { notifyOwner } from "./_core/notification";
 import { notifyPartner, notifyAdmins } from "./_core/websocket";
 import { sendNewOrderNotificationToAdmins, sendOrderStatusChangeToPartner, sendDepositReminderEmail } from "./email";
+import { notifyOrderStatusChanged, notifyNewOrderCreated, notifyDepositReminder } from "./notification-service";
 
 /**
  * Check for low stock products and send alerts
@@ -137,6 +138,13 @@ export async function notifyOrderStatusChange(
       console.error("[Alerts] Failed to send email notification to partner:", err);
     }
 
+    // Persistent DB notification for partner
+    try {
+      await notifyOrderStatusChanged(orderId, oldStatus, newStatus);
+    } catch (err) {
+      console.error("[Alerts] Failed to create persistent notification:", err);
+    }
+
     console.log(`[Alerts] Order status change notification sent for order ${orderId}`);
     return { success: true };
   } catch (error) {
@@ -212,6 +220,13 @@ export async function notifyNewOrder(orderId: number) {
       console.error("[Alerts] Failed to send email notification:", err);
     }
 
+    // Persistent DB notification for admins
+    try {
+      await notifyNewOrderCreated(orderId);
+    } catch (err) {
+      console.error("[Alerts] Failed to create persistent notification:", err);
+    }
+
     console.log(`[Alerts] New order notification sent for order ${orderId}`);
     return { success: true };
   } catch (error) {
@@ -276,6 +291,13 @@ export async function processDepositReminders(hoursThreshold: number = 48) {
           sentCount++;
           results.push({ orderId: order.id, orderNumber: order.orderNumber, success: true });
           console.log(`[Alerts] Deposit reminder sent for order ${order.orderNumber} to ${partnerEmail}`);
+
+          // Persistent DB notification for partner
+          try {
+            await notifyDepositReminder(order.id, order.orderNumber, order.partnerId);
+          } catch (err) {
+            console.error("[Alerts] Failed to create deposit reminder notification:", err);
+          }
         } else {
           results.push({ orderId: order.id, orderNumber: order.orderNumber, success: false, error: emailResult.error });
           console.error(`[Alerts] Failed to send deposit reminder for order ${order.orderNumber}:`, emailResult.error);

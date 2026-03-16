@@ -422,8 +422,7 @@ export async function getUnreadNotificationsCount(userId: number) {
   return result[0]?.count || 0;
 }
 
-// Note: markNotificationAsRead and createNotification are defined at the end of the file
-// with enhanced functionality
+// Note: createNotification is now in notification-service.ts and re-exported from this file
 
 // ============================================
 // RESOURCE QUERIES
@@ -1872,10 +1871,16 @@ export async function getUnreadNotificationCount(userId: number) {
   return { count: result[0]?.count || 0 };
 }
 
-type NotificationType = "ORDER_CREATED" | "ORDER_STATUS_CHANGED" | "PAYMENT_RECEIVED" | "PAYMENT_FAILED" | "INVOICE_READY" | "STOCK_LOW" | "NEW_PARTNER" | "PARTNER_APPROVED" | "NEW_RESOURCE" | "SYSTEM_ALERT";
+// createNotification and notifyAdmins are now in notification-service.ts
+// Re-export for backward compatibility
+export { createNotification } from "./notification-service";
 
-// Helper to notify all admins
-export async function notifyAdmins(data: {
+import { createNotification as _createNotification } from "./notification-service";
+
+type NotificationType = "ORDER_CREATED" | "ORDER_STATUS_CHANGED" | "PAYMENT_RECEIVED" | "PAYMENT_FAILED" | "INVOICE_READY" | "STOCK_LOW" | "NEW_PARTNER" | "PARTNER_APPROVED" | "PARTNER_SUSPENDED" | "NEW_RESOURCE" | "SAV_CREATED" | "SAV_STATUS_CHANGED" | "LEAD_ASSIGNED" | "DEPOSIT_REMINDER" | "REFUND_PROCESSED" | "SYSTEM_ALERT";
+
+// Helper to notify all admins (kept for backward compatibility)
+export async function notifyAdminsDb(data: {
   type: NotificationType;
   title: string;
   message: string;
@@ -1896,7 +1901,7 @@ export async function notifyAdmins(data: {
     );
 
   for (const admin of admins) {
-    await createNotification({
+    await _createNotification({
       userId: admin.id,
       type: data.type,
       title: data.title,
