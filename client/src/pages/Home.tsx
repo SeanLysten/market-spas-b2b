@@ -45,9 +45,7 @@ export default function Home() {
         <div className="px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 shrink-0 rounded-lg bg-primary flex items-center justify-center">
-                <Waves className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logo-market-spa_177731cb.png" alt="Market Spas" className="w-9 h-9 shrink-0 rounded-lg object-contain" />
               <div>
                 <p className="font-bold text-base leading-tight">Market Spas</p>
                 <p className="text-xs text-muted-foreground leading-tight hidden sm:block">Portail Partenaires B2B</p>
@@ -175,9 +173,7 @@ export default function Home() {
       <footer className="border-t bg-card/50 px-4 py-5">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-              <Waves className="w-4 h-4 text-primary-foreground" />
-            </div>
+            <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logo-market-spa_177731cb.png" alt="Market Spas" className="w-7 h-7 rounded-md object-contain" />
             <p className="text-sm font-semibold">Market Spas</p>
           </div>
           <div className="flex items-center gap-4">

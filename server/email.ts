@@ -351,6 +351,7 @@ export async function sendInvitationEmail({
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px 8px 0 0;">
+              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logo-market-spa_177731cb.png" alt="Market Spas" width="60" height="60" style="display: block; margin: 0 auto 12px; border-radius: 12px;" />
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">Market Spas</h1>
               <p style="margin: 10px 0 0; color: #ffffff; font-size: 16px; opacity: 0.9;">Portail Partenaires B2B</p>
             </td>
@@ -536,6 +537,7 @@ export async function sendNewOrderNotificationToAdmins(
           <!-- Header -->
           <tr>
             <td style="padding: 30px 40px; text-align: center; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px 8px 0 0;">
+              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logo-market-spa_177731cb.png" alt="Market Spas" width="50" height="50" style="display: block; margin: 0 auto 10px; border-radius: 10px;" />
               <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">🛒 Nouvelle Commande</h1>
               <p style="margin: 10px 0 0; color: #ffffff; font-size: 18px; opacity: 0.95;">#${orderNumber}</p>
             </td>
@@ -883,6 +885,7 @@ export async function sendOrderStatusChangeToPartner(
           <!-- Header -->
           <tr>
             <td style="padding: 30px 40px; text-align: center; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-radius: 8px 8px 0 0;">
+              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logo-market-spa_177731cb.png" alt="Market Spas" width="50" height="50" style="display: block; margin: 0 auto 10px; border-radius: 10px;" />
               <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Market Spas</h1>
               <p style="margin: 10px 0 0; color: #ffffff; font-size: 16px; opacity: 0.95;">Mise à jour de votre commande</p>
             </td>
@@ -1112,6 +1115,7 @@ export async function sendDepositReminderEmail(
           <!-- Header -->
           <tr>
             <td style="padding: 30px 40px; text-align: center; background: linear-gradient(135deg, ${urgencyColor} 0%, ${urgencyLevel === 'high' ? '#b91c1c' : '#d97706'} 100%); border-radius: 8px 8px 0 0;">
+              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logo-market-spa_177731cb.png" alt="Market Spas" width="50" height="50" style="display: block; margin: 0 auto 10px; border-radius: 10px;" />
               <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">💳 Rappel de paiement</h1>
               <p style="margin: 10px 0 0; color: #ffffff; font-size: 16px; opacity: 0.95;">Acompte en attente</p>
             </td>
@@ -1783,6 +1787,7 @@ export function createNewsletterTemplate(
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #5ab89f 0%, #3d9b85 100%); border-radius: 8px 8px 0 0;">
+              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logo-market-spa_177731cb.png" alt="Market Spas" width="60" height="60" style="display: block; margin: 0 auto 12px; border-radius: 12px;" />
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">Market Spas</h1>
               <p style="margin: 10px 0 0; color: #ffffff; font-size: 16px; opacity: 0.95;">Portail Partenaires B2B</p>
             </td>

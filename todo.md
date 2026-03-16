@@ -2881,3 +2881,13 @@
 - [x] Ajouter bouton export PDF sur la page récapitulatif
 - [x] Ajouter lien vers le récapitulatif depuis la liste des commandes et le tracking
 - [x] Écrire les tests vitest
+
+## Intégration logo Market Spa
+- [x] Uploader le logo et obtenir le CDN URL
+- [x] Mettre à jour VITE_APP_LOGO avec le nouveau logo (via favicon + img tags)
+- [x] Intégrer le logo dans le PDF de récapitulatif commande
+- [x] Intégrer le logo dans la page Home (en-tête, footer)
+- [x] Intégrer le logo dans la page Login
+- [x] Intégrer le logo dans le sidebar admin (AdminLayout)
+- [x] Intégrer le logo dans la page OrderConfirmation
+- [x] Intégrer le logo dans la page Register

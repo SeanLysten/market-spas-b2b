@@ -38,9 +38,7 @@ export default function Login() {
       {/* Top brand bar */}
       <div className="bg-primary px-4 py-5 text-center">
         <div className="flex items-center justify-center gap-3 mb-1">
-          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-            <Waves className="w-6 h-6 text-white" />
-          </div>
+          <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logo-market-spa_177731cb.png" alt="Market Spas" className="w-12 h-12 rounded-xl object-contain" />
           <span className="text-2xl font-bold text-white tracking-tight">Market Spas</span>
         </div>
         <p className="text-primary-foreground/80 text-sm">Portail Partenaires B2B</p>

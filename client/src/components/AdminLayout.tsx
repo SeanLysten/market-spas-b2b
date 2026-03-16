@@ -352,11 +352,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           {/* Header */}
           <div className="p-6 border-b">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                  Administration
-                </p>
-                <p className="text-xs text-muted-foreground">Market Spas</p>
+              <div className="flex items-center gap-2">
+                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logo-market-spa_177731cb.png" alt="Market Spas" className="w-8 h-8 rounded-md object-contain" />
+                <div>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                    Administration
+                  </p>
+                  <p className="text-xs text-muted-foreground">Market Spas</p>
+                </div>
               </div>
               <Button
                 variant="ghost"

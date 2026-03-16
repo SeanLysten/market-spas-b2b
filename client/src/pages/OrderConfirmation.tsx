@@ -82,9 +82,7 @@ export default function OrderConfirmation() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/">
             <div className="flex items-center gap-3 cursor-pointer">
-              <div className="w-10 h-10 bg-info dark:bg-info-dark rounded-lg flex items-center justify-center">
-                <Package className="h-6 w-6 text-white" />
-              </div>
+              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logo-market-spa_177731cb.png" alt="Market Spas" className="w-10 h-10 rounded-lg object-contain" />
               <div>
                 <h1 className="text-xl text-display text-display font-bold text-gray-900">Market Spas</h1>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">Portail Partenaires B2B</p>

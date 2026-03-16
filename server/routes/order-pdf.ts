@@ -3,6 +3,20 @@ import PDFDocument from "pdfkit";
 import { getDb, getOrderWithItems } from "../db";
 import { partners, users, payments, productVariants, products } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
+import https from "https";
+
+const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logo-market-spa_177731cb.png";
+
+function fetchImageBuffer(url: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+      const chunks: Buffer[] = [];
+      res.on("data", (chunk: Buffer) => chunks.push(chunk));
+      res.on("end", () => resolve(Buffer.concat(chunks)));
+      res.on("error", reject);
+    }).on("error", reject);
+  });
+}
 
 const router = Router();
 
@@ -101,18 +115,25 @@ router.get("/api/orders/:id/pdf", async (req, res) => {
     const borderColor = "#e0d5c8";
     const pageWidth = 495; // A4 width minus margins
 
-    // ── Header ──────────────────────────────────────────
+    // ── Header with logo ──────────────────────────────────────────
+    try {
+      const logoBuffer = await fetchImageBuffer(LOGO_URL);
+      doc.image(logoBuffer, 50, 40, { width: 50, height: 50 });
+    } catch (e) {
+      // fallback: no logo
+    }
+
     doc
-      .fontSize(24)
+      .fontSize(22)
       .font("Helvetica-Bold")
       .fillColor(primaryColor)
-      .text("Market Spas", 50, 50);
+      .text("Market Spas", 108, 48);
 
     doc
       .fontSize(9)
       .font("Helvetica")
       .fillColor(mutedColor)
-      .text("Portail B2B — Récapitulatif de commande", 50, 78);
+      .text("Portail B2B — Récapitulatif de commande", 108, 72);
 
     // Order number and date on the right
     doc

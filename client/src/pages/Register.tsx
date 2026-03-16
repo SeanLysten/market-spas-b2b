@@ -232,9 +232,7 @@ export default function Register() {
       <Card className="w-full max-w-2xl shadow-xl">
         <CardHeader className="space-y-4 text-center pb-2">
           <div className="flex justify-center">
-            <div className="h-14 w-14 rounded-full bg-primary flex items-center justify-center">
-              <Package className="h-7 w-7 text-white" />
-            </div>
+            <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logo-market-spa_177731cb.png" alt="Market Spas" className="h-14 w-14 rounded-full object-contain" />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold text-gray-900">
