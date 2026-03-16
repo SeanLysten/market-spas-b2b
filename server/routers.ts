@@ -359,6 +359,22 @@ export const appRouter = router({
         const result = await processDepositReminders(input.hoursThreshold);
         return result;
       }),
+
+    processArrivedStock: publicProcedure
+      .input(z.object({ 
+        secret: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        // Vérifier la clé secrète
+        const CRON_SECRET = process.env.CRON_SECRET || 'default-secret-change-me';
+        if (input.secret !== CRON_SECRET) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid secret key' });
+        }
+        
+        // Appeler la fonction de traitement du stock (import statique db déjà disponible)
+        const result = await db.processArrivedStock();
+        return result;
+      }),
   }),
 
   // ============================================
