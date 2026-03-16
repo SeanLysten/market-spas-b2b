@@ -28,6 +28,9 @@ import {
   Archive,
   Loader2,
 } from "lucide-react";
+import { OnboardingTour } from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { resourcesTour } from "@/config/onboarding-tours";
 import { Link } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -136,6 +139,7 @@ function FolderItem({
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Resources() {
+  const onboarding = useOnboarding("resources");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFolderId, setActiveFolderId] = useState<number | null | "all" | "unclassified">("all");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -378,7 +382,7 @@ export default function Resources() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top bar */}
-      <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-40 px-4 py-3">
+      <header data-tour="resources-header" className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-40 px-4 py-3">
         <div className="flex items-center gap-3">
           <Link href="/dashboard">
             <Button variant="ghost" size="sm" className="gap-1">
@@ -418,7 +422,7 @@ export default function Resources() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar – Finder-style */}
-        <aside className="w-52 shrink-0 border-r bg-muted/30 hidden md:flex flex-col py-3 gap-0.5 overflow-y-auto">
+        <aside data-tour="resources-sidebar" className="w-52 shrink-0 border-r bg-muted/30 hidden md:flex flex-col py-3 gap-0.5 overflow-y-auto">
           <p className="px-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Médiathèque
           </p>
@@ -882,6 +886,15 @@ export default function Resources() {
           </div>
         </DialogContent>
       </Dialog>
+      <OnboardingTour
+        steps={resourcesTour}
+        isActive={onboarding.isActive}
+        currentStep={onboarding.currentStep}
+        onNext={onboarding.nextStep}
+        onPrev={onboarding.prevStep}
+        onSkip={onboarding.skipTour}
+        onComplete={onboarding.markCompleted}
+      />
     </div>
   );
 }

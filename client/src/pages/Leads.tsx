@@ -28,6 +28,9 @@ import {
   MoreVertical
 } from "lucide-react";
 import { Link } from "wouter";
+import { OnboardingTour } from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { leadsTour } from "@/config/onboarding-tours";
 import { ExportButton } from "@/components/ExportButton";
 
 // Types
@@ -78,6 +81,7 @@ const LEAD_SOURCES = {
 
 export default function Leads() {
   const { user } = useAuth();
+  const onboarding = useOnboarding("leads");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -239,7 +243,7 @@ export default function Leads() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-card border-b sticky top-0 z-10">
+      <header data-tour="leads-header" className="bg-card border-b sticky top-0 z-10">
         <div className="container py-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-4">
@@ -267,7 +271,7 @@ export default function Leads() {
 
       <main className="container py-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div data-tour="leads-stats" className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardContent className="pt-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -344,7 +348,7 @@ export default function Leads() {
         </Card>
 
         {/* Liste des leads */}
-        <div className="space-y-4">
+        <div data-tour="leads-list" className="space-y-4">
           {filteredLeads.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
@@ -670,6 +674,15 @@ export default function Leads() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <OnboardingTour
+        steps={leadsTour}
+        isActive={onboarding.isActive}
+        currentStep={onboarding.currentStep}
+        onNext={onboarding.nextStep}
+        onPrev={onboarding.prevStep}
+        onSkip={onboarding.skipTour}
+        onComplete={onboarding.markCompleted}
+      />
     </div>
   );
 }

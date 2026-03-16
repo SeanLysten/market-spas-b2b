@@ -12,6 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import AfterSalesDetail from "@/components/AfterSalesDetail";
+import { OnboardingTour } from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { savTour } from "@/config/onboarding-tours";
 
 // ===== BRAND LABELS =====
 const BRAND_LABELS: Record<string, string> = {
@@ -782,6 +785,7 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
 // ===== MAIN PAGE =====
 export default function AfterSales() {
   const { data: user } = trpc.auth.me.useQuery();
+  const onboarding = useOnboarding("sav");
   // Only load partners list for admins (partners don't need to select a partner)
   const isAdmin = isAdminUser(user);
   const { data: partners } = trpc.partners.list.useQuery({}, { enabled: isAdmin });
@@ -880,7 +884,7 @@ export default function AfterSales() {
 
   return (
     <div className="container mx-auto px-3 sm:px-6 py-4 md:py-8">
-      <div className="space-y-3 mb-6">
+      <div data-tour="sav-header" className="space-y-3 mb-6">
         <div className="flex items-center gap-3">
           <Link href="/dashboard">
             <Button variant="outline" size="icon" className="flex-shrink-0"><ArrowLeft className="h-4 w-4" /></Button>
@@ -890,7 +894,7 @@ export default function AfterSales() {
             <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">Gérez vos demandes de SAV avec analyse de garantie automatique</p>
           </div>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)} className="w-full sm:w-auto">
+        <Button data-tour="sav-create" onClick={() => setIsCreateDialogOpen(true)} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Nouvelle demande SAV
         </Button>
@@ -1016,6 +1020,7 @@ export default function AfterSales() {
       )}
 
       {/* SAV List */}
+      <div data-tour="sav-list">
       {isLoading ? (
         <div className="text-center py-12">Chargement...</div>
       ) : filteredServices.length === 0 ? (
@@ -1076,6 +1081,7 @@ export default function AfterSales() {
         </div>
       )}
 
+      </div>
       {/* Detail Dialog */}
       {selectedServiceId && (
         <Dialog open={!!selectedServiceId} onOpenChange={() => setSelectedServiceId(null)}>
@@ -1087,6 +1093,15 @@ export default function AfterSales() {
           </DialogContent>
         </Dialog>
       )}
+      <OnboardingTour
+        steps={savTour}
+        isActive={onboarding.isActive}
+        currentStep={onboarding.currentStep}
+        onNext={onboarding.nextStep}
+        onPrev={onboarding.prevStep}
+        onSkip={onboarding.skipTour}
+        onComplete={onboarding.markCompleted}
+      />
     </div>
   );
 }

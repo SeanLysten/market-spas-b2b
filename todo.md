@@ -2921,3 +2921,16 @@
 - [x] Rendre les notifications cliquables avec navigation vers linkUrl (commande, ticket SAV, etc.)
 - [x] Ajouter icônes par type de notification (SAV, paiement, lead, ressource, etc.)
 - [x] Marquer automatiquement comme lu au clic
+
+## Système de Tips/Onboarding guidé
+- [x] Créer le composant OnboardingTour réutilisable (overlay, surbrillance, tooltip, progression)
+- [x] Créer le hook useOnboarding avec persistance localStorage (première visite uniquement)
+- [x] Définir les tips pour le Dashboard (6 étapes)
+- [x] Définir les tips pour le Catalogue (4 étapes)
+- [x] Définir les tips pour les Commandes (4 étapes)
+- [x] Définir les tips pour le SAV (3 étapes)
+- [x] Définir les tips pour les Leads (3 étapes)
+- [x] Définir les tips pour les Ressources (2 étapes)
+- [x] Définir les tips pour le Calendrier (2 étapes)
+- [x] Intégrer les tours sur chaque page utilisateur (7 pages)
+- [x] Tous les 990 tests passent

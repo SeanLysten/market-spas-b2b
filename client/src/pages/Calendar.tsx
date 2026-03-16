@@ -22,6 +22,9 @@ import {
   List,
   ArrowLeft
 } from "lucide-react";
+import { OnboardingTour } from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { calendarTour } from "@/config/onboarding-tours";
 
 // Types
 interface Event {
@@ -55,6 +58,7 @@ const DAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
 export default function Calendar() {
   const { user } = useAuth();
+  const onboarding = useOnboarding("calendar");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [viewMode, setViewMode] = useState<"month" | "list">("month");
@@ -174,7 +178,7 @@ export default function Calendar() {
     <DashboardLayout>
       <div className="p-4 md:p-6 space-y-4 md:space-y-6">
         {/* Page header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div data-tour="calendar-header" className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-foreground">Calendrier</h1>
             <p className="text-xs md:text-sm text-muted-foreground">Événements, promotions et formations</p>
@@ -200,7 +204,7 @@ export default function Calendar() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
+        <div data-tour="calendar-grid" className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Calendrier principal */}
           <div className="lg:col-span-3">
             <Card>
@@ -536,6 +540,15 @@ export default function Calendar() {
           )}
         </DialogContent>
       </Dialog>
+      <OnboardingTour
+        steps={calendarTour}
+        isActive={onboarding.isActive}
+        currentStep={onboarding.currentStep}
+        onNext={onboarding.nextStep}
+        onPrev={onboarding.prevStep}
+        onSkip={onboarding.skipTour}
+        onComplete={onboarding.markCompleted}
+      />
     </DashboardLayout>
   );
 }

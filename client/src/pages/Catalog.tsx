@@ -12,6 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import ProductAddToCartDialog from "@/components/ProductAddToCartDialog";
 import { CSVImportDialog } from "@/components/CSVImportDialog";
+import { OnboardingTour } from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { catalogTour } from "@/config/onboarding-tours";
 
 const COLOR_MAP: Record<string, string> = {
   "sterling marble": "#E8E4E0",
@@ -252,6 +255,7 @@ function ProductCard({ product, onOpenDialog }: {
 
 export default function Catalog() {
   const { user } = useAuth();
+  const onboarding = useOnboarding("catalog");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -271,7 +275,7 @@ export default function Catalog() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header data-tour="catalog-header" className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container py-4">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
@@ -310,7 +314,7 @@ export default function Catalog() {
 
       <div className="container py-8">
         {/* Search and Filters */}
-        <div className="mb-8 space-y-4">
+        <div data-tour="catalog-search" className="mb-8 space-y-4">
           <div className="flex gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -420,7 +424,7 @@ export default function Catalog() {
             ))}
           </div>
         ) : products && products.length > 0 ? (
-          <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div data-tour="catalog-product" className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {products.map((product: any) => (
               <ProductCard
                 key={product.id}
@@ -448,6 +452,15 @@ export default function Catalog() {
           product={selectedProduct}
         />
       )}
+      <OnboardingTour
+        steps={catalogTour}
+        isActive={onboarding.isActive}
+        currentStep={onboarding.currentStep}
+        onNext={onboarding.nextStep}
+        onPrev={onboarding.prevStep}
+        onSkip={onboarding.skipTour}
+        onComplete={onboarding.markCompleted}
+      />
     </div>
   );
 }

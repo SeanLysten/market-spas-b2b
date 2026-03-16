@@ -36,10 +36,14 @@ import {
   FolderOpen,
   ExternalLink,
 } from "lucide-react";
+import { OnboardingTour } from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { dashboardTour } from "@/config/onboarding-tours";
 import { Link } from "wouter";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const onboarding = useOnboarding("dashboard");
   const utils = trpc.useUtils();
   const { data: notificationsData, isLoading: notificationsLoading } = trpc.dashboard.notifications.useQuery({ limit: 5 });
   const notifications = useSafeQuery(notificationsData);
@@ -173,7 +177,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header data-tour="dashboard-header" className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container py-4">
           <div className="space-y-3">
             <div>
@@ -247,7 +251,7 @@ export default function Dashboard() {
       <div className="container py-8 space-y-8">
         {/* Accès rapides principaux - filtered by permissions */}
         {quickAccessCards.length > 0 && (
-          <div className={`grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-${Math.min(quickAccessCards.length, 5)}`}>
+          <div data-tour="quick-access" className={`grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-${Math.min(quickAccessCards.length, 5)}`}>
             {quickAccessCards.map((card) => {
               const Icon = card.icon;
               return (
@@ -270,7 +274,7 @@ export default function Dashboard() {
         {/* Section Leads - only if leads access */}
         {canLeads && (
           <Link href="/leads">
-            <Card className="card-hover cursor-pointer hover:border-primary/50 transition-all bg-gradient-to-r from-blue-500/5 to-purple-500/5">
+            <Card data-tour="leads-section" className="card-hover cursor-pointer hover:border-primary/50 transition-all bg-gradient-to-r from-blue-500/5 to-purple-500/5">
               <CardContent className="py-6">
                 <div className="flex items-center gap-4 md:gap-6">
                   <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
@@ -291,7 +295,7 @@ export default function Dashboard() {
 
         <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2">
           {/* Événements à venir */}
-          <Card>
+          <Card data-tour="events-section">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -360,7 +364,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Notifications */}
-          <Card>
+          <Card data-tour="notifications-section">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -464,7 +468,7 @@ export default function Dashboard() {
 
         {/* Actions secondaires - filtered by permissions */}
         {secondaryActions.length > 0 && (
-          <Card>
+          <Card data-tour="secondary-actions">
             <CardHeader>
               <CardTitle>Autres accès</CardTitle>
               <CardDescription>Gérez vos commandes et favoris</CardDescription>
@@ -515,6 +519,15 @@ export default function Dashboard() {
           </Card>
         )}
       </div>
+      <OnboardingTour
+        steps={dashboardTour}
+        isActive={onboarding.isActive}
+        currentStep={onboarding.currentStep}
+        onNext={onboarding.nextStep}
+        onPrev={onboarding.prevStep}
+        onSkip={onboarding.skipTour}
+        onComplete={onboarding.markCompleted}
+      />
     </div>
   );
 }

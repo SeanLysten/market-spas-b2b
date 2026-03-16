@@ -18,6 +18,9 @@ import {
 import { Link } from "wouter";
 import { ExportButton } from "@/components/ExportButton";
 import { Badge } from "@/components/ui/badge";
+import { OnboardingTour } from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { ordersTour } from "@/config/onboarding-tours";
 import {
   Table,
   TableBody,
@@ -29,6 +32,7 @@ import {
 
 export default function Orders() {
   const { user } = useAuth();
+  const onboarding = useOnboarding("orders");
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
 
   const { data: orders, isLoading } = trpc.orders.list.useQuery({
@@ -103,7 +107,7 @@ export default function Orders() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header data-tour="orders-header" className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container py-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-4">
@@ -138,7 +142,7 @@ export default function Orders() {
 
       <div className="container py-8">
         {/* Status Filters */}
-        <div className="mb-6 flex gap-2 flex-wrap">
+        <div data-tour="orders-filters" className="mb-6 flex gap-2 flex-wrap">
           <Button
             variant={statusFilter === undefined ? "default" : "outline"}
             size="sm"
@@ -178,7 +182,7 @@ export default function Orders() {
         ) : orders && orders.length > 0 ? (
           <>
             {/* Vue desktop : Tableau */}
-            <Card className="hidden md:block">
+            <Card data-tour="orders-list" className="hidden md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -218,7 +222,7 @@ export default function Orders() {
                         €{Number(order.totalTTC).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div data-tour="orders-actions" className="flex justify-end gap-2">
                           <Link href={`/order/${order.id}`}>
                             <Button variant="ghost" size="sm" title="Voir les détails">
                               <Eye className="w-4 h-4" />
@@ -330,6 +334,15 @@ export default function Orders() {
           </Card>
         )}
       </div>
+      <OnboardingTour
+        steps={ordersTour}
+        isActive={onboarding.isActive}
+        currentStep={onboarding.currentStep}
+        onNext={onboarding.nextStep}
+        onPrev={onboarding.prevStep}
+        onSkip={onboarding.skipTour}
+        onComplete={onboarding.markCompleted}
+      />
     </div>
   );
 }
