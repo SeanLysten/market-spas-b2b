@@ -43,6 +43,7 @@ import {
 import { Link } from "wouter";
 import SalesChart from "@/components/charts/SalesChart";
 import TopProductsChart from "@/components/charts/TopProductsChart";
+import MiniCalendar from "@/components/MiniCalendar";
 
 // Helper to check admin module access
 function hasModule(
@@ -287,6 +288,9 @@ function MarketingDashboardSection() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Calendar */}
+      <MiniCalendar isAdmin />
 
       {/* Marketing Quick Actions */}
       <div>
@@ -891,36 +895,39 @@ function FullAdminDashboardSection() {
         </div>
       )}
 
-      {/* Orders + Stock */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2"><Activity className="w-5 h-5" />Commandes récentes</CardTitle>
-              <CardDescription>Les 5 dernières commandes</CardDescription>
-            </div>
-            <Link href="/admin/orders"><Button variant="ghost" size="sm" className="gap-1">Voir tout <ArrowRight className="w-4 h-4" /></Button></Link>
-          </CardHeader>
-          <CardContent>
-            {recentOrders && recentOrders.length > 0 ? (
-              <div className="space-y-4">
-                {recentOrdersSafe.map((order: any) => (
-                  <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"><ShoppingBag className="w-5 h-5 text-primary" /></div>
-                      <div><p className="font-medium">{order.orderNumber}</p><p className="text-xs text-muted-foreground">{formatDate(order.createdAt)}</p></div>
-                    </div>
-                    <div className="text-right"><p className="font-semibold">{formatPrice(order.totalTTC)}</p>{getStatusBadge(order.status)}</div>
-                  </div>
-                ))}
+      {/* Orders + Calendar */}
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+        <div className="md:col-span-2">
+          <Card className="h-full">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2"><Activity className="w-5 h-5" />Commandes récentes</CardTitle>
+                <CardDescription>Les 5 dernières commandes</CardDescription>
               </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground"><ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-50" /><p>Aucune commande récente</p></div>
-            )}
-          </CardContent>
-        </Card>
-
-
+              <Link href="/admin/orders"><Button variant="ghost" size="sm" className="gap-1">Voir tout <ArrowRight className="w-4 h-4" /></Button></Link>
+            </CardHeader>
+            <CardContent>
+              {recentOrders && recentOrders.length > 0 ? (
+                <div className="space-y-4">
+                  {recentOrdersSafe.map((order: any) => (
+                    <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"><ShoppingBag className="w-5 h-5 text-primary" /></div>
+                        <div><p className="font-medium">{order.orderNumber}</p><p className="text-xs text-muted-foreground">{formatDate(order.createdAt)}</p></div>
+                      </div>
+                      <div className="text-right"><p className="font-semibold">{formatPrice(order.totalTTC)}</p>{getStatusBadge(order.status)}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground"><ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-50" /><p>Aucune commande récente</p></div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+        <div>
+          <MiniCalendar isAdmin />
+        </div>
       </div>
 
       {/* Charts */}

@@ -2896,3 +2896,6 @@
 - [x] Supprimer tous les événements test de la base de données
 - [x] Rendre l'accès au calendrier plus facile (lien direct dans le sidebar, intégré dans DashboardLayout)
 - [x] Améliorer l'UX du calendrier (design revu, vue liste améliorée, indicateur aujourd'hui, états vides)
+
+## Dashboard Admin - Vue calendrier Mois
+- [x] Ajouter un widget calendrier format "Mois" sur le dashboard admin (similaire au dashboard utilisateur)
