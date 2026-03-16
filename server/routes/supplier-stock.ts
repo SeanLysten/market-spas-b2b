@@ -423,6 +423,7 @@ router.get("/api/supplier/orders/export", async (req, res) => {
             const p = partnerRows[0];
             clientInfo = {
               partnerId: p.id,
+              supplierClientCode: p.supplierClientCode || null,
               company: {
                 name: p.companyName,
                 tradeName: p.tradeName || null,

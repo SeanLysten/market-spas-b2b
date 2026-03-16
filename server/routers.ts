@@ -767,6 +767,7 @@ export const appRouter = router({
             status: z.enum(["PENDING", "APPROVED", "SUSPENDED", "TERMINATED"]).optional(),
             discountPercent: z.string().optional(),
             internalNotes: z.string().optional(),
+            supplierClientCode: z.string().nullable().optional(),
           }),
         })
       )
@@ -2028,6 +2029,7 @@ export const appRouter = router({
             discountPercent: z.number().optional(),
             status: z.enum(["PENDING", "APPROVED", "SUSPENDED", "TERMINATED"]).optional(),
             internalNotes: z.string().optional(),
+            supplierClientCode: z.string().nullable().optional(),
           })
         )
         .mutation(async ({ input }) => {

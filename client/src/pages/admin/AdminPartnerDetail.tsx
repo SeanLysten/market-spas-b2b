@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { AdminLayout } from "@/components/AdminLayout";
@@ -38,6 +39,65 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+
+// Inline editable field for supplier client code
+function SupplierCodeField({ partnerId, currentCode }: { partnerId: number; currentCode?: string | null }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [value, setValue] = useState(currentCode || "");
+  const utils = trpc.useUtils();
+
+  const updateMutation = trpc.admin.partners.update.useMutation({
+    onSuccess: () => {
+      toast.success("Code client fournisseur mis à jour");
+      setIsEditing(false);
+      utils.admin.partners.invalidate();
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Erreur lors de la mise à jour");
+    },
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate({
+      id: partnerId,
+      supplierClientCode: value.trim() || null,
+    });
+  };
+
+  if (!isEditing) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-sm font-semibold text-blue-700">{currentCode || "Non défini"}</span>
+        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setValue(currentCode || ""); setIsEditing(true); }}>
+          <Edit className="w-3 h-3" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1">
+      <Input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Ex: 5611"
+        className="h-7 w-24 text-xs font-mono"
+        autoFocus
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleSave();
+          if (e.key === "Escape") setIsEditing(false);
+        }}
+      />
+      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-green-600" onClick={handleSave} disabled={updateMutation.isPending}>
+        <CheckCircle className="w-3.5 h-3.5" />
+      </Button>
+      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500" onClick={() => setIsEditing(false)}>
+        <XCircle className="w-3.5 h-3.5" />
+      </Button>
+    </div>
+  );
+}
 
 const statusLabels: Record<string, string> = {
   PENDING: "En attente",
@@ -263,9 +323,15 @@ export default function AdminPartnerDetail() {
                 </div>
               </div>
               <Separator />
-              <div>
-                <p className="text-muted-foreground text-sm mb-1">Stripe Customer ID</p>
-                <p className="font-mono text-xs">{partner.stripeCustomerId || "Non lié"}</p>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-muted-foreground text-sm mb-1">Code Client Fournisseur</p>
+                  <SupplierCodeField partnerId={partner.id} currentCode={partner.supplierClientCode} />
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm mb-1">Stripe Customer ID</p>
+                  <p className="font-mono text-xs">{partner.stripeCustomerId || "Non lié"}</p>
+                </div>
               </div>
               {partner.internalNotes && (
                 <>

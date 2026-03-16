@@ -2989,3 +2989,10 @@
 - [x] Installer sharp et compresser les images côté serveur avant upload S3 (PNG→JPEG, max 4K)
 - [x] Augmenter les limites body size (100MB multer + express) et timeout (10 min)
 - [x] Ajouter bouton retry par fichier et "Tout réessayer" pour les erreurs
+
+## Feature - Code Client Fournisseur (supplierClientCode)
+- [x] Ajouter le champ supplierClientCode au schéma DB (table partners)
+- [x] Migrer la base de données (ALTER TABLE)
+- [x] Ajouter le champ dans les formulaires admin (fiche partenaire inline edit + liste partenaires colonne)
+- [x] Intégrer le code dans l'export API fournisseur (GET /api/supplier/orders/export)
+- [x] Tester et valider - 990 tests passent

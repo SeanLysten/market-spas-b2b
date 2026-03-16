@@ -317,6 +317,7 @@ export const partners = mysqlTable(
     territory: varchar("territory", { length: 100 }),
 
     // External IDs
+    supplierClientCode: varchar("supplierClientCode", { length: 50 }),
     odooPartnerId: int("odooPartnerId"),
     stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
 

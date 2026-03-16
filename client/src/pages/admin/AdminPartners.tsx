@@ -568,6 +568,9 @@ export default function AdminPartners() {
                       </Badge>
                     </div>
                     <div className="flex flex-wrap gap-1.5 mt-2">
+                      {partner.supplierClientCode && (
+                        <Badge variant="outline" className="text-[10px] font-mono text-blue-700">Code: {partner.supplierClientCode}</Badge>
+                      )}
                       <Badge variant="outline" className="text-[10px]">{partner.discountPercent || 0}% remise</Badge>
                       <Badge variant="outline" className="text-[10px]">{partner.orderCount || 0} cmd</Badge>
                     </div>
@@ -586,6 +589,7 @@ export default function AdminPartners() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Entreprise</TableHead>
+                    <TableHead>Code Client</TableHead>
                     <TableHead>Contact</TableHead>
                     <TableHead>Remise globale</TableHead>
                     <TableHead>Statut</TableHead>
@@ -601,6 +605,9 @@ export default function AdminPartners() {
                           <p className="font-medium">{partner.companyName}</p>
                           <p className="text-xs md:text-sm text-muted-foreground">{partner.vatNumber}</p>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm font-semibold text-blue-700">{partner.supplierClientCode || "—"}</span>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
