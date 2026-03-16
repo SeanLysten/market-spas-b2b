@@ -2916,3 +2916,8 @@
 - [x] Brancher notifications : nouveau lead attribué (type LEAD_ASSIGNED + linkUrl)
 - [x] Brancher notifications : rappel acompte impayé
 - [x] Écrire les tests vitest (21 tests, 990 total)
+
+## Liens cliquables notifications
+- [x] Rendre les notifications cliquables avec navigation vers linkUrl (commande, ticket SAV, etc.)
+- [x] Ajouter icônes par type de notification (SAV, paiement, lead, ressource, etc.)
+- [x] Marquer automatiquement comme lu au clic

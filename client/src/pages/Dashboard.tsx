@@ -28,14 +28,28 @@ import {
   UserCog,
   Receipt,
   Building2,
+  CreditCard,
+  XCircle,
+  RefreshCw,
+  UserCheck,
+  UserX,
+  FolderOpen,
+  ExternalLink,
 } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const utils = trpc.useUtils();
   const { data: notificationsData, isLoading: notificationsLoading } = trpc.dashboard.notifications.useQuery({ limit: 5 });
   const notifications = useSafeQuery(notificationsData);
   const { data: unreadCount } = trpc.dashboard.unreadCount.useQuery();
+  const markRead = trpc.dashboard.markNotificationRead.useMutation({
+    onSuccess: () => {
+      utils.dashboard.notifications.invalidate();
+      utils.dashboard.unreadCount.invalidate();
+    },
+  });
   const { data: upcomingEventsData } = trpc.events.upcoming.useQuery({ limit: 5 });
   const upcomingEvents = upcomingEventsData || [];
 
@@ -366,44 +380,77 @@ export default function Dashboard() {
             <CardContent>
               {notifications && notifications.length > 0 ? (
                 <div className="space-y-3">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`flex items-start gap-3 p-4 rounded-lg border transition-colors ${
-                        notification.isRead ? 'bg-card' : 'bg-accent/5 border-primary/20'
-                      }`}
-                    >
-                      <div className="flex-shrink-0 mt-1">
-                        {notification.type === 'ORDER_STATUS_CHANGED' && (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                        )}
-                        {notification.type === 'PAYMENT_RECEIVED' && (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                        )}
-                        {notification.type === 'STOCK_LOW' && (
-                          <AlertCircle className="w-5 h-5 text-yellow-600" />
-                        )}
-                        {!['ORDER_STATUS_CHANGED', 'PAYMENT_RECEIVED', 'STOCK_LOW'].includes(notification.type) && (
-                          <Bell className="w-5 h-5 text-primary" />
+                  {notifications.map((notification) => {
+                    const iconMap: Record<string, React.ReactNode> = {
+                      ORDER_CREATED: <ShoppingCart className="w-5 h-5 text-blue-600" />,
+                      ORDER_STATUS_CHANGED: <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
+                      PAYMENT_RECEIVED: <CreditCard className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
+                      PAYMENT_FAILED: <XCircle className="w-5 h-5 text-red-600" />,
+                      REFUND_PROCESSED: <RefreshCw className="w-5 h-5 text-orange-600" />,
+                      DEPOSIT_REMINDER: <AlertCircle className="w-5 h-5 text-yellow-600" />,
+                      NEW_PARTNER: <Building2 className="w-5 h-5 text-blue-600" />,
+                      PARTNER_APPROVED: <UserCheck className="w-5 h-5 text-emerald-600" />,
+                      PARTNER_SUSPENDED: <UserX className="w-5 h-5 text-red-600" />,
+                      SAV_CREATED: <Wrench className="w-5 h-5 text-orange-600" />,
+                      SAV_STATUS_CHANGED: <Wrench className="w-5 h-5 text-blue-600" />,
+                      NEW_RESOURCE: <FolderOpen className="w-5 h-5 text-purple-600" />,
+                      LEAD_ASSIGNED: <Target className="w-5 h-5 text-teal-600" />,
+                      STOCK_LOW: <AlertCircle className="w-5 h-5 text-yellow-600" />,
+                    };
+                    const icon = iconMap[notification.type] || <Bell className="w-5 h-5 text-primary" />;
+                    const hasLink = !!(notification as any).linkUrl;
+
+                    const handleClick = () => {
+                      if (!notification.isRead) {
+                        markRead.mutate({ id: notification.id });
+                      }
+                      if (hasLink) {
+                        window.location.href = (notification as any).linkUrl;
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={notification.id}
+                        onClick={handleClick}
+                        className={`flex items-start gap-3 p-4 rounded-lg border transition-all ${
+                          notification.isRead ? 'bg-card' : 'bg-accent/5 border-primary/20'
+                        } ${hasLink ? 'cursor-pointer hover:bg-accent/10 hover:border-primary/30' : ''}`}
+                      >
+                        <div className="flex-shrink-0 mt-1">
+                          {icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm mb-1 ${notification.isRead ? 'font-medium' : 'font-semibold'}`}>{notification.title}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {notification.message}
+                          </p>
+                          <div className="flex items-center justify-between mt-2">
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {new Date(notification.createdAt).toLocaleDateString('fr-FR', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                            {hasLink && (
+                              <span className="text-xs text-primary flex items-center gap-1">
+                                {(notification as any).linkText || 'Voir'}
+                                <ExternalLink className="w-3 h-3" />
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {!notification.isRead && (
+                          <div className="flex-shrink-0 mt-2">
+                            <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                          </div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm mb-1">{notification.title}</p>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {new Date(notification.createdAt).toLocaleDateString('fr-FR', {
-                            day: 'numeric',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-12">
