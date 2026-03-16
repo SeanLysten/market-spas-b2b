@@ -33,79 +33,95 @@ export function OnboardingTour({
   onComplete,
 }: OnboardingTourProps) {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
-  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
+  const [tooltipPos, setTooltipPos] = useState<React.CSSProperties>({});
   const [arrowStyle, setArrowStyle] = useState<React.CSSProperties>({});
-  const [arrowDirection, setArrowDirection] = useState<string>("top");
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recalcCountRef = useRef(0);
 
   const step = steps[currentStep];
   const isLastStep = currentStep === steps.length - 1;
 
-  const calculatePosition = useCallback(() => {
+  // Scroll target into view and then position tooltip
+  const scrollAndPosition = useCallback(() => {
     if (!step || !isActive) return;
 
-    const target = document.querySelector(step.target);
+    setIsReady(false);
+    recalcCountRef.current = 0;
+
+    const target = document.querySelector(step.target) as HTMLElement | null;
     if (!target) {
-      // If target not found, show tooltip in center
+      // Target not found → center tooltip
       setTargetRect(null);
-      setTooltipStyle({
+      setTooltipPos({
         position: "fixed",
         top: "50%",
         left: "50%",
         transform: "translate(-50%, -50%)",
         zIndex: 10002,
       });
+      setArrowStyle({});
+      setTimeout(() => setIsReady(true), 100);
       return;
     }
 
-    const rect = target.getBoundingClientRect();
-    setTargetRect(rect);
+    // First, scroll the element into view
+    target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
 
-    // Scroll element into view if needed
-    const isInView =
-      rect.top >= 0 &&
-      rect.bottom <= window.innerHeight &&
-      rect.left >= 0 &&
-      rect.right <= window.innerWidth;
+    // Wait for scroll to finish, then position
+    const waitAndPosition = () => {
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => {
+        const rect = target.getBoundingClientRect();
+        setTargetRect(rect);
+        positionTooltipAroundRect(rect, step.position);
+        setIsReady(true);
 
-    if (!isInView) {
-      target.scrollIntoView({ behavior: "smooth", block: "center" });
-      // Recalculate after scroll
-      setTimeout(() => {
-        const newRect = target.getBoundingClientRect();
-        setTargetRect(newRect);
-        positionTooltip(newRect, step.position);
-      }, 400);
-    } else {
-      positionTooltip(rect, step.position);
-    }
+        // Double-check position after a short delay (scroll might still be settling)
+        if (recalcCountRef.current < 2) {
+          recalcCountRef.current++;
+          setTimeout(() => {
+            const freshRect = target.getBoundingClientRect();
+            // Only update if position changed significantly
+            if (Math.abs(freshRect.top - rect.top) > 5 || Math.abs(freshRect.left - rect.left) > 5) {
+              setTargetRect(freshRect);
+              positionTooltipAroundRect(freshRect, step.position);
+            }
+          }, 350);
+        }
+      }, 450);
+    };
+
+    waitAndPosition();
   }, [step, isActive]);
 
-  const positionTooltip = (rect: DOMRect, preferredPosition?: string) => {
+  const positionTooltipAroundRect = (rect: DOMRect, preferredPosition?: string) => {
     const tooltipWidth = 340;
-    const tooltipHeight = 200;
+    const tooltipEstHeight = 220;
     const margin = 16;
     const arrowSize = 8;
+    const viewW = window.innerWidth;
+    const viewH = window.innerHeight;
 
     const spaceAbove = rect.top;
-    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceBelow = viewH - rect.bottom;
     const spaceLeft = rect.left;
-    const spaceRight = window.innerWidth - rect.right;
+    const spaceRight = viewW - rect.right;
 
     let pos = preferredPosition || "auto";
 
     if (pos === "auto") {
-      // Pick the best position based on available space
-      if (spaceBelow >= tooltipHeight + margin) {
+      if (spaceBelow >= tooltipEstHeight + margin) {
         pos = "bottom";
-      } else if (spaceAbove >= tooltipHeight + margin) {
+      } else if (spaceAbove >= tooltipEstHeight + margin) {
         pos = "top";
       } else if (spaceRight >= tooltipWidth + margin) {
         pos = "right";
       } else if (spaceLeft >= tooltipWidth + margin) {
         pos = "left";
       } else {
+        // Not enough space anywhere → place below and clamp to viewport
         pos = "bottom";
       }
     }
@@ -127,78 +143,124 @@ export function OnboardingTour({
     const centerY = rect.top + rect.height / 2;
 
     switch (pos) {
-      case "bottom":
-        style.top = `${rect.bottom + margin}px`;
-        style.left = `${Math.max(margin, Math.min(centerX - tooltipWidth / 2, window.innerWidth - tooltipWidth - margin))}px`;
+      case "bottom": {
+        let top = rect.bottom + margin;
+        // Clamp: ensure tooltip doesn't go below viewport
+        if (top + tooltipEstHeight > viewH - margin) {
+          top = Math.max(margin, viewH - tooltipEstHeight - margin);
+        }
+        let left = Math.max(margin, Math.min(centerX - tooltipWidth / 2, viewW - tooltipWidth - margin));
+        style.top = `${top}px`;
+        style.left = `${left}px`;
         arrow.top = `-${arrowSize}px`;
-        arrow.left = `${Math.min(Math.max(centerX - parseFloat(String(style.left)) - arrowSize, 16), tooltipWidth - 32)}px`;
+        arrow.left = `${Math.min(Math.max(centerX - left - arrowSize, 16), tooltipWidth - 32)}px`;
         arrow.borderLeft = `${arrowSize}px solid transparent`;
         arrow.borderRight = `${arrowSize}px solid transparent`;
         arrow.borderBottom = `${arrowSize}px solid var(--card)`;
-        setArrowDirection("top");
         break;
-      case "top":
-        style.bottom = `${window.innerHeight - rect.top + margin}px`;
-        style.left = `${Math.max(margin, Math.min(centerX - tooltipWidth / 2, window.innerWidth - tooltipWidth - margin))}px`;
+      }
+      case "top": {
+        let bottom = viewH - rect.top + margin;
+        // Clamp: ensure tooltip doesn't go above viewport
+        if (viewH - bottom - tooltipEstHeight < margin) {
+          bottom = Math.max(margin, viewH - tooltipEstHeight - margin);
+        }
+        let left = Math.max(margin, Math.min(centerX - tooltipWidth / 2, viewW - tooltipWidth - margin));
+        style.bottom = `${bottom}px`;
+        style.left = `${left}px`;
         arrow.bottom = `-${arrowSize}px`;
-        arrow.left = `${Math.min(Math.max(centerX - parseFloat(String(style.left)) - arrowSize, 16), tooltipWidth - 32)}px`;
+        arrow.left = `${Math.min(Math.max(centerX - left - arrowSize, 16), tooltipWidth - 32)}px`;
         arrow.borderLeft = `${arrowSize}px solid transparent`;
         arrow.borderRight = `${arrowSize}px solid transparent`;
         arrow.borderTop = `${arrowSize}px solid var(--card)`;
-        setArrowDirection("bottom");
         break;
-      case "right":
-        style.left = `${rect.right + margin}px`;
-        style.top = `${Math.max(margin, Math.min(centerY - tooltipHeight / 2, window.innerHeight - tooltipHeight - margin))}px`;
+      }
+      case "right": {
+        let left = rect.right + margin;
+        if (left + tooltipWidth > viewW - margin) {
+          left = Math.max(margin, viewW - tooltipWidth - margin);
+        }
+        let top = Math.max(margin, Math.min(centerY - tooltipEstHeight / 2, viewH - tooltipEstHeight - margin));
+        style.left = `${left}px`;
+        style.top = `${top}px`;
         arrow.left = `-${arrowSize}px`;
-        arrow.top = `${Math.min(Math.max(centerY - parseFloat(String(style.top)) - arrowSize, 16), tooltipHeight - 32)}px`;
+        arrow.top = `${Math.min(Math.max(centerY - top - arrowSize, 16), tooltipEstHeight - 32)}px`;
         arrow.borderTop = `${arrowSize}px solid transparent`;
         arrow.borderBottom = `${arrowSize}px solid transparent`;
         arrow.borderRight = `${arrowSize}px solid var(--card)`;
-        setArrowDirection("left");
         break;
-      case "left":
-        style.right = `${window.innerWidth - rect.left + margin}px`;
-        style.top = `${Math.max(margin, Math.min(centerY - tooltipHeight / 2, window.innerHeight - tooltipHeight - margin))}px`;
+      }
+      case "left": {
+        let right = viewW - rect.left + margin;
+        if (viewW - right - tooltipWidth < margin) {
+          right = Math.max(margin, viewW - tooltipWidth - margin);
+        }
+        let top = Math.max(margin, Math.min(centerY - tooltipEstHeight / 2, viewH - tooltipEstHeight - margin));
+        style.right = `${right}px`;
+        style.top = `${top}px`;
         arrow.right = `-${arrowSize}px`;
-        arrow.top = `${Math.min(Math.max(centerY - parseFloat(String(style.top)) - arrowSize, 16), tooltipHeight - 32)}px`;
+        arrow.top = `${Math.min(Math.max(centerY - top - arrowSize, 16), tooltipEstHeight - 32)}px`;
         arrow.borderTop = `${arrowSize}px solid transparent`;
         arrow.borderBottom = `${arrowSize}px solid transparent`;
         arrow.borderLeft = `${arrowSize}px solid var(--card)`;
-        setArrowDirection("right");
         break;
+      }
     }
 
-    setTooltipStyle(style);
+    setTooltipPos(style);
     setArrowStyle(arrow);
   };
 
+  // Trigger scroll+position on step change
   useEffect(() => {
     if (!isActive) return;
-    setIsAnimating(true);
-    const timer = setTimeout(() => {
-      calculatePosition();
-      setIsAnimating(false);
-    }, 150);
+    scrollAndPosition();
+    return () => {
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    };
+  }, [currentStep, isActive, scrollAndPosition]);
 
-    return () => clearTimeout(timer);
-  }, [currentStep, isActive, calculatePosition]);
-
-  // Recalculate on resize/scroll
+  // Recalculate on resize (debounced)
   useEffect(() => {
     if (!isActive) return;
 
-    const handleResize = () => calculatePosition();
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (step) {
+          const target = document.querySelector(step.target);
+          if (target) {
+            const rect = target.getBoundingClientRect();
+            setTargetRect(rect);
+            positionTooltipAroundRect(rect, step.position);
+          }
+        }
+      }, 100);
+    };
+
     window.addEventListener("resize", handleResize);
-    window.addEventListener("scroll", handleResize, true);
+    // Listen to scroll on capture to update highlight position
+    const handleScroll = () => {
+      if (step) {
+        const target = document.querySelector(step.target);
+        if (target) {
+          const rect = target.getBoundingClientRect();
+          setTargetRect(rect);
+          positionTooltipAroundRect(rect, step.position);
+        }
+      }
+    };
+    window.addEventListener("scroll", handleScroll, true);
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      window.removeEventListener("scroll", handleResize, true);
+      window.removeEventListener("scroll", handleScroll, true);
+      clearTimeout(resizeTimer);
     };
-  }, [isActive, calculatePosition]);
+  }, [isActive, step]);
 
-  // Handle keyboard navigation
+  // Keyboard navigation
   useEffect(() => {
     if (!isActive) return;
 
@@ -224,7 +286,7 @@ export function OnboardingTour({
       {/* Overlay with cutout for highlighted element */}
       <div
         className="fixed inset-0 z-[10000] transition-opacity duration-300"
-        style={{ opacity: isAnimating ? 0 : 1 }}
+        style={{ opacity: isReady ? 1 : 0 }}
       >
         {/* Dark overlay */}
         <svg
@@ -264,7 +326,8 @@ export function OnboardingTour({
               top: targetRect.top - padding,
               width: targetRect.width + padding * 2,
               height: targetRect.height + padding * 2,
-              boxShadow: "0 0 0 4px rgba(var(--primary-rgb, 59, 130, 246), 0.3), 0 0 20px rgba(var(--primary-rgb, 59, 130, 246), 0.15)",
+              boxShadow:
+                "0 0 0 4px rgba(var(--primary-rgb, 59, 130, 246), 0.3), 0 0 20px rgba(var(--primary-rgb, 59, 130, 246), 0.15)",
             }}
           />
         )}
@@ -275,9 +338,9 @@ export function OnboardingTour({
         ref={tooltipRef}
         className="fixed z-[10002] transition-all duration-300"
         style={{
-          ...tooltipStyle,
-          opacity: isAnimating ? 0 : 1,
-          transform: `${tooltipStyle.transform || ""} ${isAnimating ? "translateY(8px)" : "translateY(0)"}`,
+          ...tooltipPos,
+          opacity: isReady ? 1 : 0,
+          transform: `${tooltipPos.transform || ""} ${isReady ? "translateY(0)" : "translateY(8px)"}`,
         }}
       >
         {/* Arrow */}

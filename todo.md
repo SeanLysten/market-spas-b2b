@@ -2934,3 +2934,7 @@
 - [x] Définir les tips pour le Calendrier (2 étapes)
 - [x] Intégrer les tours sur chaque page utilisateur (7 pages)
 - [x] Tous les 990 tests passent
+
+## Bug - Onboarding tips inaccessibles sur certaines pages
+- [x] Corriger le scroll automatique vers l'élément ciblé à chaque étape du tour
+- [x] S'assurer que le tooltip reste toujours visible dans la zone d'écran
