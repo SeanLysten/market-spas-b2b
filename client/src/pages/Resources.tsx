@@ -28,6 +28,7 @@ import {
   Archive,
   Loader2,
   Menu,
+  Expand,
 } from "lucide-react";
 import {
   Sheet,
@@ -43,6 +44,7 @@ import { Link } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import FullscreenImageViewer, { type ViewerResource } from "@/components/FullscreenImageViewer";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -175,6 +177,8 @@ export default function Resources() {
   const [zipProgress, setZipProgress] = useState<{ current: number; total: number } | null>(null);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [fullscreenIndex, setFullscreenIndex] = useState(-1);
+  const [fullscreenOpen, setFullscreenOpen] = useState(false);
   const { user } = useAuth();
   const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN";
 
@@ -341,8 +345,16 @@ export default function Resources() {
   };
 
   const handleView = (resource: any) => {
-    setPreviewResource(resource);
-    setPreviewOpen(true);
+    if (resource.fileType?.startsWith("image/")) {
+      // Open fullscreen viewer for images
+      const idx = filtered.findIndex((r: any) => r.id === resource.id);
+      setFullscreenIndex(idx >= 0 ? idx : 0);
+      setFullscreenOpen(true);
+    } else {
+      // Keep dialog for non-image files (PDF, video, etc.)
+      setPreviewResource(resource);
+      setPreviewOpen(true);
+    }
   };
 
   const toggleSort = (field: SortField) => {
@@ -790,8 +802,7 @@ export default function Resources() {
                           ? "border-primary bg-primary/5 shadow-md"
                           : "border-transparent bg-card hover:border-border hover:shadow-sm"
                       )}
-                      onClick={() => toggleSelect(resource.id)}
-                      onDoubleClick={() => handleView(resource)}
+                      onClick={() => handleView(resource)}
                     >
                       {/* Checkbox */}
                       <div
@@ -847,18 +858,20 @@ export default function Resources() {
                         <Button
                           size="icon"
                           variant="secondary"
-                          className="h-6 w-6"
+                          className="h-7 w-7"
                           onClick={(e) => { e.stopPropagation(); handleView(resource); }}
+                          title="Aperçu plein écran"
                         >
-                          <Eye className="w-3 h-3" />
+                          <Expand className="w-3.5 h-3.5" />
                         </Button>
                         <Button
                           size="icon"
                           variant="secondary"
-                          className="h-6 w-6"
+                          className="h-7 w-7"
                           onClick={(e) => { e.stopPropagation(); handleDownload(resource.id, resource.fileUrl, resource.title); }}
+                          title="Télécharger"
                         >
-                          <Download className="w-3 h-3" />
+                          <Download className="w-3.5 h-3.5" />
                         </Button>
                       </div>
                     </div>
@@ -940,7 +953,7 @@ export default function Resources() {
                           "flex items-center gap-3 p-2.5 bg-card rounded-xl border-2 transition-all",
                           isSelected ? "border-primary bg-primary/5" : "border-border"
                         )}
-                        onClick={() => toggleSelect(resource.id)}
+                        onClick={() => handleView(resource)}
                       >
                         {/* Thumbnail / Icon */}
                         <div className="w-12 h-12 rounded-lg bg-muted/50 shrink-0 overflow-hidden flex items-center justify-center">
@@ -961,18 +974,18 @@ export default function Resources() {
                           </div>
                         </div>
 
-                        {/* Selection indicator */}
-                        <div className={cn("w-5 h-5 rounded border-2 flex items-center justify-center shrink-0", isSelected ? "bg-primary border-primary" : "border-muted-foreground/30")}>
-                          {isSelected && <CheckSquare className="w-3 h-3 text-primary-foreground" />}
+                        {/* Selection checkbox */}
+                        <div
+                          className={cn("w-7 h-7 rounded border-2 flex items-center justify-center shrink-0 cursor-pointer", isSelected ? "bg-primary border-primary" : "border-muted-foreground/30")}
+                          onClick={(e) => { e.stopPropagation(); toggleSelect(resource.id); }}
+                        >
+                          {isSelected && <CheckSquare className="w-4 h-4 text-primary-foreground" />}
                         </div>
 
                         {/* Actions */}
                         <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleView(resource)}>
-                            <Eye className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleDownload(resource.id, resource.fileUrl, resource.title)}>
-                            <Download className="w-3.5 h-3.5" />
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleDownload(resource.id, resource.fileUrl, resource.title)}>
+                            <Download className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
@@ -1042,6 +1055,14 @@ export default function Resources() {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Fullscreen Image Viewer */}
+      <FullscreenImageViewer
+        resources={filtered as ViewerResource[]}
+        currentIndex={fullscreenIndex}
+        open={fullscreenOpen}
+        onClose={() => setFullscreenOpen(false)}
+        onDownload={(r) => handleDownload(r.id, r.fileUrl, r.title)}
+      />
       <OnboardingTour
         steps={resourcesTour}
         isActive={onboarding.isActive}

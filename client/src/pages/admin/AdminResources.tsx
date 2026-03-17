@@ -61,7 +61,9 @@ import {
   FolderInput,
   Check,
   Menu,
+  Expand,
 } from "lucide-react";
+import FullscreenImageViewer, { type ViewerResource } from "@/components/FullscreenImageViewer";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -358,6 +360,8 @@ export default function AdminResources() {
   const [previewResource, setPreviewResource] = useState<Resource | null>(null);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [fullscreenIndex, setFullscreenIndex] = useState(-1);
+  const [fullscreenOpen, setFullscreenOpen] = useState(false);
 
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [createFolderParentId, setCreateFolderParentId] = useState<number | null>(null);
@@ -465,6 +469,17 @@ export default function AdminResources() {
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+  };
+
+  // Open fullscreen viewer for images, dialog for other types
+  const handleAdminView = (resource: Resource) => {
+    if (resource.fileType.startsWith("image/")) {
+      const idx = displayedResources.findIndex((r) => r.id === resource.id);
+      setFullscreenIndex(idx >= 0 ? idx : 0);
+      setFullscreenOpen(true);
+    } else {
+      setPreviewResource(resource);
+    }
   };
 
   const selectAll = () => setSelectedFiles(new Set(displayedResources.map((r) => r.id)));
@@ -746,7 +761,7 @@ export default function AdminResources() {
                         e.dataTransfer.setData("application/x-file-ids", JSON.stringify(ids));
                       }}
                       onClick={(e) => toggleSelect(resource.id, e)}
-                      onDoubleClick={() => setPreviewResource(resource)}
+                      onDoubleClick={() => handleAdminView(resource)}
                     >
                       <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
                         {thumb ? (
@@ -771,7 +786,7 @@ export default function AdminResources() {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-40">
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setPreviewResource(resource); }}><Eye className="w-4 h-4 mr-2" />Aperçu</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAdminView(resource); }}><Eye className="w-4 h-4 mr-2" />Aperçu</DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); window.open(resource.fileUrl, "_blank"); }}><Download className="w-4 h-4 mr-2" />Télécharger</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); setDeletingResource(resource); }}><Trash2 className="w-4 h-4 mr-2" />Supprimer</DropdownMenuItem>
@@ -812,7 +827,7 @@ export default function AdminResources() {
                             draggable
                             onDragStart={(e) => { const ids = isSelected ? Array.from(selectedFiles) : [resource.id]; setDraggingFileIds(new Set(ids)); e.dataTransfer.setData("application/x-file-ids", JSON.stringify(ids)); }}
                             onClick={(e) => toggleSelect(resource.id, e)}
-                            onDoubleClick={() => setPreviewResource(resource)}
+                            onDoubleClick={() => handleAdminView(resource)}
                           >
                             <td className="px-3 py-2"><input type="checkbox" checked={isSelected} onChange={() => {}} className="rounded border-gray-300" /></td>
                             <td className="px-3 py-2"><div className="flex items-center gap-2">{getFileIcon(resource.fileType)}<span className="font-medium text-gray-800 truncate max-w-xs">{resource.title}</span></div></td>
@@ -825,7 +840,7 @@ export default function AdminResources() {
                                   <button className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200" onClick={(e) => e.stopPropagation()}><MoreVertical className="w-4 h-4" /></button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-40">
-                                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setPreviewResource(resource); }}><Eye className="w-4 h-4 mr-2" />Aperçu</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAdminView(resource); }}><Eye className="w-4 h-4 mr-2" />Aperçu</DropdownMenuItem>
                                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); window.open(resource.fileUrl, "_blank"); }}><Download className="w-4 h-4 mr-2" />Télécharger</DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); setDeletingResource(resource); }}><Trash2 className="w-4 h-4 mr-2" />Supprimer</DropdownMenuItem>
@@ -882,7 +897,7 @@ export default function AdminResources() {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-40">
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setPreviewResource(resource); }}><Eye className="w-4 h-4 mr-2" />Aperçu</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAdminView(resource); }}><Eye className="w-4 h-4 mr-2" />Aperçu</DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); window.open(resource.fileUrl, "_blank"); }}><Download className="w-4 h-4 mr-2" />Télécharger</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); setDeletingResource(resource); }}><Trash2 className="w-4 h-4 mr-2" />Supprimer</DropdownMenuItem>
@@ -1033,6 +1048,15 @@ export default function AdminResources() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Fullscreen Image Viewer */}
+      <FullscreenImageViewer
+        resources={displayedResources as ViewerResource[]}
+        currentIndex={fullscreenIndex}
+        open={fullscreenOpen}
+        onClose={() => setFullscreenOpen(false)}
+        onDownload={(r) => window.open(r.fileUrl, "_blank")}
+      />
 
       {/* Floating upload progress panel */}
       <UploadProgressPanel
