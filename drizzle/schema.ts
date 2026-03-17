@@ -168,6 +168,9 @@ export const users = mysqlTable(
     isActive: boolean("isActive").default(true),
     mustChangePassword: boolean("mustChangePassword").default(false),
 
+    // Onboarding - JSON array of completed tour page keys
+    completedOnboarding: text("completedOnboarding"),
+
     // Timestamps
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

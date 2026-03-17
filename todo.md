@@ -3013,3 +3013,9 @@
 - [x] Les dossiers s'affichent en cercles tronqués illisibles dans la barre horizontale mobile
 - [x] Refait en chips horizontaux scrollables avec icône dossier + nom complet + compteur
 - [x] Ajouté CSS scrollbar-hide pour masquer la scrollbar sur mobile
+
+## Bug - Tutoriel onboarding apparaît à chaque visite
+- [x] Le tutoriel d'onboarding se relance à chaque chargement du site au lieu d'une seule fois
+- [x] Corriger la persistance : ajouté stockage côté serveur (colonne completedOnboarding sur users)
+- [x] Hook useOnboarding synchro serveur + localStorage cache
+- [x] Bouton "Relancer les guides" utilise maintenant useResetAllOnboarding (reset serveur + local)

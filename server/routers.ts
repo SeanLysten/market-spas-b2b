@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
+import { users } from "../drizzle/schema";
 import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -55,6 +56,48 @@ export const appRouter = router({
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
+    }),
+
+    // Onboarding tours - get completed tours from DB
+    getCompletedOnboarding: protectedProcedure.query(async ({ ctx }) => {
+      try {
+        const raw = ctx.user.completedOnboarding;
+        return raw ? JSON.parse(raw) as string[] : [];
+      } catch {
+        return [];
+      }
+    }),
+
+    // Onboarding tours - mark a tour as completed in DB
+    markOnboardingCompleted: protectedProcedure
+      .input(z.object({ pageKey: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        let completed: string[] = [];
+        try {
+          const raw = ctx.user.completedOnboarding;
+          completed = raw ? JSON.parse(raw) as string[] : [];
+        } catch { /* ignore */ }
+        if (!completed.includes(input.pageKey)) {
+          completed.push(input.pageKey);
+        }
+        const drizzleDb = await db.getDb();
+        if (drizzleDb) {
+          await drizzleDb.update(users).set({
+            completedOnboarding: JSON.stringify(completed),
+          }).where(eq(users.id, ctx.user.id));
+        }
+        return { success: true, completed };
+      }),
+
+    // Onboarding tours - reset all tours (for "Relancer le guide" button)
+    resetOnboarding: protectedProcedure.mutation(async ({ ctx }) => {
+      const drizzleDb = await db.getDb();
+      if (drizzleDb) {
+        await drizzleDb.update(users).set({
+          completedOnboarding: JSON.stringify([]),
+        }).where(eq(users.id, ctx.user.id));
+      }
+      return { success: true };
     }),
 
     // Validate invitation token and get email

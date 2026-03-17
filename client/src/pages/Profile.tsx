@@ -23,10 +23,11 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { Link } from "wouter";
-import { resetAllOnboarding } from "@/hooks/useOnboarding";
+import { useResetAllOnboarding } from "@/hooks/useOnboarding";
 
 export default function Profile() {
   const { user } = useAuth();
+  const resetOnboardingAll = useResetAllOnboarding();
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -553,7 +554,7 @@ export default function Profile() {
                         size="sm"
                         className="gap-2"
                         onClick={() => {
-                          resetAllOnboarding();
+                          resetOnboardingAll();
                           alert("Les guides ont été réinitialisés. Ils se relanceront automatiquement lors de votre prochaine visite sur chaque page.");
                         }}
                       >
