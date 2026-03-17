@@ -106,7 +106,29 @@ class AuthServer {
   }
 
   async authenticateRequest(req: Request): Promise<User> {
-    // Local authentication flow - verify JWT session cookie
+    // 1. Try Bearer token first (mobile app)
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.slice(7);
+      try {
+        const { verifyMobileAccessToken } = await import("../routes/mobile-auth");
+        const payload = await verifyMobileAccessToken(token);
+        if (payload) {
+          const user = await db.getUserById(parseInt(payload.sub));
+          if (user && user.isActive) {
+            await db.upsertUser({
+              openId: user.openId,
+              lastSignedIn: new Date(),
+            });
+            return user;
+          }
+        }
+      } catch (e) {
+        // Fall through to cookie auth
+      }
+    }
+
+    // 2. Cookie-based authentication (web portal)
     const cookies = this.parseCookies(req.headers.cookie);
     const sessionCookie = cookies.get(COOKIE_NAME);
     const session = await this.verifySession(sessionCookie);

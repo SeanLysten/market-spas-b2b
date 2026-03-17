@@ -3022,3 +3022,15 @@
 - [x] Aligner l'affichage mobile des dossiers de la médiathèque utilisateur (Resources.tsx) sur celui de la version admin (AdminResources.tsx)
 - [x] Optimiser la vitesse de chargement des fichiers dans la médiathèque (thumbnails, lazy loading, pagination)
 - [x] Mode plein écran pour prévisualiser les images avec flèches de navigation gauche/droite
+
+## Préparation backend pour app mobile React Native/Expo
+- [x] Authentification mobile avec JWT access + refresh tokens
+- [x] Configurer CORS pour autoriser l'app mobile
+- [x] Route de login mobile (email/password → JWT tokens)
+- [x] Route de refresh token pour renouveler les sessions
+- [x] Support des notifications push Expo (compatible FCM/APNs)
+- [x] Table device_push_tokens pour stocker les tokens push des appareils
+- [x] Route d'enregistrement/suppression de device token
+- [x] Service d'envoi de notifications push (push-notifications.ts)
+- [x] Endpoints optimisés mobile (pagination, données allégées)
+- [x] Documentation API mobile pour l'intégration React Native (MOBILE_API_DOCS.md)

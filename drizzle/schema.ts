@@ -2768,3 +2768,55 @@ export const partnerProductDiscounts = mysqlTable(
 );
 export type PartnerProductDiscount = typeof partnerProductDiscounts.$inferSelect;
 export type InsertPartnerProductDiscount = typeof partnerProductDiscounts.$inferInsert;
+
+
+// ============================================
+// MOBILE APP - REFRESH TOKENS
+// ============================================
+export const mobileRefreshTokens = mysqlTable(
+  "mobile_refresh_tokens",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    token: varchar("token", { length: 512 }).notNull().unique(),
+    deviceId: varchar("deviceId", { length: 255 }),
+    deviceName: varchar("deviceName", { length: 255 }),
+    platform: varchar("platform", { length: 20 }), // 'ios' | 'android'
+    expiresAt: timestamp("expiresAt").notNull(),
+    revokedAt: timestamp("revokedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    lastUsedAt: timestamp("lastUsedAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    tokenIdx: index("mobile_rt_token_idx").on(table.token),
+    userIdIdx: index("mobile_rt_userId_idx").on(table.userId),
+  })
+);
+
+export type MobileRefreshToken = typeof mobileRefreshTokens.$inferSelect;
+export type InsertMobileRefreshToken = typeof mobileRefreshTokens.$inferInsert;
+
+// ============================================
+// MOBILE APP - DEVICE PUSH TOKENS (FCM)
+// ============================================
+export const devicePushTokens = mysqlTable(
+  "device_push_tokens",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    pushToken: varchar("pushToken", { length: 512 }).notNull(),
+    platform: varchar("platform", { length: 20 }).notNull(), // 'ios' | 'android'
+    deviceId: varchar("deviceId", { length: 255 }),
+    deviceName: varchar("deviceName", { length: 255 }),
+    isActive: boolean("isActive").default(true),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("dpt_userId_idx").on(table.userId),
+    pushTokenIdx: index("dpt_pushToken_idx").on(table.pushToken),
+  })
+);
+
+export type DevicePushToken = typeof devicePushTokens.$inferSelect;
+export type InsertDevicePushToken = typeof devicePushTokens.$inferInsert;

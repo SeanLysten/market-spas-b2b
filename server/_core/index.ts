@@ -21,6 +21,8 @@ import { uploadResourceRouter } from "../routes/upload-resource";
 import { supplierStockRouter } from "../routes/supplier-stock";
 import { orderPdfRouter } from "../routes/order-pdf";
 import { validateEnv } from "./env";
+import { mobileAuthRouter } from "../routes/mobile-auth";
+import { mobileApiRouter } from "../routes/mobile-api";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -50,6 +52,26 @@ async function startServer() {
 
   // Trust proxy (required for rate limiting behind reverse proxy)
   app.set("trust proxy", 1);
+
+  // CORS middleware (manual implementation for ESM compatibility)
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    // Allow all origins for mobile API, specific patterns for web
+    if (origin) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+    } else {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+    }
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,X-Device-Id,X-Platform");
+    res.setHeader("Access-Control-Expose-Headers", "X-Total-Count");
+    res.setHeader("Access-Control-Max-Age", "86400");
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(204);
+    }
+    next();
+  });
 
   // Security headers with Helmet
   app.use(helmet({
@@ -320,6 +342,10 @@ async function startServer() {
   app.use("/api/webhooks", webhooksRouter);
   // Inbound leads (formulaire Shopify + emails entrants)
   app.use(inboundLeadsRouter);
+  // Mobile auth routes (login, refresh, logout, push tokens)
+  app.use(mobileAuthRouter);
+  // Mobile optimized API endpoints (v1)
+  app.use(mobileApiRouter);
   // Resource upload - multipart/form-data for large files (videos, etc.)
   app.use(uploadResourceRouter);
   // Supplier stock integration API
