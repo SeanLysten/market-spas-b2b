@@ -3001,3 +3001,10 @@
 - [x] Analyser le code actuel et identifier les problèmes mobile
 - [x] Refaire le layout mobile : sidebar en Sheet drawer, header compact, grille/liste adaptative, cartes mobiles
 - [x] Tester et valider - 990 tests passent
+
+## Nettoyage final - Supprimer TOUTES les traces de Manus OAuth
+- [x] Audit exhaustif grep de toutes les références OAuth/Manus dans le code
+- [x] Supprimer fichier oauth.ts stub, commentaires Manus OAuth, loginMethod "manus" dans tests
+- [x] Corriger mentions "OAuth 2.0" dans Privacy.tsx et static-pages.ts
+- [x] Vérifier que l'auth repose uniquement sur email/mot de passe local + JWT
+- [x] Tester et valider - 990 tests passent

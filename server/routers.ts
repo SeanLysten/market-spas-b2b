@@ -739,7 +739,7 @@ export const appRouter = router({
             await db.createLocalUser({
               openId,
               email: input.primaryContactEmail,
-              passwordHash: '', // No password - login via invitation/OAuth only
+              passwordHash: '', // No password - login via invitation link only
               firstName: input.primaryContactName.split(' ')[0] || input.primaryContactName,
               lastName: input.primaryContactName.split(' ').slice(1).join(' ') || '',
               name: input.primaryContactName,

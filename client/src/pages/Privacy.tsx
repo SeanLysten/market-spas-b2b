@@ -110,7 +110,7 @@ export default function Privacy() {
           </p>
           <ul className="list-disc list-inside text-slate-700 space-y-2 ml-4">
             <li>Chiffrement SSL/TLS pour toutes les communications</li>
-            <li>Authentification OAuth 2.0 sécurisée</li>
+            <li>Authentification sécurisée par email/mot de passe avec sessions JWT</li>
             <li>Stockage chiffré des tokens d'accès et données sensibles</li>
             <li>Contrôle d'accès basé sur les rôles (RBAC)</li>
             <li>Surveillance et journalisation des accès</li>

@@ -20,7 +20,7 @@ function createMockContext(userOverrides?: Partial<AuthenticatedUser>): TrpcCont
     timezone: "Europe/Brussels",
     role: "PARTNER_USER",
     partnerId: 1,
-    loginMethod: "manus",
+    loginMethod: "local",
     twoFactorEnabled: false,
     twoFactorSecret: null,
     lastLoginAt: null,

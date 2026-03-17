@@ -82,7 +82,7 @@ export function getPrivacyHTML(): string {
         <p>Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles appropriées pour protéger vos données, notamment :</p>
         <ul>
             <li>Chiffrement SSL/TLS pour toutes les communications</li>
-            <li>Authentification OAuth 2.0 sécurisée</li>
+            <li>Authentification sécurisée par email/mot de passe avec sessions JWT</li>
             <li>Stockage chiffré des tokens d'accès et données sensibles</li>
             <li>Contrôle d'accès basé sur les rôles (RBAC)</li>
         </ul>
