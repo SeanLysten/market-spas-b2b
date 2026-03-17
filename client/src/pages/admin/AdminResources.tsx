@@ -677,20 +677,39 @@ export default function AdminResources() {
             {subFolders.length > 0 && (
               <div className="mb-4 md:mb-6">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Sous-dossiers</p>
-                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3">
+
+                {/* Mobile: horizontal scrollable chips */}
+                <div className="md:hidden flex gap-2 overflow-x-auto pb-2 -mx-3 px-3 scrollbar-hide">
+                  {subFolders.map((sf) => (
+                    <button
+                      key={sf.id}
+                      className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-gray-200 hover:border-emerald-400 hover:shadow-sm cursor-pointer transition-all flex-shrink-0 min-w-0"
+                      onClick={() => setSelectedFolderId(sf.id)}
+                    >
+                      <FolderOpen className="w-4 h-4 flex-shrink-0" style={{ color: sf.color || "#6b7280" }} />
+                      <span className="text-xs font-medium text-gray-700 whitespace-nowrap">{sf.name}</span>
+                      {resourceCounts[sf.id] != null && (
+                        <span className="text-[10px] text-gray-400 bg-gray-100 rounded-full px-1.5 py-0.5 flex-shrink-0">{resourceCounts[sf.id]}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Desktop: grid cards */}
+                <div className="hidden md:grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                   {subFolders.map((sf) => (
                     <div
                       key={sf.id}
-                      className="group flex flex-col items-center gap-1.5 md:gap-2 p-2 md:p-3 bg-white rounded-xl border-2 border-gray-200 hover:border-emerald-400 hover:shadow-sm cursor-pointer transition-all"
+                      className="group flex flex-col items-center gap-2 p-3 bg-white rounded-xl border-2 border-gray-200 hover:border-emerald-400 hover:shadow-sm cursor-pointer transition-all"
                       onClick={() => setSelectedFolderId(sf.id)}
                       onDragOver={(e) => { e.preventDefault(); setDragOverFolderId(sf.id); }}
                       onDragLeave={() => setDragOverFolderId(null)}
                       onDrop={(e) => { e.preventDefault(); e.stopPropagation(); handleFolderDrop(sf.id); }}
                     >
-                      <FolderOpen className="w-8 h-8 md:w-10 md:h-10" style={{ color: sf.color || "#6b7280" }} />
-                      <span className="text-[10px] md:text-xs font-medium text-gray-700 text-center truncate w-full">{sf.name}</span>
+                      <FolderOpen className="w-10 h-10" style={{ color: sf.color || "#6b7280" }} />
+                      <span className="text-xs font-medium text-gray-700 text-center truncate w-full">{sf.name}</span>
                       {resourceCounts[sf.id] != null && (
-                        <span className="text-[10px] md:text-xs text-gray-400">{resourceCounts[sf.id]}</span>
+                        <span className="text-xs text-gray-400">{resourceCounts[sf.id]}</span>
                       )}
                     </div>
                   ))}

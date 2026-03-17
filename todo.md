@@ -3008,3 +3008,8 @@
 - [x] Corriger mentions "OAuth 2.0" dans Privacy.tsx et static-pages.ts
 - [x] Vérifier que l'auth repose uniquement sur email/mot de passe local + JWT
 - [x] Tester et valider - 990 tests passent
+
+## Bug - Dossiers médiathèque illisibles en mobile
+- [x] Les dossiers s'affichent en cercles tronqués illisibles dans la barre horizontale mobile
+- [x] Refait en chips horizontaux scrollables avec icône dossier + nom complet + compteur
+- [x] Ajouté CSS scrollbar-hide pour masquer la scrollbar sur mobile

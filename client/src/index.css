@@ -263,3 +263,11 @@
     background-size: 1000px 100%;
   }
 }
+/* ═══ UTILITY: Hide scrollbar ═══ */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

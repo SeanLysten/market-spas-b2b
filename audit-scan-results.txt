@@ -1,10 +1,10 @@
 === CODEBASE AUDIT SCAN ===
 Project: /home/ubuntu/market-spas-b2b
-Date: 2026-03-17T12:08:08Z
+Date: 2026-03-17T12:22:19Z
 
 ## 1. PROJECT STATS
-Total TS/TSX files: 275
-Total lines of code: 89562
+Total TS/TSX files: 274
+Total lines of code: 89553
 Largest files:
    5357 /home/ubuntu/market-spas-b2b/server/routers.ts
    5186 /home/ubuntu/market-spas-b2b/server/db.ts
