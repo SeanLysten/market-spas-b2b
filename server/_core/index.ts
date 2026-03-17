@@ -382,6 +382,112 @@ async function startServer() {
     }
   });
 
+  // Thumbnail on-the-fly generation with S3 caching
+  app.get("/api/resources/thumbnail/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid ID" });
+
+      const { getDb } = await import("../db");
+      const { resources } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      const { generateThumbnailFromUrl, isThumbableImage, setCachedThumb } = await import("../thumbnail");
+
+      const drizzleDb = await getDb();
+      const [resource] = await drizzleDb.select({
+        id: resources.id,
+        fileUrl: resources.fileUrl,
+        fileType: resources.fileType,
+        thumbnailUrl: resources.thumbnailUrl,
+      }).from(resources).where(eq(resources.id, id)).limit(1);
+
+      if (!resource) return res.status(404).json({ error: "Not found" });
+
+      // If thumbnail already exists, redirect to it
+      if (resource.thumbnailUrl) {
+        return res.redirect(301, resource.thumbnailUrl);
+      }
+
+      // If not an image, redirect to original
+      if (!isThumbableImage(resource.fileType)) {
+        return res.redirect(302, resource.fileUrl);
+      }
+
+      // Generate thumbnail on-the-fly
+      const thumbUrl = await generateThumbnailFromUrl(resource.fileUrl, resource.id);
+
+      // Save to DB for future requests
+      await drizzleDb.update(resources).set({ thumbnailUrl: thumbUrl }).where(eq(resources.id, id));
+      setCachedThumb(id, thumbUrl);
+
+      // Redirect to the generated thumbnail
+      return res.redirect(301, thumbUrl);
+    } catch (err) {
+      console.error("[Thumbnail] Error:", (err as Error).message);
+      // Fallback: redirect to original
+      try {
+        const { getDb } = await import("../db");
+        const { resources } = await import("../../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const drizzleDb = await getDb();
+        const [resource] = await drizzleDb.select({ fileUrl: resources.fileUrl }).from(resources).where(eq(resources.id, parseInt(req.params.id))).limit(1);
+        if (resource) return res.redirect(302, resource.fileUrl);
+      } catch {}
+      return res.status(500).json({ error: "Thumbnail generation failed" });
+    }
+  });
+
+  // Batch thumbnail generation endpoint (admin only)
+  app.post("/api/resources/generate-thumbnails", async (req, res) => {
+    try {
+      const { sdk: authSdk } = await import("./sdk");
+      const user = await authSdk.authenticateRequest(req);
+      if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
+        return res.status(403).json({ error: "Admin only" });
+      }
+
+      const { getDb } = await import("../db");
+      const { resources } = await import("../../drizzle/schema");
+      const { isNull, eq, or, sql } = await import("drizzle-orm");
+      const { generateThumbnailFromUrl, isThumbableImage } = await import("../thumbnail");
+
+      const drizzleDb = await getDb();
+      const allResources = await drizzleDb.select({
+        id: resources.id,
+        fileUrl: resources.fileUrl,
+        fileType: resources.fileType,
+        thumbnailUrl: resources.thumbnailUrl,
+      }).from(resources).where(
+        or(isNull(resources.thumbnailUrl), sql`${resources.thumbnailUrl} = ''`)
+      );
+
+      const imagesToProcess = allResources.filter(r => isThumbableImage(r.fileType));
+      let generated = 0;
+      let failed = 0;
+
+      // Process in batches of 3 to avoid overwhelming the server
+      for (let i = 0; i < imagesToProcess.length; i += 3) {
+        const batch = imagesToProcess.slice(i, i + 3);
+        const results = await Promise.allSettled(
+          batch.map(async (r) => {
+            const thumbUrl = await generateThumbnailFromUrl(r.fileUrl, r.id);
+            await drizzleDb.update(resources).set({ thumbnailUrl: thumbUrl }).where(eq(resources.id, r.id));
+            return thumbUrl;
+          })
+        );
+        for (const result of results) {
+          if (result.status === "fulfilled") generated++;
+          else failed++;
+        }
+      }
+
+      return res.json({ success: true, total: imagesToProcess.length, generated, failed });
+    } catch (err) {
+      console.error("[Batch Thumbnails] Error:", (err as Error).message);
+      return res.status(500).json({ error: "Batch thumbnail generation failed" });
+    }
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",

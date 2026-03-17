@@ -111,8 +111,10 @@ function getFileIcon(fileType: string) {
 }
 
 function getFileThumbnail(resource: Resource): string | null {
-  if (resource.fileType.startsWith("image/")) return resource.fileUrl;
-  return null;
+  if (!resource.fileType.startsWith("image/")) return null;
+  // Use cached thumbnail if available, otherwise generate on-the-fly
+  if ((resource as any).thumbnailUrl) return (resource as any).thumbnailUrl;
+  return `/api/resources/thumbnail/${resource.id}`;
 }
 
 // ─── FolderTree Node ─────────────────────────────────────────────────────────
@@ -748,7 +750,7 @@ export default function AdminResources() {
                     >
                       <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
                         {thumb ? (
-                          <img src={thumb} alt={resource.title} className="w-full h-full object-cover" loading="lazy" />
+                          <img src={thumb} alt={resource.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                         ) : (
                           <div className="flex flex-col items-center gap-1 p-3 md:p-4">
                             {getFileIcon(resource.fileType)}
@@ -851,7 +853,7 @@ export default function AdminResources() {
                         {/* Thumbnail / Icon */}
                         <div className="w-12 h-12 rounded-lg bg-gray-50 flex-shrink-0 overflow-hidden flex items-center justify-center">
                           {thumb ? (
-                            <img src={thumb} alt={resource.title} className="w-full h-full object-cover rounded-lg" loading="lazy" />
+                            <img src={thumb} alt={resource.title} className="w-full h-full object-cover rounded-lg" loading="lazy" decoding="async" />
                           ) : (
                             getFileIcon(resource.fileType)
                           )}

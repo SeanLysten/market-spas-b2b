@@ -1,0 +1,17 @@
+{
+  "query": "SELECT COUNT(*) as total, ROUND(AVG(fileSize)/1024/1024, 2) as avg_mb, ROUND(MAX(fileSize)/1024/1024, 2) as max_mb, ROUND(SUM(fileSize)/1024/1024, 2) as total_mb, SUM(CASE WHEN thumbnailUrl IS NOT NULL AND thumbnailUrl != '' THEN 1 ELSE 0 END) as has_thumbnail FROM resources;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT COUNT(*) as total, ROUND(AVG(fileSize)/1024/1024, 2) as avg_mb, ROUND(MAX(fileSize)/1024/1024, 2) as max_mb, ROUND(SUM(fileSize)/1024/1024, 2) as total_mb, SUM(CASE WHEN thumbnailUrl IS NOT NULL AND thumbnailUrl != '' THEN 1 ELSE 0 END) as has_thumbnail FROM resources;",
+  "rows": [
+    {
+      "total": "101",
+      "avg_mb": "8.81",
+      "max_mb": "30.34",
+      "total_mb": "889.73",
+      "has_thumbnail": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tavg_mb\tmax_mb\ttotal_mb\thas_thumbnail\n101\t8.81\t30.34\t889.73\t0\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

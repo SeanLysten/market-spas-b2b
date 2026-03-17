@@ -78,6 +78,13 @@ const formatSize = (bytes: number) => {
 const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
 
+/** Returns a lightweight thumbnail URL for grid/list views. Falls back to original. */
+const getThumbnailUrl = (resource: { id: number; fileUrl: string; fileType: string; thumbnailUrl?: string | null }) => {
+  if (!resource.fileType.includes("image")) return null;
+  if (resource.thumbnailUrl) return resource.thumbnailUrl;
+  return `/api/resources/thumbnail/${resource.id}`;
+};
+
 // ─── Sidebar folder tree ──────────────────────────────────────────────────────
 
 function FolderItem({
@@ -805,10 +812,11 @@ export default function Resources() {
                       <div className="aspect-square rounded-t-xl overflow-hidden bg-muted/50 flex items-center justify-center">
                         {isImage ? (
                           <img
-                            src={resource.fileUrl}
+                            src={getThumbnailUrl(resource) || resource.fileUrl}
                             alt={resource.title}
                             className="w-full h-full object-cover"
                             loading="lazy"
+                            decoding="async"
                           />
                         ) : (
                           <div className="flex flex-col items-center gap-2 p-4">
@@ -937,7 +945,7 @@ export default function Resources() {
                         {/* Thumbnail / Icon */}
                         <div className="w-12 h-12 rounded-lg bg-muted/50 shrink-0 overflow-hidden flex items-center justify-center">
                           {isImage ? (
-                            <img src={resource.fileUrl} alt={resource.title} className="w-full h-full object-cover rounded-lg" loading="lazy" />
+                            <img src={getThumbnailUrl(resource) || resource.fileUrl} alt={resource.title} className="w-full h-full object-cover rounded-lg" loading="lazy" decoding="async" />
                           ) : (
                             <Icon className="w-6 h-6 text-muted-foreground" />
                           )}

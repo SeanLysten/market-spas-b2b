@@ -5,6 +5,8 @@ import { storagePut } from "../storage";
 import { getDb } from "../db";
 import { resources } from "../../drizzle/schema";
 import { sdk } from "../_core/sdk";
+import { generateThumbnailFromBuffer, isThumbableImage } from "../thumbnail";
+import { eq } from "drizzle-orm";
 
 const router = Router();
 
@@ -162,8 +164,24 @@ async function processFileUpload(
     folderId,
   });
 
+  const insertId = (created as any)?.insertId || null;
+
+  // Generate thumbnail for images (async, non-blocking)
+  if (insertId && isThumbableImage(finalMimetype)) {
+    generateThumbnailFromBuffer(finalBuffer, insertId)
+      .then(async (thumbUrl) => {
+        try {
+          await db.update(resources).set({ thumbnailUrl: thumbUrl }).where(eq(resources.id, insertId));
+          console.log(`[upload-resource] Thumbnail generated for resource ${insertId}`);
+        } catch (err) {
+          console.error(`[upload-resource] Failed to save thumbnail URL:`, err);
+        }
+      })
+      .catch((err) => console.error(`[upload-resource] Thumbnail generation failed:`, err));
+  }
+
   return {
-    id: (created as any)?.insertId || null,
+    id: insertId,
     title,
     fileUrl: url,
     fileType: finalMimetype,

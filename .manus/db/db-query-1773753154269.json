@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, title, fileType, thumbnailUrl FROM resources LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, title, fileType, thumbnailUrl FROM resources LIMIT 5;",
+  "rows": [
+    {
+      "id": "60002",
+      "title": "logo marketspa copie",
+      "fileType": "image/png",
+      "thumbnailUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/thumbnails/resource-60002-400w.webp"
+    },
+    {
+      "id": "60003",
+      "title": " neptune-situation",
+      "fileType": "image/jpeg",
+      "thumbnailUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/thumbnails/resource-60003-400w.webp"
+    },
+    {
+      "id": "60004",
+      "title": " neptune.situation dans une pièce_",
+      "fileType": "image/jpeg",
+      "thumbnailUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/thumbnails/resource-60004-400w.webp"
+    },
+    {
+      "id": "60005",
+      "title": " neptune.situation",
+      "fileType": "image/jpeg",
+      "thumbnailUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/thumbnails/resource-60005-400w.webp"
+    },
+    {
+      "id": "60006",
+      "title": "neptune en situation",
+      "fileType": "image/jpeg",
+      "thumbnailUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/thumbnails/resource-60006-400w.webp"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tfileType\tthumbnailUrl\n60002\tlogo marketspa copie\timage/png\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/thumbnails/resource-60002-400w.webp\n60003\t neptune-situation\timage/jpeg\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/thumbnails/resource-60003-400w.webp\n60004\t neptune.situation dans une pièce_\timage/jpeg\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/thumbnails/resource-60004-400w.webp\n60005\t neptune.situation\timage/jpeg\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/thumbnails/resource-60005-400w.webp\n60006\tneptune en situation\timage/jpeg\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/thumbnails/resource-60006-400w.webp\n",
+  "stderr": "",
+  "execution_time_ms": 97
+}
