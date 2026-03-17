@@ -2996,3 +2996,8 @@
 - [x] Ajouter le champ dans les formulaires admin (fiche partenaire inline edit + liste partenaires colonne)
 - [x] Intégrer le code dans l'export API fournisseur (GET /api/supplier/orders/export)
 - [x] Tester et valider - 990 tests passent
+
+## Refonte mobile - Page Médiathèque (AdminResources)
+- [x] Analyser le code actuel et identifier les problèmes mobile
+- [x] Refaire le layout mobile : sidebar en Sheet drawer, header compact, grille/liste adaptative, cartes mobiles
+- [x] Tester et valider - 990 tests passent

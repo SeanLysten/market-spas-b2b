@@ -1,0 +1,32 @@
+Analyse AdminResources.tsx - Problèmes mobile identifiés:
+
+1. SIDEBAR (w-64 = 256px) : Toujours visible, prend trop de place sur mobile. Pas de classe md:hidden.
+   → Solution: Sidebar cachée sur mobile, remplacée par un sélecteur de dossier en haut (dropdown ou sheet)
+
+2. LAYOUT (flex h-[calc(100vh-4rem)]) : Layout desktop fixe sans adaptation mobile
+   → Solution: Sur mobile, layout vertical avec header dossier + contenu
+
+3. TOOLBAR : Barre d'outils horizontale avec breadcrumb + search + view toggle + nouveau dossier
+   → Solution: Empiler sur mobile, simplifier
+
+4. GRILLE : grid-cols-2 minimum est OK mais les cartes sont petites
+   → Solution: Garder grid-cols-2 sur mobile, optimiser les cartes
+
+5. LISTE (table) : Table pas adaptée mobile
+   → Solution: Cartes sur mobile au lieu de table
+
+6. SELECTION BAR : OK mais les boutons pourraient déborder
+   → Solution: Adapter en flex-wrap
+
+7. DROP ZONE : Le drag & drop ne fonctionne pas sur mobile
+   → Solution: Garder le bouton "Importer" bien visible
+
+8. DIALOGS : Déjà responsifs grâce à shadcn
+
+Plan de refonte:
+- Ajouter un Sheet (drawer) pour la sidebar sur mobile
+- Ajouter un bouton hamburger/dossier pour ouvrir le drawer
+- Adapter la toolbar en 2 lignes sur mobile
+- Cacher la sidebar desktop sur mobile (hidden md:flex)
+- Adapter la grille de fichiers pour mobile
+- Adapter la vue liste en cartes sur mobile

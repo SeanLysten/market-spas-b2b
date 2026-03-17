@@ -13,6 +13,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -53,6 +60,7 @@ import {
   Eye,
   FolderInput,
   Check,
+  Menu,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -221,6 +229,119 @@ function FolderTreeNode({
   );
 }
 
+// ─── Sidebar Content (shared between desktop sidebar and mobile sheet) ───────
+
+function SidebarContent({
+  folders,
+  rootFolders,
+  allResources,
+  selectedFolderId,
+  setSelectedFolderId,
+  resourceCounts,
+  dragOverFolderId,
+  setDragOverFolderId,
+  handleFolderDrop,
+  setCreateFolderParentId,
+  setNewFolderName,
+  setShowCreateFolder,
+  setEditingFolder,
+  setEditFolderName,
+  setDeletingFolder,
+  fileInputRef,
+  uploadFiles,
+  onFolderSelect,
+}: {
+  folders: MediaFolder[];
+  rootFolders: MediaFolder[];
+  allResources: Resource[];
+  selectedFolderId: number | null | "all";
+  setSelectedFolderId: (id: number | null | "all") => void;
+  resourceCounts: Record<number, number>;
+  dragOverFolderId: number | null;
+  setDragOverFolderId: (id: number | null) => void;
+  handleFolderDrop: (folderId: number | null) => void;
+  setCreateFolderParentId: (id: number | null) => void;
+  setNewFolderName: (name: string) => void;
+  setShowCreateFolder: (show: boolean) => void;
+  setEditingFolder: (folder: MediaFolder | null) => void;
+  setEditFolderName: (name: string) => void;
+  setDeletingFolder: (folder: MediaFolder | null) => void;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+  uploadFiles: (files: File[]) => void;
+  onFolderSelect?: () => void;
+}) {
+  const handleSelect = (id: number | null | "all") => {
+    setSelectedFolderId(id);
+    onFolderSelect?.();
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-3 border-b border-gray-100 flex items-center justify-between">
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Dossiers</span>
+        <Button variant="ghost" size="icon" className="h-6 w-6" title="Nouveau dossier"
+          onClick={() => { setCreateFolderParentId(null); setNewFolderName(""); setShowCreateFolder(true); }}>
+          <FolderPlus className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+        {/* All */}
+        <div
+          className={`flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-colors ${selectedFolderId === "all" ? "bg-emerald-600 text-white" : "hover:bg-gray-100"}`}
+          onClick={() => handleSelect("all")}
+        >
+          <FolderOpen className="w-4 h-4 flex-shrink-0" />
+          <span className="flex-1 text-sm font-medium">Tous les fichiers</span>
+          <span className={`text-xs px-1.5 py-0.5 rounded-full ${selectedFolderId === "all" ? "bg-white/20 text-white" : "bg-gray-200 text-gray-600"}`}>
+            {allResources.length}
+          </span>
+        </div>
+
+        {/* Unclassified */}
+        <div
+          className={`flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-colors ${selectedFolderId === null ? "bg-emerald-600 text-white" : dragOverFolderId === 0 ? "bg-emerald-100 border border-emerald-400" : "hover:bg-gray-100"}`}
+          onClick={() => handleSelect(null)}
+          onDragOver={(e) => { e.preventDefault(); setDragOverFolderId(0); }}
+          onDragLeave={() => setDragOverFolderId(null)}
+          onDrop={async (e) => { e.preventDefault(); setDragOverFolderId(null); await handleFolderDrop(null); }}
+        >
+          <Folder className="w-4 h-4 flex-shrink-0 text-gray-400" />
+          <span className="flex-1 text-sm">Non classés</span>
+          <span className={`text-xs px-1.5 py-0.5 rounded-full ${selectedFolderId === null ? "bg-white/20 text-white" : "bg-gray-200 text-gray-600"}`}>
+            {allResources.filter((r) => !r.folderId).length}
+          </span>
+        </div>
+
+        {rootFolders.length > 0 && <div className="border-t border-gray-100 my-1" />}
+
+        {rootFolders.map((folder) => (
+          <FolderTreeNode
+            key={folder.id}
+            folder={folder}
+            allFolders={folders}
+            selectedFolderId={selectedFolderId}
+            onSelect={(id) => handleSelect(id)}
+            onCreateSubfolder={(parentId) => { setCreateFolderParentId(parentId); setNewFolderName(""); setShowCreateFolder(true); }}
+            onRename={(f) => { setEditingFolder(f); setEditFolderName(f.name); }}
+            onDelete={setDeletingFolder}
+            resourceCounts={resourceCounts}
+            dragOverFolderId={dragOverFolderId}
+            onDragOver={setDragOverFolderId}
+            onDrop={handleFolderDrop}
+          />
+        ))}
+      </div>
+
+      <div className="p-3 border-t border-gray-100">
+        <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" size="sm" onClick={() => fileInputRef.current?.click()}>
+          <Upload className="w-4 h-4 mr-2" />Importer des fichiers
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function AdminResources() {
@@ -233,7 +354,8 @@ export default function AdminResources() {
   const [dragOverFolderId, setDragOverFolderId] = useState<number | null>(null);
   const [draggingFileIds, setDraggingFileIds] = useState<Set<number>>(new Set());
   const [previewResource, setPreviewResource] = useState<Resource | null>(null);
-  // Upload queue with real progress tracking
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [createFolderParentId, setCreateFolderParentId] = useState<number | null>(null);
@@ -374,81 +496,110 @@ export default function AdminResources() {
 
   const breadcrumb = getBreadcrumb();
 
+  // Current folder name for mobile header
+  const currentFolderName = selectedFolderId === "all"
+    ? "Tous les fichiers"
+    : selectedFolderId === null
+    ? "Non classés"
+    : (folders as MediaFolder[]).find((f) => f.id === selectedFolderId)?.name || "Dossier";
+
+  // Shared sidebar props
+  const sidebarProps = {
+    folders: folders as MediaFolder[],
+    rootFolders,
+    allResources: allResources as Resource[],
+    selectedFolderId,
+    setSelectedFolderId,
+    resourceCounts,
+    dragOverFolderId,
+    setDragOverFolderId,
+    handleFolderDrop,
+    setCreateFolderParentId,
+    setNewFolderName,
+    setShowCreateFolder,
+    setEditingFolder,
+    setEditFolderName,
+    setDeletingFolder,
+    fileInputRef,
+    uploadFiles,
+  };
+
   return (
     <AdminLayout>
       <div className="flex h-[calc(100vh-4rem)] overflow-hidden -m-6">
 
-        {/* ── Sidebar ── */}
-        <aside className="w-64 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
-          <div className="p-3 border-b border-gray-100 flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Médiathèque</span>
-            <Button variant="ghost" size="icon" className="h-6 w-6" title="Nouveau dossier"
-              onClick={() => { setCreateFolderParentId(null); setNewFolderName(""); setShowCreateFolder(true); }}>
-              <FolderPlus className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
-            {/* All */}
-            <div
-              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${selectedFolderId === "all" ? "bg-emerald-600 text-white" : "hover:bg-gray-100"}`}
-              onClick={() => setSelectedFolderId("all")}
-            >
-              <FolderOpen className="w-4 h-4 flex-shrink-0" />
-              <span className="flex-1 text-sm font-medium">Tous les fichiers</span>
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${selectedFolderId === "all" ? "bg-white/20 text-white" : "bg-gray-200 text-gray-600"}`}>
-                {(allResources as Resource[]).length}
-              </span>
-            </div>
-
-            {/* Unclassified */}
-            <div
-              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${selectedFolderId === null ? "bg-emerald-600 text-white" : dragOverFolderId === 0 ? "bg-emerald-100 border border-emerald-400" : "hover:bg-gray-100"}`}
-              onClick={() => setSelectedFolderId(null)}
-              onDragOver={(e) => { e.preventDefault(); setDragOverFolderId(0); }}
-              onDragLeave={() => setDragOverFolderId(null)}
-              onDrop={async (e) => { e.preventDefault(); setDragOverFolderId(null); await handleFolderDrop(null); }}
-            >
-              <Folder className="w-4 h-4 flex-shrink-0 text-gray-400" />
-              <span className="flex-1 text-sm">Non classés</span>
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${selectedFolderId === null ? "bg-white/20 text-white" : "bg-gray-200 text-gray-600"}`}>
-                {(allResources as Resource[]).filter((r) => !r.folderId).length}
-              </span>
-            </div>
-
-            {rootFolders.length > 0 && <div className="border-t border-gray-100 my-1" />}
-
-            {rootFolders.map((folder) => (
-              <FolderTreeNode
-                key={folder.id}
-                folder={folder}
-                allFolders={folders as MediaFolder[]}
-                selectedFolderId={selectedFolderId}
-                onSelect={setSelectedFolderId}
-                onCreateSubfolder={(parentId) => { setCreateFolderParentId(parentId); setNewFolderName(""); setShowCreateFolder(true); }}
-                onRename={(f) => { setEditingFolder(f); setEditFolderName(f.name); }}
-                onDelete={setDeletingFolder}
-                resourceCounts={resourceCounts}
-                dragOverFolderId={dragOverFolderId}
-                onDragOver={setDragOverFolderId}
-                onDrop={handleFolderDrop}
-              />
-            ))}
-          </div>
-
-          <div className="p-3 border-t border-gray-100">
-            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" size="sm" onClick={() => fileInputRef.current?.click()}>
-              <Upload className="w-4 h-4 mr-2" />Importer des fichiers
-            </Button>
-            <input ref={fileInputRef} type="file" multiple className="hidden"
-              onChange={(e) => { const files = Array.from(e.target.files || []); if (files.length > 0) uploadFiles(files); e.target.value = ""; }} />
-          </div>
+        {/* ── Desktop Sidebar (hidden on mobile) ── */}
+        <aside className="hidden md:flex w-64 flex-shrink-0 bg-white border-r border-gray-200 flex-col overflow-hidden">
+          <SidebarContent {...sidebarProps} />
         </aside>
 
         {/* ── Main ── */}
         <main className="flex-1 flex flex-col overflow-hidden bg-gray-50">
-          {/* Toolbar */}
-          <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3">
+
+          {/* ── Mobile Header ── */}
+          <div className="md:hidden bg-white border-b border-gray-200 px-3 py-2.5">
+            <div className="flex items-center gap-2">
+              {/* Folder drawer trigger */}
+              <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5 flex-shrink-0">
+                    <Menu className="w-4 h-4" />
+                    <Folder className="w-3.5 h-3.5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[280px] p-0">
+                  <SheetHeader className="sr-only">
+                    <SheetTitle>Dossiers</SheetTitle>
+                  </SheetHeader>
+                  <SidebarContent {...sidebarProps} onFolderSelect={() => setMobileSheetOpen(false)} />
+                </SheetContent>
+              </Sheet>
+
+              {/* Current folder name */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">{currentFolderName}</p>
+                <p className="text-xs text-gray-500">{displayedResources.length} fichier(s)</p>
+              </div>
+
+              {/* Search toggle */}
+              <Button variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0" onClick={() => setMobileSearchOpen(!mobileSearchOpen)}>
+                <Search className="w-4 h-4" />
+              </Button>
+
+              {/* View mode toggle */}
+              <div className="flex border border-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                <button className={`p-1.5 ${viewMode === "grid" ? "bg-emerald-50 text-emerald-600" : "text-gray-500"}`} onClick={() => setViewMode("grid")}><Grid3X3 className="w-4 h-4" /></button>
+                <button className={`p-1.5 ${viewMode === "list" ? "bg-emerald-50 text-emerald-600" : "text-gray-500"}`} onClick={() => setViewMode("list")}><List className="w-4 h-4" /></button>
+              </div>
+
+              {/* Upload button */}
+              <Button size="icon" className="h-9 w-9 bg-emerald-600 hover:bg-emerald-700 text-white flex-shrink-0" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Mobile search bar (collapsible) */}
+            {mobileSearchOpen && (
+              <div className="mt-2 relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <Input
+                  placeholder="Rechercher un fichier..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8 h-9 text-sm"
+                  autoFocus
+                />
+                {search && (
+                  <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => { setSearch(""); setMobileSearchOpen(false); }}>
+                    <X className="w-3.5 h-3.5 text-gray-400" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ── Desktop Toolbar (hidden on mobile) ── */}
+          <div className="hidden md:flex bg-white border-b border-gray-200 px-4 py-2 items-center gap-3">
             <div className="flex items-center gap-1 text-sm text-gray-600 flex-1 min-w-0">
               <button className="hover:text-emerald-600 font-medium" onClick={() => setSelectedFolderId("all")}>Médiathèque</button>
               {breadcrumb.map((f, i) => (
@@ -477,9 +628,9 @@ export default function AdminResources() {
 
           {/* Selection bar */}
           {selectedFiles.size > 0 && (
-            <div className="bg-emerald-50 border-b border-emerald-200 px-4 py-2 flex items-center gap-3">
-              <span className="text-sm font-medium text-emerald-800">{selectedFiles.size} fichier(s) sélectionné(s)</span>
-              <div className="flex gap-2 ml-auto">
+            <div className="bg-emerald-50 border-b border-emerald-200 px-3 md:px-4 py-2 flex flex-wrap items-center gap-2 md:gap-3">
+              <span className="text-sm font-medium text-emerald-800">{selectedFiles.size} sélectionné(s)</span>
+              <div className="flex gap-1.5 md:gap-2 ml-auto flex-wrap">
                 <Button variant="outline" size="sm" className="h-7 text-xs border-emerald-300" onClick={() => { setMovingFiles(true); setMoveTargetFolderId(null); }}>
                   <Move className="w-3 h-3 mr-1" />Déplacer
                 </Button>
@@ -487,7 +638,7 @@ export default function AdminResources() {
                   <Trash2 className="w-3 h-3 mr-1" />Supprimer
                 </Button>
                 <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={clearSelection}>
-                  <X className="w-3 h-3 mr-1" />Désélectionner
+                  <X className="w-3 h-3" />
                 </Button>
               </div>
             </div>
@@ -495,7 +646,7 @@ export default function AdminResources() {
 
           {/* Upload progress - inline summary when uploading */}
           {uploadQueue.isUploading && (
-            <div className="bg-blue-50 border-b border-blue-200 px-4 py-2">
+            <div className="bg-blue-50 border-b border-blue-200 px-3 md:px-4 py-2">
               <div className="flex items-center gap-2 text-sm">
                 <Upload className="w-3.5 h-3.5 text-blue-500 animate-pulse" />
                 <span className="text-blue-700 flex-1">Import en cours ({uploadQueue.completedCount}/{uploadQueue.totalCount}) - {uploadQueue.overallProgress}%</span>
@@ -508,7 +659,7 @@ export default function AdminResources() {
 
           {/* Drop zone */}
           <div
-            className={`flex-1 overflow-y-auto p-4 relative transition-colors ${isDragOver ? "bg-emerald-50 ring-2 ring-inset ring-emerald-400" : ""}`}
+            className={`flex-1 overflow-y-auto p-3 md:p-4 relative transition-colors ${isDragOver ? "bg-emerald-50 ring-2 ring-inset ring-emerald-400" : ""}`}
             onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
             onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false); }}
             onDrop={handleZoneDrop}
@@ -524,22 +675,22 @@ export default function AdminResources() {
 
             {/* Sub-folders section */}
             {subFolders.length > 0 && (
-              <div className="mb-6">
+              <div className="mb-4 md:mb-6">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Sous-dossiers</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3">
                   {subFolders.map((sf) => (
                     <div
                       key={sf.id}
-                      className="group flex flex-col items-center gap-2 p-3 bg-white rounded-xl border-2 border-gray-200 hover:border-emerald-400 hover:shadow-sm cursor-pointer transition-all"
+                      className="group flex flex-col items-center gap-1.5 md:gap-2 p-2 md:p-3 bg-white rounded-xl border-2 border-gray-200 hover:border-emerald-400 hover:shadow-sm cursor-pointer transition-all"
                       onClick={() => setSelectedFolderId(sf.id)}
                       onDragOver={(e) => { e.preventDefault(); setDragOverFolderId(sf.id); }}
                       onDragLeave={() => setDragOverFolderId(null)}
                       onDrop={(e) => { e.preventDefault(); e.stopPropagation(); handleFolderDrop(sf.id); }}
                     >
-                      <FolderOpen className="w-10 h-10" style={{ color: sf.color || "#6b7280" }} />
-                      <span className="text-xs font-medium text-gray-700 text-center truncate w-full text-center">{sf.name}</span>
+                      <FolderOpen className="w-8 h-8 md:w-10 md:h-10" style={{ color: sf.color || "#6b7280" }} />
+                      <span className="text-[10px] md:text-xs font-medium text-gray-700 text-center truncate w-full">{sf.name}</span>
                       {resourceCounts[sf.id] != null && (
-                        <span className="text-xs text-gray-400">{resourceCounts[sf.id]} fichier(s)</span>
+                        <span className="text-[10px] md:text-xs text-gray-400">{resourceCounts[sf.id]}</span>
                       )}
                     </div>
                   ))}
@@ -548,17 +699,18 @@ export default function AdminResources() {
             )}
 
             {displayedResources.length === 0 && subFolders.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center py-16">
-                <Folder className="w-16 h-16 text-gray-300 mb-4" />
-                <p className="text-gray-500 font-medium">Ce dossier est vide</p>
-                <p className="text-gray-400 text-sm mt-1">Glissez des fichiers ici ou cliquez sur "Importer des fichiers"</p>
+              <div className="flex flex-col items-center justify-center h-full text-center py-12 md:py-16">
+                <Folder className="w-12 h-12 md:w-16 md:h-16 text-gray-300 mb-3 md:mb-4" />
+                <p className="text-gray-500 font-medium text-sm md:text-base">Ce dossier est vide</p>
+                <p className="text-gray-400 text-xs md:text-sm mt-1">Cliquez sur le bouton pour importer des fichiers</p>
                 <Button className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white" size="sm" onClick={() => fileInputRef.current?.click()}>
                   <Upload className="w-4 h-4 mr-2" />Importer
                 </Button>
               </div>
             ) : displayedResources.length === 0 ? null
             : viewMode === "grid" ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              /* ── Grid View ── */
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3">
                 {displayedResources.map((resource) => {
                   const isSelected = selectedFiles.has(resource.id);
                   const thumb = getFileThumbnail(resource);
@@ -577,18 +729,20 @@ export default function AdminResources() {
                     >
                       <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
                         {thumb ? (
-                          <img src={thumb} alt={resource.title} className="w-full h-full object-cover" />
+                          <img src={thumb} alt={resource.title} className="w-full h-full object-cover" loading="lazy" />
                         ) : (
-                          <div className="flex flex-col items-center gap-1 p-4">
+                          <div className="flex flex-col items-center gap-1 p-3 md:p-4">
                             {getFileIcon(resource.fileType)}
-                            <span className="text-xs text-gray-400 uppercase font-mono">{resource.fileType.split("/")[1]?.substring(0, 4) || "file"}</span>
+                            <span className="text-[10px] md:text-xs text-gray-400 uppercase font-mono">{resource.fileType.split("/")[1]?.substring(0, 4) || "file"}</span>
                           </div>
                         )}
                       </div>
-                      <div className={`absolute top-2 left-2 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${isSelected ? "bg-emerald-500 border-emerald-500" : "bg-white/80 border-gray-300 opacity-0 group-hover:opacity-100"}`}>
+                      {/* Selection checkbox */}
+                      <div className={`absolute top-1.5 left-1.5 md:top-2 md:left-2 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${isSelected ? "bg-emerald-500 border-emerald-500" : "bg-white/80 border-gray-300 md:opacity-0 md:group-hover:opacity-100"}`}>
                         {isSelected && <Check className="w-3 h-3 text-white" />}
                       </div>
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {/* Actions menu */}
+                      <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button className="bg-white/90 rounded-full p-1 shadow hover:bg-white" onClick={(e) => e.stopPropagation()}>
@@ -603,73 +757,135 @@ export default function AdminResources() {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-                      <div className="p-2">
-                        <p className="text-xs font-medium text-gray-800 truncate">{resource.title}</p>
-                        <p className="text-xs text-gray-400">{formatSize(resource.fileSize)}</p>
+                      <div className="p-1.5 md:p-2">
+                        <p className="text-[10px] md:text-xs font-medium text-gray-800 truncate">{resource.title}</p>
+                        <p className="text-[10px] md:text-xs text-gray-400">{formatSize(resource.fileSize)}</p>
                       </div>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="w-8 px-3 py-2">
-                        <input type="checkbox" checked={selectedFiles.size === displayedResources.length && displayedResources.length > 0} onChange={(e) => e.target.checked ? selectAll() : clearSelection()} className="rounded border-gray-300" />
-                      </th>
-                      <th className="text-left px-3 py-2 font-medium text-gray-600">Nom</th>
-                      <th className="text-left px-3 py-2 font-medium text-gray-600 hidden md:table-cell">Type</th>
-                      <th className="text-left px-3 py-2 font-medium text-gray-600 hidden md:table-cell">Taille</th>
-                      <th className="text-left px-3 py-2 font-medium text-gray-600 hidden lg:table-cell">Date</th>
-                      <th className="w-10 px-3 py-2" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {displayedResources.map((resource) => {
-                      const isSelected = selectedFiles.has(resource.id);
-                      return (
-                        <tr key={resource.id} className={`group cursor-pointer transition-colors ${isSelected ? "bg-emerald-50" : "hover:bg-gray-50"}`}
-                          draggable
-                          onDragStart={(e) => { const ids = isSelected ? Array.from(selectedFiles) : [resource.id]; setDraggingFileIds(new Set(ids)); e.dataTransfer.setData("application/x-file-ids", JSON.stringify(ids)); }}
-                          onClick={(e) => toggleSelect(resource.id, e)}
-                          onDoubleClick={() => setPreviewResource(resource)}
-                        >
-                          <td className="px-3 py-2"><input type="checkbox" checked={isSelected} onChange={() => {}} className="rounded border-gray-300" /></td>
-                          <td className="px-3 py-2"><div className="flex items-center gap-2">{getFileIcon(resource.fileType)}<span className="font-medium text-gray-800 truncate max-w-xs">{resource.title}</span></div></td>
-                          <td className="px-3 py-2 text-gray-500 hidden md:table-cell">{resource.fileType.split("/")[1]?.toUpperCase() || "—"}</td>
-                          <td className="px-3 py-2 text-gray-500 hidden md:table-cell">{formatSize(resource.fileSize)}</td>
-                          <td className="px-3 py-2 text-gray-500 hidden lg:table-cell">{new Date(resource.createdAt).toLocaleDateString("fr-FR")}</td>
-                          <td className="px-3 py-2">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200" onClick={(e) => e.stopPropagation()}><MoreVertical className="w-4 h-4" /></button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-40">
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setPreviewResource(resource); }}><Eye className="w-4 h-4 mr-2" />Aperçu</DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); window.open(resource.fileUrl, "_blank"); }}><Download className="w-4 h-4 mr-2" />Télécharger</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); setDeletingResource(resource); }}><Trash2 className="w-4 h-4 mr-2" />Supprimer</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              /* ── List View ── */
+              <>
+                {/* Desktop list */}
+                <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="w-8 px-3 py-2">
+                          <input type="checkbox" checked={selectedFiles.size === displayedResources.length && displayedResources.length > 0} onChange={(e) => e.target.checked ? selectAll() : clearSelection()} className="rounded border-gray-300" />
+                        </th>
+                        <th className="text-left px-3 py-2 font-medium text-gray-600">Nom</th>
+                        <th className="text-left px-3 py-2 font-medium text-gray-600 hidden md:table-cell">Type</th>
+                        <th className="text-left px-3 py-2 font-medium text-gray-600 hidden md:table-cell">Taille</th>
+                        <th className="text-left px-3 py-2 font-medium text-gray-600 hidden lg:table-cell">Date</th>
+                        <th className="w-10 px-3 py-2" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {displayedResources.map((resource) => {
+                        const isSelected = selectedFiles.has(resource.id);
+                        return (
+                          <tr key={resource.id} className={`group cursor-pointer transition-colors ${isSelected ? "bg-emerald-50" : "hover:bg-gray-50"}`}
+                            draggable
+                            onDragStart={(e) => { const ids = isSelected ? Array.from(selectedFiles) : [resource.id]; setDraggingFileIds(new Set(ids)); e.dataTransfer.setData("application/x-file-ids", JSON.stringify(ids)); }}
+                            onClick={(e) => toggleSelect(resource.id, e)}
+                            onDoubleClick={() => setPreviewResource(resource)}
+                          >
+                            <td className="px-3 py-2"><input type="checkbox" checked={isSelected} onChange={() => {}} className="rounded border-gray-300" /></td>
+                            <td className="px-3 py-2"><div className="flex items-center gap-2">{getFileIcon(resource.fileType)}<span className="font-medium text-gray-800 truncate max-w-xs">{resource.title}</span></div></td>
+                            <td className="px-3 py-2 text-gray-500 hidden md:table-cell">{resource.fileType.split("/")[1]?.toUpperCase() || "—"}</td>
+                            <td className="px-3 py-2 text-gray-500 hidden md:table-cell">{formatSize(resource.fileSize)}</td>
+                            <td className="px-3 py-2 text-gray-500 hidden lg:table-cell">{new Date(resource.createdAt).toLocaleDateString("fr-FR")}</td>
+                            <td className="px-3 py-2">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200" onClick={(e) => e.stopPropagation()}><MoreVertical className="w-4 h-4" /></button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setPreviewResource(resource); }}><Eye className="w-4 h-4 mr-2" />Aperçu</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); window.open(resource.fileUrl, "_blank"); }}><Download className="w-4 h-4 mr-2" />Télécharger</DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); setDeletingResource(resource); }}><Trash2 className="w-4 h-4 mr-2" />Supprimer</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile list - card-based */}
+                <div className="md:hidden space-y-2">
+                  {displayedResources.map((resource) => {
+                    const isSelected = selectedFiles.has(resource.id);
+                    const thumb = getFileThumbnail(resource);
+                    return (
+                      <div
+                        key={resource.id}
+                        className={`flex items-center gap-3 p-2.5 bg-white rounded-xl border-2 transition-all ${isSelected ? "border-emerald-500 bg-emerald-50/50" : "border-gray-200"}`}
+                        onClick={(e) => toggleSelect(resource.id, e)}
+                      >
+                        {/* Thumbnail / Icon */}
+                        <div className="w-12 h-12 rounded-lg bg-gray-50 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                          {thumb ? (
+                            <img src={thumb} alt={resource.title} className="w-full h-full object-cover rounded-lg" loading="lazy" />
+                          ) : (
+                            getFileIcon(resource.fileType)
+                          )}
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">{resource.title}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs text-gray-400">{formatSize(resource.fileSize)}</span>
+                            <span className="text-xs text-gray-300">·</span>
+                            <span className="text-xs text-gray-400">{new Date(resource.createdAt).toLocaleDateString("fr-FR")}</span>
+                          </div>
+                        </div>
+
+                        {/* Selection indicator */}
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-emerald-500 border-emerald-500" : "border-gray-300"}`}>
+                          {isSelected && <Check className="w-3 h-3 text-white" />}
+                        </div>
+
+                        {/* Actions */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                              <MoreVertical className="w-4 h-4 text-gray-400" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setPreviewResource(resource); }}><Eye className="w-4 h-4 mr-2" />Aperçu</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); window.open(resource.fileUrl, "_blank"); }}><Download className="w-4 h-4 mr-2" />Télécharger</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); setDeletingResource(resource); }}><Trash2 className="w-4 h-4 mr-2" />Supprimer</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
 
           {/* Status bar */}
-          <div className="bg-white border-t border-gray-200 px-4 py-1.5 flex items-center justify-between text-xs text-gray-500">
+          <div className="bg-white border-t border-gray-200 px-3 md:px-4 py-1.5 flex items-center justify-between text-xs text-gray-500">
             <span>{displayedResources.length} élément(s)</span>
             {selectedFiles.size > 0 && <span className="text-emerald-600 font-medium">{selectedFiles.size} sélectionné(s)</span>}
           </div>
         </main>
       </div>
+
+      {/* Hidden file input */}
+      <input ref={fileInputRef} type="file" multiple className="hidden"
+        onChange={(e) => { const files = Array.from(e.target.files || []); if (files.length > 0) uploadFiles(files); e.target.value = ""; }} />
 
       {/* ── Dialogs ── */}
 
@@ -773,18 +989,18 @@ export default function AdminResources() {
 
       {/* Preview */}
       <Dialog open={!!previewResource} onOpenChange={() => setPreviewResource(null)}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">{previewResource && getFileIcon(previewResource.fileType)}{previewResource?.title}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-sm md:text-base">{previewResource && getFileIcon(previewResource.fileType)}<span className="truncate">{previewResource?.title}</span></DialogTitle>
           </DialogHeader>
           {previewResource && (
             <div className="mt-2">
               {previewResource.fileType.startsWith("image/") ? (
-                <img src={previewResource.fileUrl} alt={previewResource.title} className="max-h-96 mx-auto rounded-lg object-contain" />
+                <img src={previewResource.fileUrl} alt={previewResource.title} className="max-h-[60vh] mx-auto rounded-lg object-contain" />
               ) : previewResource.fileType.startsWith("video/") ? (
-                <video src={previewResource.fileUrl} controls className="w-full max-h-96 rounded-lg" />
+                <video src={previewResource.fileUrl} controls className="w-full max-h-[60vh] rounded-lg" />
               ) : previewResource.fileType === "application/pdf" ? (
-                <iframe src={previewResource.fileUrl} className="w-full h-96 rounded-lg border" title={previewResource.title} />
+                <iframe src={previewResource.fileUrl} className="w-full h-[60vh] rounded-lg border" title={previewResource.title} />
               ) : (
                 <div className="flex flex-col items-center gap-4 py-8">{getFileIcon(previewResource.fileType)}<p className="text-gray-500">Aperçu non disponible pour ce type de fichier</p></div>
               )}
