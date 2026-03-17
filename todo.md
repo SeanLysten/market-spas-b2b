@@ -3019,3 +3019,4 @@
 - [x] Corriger la persistance : ajouté stockage côté serveur (colonne completedOnboarding sur users)
 - [x] Hook useOnboarding synchro serveur + localStorage cache
 - [x] Bouton "Relancer les guides" utilise maintenant useResetAllOnboarding (reset serveur + local)
+- [x] Aligner l'affichage mobile des dossiers de la médiathèque utilisateur (Resources.tsx) sur celui de la version admin (AdminResources.tsx)
