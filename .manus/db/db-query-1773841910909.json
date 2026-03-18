@@ -1,0 +1,37 @@
+{
+  "query": "SELECT id, orderNumber, status, partnerId, depositPaid, totalTTC, depositAmount FROM orders LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, orderNumber, status, partnerId, depositPaid, totalTTC, depositAmount FROM orders LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "orderNumber": "CMD-202603-0001",
+      "status": "SHIPPED",
+      "partnerId": "60001",
+      "depositPaid": "0",
+      "totalTTC": "2350.00",
+      "depositAmount": "705.00"
+    },
+    {
+      "id": "2",
+      "orderNumber": "CMD-TEST-001",
+      "status": "DEPOSIT_PAID",
+      "partnerId": "60002",
+      "depositPaid": "1",
+      "totalTTC": "5475.25",
+      "depositAmount": "1357.50"
+    },
+    {
+      "id": "3",
+      "orderNumber": "CMD-TEST-002",
+      "status": "IN_PRODUCTION",
+      "partnerId": "60003",
+      "depositPaid": "1",
+      "totalTTC": "8917.70",
+      "depositAmount": "2211.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\tstatus\tpartnerId\tdepositPaid\ttotalTTC\tdepositAmount\n1\tCMD-202603-0001\tSHIPPED\t60001\t0\t2350.00\t705.00\n2\tCMD-TEST-001\tDEPOSIT_PAID\t60002\t1\t5475.25\t1357.50\n3\tCMD-TEST-002\tIN_PRODUCTION\t60003\t1\t8917.70\t2211.00\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

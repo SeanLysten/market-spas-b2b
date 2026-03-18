@@ -426,6 +426,7 @@ describe("Supplier Orders Export - Updated Format (Supplier-Aligned Fields)", ()
         ],
         payments: [
           {
+            type: "DEPOSIT",
             amount: "1482.00",
             method: "card",
             status: "SUCCEEDED",
@@ -434,6 +435,7 @@ describe("Supplier Orders Export - Updated Format (Supplier-Aligned Fields)", ()
         ],
         client: {
           partnerId: 7,
+          supplierClientCode: null,
           company: {
             name: "Spa Concept SPRL",
             tradeName: "Spa Concept",
@@ -455,16 +457,20 @@ describe("Supplier Orders Export - Updated Format (Supplier-Aligned Fields)", ()
             country: "BE",
           },
           level: "GOLD",
-        },
-        deliveryAddress: {
-          street: "Zoning Industriel 12",
-          street2: "Bâtiment B",
-          city: "Gembloux",
-          postalCode: "5030",
-          country: "BE",
-          contactName: "Jean Dupont",
-          contactPhone: "+32 475 12 34 56",
-          instructions: "Accès par la porte latérale",
+          orderedBy: {
+            name: "Jean Dupont",
+            email: "jean.dupont@spaconcept.be",
+          },
+          deliveryAddress: {
+            street: "Zoning Industriel 12",
+            street2: "Bâtiment B",
+            city: "Gembloux",
+            postalCode: "5030",
+            country: "BE",
+            contactName: "Jean Dupont",
+            contactPhone: "+32 475 12 34 56",
+            instructions: "Accès par la porte latérale",
+          },
         },
       },
     ],
@@ -557,8 +563,8 @@ describe("Supplier Orders Export - Updated Format (Supplier-Aligned Fields)", ()
     expect(client).not.toHaveProperty("phone");
   });
 
-  it("should have separate delivery address at order level", () => {
-    const delivery = sampleExport.data[0].deliveryAddress;
+  it("should have delivery address inside client (Valentin format)", () => {
+    const delivery = sampleExport.data[0].client.deliveryAddress;
     expect(delivery).toHaveProperty("street");
     expect(delivery).toHaveProperty("city");
     expect(delivery).toHaveProperty("postalCode");
@@ -566,6 +572,23 @@ describe("Supplier Orders Export - Updated Format (Supplier-Aligned Fields)", ()
     expect(delivery).toHaveProperty("contactName");
     expect(delivery).toHaveProperty("contactPhone");
     expect(delivery).toHaveProperty("instructions");
+  });
+
+  it("should include payment type (DEPOSIT/BALANCE) in payments", () => {
+    const payment = sampleExport.data[0].payments[0];
+    expect(payment).toHaveProperty("type", "DEPOSIT");
+    expect(payment).toHaveProperty("amount");
+    expect(payment).toHaveProperty("method");
+    expect(payment).toHaveProperty("status");
+    expect(payment).toHaveProperty("paidAt");
+  });
+
+  it("should include supplierClientCode and orderedBy in client", () => {
+    const client = sampleExport.data[0].client;
+    expect(client).toHaveProperty("supplierClientCode");
+    expect(client).toHaveProperty("orderedBy");
+    expect(client.orderedBy).toHaveProperty("name");
+    expect(client.orderedBy).toHaveProperty("email");
   });
 
   it("should allow matching items by CodeProduit with supplier import data", () => {

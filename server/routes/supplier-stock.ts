@@ -531,21 +531,35 @@ router.get("/api/supplier/orders/export", async (req, res) => {
         console.error("[SupplierOrders] Items lookup error:", e.message);
       }
 
-      // --- Payments ---
+      // --- Payments (use raw SQL to avoid Drizzle enum column name issues) ---
       try {
-        const pmts = await db
-          .select({
-            amount: payments.amount,
-            method: payments.method,
-            status: payments.status,
-            paidAt: payments.paidAt,
-          })
-          .from(payments)
-          .where(eq(payments.orderId, order.orderId));
-        paymentsList = pmts;
+        const pmts: any[] = await db.execute(
+          sql`SELECT amount, method, status, paidAt FROM payments WHERE orderId = ${order.orderId} ORDER BY paidAt ASC`
+        );
+        // Flatten rows (mysql2 returns [rows, fields])
+        const pmtRows = Array.isArray(pmts) && Array.isArray(pmts[0]) ? pmts[0] : pmts;
+        paymentsList = pmtRows.map((p: any, idx: number) => ({
+          type: idx === 0 ? "DEPOSIT" : "BALANCE",
+          amount: p.amount,
+          method: p.method,
+          status: p.status || p.payment_status || "UNKNOWN",
+          paidAt: p.paidAt || null,
+        }));
       } catch (e: any) {
         console.error("[SupplierOrders] Payments lookup error:", e.message);
       }
+
+      // Add deliveryAddress inside client (as per Valentin's format)
+      clientInfo.deliveryAddress = {
+        street: order.deliveryStreet || null,
+        street2: order.deliveryStreet2 || null,
+        city: order.deliveryCity || null,
+        postalCode: order.deliveryPostalCode || null,
+        country: order.deliveryCountry || null,
+        contactName: order.deliveryContactName || null,
+        contactPhone: order.deliveryContactPhone || null,
+        instructions: order.deliveryInstructions || null,
+      };
 
       exportData.push({
         order: {
@@ -575,16 +589,6 @@ router.get("/api/supplier/orders/export", async (req, res) => {
         items: orderItemsList,
         payments: paymentsList,
         client: clientInfo,
-        deliveryAddress: {
-          street: order.deliveryStreet || null,
-          street2: order.deliveryStreet2 || null,
-          city: order.deliveryCity || null,
-          postalCode: order.deliveryPostalCode || null,
-          country: order.deliveryCountry || null,
-          contactName: order.deliveryContactName || null,
-          contactPhone: order.deliveryContactPhone || null,
-          instructions: order.deliveryInstructions || null,
-        },
       });
     }
 

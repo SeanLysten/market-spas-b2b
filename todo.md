@@ -3059,3 +3059,10 @@
 - [x] Route /admin/sav retourne une erreur 404 (redirection vers /admin/after-sales)
 - [x] Route /admin/orders/:id retourne une erreur 404 (détail commande admin) - ajout route + auto-open dialog
 - [x] Bug: "Partenaire inconnu" s'affiche dans les commandes admin au lieu du nom du partenaire - corrigé (enrichissement partenaire dans getAllOrders)
+- [x] Mettre à jour l'API fournisseur pour correspondre au format JSON de Valentin (ajout code partenaire, structure client complète)
+  - [x] deliveryAddress déplacé à l'intérieur de l'objet client
+  - [x] Ajout payments.type (DEPOSIT/BALANCE) dérivé de l'ordre de paiement
+  - [x] Correction requête SQL payments (raw SQL pour éviter les problèmes d'enum Drizzle)
+  - [x] Ajout supplierClientCode et orderedBy dans client
+  - [x] Paiements de test insérés pour les commandes CMD-TEST-001 et CMD-TEST-002
+  - [x] 52 tests supplier-stock passent
