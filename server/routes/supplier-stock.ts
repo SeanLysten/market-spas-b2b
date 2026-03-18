@@ -512,6 +512,13 @@ router.get("/api/supplier/orders/export", async (req, res) => {
             ean13Numeric = Number(ean13);
           }
 
+          // TotalHT = PrixUnitaireHT × Quantité SANS remise
+          // La remise est portée au niveau de la commande (discountPercent / discountAmount)
+          // et ne doit PAS être incluse dans le TotalHT des lignes (format Valentin)
+          const unitPrice = parseFloat(item.unitPriceHT || "0");
+          const qty = item.quantity || 1;
+          const totalHTSansRemise = (unitPrice * qty).toFixed(2);
+
           orderItemsList.push({
             NomProduit: item.itemName,
             SKU: item.itemSku,
@@ -520,7 +527,7 @@ router.get("/api/supplier/orders/export", async (req, res) => {
             Couleur: item.color || null,
             QuantiteCommandee: item.quantity,
             PrixUnitaireHT: item.unitPriceHT,
-            TotalHT: item.totalHT,
+            TotalHT: totalHTSansRemise,
             SourceStock: item.stockSource || null,
             EnStock: item.snapshotEnStock ?? null,
             EnTransit: item.snapshotEnTransit ?? null,

@@ -3066,3 +3066,10 @@
   - [x] Ajout supplierClientCode et orderedBy dans client
   - [x] Paiements de test insérés pour les commandes CMD-TEST-001 et CMD-TEST-002
   - [x] 52 tests supplier-stock passent
+
+## Bug - API fournisseur : TotalHT des items inclut la remise (incorrect)
+- [x] Le champ TotalHT des items doit être PrixUnitaireHT × Quantité SANS remise (Valentin le confirme)
+- [x] CMD-TEST-001 : Easy Relax TotalHT=2090 (avec remise 5%) → corrigé à 2200, Mykonos → corrigé à 2300
+- [x] CMD-TEST-002 : Neptune V2 TotalHT=4680 (avec remise 10%) → corrigé à 5200, Volcano → corrigé à 3200
+- [x] Recalcul dans l'API (PrixUnitaireHT × Quantité) sans toucher la base de données
+- [x] subtotalHT de la commande reste correct (sans remise) — confirmé ✓

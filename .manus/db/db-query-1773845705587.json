@@ -1,0 +1,42 @@
+{
+  "query": "SELECT oi.orderId, oi.name, oi.quantity, oi.unitPriceHT, oi.totalHT, o.discountPercent \nFROM order_items oi \nJOIN orders o ON o.id = oi.orderId \nWHERE oi.orderId IN (2, 3)\nORDER BY oi.orderId, oi.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT oi.orderId, oi.name, oi.quantity, oi.unitPriceHT, oi.totalHT, o.discountPercent \nFROM order_items oi \nJOIN orders o ON o.id = oi.orderId \nWHERE oi.orderId IN (2, 3)\nORDER BY oi.orderId, oi.id;",
+  "rows": [
+    {
+      "orderId": "2",
+      "name": "Easy Relax - Sterling Marble",
+      "quantity": "1",
+      "unitPriceHT": "2200.00",
+      "totalHT": "2090.00",
+      "discountPercent": "5.00"
+    },
+    {
+      "orderId": "2",
+      "name": "Mykonos - Sterling Marble",
+      "quantity": "1",
+      "unitPriceHT": "2300.00",
+      "totalHT": "2185.00",
+      "discountPercent": "5.00"
+    },
+    {
+      "orderId": "3",
+      "name": "Neptune V2 - Sterling Marble",
+      "quantity": "2",
+      "unitPriceHT": "2600.00",
+      "totalHT": "4680.00",
+      "discountPercent": "10.00"
+    },
+    {
+      "orderId": "3",
+      "name": "Volcano - Sterling Marble",
+      "quantity": "1",
+      "unitPriceHT": "3200.00",
+      "totalHT": "2880.00",
+      "discountPercent": "10.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderId\tname\tquantity\tunitPriceHT\ttotalHT\tdiscountPercent\n2\tEasy Relax - Sterling Marble\t1\t2200.00\t2090.00\t5.00\n2\tMykonos - Sterling Marble\t1\t2300.00\t2185.00\t5.00\n3\tNeptune V2 - Sterling Marble\t2\t2600.00\t4680.00\t10.00\n3\tVolcano - Sterling Marble\t1\t3200.00\t2880.00\t10.00\n",
+  "stderr": "",
+  "execution_time_ms": 339
+}
