@@ -1537,6 +1537,20 @@ export interface CreateOrderInput {
   discountPercent?: number;
 }
 
+async function generateOrderNumber(): Promise<string> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const now = new Date();
+  const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`;
+  // Count existing orders this month to generate sequential number
+  const [countResult] = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(orders)
+    .where(sql`orderNumber LIKE ${`CMD-${yearMonth}-%`}`);
+  const seq = (countResult?.count || 0) + 1;
+  return `CMD-${yearMonth}-${String(seq).padStart(4, "0")}`;
+}
+
 export async function createOrder(input: CreateOrderInput) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

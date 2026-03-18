@@ -1,0 +1,19 @@
+{
+  "query": "SELECT id FROM partners LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id FROM partners LIMIT 3;",
+  "rows": [
+    {
+      "id": "60001"
+    },
+    {
+      "id": "60002"
+    },
+    {
+      "id": "60003"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\n60001\n60002\n60003\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

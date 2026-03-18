@@ -901,13 +901,321 @@ router.get("/api/mobile/v1/events", async (req: AuthenticatedRequest, res: Respo
 });
 
 // ============================================
+// POST /api/mobile/v1/orders
+// Create a new order (same logic as web tRPC)
+// ============================================
+router.post("/api/mobile/v1/orders", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.mobileUser!.sub);
+    const partnerId = req.mobileUser!.partnerId;
+
+    if (!partnerId) {
+      return res.status(403).json({ error: "FORBIDDEN", message: "Vous devez être associé à un partenaire pour passer commande" });
+    }
+
+    const { items, deliveryAddress, paymentMethod, shippingType, customerNotes } = req.body;
+
+    // Validate required fields
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: "MISSING_FIELDS", message: "La commande doit contenir au moins un article" });
+    }
+    if (!deliveryAddress || !deliveryAddress.street || !deliveryAddress.city || !deliveryAddress.postalCode || !deliveryAddress.country || !deliveryAddress.contactName || !deliveryAddress.contactPhone) {
+      return res.status(400).json({ error: "MISSING_FIELDS", message: "Adresse de livraison incomplète (street, city, postalCode, country, contactName, contactPhone requis)" });
+    }
+    if (!paymentMethod) {
+      return res.status(400).json({ error: "MISSING_FIELDS", message: "Méthode de paiement requise" });
+    }
+
+    const db = await import("../db");
+    const { products: productsTable, partnerProductDiscounts } = await import("../../drizzle/schema");
+    const { eq, and } = await import("drizzle-orm");
+
+    const drizzleDb = await db.getDb();
+
+    // Get per-product discounts for this partner
+    const partnerProdDiscounts = await db.getPartnerProductDiscounts(partnerId);
+    const productDiscountsMap = new Map<number, number>();
+    for (const ppd of partnerProdDiscounts) {
+      productDiscountsMap.set(ppd.productId, ppd.discountPercent);
+    }
+
+    // Get partner's global fallback discount
+    const partnerInfo = await db.getPartnerById(partnerId);
+    const partnerGlobalDiscount = partnerInfo?.discountPercent ? parseFloat(partnerInfo.discountPercent) : 0;
+
+    // Get dynamic VAT rate from system settings
+    const taxConfig = await db.getTaxConfig();
+    const dynamicVatRate = taxConfig.vatRate;
+
+    // Build order items with product details and per-product discounts
+    const orderItems: any[] = [];
+    let totalDiscountWeighted = 0;
+    let totalItemsValue = 0;
+
+    for (const item of items) {
+      if (!item.productId || !item.quantity || item.quantity < 1) {
+        return res.status(400).json({ error: "INVALID_ITEM", message: `Article invalide: productId et quantity (>0) requis` });
+      }
+
+      const product = await db.getProductById(item.productId);
+      if (!product) {
+        return res.status(404).json({ error: "NOT_FOUND", message: `Produit ${item.productId} non trouvé` });
+      }
+
+      let sku = product.sku;
+      let name = product.name;
+      let unitPriceHT = parseFloat(product.pricePartnerHT);
+      let vatRate = dynamicVatRate;
+
+      // If variant is specified, get variant details
+      if (item.variantId) {
+        const variant = await db.getProductVariantById(item.variantId);
+        if (variant) {
+          sku = variant.sku;
+          name = `${product.name} - ${variant.name}`;
+          if (variant.pricePartnerHT) {
+            unitPriceHT = parseFloat(variant.pricePartnerHT);
+          }
+        }
+      }
+
+      // Per-product discount takes priority, then partner global discount
+      const itemDiscount = productDiscountsMap.get(item.productId) ?? partnerGlobalDiscount;
+      const lineValue = unitPriceHT * item.quantity;
+      totalDiscountWeighted += (lineValue * itemDiscount) / 100;
+      totalItemsValue += lineValue;
+
+      orderItems.push({
+        productId: item.productId,
+        variantId: item.variantId,
+        sku,
+        name,
+        quantity: item.quantity,
+        unitPriceHT,
+        vatRate,
+        discountPercent: itemDiscount,
+        isPreorder: item.isPreorder || false,
+      });
+    }
+
+    // Weighted average discount for the order
+    const avgDiscountPercent = totalItemsValue > 0 ? Math.round((totalDiscountWeighted / totalItemsValue) * 10000) / 100 : 0;
+
+    // Create the order with dynamic shipping
+    const result = await db.createOrder({
+      partnerId,
+      createdById: userId,
+      items: orderItems,
+      deliveryAddress,
+      paymentMethod,
+      shippingType: shippingType || "standard",
+      customerNotes: customerNotes || undefined,
+      discountPercent: avgDiscountPercent,
+    });
+
+    // Send new order notification
+    try {
+      const { notifyNewOrder } = await import("../alerts");
+      await notifyNewOrder(result.orderId);
+    } catch (err) {
+      console.error("[Mobile API] Failed to send order notification:", err);
+    }
+
+    return res.status(201).json({
+      success: true,
+      orderId: result.orderId,
+      orderNumber: result.orderNumber,
+      totalHT: result.totalHT,
+      totalTTC: result.totalTTC,
+      shippingHT: result.shippingHT,
+      depositAmount: result.depositAmount,
+      balanceAmount: result.balanceAmount,
+      discountPercent: avgDiscountPercent,
+      message: "Commande créée avec succès",
+    });
+  } catch (err: any) {
+    console.error("[Mobile API] Create order error:", err);
+    // Handle stock errors gracefully
+    if (err.message?.includes("Stock insuffisant")) {
+      return res.status(409).json({ error: "INSUFFICIENT_STOCK", message: err.message });
+    }
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message || "Erreur lors de la création de la commande" });
+  }
+});
+
+// ============================================
+// POST /api/mobile/v1/sav
+// Create a new SAV ticket with optional photo upload
+// ============================================
+router.post("/api/mobile/v1/sav", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.mobileUser!.sub);
+    const partnerId = req.mobileUser!.partnerId;
+
+    if (!partnerId) {
+      return res.status(403).json({ error: "FORBIDDEN", message: "Vous devez être associé à un partenaire pour créer un ticket SAV" });
+    }
+
+    const {
+      serialNumber,
+      issueType,
+      description,
+      urgency,
+      brand,
+      productLine,
+      modelName,
+      component,
+      defectType,
+      purchaseDate,
+      deliveryDate,
+      usageType,
+      isOriginalBuyer,
+      isModified,
+      isMaintenanceConform,
+      isChemistryConform,
+      usesHydrogenPeroxide,
+      customerName,
+      customerPhone,
+      customerEmail,
+      customerAddress,
+      installationDate,
+      productId,
+      media,
+    } = req.body;
+
+    // Validate required fields
+    if (!serialNumber || !serialNumber.trim()) {
+      return res.status(400).json({ error: "MISSING_FIELDS", message: "Numéro de série requis" });
+    }
+    if (!issueType) {
+      return res.status(400).json({ error: "MISSING_FIELDS", message: "Type de problème requis" });
+    }
+    if (!description || description.length < 10) {
+      return res.status(400).json({ error: "MISSING_FIELDS", message: "Description requise (minimum 10 caractères)" });
+    }
+
+    // Upload media to S3
+    const { storagePut } = await import("../storage");
+    const { nanoid } = await import("nanoid");
+    const uploadedMedia: Array<{ url: string; key: string; type: "IMAGE" | "VIDEO"; description?: string }> = [];
+
+    if (media && Array.isArray(media) && media.length > 0) {
+      for (const item of media) {
+        if (!item.base64 || !item.mimeType || !item.type) {
+          continue; // Skip invalid media items
+        }
+        try {
+          const buffer = Buffer.from(item.base64, "base64");
+          const ext = item.type === "VIDEO" ? "mp4" : "jpg";
+          const fileKey = `sav/${partnerId}/${Date.now()}-${nanoid()}.${ext}`;
+          const { url } = await storagePut(fileKey, buffer, item.mimeType);
+          uploadedMedia.push({ url, key: fileKey, type: item.type, description: item.description });
+        } catch (uploadErr) {
+          console.error("[Mobile API] Failed to upload SAV media:", uploadErr);
+        }
+      }
+    }
+
+    // Run warranty analysis if enough data
+    let warrantyResult = null;
+    if (brand && component && defectType && purchaseDate && deliveryDate) {
+      try {
+        const { analyzeWarranty, SavBrand, UsageType } = await import("../sav-warranty");
+        warrantyResult = analyzeWarranty({
+          brand: brand as any,
+          productLine,
+          component,
+          defectType,
+          purchaseDate,
+          deliveryDate,
+          usageType: (usageType || "PRIVATE") as any,
+          isOriginalBuyer: isOriginalBuyer ?? true,
+          isModified: isModified ?? false,
+          isMaintenanceConform: isMaintenanceConform ?? true,
+          isChemistryConform: isChemistryConform ?? true,
+          usesHydrogenPeroxide: usesHydrogenPeroxide ?? false,
+        });
+      } catch (err) {
+        console.error("[Mobile API] Warranty analysis failed:", err);
+      }
+    }
+
+    // Create the SAV ticket
+    const savDb = await import("../sav-db");
+    const result = await savDb.createSavTicket({
+      partnerId,
+      productId: productId || undefined,
+      serialNumber: serialNumber.trim(),
+      issueType,
+      description,
+      urgency: urgency || "NORMAL",
+      brand,
+      productLine,
+      modelName,
+      component,
+      defectType,
+      purchaseDate,
+      deliveryDate,
+      usageType: usageType || "PRIVATE",
+      isOriginalBuyer: isOriginalBuyer ?? true,
+      isModified: isModified ?? false,
+      isMaintenanceConform: isMaintenanceConform ?? true,
+      isChemistryConform: isChemistryConform ?? true,
+      usesHydrogenPeroxide: usesHydrogenPeroxide ?? false,
+      customerName,
+      customerPhone,
+      customerEmail,
+      customerAddress,
+      installationDate,
+      media: uploadedMedia,
+      warrantyStatus: warrantyResult?.status,
+      warrantyPercentage: warrantyResult?.percentage,
+      warrantyExpiryDate: warrantyResult?.expiryDate || undefined,
+      warrantyAnalysisDetails: warrantyResult ? JSON.stringify(warrantyResult) : undefined,
+    });
+
+    // Notify admin
+    try {
+      const { notifyOwner } = await import("../alerts");
+      const urgencyLabel = urgency === "CRITICAL" ? "CRITIQUE" : urgency === "URGENT" ? "URGENT" : "";
+      await notifyOwner({
+        title: `Nouveau ticket SAV ${urgencyLabel} - ${result.ticketNumber}`,
+        content: `Ticket: ${result.ticketNumber}\nMarque: ${brand || "N/A"}\nModèle: ${modelName || "N/A"}\nComposant: ${component || "N/A"}\nGarantie: ${warrantyResult?.status || "À analyser"}\nDescription: ${description.substring(0, 200)}`,
+      });
+    } catch (err) {
+      console.error("[Mobile API] Failed to send SAV notification:", err);
+    }
+
+    // Persistent DB notification for admins
+    try {
+      const notifService = await import("../notification-service");
+      await notifService.notifySavTicketCreated(result.ticketNumber, partnerId, urgency || "NORMAL", description);
+    } catch (err) {
+      console.error("[Mobile API] Failed to create SAV DB notification:", err);
+    }
+
+    return res.status(201).json({
+      success: true,
+      ticketId: result.serviceId,
+      ticketNumber: result.ticketNumber,
+      warrantyAnalysis: warrantyResult || null,
+      mediaUploaded: uploadedMedia.length,
+      message: "Ticket SAV créé avec succès",
+    });
+  } catch (err: any) {
+    console.error("[Mobile API] Create SAV error:", err);
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message || "Erreur lors de la création du ticket SAV" });
+  }
+});
+
+// ============================================
 // GET /api/mobile/health
 // Health check endpoint (public)
 // ============================================
 router.get("/api/mobile/health", (_req: Request, res: Response) => {
   return res.json({
     status: "ok",
-    version: "1.0.0",
+    version: "1.1.0",
     timestamp: new Date().toISOString(),
   });
 });

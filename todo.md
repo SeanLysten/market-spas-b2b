@@ -3040,3 +3040,8 @@
 - [x] Corriger les endpoints qui retournent des erreurs ou données incomplètes
 - [x] Tester tous les endpoints de bout en bout
 - [x] Créer le fichier d'intégration complet pour l'app mobile React Native
+
+## Endpoints de création mobile
+- [x] POST /api/mobile/v1/orders - Création de commande depuis l'app mobile
+- [x] POST /api/mobile/v1/sav - Création de ticket SAV avec upload photos depuis l'app mobile
+- [x] Mettre à jour le guide d'intégration INTEGRATION_APP_MOBILE_MARKET_SPAS.md

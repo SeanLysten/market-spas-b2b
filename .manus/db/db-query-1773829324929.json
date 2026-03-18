@@ -1,0 +1,106 @@
+{
+  "query": "SHOW COLUMNS FROM after_sales_services WHERE Field LIKE '%brand%' OR Field LIKE '%warranty%' OR Field LIKE '%model%' OR Field LIKE '%component%' OR Field LIKE '%defect%' OR Field LIKE '%purchase%' OR Field LIKE '%delivery%' OR Field LIKE '%usage%' OR Field LIKE '%original%' OR Field LIKE '%modified%' OR Field LIKE '%maintenance%' OR Field LIKE '%chemistry%' OR Field LIKE '%hydrogen%' OR Field LIKE '%product_line%' OR Field LIKE '%productLine%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SHOW COLUMNS FROM after_sales_services WHERE Field LIKE '%brand%' OR Field LIKE '%warranty%' OR Field LIKE '%model%' OR Field LIKE '%component%' OR Field LIKE '%defect%' OR Field LIKE '%purchase%' OR Field LIKE '%delivery%' OR Field LIKE '%usage%' OR Field LIKE '%original%' OR Field LIKE '%modified%' OR Field LIKE '%maintenance%' OR Field LIKE '%chemistry%' OR Field LIKE '%hydrogen%' OR Field LIKE '%product_line%' OR Field LIKE '%productLine%';",
+  "rows": [
+    {
+      "Field": "brand",
+      "Type": "enum('MARKET_SPAS','WELLIS_CLASSIC','WELLIS_LIFE','WELLIS_WIBES','PASSION_SPAS','PLATINUM_SPAS')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "productLine",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "modelName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "component",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "defectType",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "purchaseDate",
+      "Type": "date",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "deliveryDate",
+      "Type": "date",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "usageType",
+      "Type": "enum('PRIVATE','COMMERCIAL','HOLIDAY_LET')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "PRIVATE",
+      "Extra": ""
+    },
+    {
+      "Field": "warrantyStatus",
+      "Type": "enum('COVERED','PARTIAL','EXPIRED','EXCLUDED','REVIEW_NEEDED')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "REVIEW_NEEDED",
+      "Extra": ""
+    },
+    {
+      "Field": "warrantyPercentage",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "warrantyExpiryDate",
+      "Type": "date",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "warrantyAnalysisDetails",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nbrand\tenum('MARKET_SPAS','WELLIS_CLASSIC','WELLIS_LIFE','WELLIS_WIBES','PASSION_SPAS','PLATINUM_SPAS')\tYES\t\tNULL\t\nproductLine\tvarchar(100)\tYES\t\tNULL\t\nmodelName\tvarchar(255)\tYES\t\tNULL\t\ncomponent\tvarchar(255)\tYES\t\tNULL\t\ndefectType\tvarchar(255)\tYES\t\tNULL\t\npurchaseDate\tdate\tYES\t\tNULL\t\ndeliveryDate\tdate\tYES\t\tNULL\t\nusageType\tenum('PRIVATE','COMMERCIAL','HOLIDAY_LET')\tYES\t\tPRIVATE\t\nwarrantyStatus\tenum('COVERED','PARTIAL','EXPIRED','EXCLUDED','REVIEW_NEEDED')\tYES\t\tREVIEW_NEEDED\t\nwarrantyPercentage\tint\tYES\t\t0\t\nwarrantyExpiryDate\tdate\tYES\t\tNULL\t\nwarrantyAnalysisDetails\ttext\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 49
+}

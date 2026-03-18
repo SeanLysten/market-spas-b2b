@@ -1,0 +1,394 @@
+{
+  "query": "SHOW COLUMNS FROM after_sales_services;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SHOW COLUMNS FROM after_sales_services;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "ticketNumber",
+      "Type": "varchar(50)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "partnerId",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "productId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "serialNumber",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "issueType",
+      "Type": "enum('LEAK','CRACK_BLISTER_DELAMINATION','ELECTRICAL_FAILURE','MALFUNCTION','ABNORMAL_NOISE','BREAKAGE','DISCOLORATION_WEAR','HEATING_ISSUE','PEELING_SHRINKAGE','OTHER','TECHNICAL','ELECTRICAL','HEATING','JETS','CONTROL_PANEL')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "description",
+      "Type": "text",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "urgency",
+      "Type": "enum('NORMAL','URGENT','CRITICAL')",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "NORMAL",
+      "Extra": ""
+    },
+    {
+      "Field": "status",
+      "Type": "enum('NEW','ANALYZING','INFO_REQUIRED','QUOTE_PENDING','PAYMENT_CONFIRMED','PREPARING','SHIPPED','RESOLVED','CLOSED','IN_PROGRESS','WAITING_PARTS')",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "NEW",
+      "Extra": ""
+    },
+    {
+      "Field": "customerName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "customerPhone",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "customerEmail",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "customerAddress",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "installationDate",
+      "Type": "date",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "assignedTechnicianId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "assignedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "resolutionNotes",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "resolvedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "closedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "brand",
+      "Type": "enum('MARKET_SPAS','WELLIS_CLASSIC','WELLIS_LIFE','WELLIS_WIBES','PASSION_SPAS','PLATINUM_SPAS')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "productLine",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "modelName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "component",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "defectType",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "purchaseDate",
+      "Type": "date",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "deliveryDate",
+      "Type": "date",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "usageType",
+      "Type": "enum('PRIVATE','COMMERCIAL','HOLIDAY_LET')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "PRIVATE",
+      "Extra": ""
+    },
+    {
+      "Field": "isOriginalBuyer",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "isModified",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "isMaintenanceConform",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "isChemistryConform",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "usesHydrogenPeroxide",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "warrantyStatus",
+      "Type": "enum('COVERED','PARTIAL','EXPIRED','EXCLUDED','REVIEW_NEEDED')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "REVIEW_NEEDED",
+      "Extra": ""
+    },
+    {
+      "Field": "warrantyPercentage",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "warrantyExpiryDate",
+      "Type": "date",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "warrantyAnalysisDetails",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "adminWarrantyOverride",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "adminWarrantyNotes",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "shippingCost",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "totalAmount",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "stripePaymentIntentId",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "paidAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "trackingNumber",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "trackingCarrier",
+      "Type": "enum('BPOST','DHL','UPS','GLS','MONDIAL_RELAY','OTHER')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "trackingUrl",
+      "Type": "varchar(512)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "shippedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nticketNumber\tvarchar(50)\tNO\tUNI\tNULL\t\npartnerId\tint\tNO\tMUL\tNULL\t\nproductId\tint\tYES\t\tNULL\t\nserialNumber\tvarchar(100)\tNO\t\tNULL\t\nissueType\tenum('LEAK','CRACK_BLISTER_DELAMINATION','ELECTRICAL_FAILURE','MALFUNCTION','ABNORMAL_NOISE','BREAKAGE','DISCOLORATION_WEAR','HEATING_ISSUE','PEELING_SHRINKAGE','OTHER','TECHNICAL','ELECTRICAL','HEATING','JETS','CONTROL_PANEL')\tNO\t\tNULL\t\ndescription\ttext\tNO\t\tNULL\t\nurgency\tenum('NORMAL','URGENT','CRITICAL')\tNO\tMUL\tNORMAL\t\nstatus\tenum('NEW','ANALYZING','INFO_REQUIRED','QUOTE_PENDING','PAYMENT_CONFIRMED','PREPARING','SHIPPED','RESOLVED','CLOSED','IN_PROGRESS','WAITING_PARTS')\tNO\tMUL\tNEW\t\ncustomerName\tvarchar(255)\tYES\t\tNULL\t\ncustomerPhone\tvarchar(50)\tYES\t\tNULL\t\ncustomerEmail\tvarchar(255)\tYES\t\tNULL\t\ncustomerAddress\ttext\tYES\t\tNULL\t\ninstallationDate\tdate\tYES\t\tNULL\t\nassignedTechnicianId\tint\tYES\t\tNULL\t\nassignedAt\ttimestamp\tYES\t\tNULL\t\nresolutionNotes\ttext\tYES\t\tNULL\t\nresolvedAt\ttimestamp\tYES\t\tNULL\t\nclosedAt\ttimestamp\tYES\t\tNULL\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\nbrand\tenum('MARKET_SPAS','WELLIS_CLASSIC','WELLIS_LIFE','WELLIS_WIBES','PASSION_SPAS','PLATINUM_SPAS')\tYES\t\tNULL\t\nproductLine\tvarchar(100)\tYES\t\tNULL\t\nmodelName\tvarchar(255)\tYES\t\tNULL\t\ncomponent\tvarchar(255)\tYES\t\tNULL\t\ndefectType\tvarchar(255)\tYES\t\tNULL\t\npurchaseDate\tdate\tYES\t\tNULL\t\ndeliveryDate\tdate\tYES\t\tNULL\t\nusageType\tenum('PRIVATE','COMMERCIAL','HOLIDAY_LET')\tYES\t\tPRIVATE\t\nisOriginalBuyer\ttinyint(1)\tYES\t\t1\t\nisModified\ttinyint(1)\tYES\t\t0\t\nisMaintenanceConform\ttinyint(1)\tYES\t\t1\t\nisChemistryConform\ttinyint(1)\tYES\t\t1\t\nusesHydrogenPeroxide\ttinyint(1)\tYES\t\t0\t\nwarrantyStatus\tenum('COVERED','PARTIAL','EXPIRED','EXCLUDED','REVIEW_NEEDED')\tYES\t\tREVIEW_NEEDED\t\nwarrantyPercentage\tint\tYES\t\t0\t\nwarrantyExpiryDate\tdate\tYES\t\tNULL\t\nwarrantyAnalysisDetails\ttext\tYES\t\tNULL\t\nadminWarrantyOverride\ttinyint(1)\tYES\t\t0\t\nadminWarrantyNotes\ttext\tYES\t\tNULL\t\nshippingCost\tdecimal(10,2)\tYES\t\tNULL\t\ntotalAmount\tdecimal(10,2)\tYES\t\tNULL\t\nstripePaymentIntentId\tvarchar(255)\tYES\t\tNULL\t\npaidAt\ttimestamp\tYES\t\tNULL\t\ntrackingNumber\tvarchar(255)\tYES\t\tNULL\t\ntrackingCarrier\tenum('BPOST','DHL','UPS','GLS','MONDIAL_RELAY','OTHER')\tYES\t\tNULL\t\ntrackingUrl\tvarchar(512)\tYES\t\tNULL\t\nshippedAt\ttimestamp\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}
