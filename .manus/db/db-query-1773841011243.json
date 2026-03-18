@@ -1,0 +1,49 @@
+{
+  "query": "SELECT id, companyName, primaryContactName, primaryContactEmail, primaryContactPhone, vatNumber, level, addressStreet, addressCity, addressPostalCode, addressCountry FROM partners WHERE companyName NOT LIKE '%Test%' LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, companyName, primaryContactName, primaryContactEmail, primaryContactPhone, vatNumber, level, addressStreet, addressCity, addressPostalCode, addressCountry FROM partners WHERE companyName NOT LIKE '%Test%' LIMIT 3;",
+  "rows": [
+    {
+      "id": "60001",
+      "companyName": "Market Spas Palmones",
+      "primaryContactName": "Contact Market Spas Palmones",
+      "primaryContactEmail": "es@spas-wellis.com",
+      "primaryContactPhone": "+34609450905",
+      "vatNumber": "ES-PALMONES-001",
+      "level": "BRONZE",
+      "addressStreet": "Ctra. Acceso Central Térmica, Nave 4",
+      "addressCity": "Palmones",
+      "addressPostalCode": "11379",
+      "addressCountry": "ES"
+    },
+    {
+      "id": "60002",
+      "companyName": "Fab'Elec",
+      "primaryContactName": "Contact Fab'Elec",
+      "primaryContactEmail": "france@marketspas.com",
+      "primaryContactPhone": "+33610622733",
+      "vatNumber": "FR-FABELEC-14310",
+      "level": "BRONZE",
+      "addressStreet": "3 Rue des Grands Champs",
+      "addressCity": "Villers-Bocage",
+      "addressPostalCode": "14310",
+      "addressCountry": "FR"
+    },
+    {
+      "id": "60003",
+      "companyName": "Projet d'eau",
+      "primaryContactName": "Contact Projet d'eau",
+      "primaryContactEmail": "luca.c@edgar-den.fr",
+      "primaryContactPhone": "+33557240801",
+      "vatNumber": "FR-PROJETEAUX-33500",
+      "level": "BRONZE",
+      "addressStreet": "2 port du Nouguey",
+      "addressCity": "Arveyres",
+      "addressPostalCode": "33500",
+      "addressCountry": "FR"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcompanyName\tprimaryContactName\tprimaryContactEmail\tprimaryContactPhone\tvatNumber\tlevel\taddressStreet\taddressCity\taddressPostalCode\taddressCountry\n60001\tMarket Spas Palmones\tContact Market Spas Palmones\tes@spas-wellis.com\t+34609450905\tES-PALMONES-001\tBRONZE\tCtra. Acceso Central Térmica, Nave 4\tPalmones\t11379\tES\n60002\tFab'Elec\tContact Fab'Elec\tfrance@marketspas.com\t+33610622733\tFR-FABELEC-14310\tBRONZE\t3 Rue des Grands Champs\tVillers-Bocage\t14310\tFR\n60003\tProjet d'eau\tContact Projet d'eau\tluca.c@edgar-den.fr\t+33557240801\tFR-PROJETEAUX-33500\tBRONZE\t2 port du Nouguey\tArveyres\t33500\tFR\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

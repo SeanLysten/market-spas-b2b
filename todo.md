@@ -3058,3 +3058,4 @@
 ## Bugs
 - [x] Route /admin/sav retourne une erreur 404 (redirection vers /admin/after-sales)
 - [x] Route /admin/orders/:id retourne une erreur 404 (détail commande admin) - ajout route + auto-open dialog
+- [x] Bug: "Partenaire inconnu" s'affiche dans les commandes admin au lieu du nom du partenaire - corrigé (enrichissement partenaire dans getAllOrders)

@@ -391,7 +391,31 @@ export async function getAllOrders(filters?: {
     query = query.offset(filters.offset) as any;
   }
 
-  return await query;
+  const rows = await query;
+
+  // Enrich orders with partner data for admin display
+  const partnerIds = [...new Set(rows.map((r: any) => r.partnerId).filter(Boolean))];
+  if (partnerIds.length === 0) return rows;
+
+  const partnerRows = await db
+    .select({
+      id: partners.id,
+      companyName: partners.companyName,
+      tradeName: partners.tradeName,
+      primaryContactName: partners.primaryContactName,
+      primaryContactEmail: partners.primaryContactEmail,
+      primaryContactPhone: partners.primaryContactPhone,
+      level: partners.level,
+    })
+    .from(partners)
+    .where(inArray(partners.id, partnerIds as number[]));
+
+  const partnerMap = new Map(partnerRows.map((p) => [p.id, p]));
+
+  return rows.map((row: any) => ({
+    ...row,
+    partner: partnerMap.get(row.partnerId) || null,
+  }));
 }
 
 // ============================================

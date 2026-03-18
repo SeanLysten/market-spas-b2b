@@ -1,0 +1,8 @@
+{
+  "query": "SELECT p.id, p.name, p.sku, p.publicPriceHT, p.supplierProductCode, p.ean13, pv.id as variantId, pv.name as variantName, pv.sku as variantSku, pv.supplierProductCode as variantSupplierCode, pv.ean13 as variantEan13, pv.stockQuantity, pv.inTransitQuantity FROM products p LEFT JOIN product_variants pv ON pv.productId = p.id WHERE p.isActive = 1 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT p.id, p.name, p.sku, p.publicPriceHT, p.supplierProductCode, p.ean13, pv.id as variantId, pv.name as variantName, pv.sku as variantSku, pv.supplierProductCode as variantSupplierCode, pv.ean13 as variantEan13, pv.stockQuantity, pv.inTransitQuantity FROM products p LEFT JOIN product_variants pv ON pv.productId = p.id WHERE p.isActive = 1 LIMIT 10;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'p.publicpriceht' in 'field list'"
+  ]
+}
