@@ -424,6 +424,8 @@ router.get("/api/supplier/orders/export", async (req, res) => {
             clientInfo = {
               partnerId: p.id,
               supplierClientCode: p.supplierClientCode || null,
+              companyName: p.companyName || null,
+              country: p.billingAddressSame ? (p.addressCountry || null) : (p.billingCountry || p.addressCountry || null),
               company: {
                 name: p.companyName,
                 tradeName: p.tradeName || null,

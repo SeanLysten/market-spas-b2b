@@ -1,0 +1,22 @@
+{
+  "query": "-- CMD-TEST-002 : Neptune V2 x2 (2600*2=5200) + Volcano x1 (3200*1=3200) = 8400€ sans remise\n-- Remise 10% = 840€ → subtotalHT après remise = 7560€\n-- Mais actuellement subtotalHT=7800 et discountAmount=780 (10% de 7800)\n-- Le vrai subtotalHT AVANT remise doit être 8400 (somme des items sans remise)\n-- discountAmount = 8400 * 10% = 840\n-- totalHT = 8400 - 840 + 350 (shipping) = 7910\n-- totalVAT = 7910 * 20% = 1582\n-- totalTTC = 7910 + 1582 = 9492\n-- depositAmount = 9492 * 30% = 2847.60\n-- balanceAmount = 9492 - 2847.60 = 6644.40\n\nUPDATE orders SET \n  subtotalHT = '8400.00',\n  discountAmount = '840.00',\n  discountPercent = '10.00',\n  totalHT = '7910.00',\n  totalVAT = '1582.00',\n  totalTTC = '9492.00',\n  depositAmount = '2847.60',\n  balanceAmount = '6644.40'\nWHERE orderNumber = 'CMD-TEST-002';\n\n-- Vérification\nSELECT orderNumber, subtotalHT, discountAmount, discountPercent, shippingHT, totalHT, totalVAT, totalTTC, depositAmount, balanceAmount\nFROM orders WHERE orderNumber = 'CMD-TEST-002';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute -- CMD-TEST-002 : Neptune V2 x2 (2600*2=5200) + Volcano x1 (3200*1=3200) = 8400€ sans remise\n-- Remise 10% = 840€ → subtotalHT après remise = 7560€\n-- Mais actuellement subtotalHT=7800 et discountAmount=780 (10% de 7800)\n-- Le vrai subtotalHT AVANT remise doit être 8400 (somme des items sans remise)\n-- discountAmount = 8400 * 10% = 840\n-- totalHT = 8400 - 840 + 350 (shipping) = 7910\n-- totalVAT = 7910 * 20% = 1582\n-- totalTTC = 7910 + 1582 = 9492\n-- depositAmount = 9492 * 30% = 2847.60\n-- balanceAmount = 9492 - 2847.60 = 6644.40\n\nUPDATE orders SET \n  subtotalHT = '8400.00',\n  discountAmount = '840.00',\n  discountPercent = '10.00',\n  totalHT = '7910.00',\n  totalVAT = '1582.00',\n  totalTTC = '9492.00',\n  depositAmount = '2847.60',\n  balanceAmount = '6644.40'\nWHERE orderNumber = 'CMD-TEST-002';\n\n-- Vérification\nSELECT orderNumber, subtotalHT, discountAmount, discountPercent, shippingHT, totalHT, totalVAT, totalTTC, depositAmount, balanceAmount\nFROM orders WHERE orderNumber = 'CMD-TEST-002';",
+  "rows": [
+    {
+      "orderNumber": "CMD-TEST-002",
+      "subtotalHT": "8400.00",
+      "discountAmount": "840.00",
+      "discountPercent": "10.00",
+      "shippingHT": "350.00",
+      "totalHT": "7910.00",
+      "totalVAT": "1582.00",
+      "totalTTC": "9492.00",
+      "depositAmount": "2847.60",
+      "balanceAmount": "6644.40"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderNumber\tsubtotalHT\tdiscountAmount\tdiscountPercent\tshippingHT\ttotalHT\ttotalVAT\ttotalTTC\tdepositAmount\tbalanceAmount\nCMD-TEST-002\t8400.00\t840.00\t10.00\t350.00\t7910.00\t1582.00\t9492.00\t2847.60\t6644.40\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

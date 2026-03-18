@@ -3090,3 +3090,9 @@
 - [x] AdminOrders.tsx : taux TVA calculé dynamiquement (totalVAT / totalHT * 100)
 - [x] OrderTracking.tsx : même correction
 - [x] ProductDetail.tsx : supprimé le prix TTC 21% en dur, remplacé par "Prix partenaire HT — TVA selon pays de livraison"
+
+## Bug - Incohérences API fournisseur (détectées par analyse automatique)
+- [x] CMD-TEST-002: subtotalHT corrigé à 8400€ (somme items sans remise), discountAmount=840€ (10%), totalHT=7910€, totalTTC=9492€
+- [x] companyName et country ajoutés au niveau racine du client dans l'API fournisseur
+- [ ] supplierClientCode NULL pour tous les partenaires (à renseigner manuellement dans l'admin par Sean)
+- [ ] Paiement CMD-TEST-001 : amount=1357.50 (acompte enregistré avant correction TVA, à corriger si besoin)
