@@ -3034,3 +3034,9 @@
 - [x] Service d'envoi de notifications push (push-notifications.ts)
 - [x] Endpoints optimisés mobile (pagination, données allégées)
 - [x] Documentation API mobile pour l'intégration React Native (MOBILE_API_DOCS.md)
+
+## Audit et correction des endpoints mobile
+- [x] Auditer tous les endpoints mobile vs données web (tRPC)
+- [x] Corriger les endpoints qui retournent des erreurs ou données incomplètes
+- [x] Tester tous les endpoints de bout en bout
+- [x] Créer le fichier d'intégration complet pour l'app mobile React Native
