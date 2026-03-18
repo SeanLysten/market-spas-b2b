@@ -3045,3 +3045,12 @@
 - [x] POST /api/mobile/v1/orders - Création de commande depuis l'app mobile
 - [x] POST /api/mobile/v1/sav - Création de ticket SAV avec upload photos depuis l'app mobile
 - [x] Mettre à jour le guide d'intégration INTEGRATION_APP_MOBILE_MARKET_SPAS.md
+
+## Suivi de livraison mobile + notifications push
+- [x] GET /api/mobile/v1/orders/:id/tracking - Endpoint de suivi de livraison détaillé
+- [x] PUT /api/mobile/v1/orders/:id/tracking - Mise à jour tracking (admin)
+- [x] Table order_status_history pour l'historique des changements de statut
+- [x] Hook automatique de notifications push lors des changements de statut de commande
+- [x] Correction bug ENV manquant dans alerts.ts
+- [x] Correction bug /me endpoint mobile (TypeError)
+- [x] Mettre à jour le guide d'intégration avec les nouveaux endpoints tracking

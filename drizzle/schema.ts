@@ -2820,3 +2820,30 @@ export const devicePushTokens = mysqlTable(
 
 export type DevicePushToken = typeof devicePushTokens.$inferSelect;
 export type InsertDevicePushToken = typeof devicePushTokens.$inferInsert;
+
+// ============================================
+// ORDER STATUS HISTORY (Suivi de livraison)
+// ============================================
+
+export const orderStatusHistory = mysqlTable(
+  "order_status_history",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    orderId: int("orderId").notNull(),
+    oldStatus: varchar("oldStatus", { length: 50 }),
+    newStatus: varchar("newStatus", { length: 50 }).notNull(),
+    note: text("note"),
+    changedByUserId: int("changedByUserId"),
+    trackingNumber: varchar("trackingNumber", { length: 255 }),
+    trackingCarrier: varchar("trackingCarrier", { length: 100 }),
+    trackingUrl: varchar("trackingUrl", { length: 500 }),
+    estimatedDeliveryDate: timestamp("estimatedDeliveryDate"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    orderIdIdx: index("osh_orderId_idx").on(table.orderId),
+    createdAtIdx: index("osh_createdAt_idx").on(table.createdAt),
+  })
+);
+
+export type OrderStatusHistory = typeof orderStatusHistory.$inferSelect;

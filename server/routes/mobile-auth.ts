@@ -349,56 +349,52 @@ router.get("/api/mobile/auth/me", async (req: Request, res: Response) => {
       });
     }
 
-    const { getDb } = await import("../db");
-    const { users, partners } = await import("../../drizzle/schema");
-    const { eq } = await import("drizzle-orm");
+    const db = await import("../db");
+      const user = await db.getUserById(parseInt(payload.sub));
 
-    const drizzleDb = await getDb();
-    const [user] = await drizzleDb
-      .select({
-        id: users.id,
-        openId: users.openId,
-        email: users.email,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        name: users.name,
-        phone: users.phone,
-        avatar: users.avatar,
-        role: users.role,
-        partnerId: users.partnerId,
-        locale: users.locale,
-        isActive: users.isActive,
-      })
-      .from(users)
-      .where(eq(users.id, parseInt(payload.sub)))
-      .limit(1);
+      if (!user || !user.isActive) {
+        return res.status(403).json({
+          error: "ACCOUNT_DISABLED",
+          message: "Votre compte a \u00e9t\u00e9 d\u00e9sactiv\u00e9",
+        });
+      }
 
-    if (!user || !user.isActive) {
-      return res.status(403).json({
-        error: "ACCOUNT_DISABLED",
-        message: "Votre compte a été désactivé",
+      // Get partner info if applicable
+      let partner = null;
+      if (user.partnerId) {
+        try {
+          const partnerData = await db.getPartnerById(user.partnerId);
+          if (partnerData) {
+            partner = {
+              id: partnerData.id,
+              companyName: partnerData.companyName,
+              partnerLevel: partnerData.partnerLevel,
+              partnerStatus: partnerData.partnerStatus,
+            };
+          }
+        } catch (e) {
+          // Partner not found, ignore
+        }
+      }
+
+      return res.json({
+        user: {
+          id: user.id,
+          openId: user.openId,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          name: user.name,
+          phone: user.phone,
+          avatar: user.avatar,
+          role: user.role,
+          partnerId: user.partnerId,
+          locale: user.locale || "fr",
+        },
+        partner,
       });
-    }
-
-    // Get partner info if applicable
-    let partner = null;
-    if (user.partnerId) {
-      const [p] = await drizzleDb
-        .select({
-          id: partners.id,
-          companyName: partners.companyName,
-          partnerLevel: partners.partnerLevel,
-          partnerStatus: partners.partnerStatus,
-        })
-        .from(partners)
-        .where(eq(partners.id, user.partnerId))
-        .limit(1);
-      partner = p || null;
-    }
-
-    return res.json({ user, partner });
   } catch (err) {
-    console.error("[Mobile Auth] Me error:", err);
+    console.error("[Mobile Auth] Me error:", err?.message, err?.stack);
     return res.status(500).json({
       error: "INTERNAL_ERROR",
       message: "Erreur interne du serveur",

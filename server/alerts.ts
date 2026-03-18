@@ -1,5 +1,6 @@
 import * as db from "./db";
 import { notifyOwner } from "./_core/notification";
+import { ENV } from "./_core/env";
 import { notifyPartner, notifyAdmins } from "./_core/websocket";
 import { sendNewOrderNotificationToAdmins, sendOrderStatusChangeToPartner, sendDepositReminderEmail } from "./email";
 import { notifyOrderStatusChanged, notifyNewOrderCreated, notifyDepositReminder } from "./notification-service";
@@ -71,7 +72,9 @@ export async function checkPendingPartnersAlert() {
 export async function notifyOrderStatusChange(
   orderId: number,
   oldStatus: string,
-  newStatus: string
+  newStatus: string,
+  changedByUserId?: number,
+  options?: { skipHistory?: boolean }
 ) {
   try {
     const order = await db.getOrderById(orderId);
@@ -99,12 +102,33 @@ export async function notifyOrderStatusChange(
       CANCELLED: "Annulé",
     };
 
+    // 1. Record status change in order_status_history (skip if already recorded by caller)
+    if (!options?.skipHistory) {
+      try {
+        const { getDb } = await import("./db");
+        const { orderStatusHistory } = await import("../drizzle/schema");
+        const drizzleDb = await getDb();
+        await drizzleDb.insert(orderStatusHistory).values({
+          orderId,
+          oldStatus,
+          newStatus,
+          changedByUserId: changedByUserId || null,
+          trackingNumber: order.trackingNumber || null,
+          trackingCarrier: order.shippingCarrier || null,
+          trackingUrl: order.trackingUrl || null,
+        });
+        console.log(`[Alerts] Status history recorded for order ${orderId}: ${oldStatus} → ${newStatus}`);
+      } catch (err) {
+        console.error("[Alerts] Failed to record status history:", err);
+      }
+    }
+
     await notifyOwner({
       title: `📦 Commande ${order.orderNumber} - Changement de statut`,
       content: `Partenaire: ${partner.companyName}\nStatut: ${statusLabels[oldStatus] || oldStatus} → ${statusLabels[newStatus] || newStatus}\nMontant: ${order.totalTTC} €\n\nConsulter la commande dans l'admin.`,
     });
 
-    // Send real-time WebSocket notification to partner
+    // 2. Send real-time WebSocket notification to partner
     try {
       notifyPartner(order.partnerId, "order:status_changed", {
         orderId: order.id,
@@ -116,7 +140,7 @@ export async function notifyOrderStatusChange(
       console.error("[Alerts] Failed to send WebSocket notification:", err);
     }
 
-    // Send email notification to partner
+    // 3. Send email notification to partner
     try {
       const partnerEmail = partner.primaryContactEmail;
       if (partnerEmail) {
@@ -138,11 +162,39 @@ export async function notifyOrderStatusChange(
       console.error("[Alerts] Failed to send email notification to partner:", err);
     }
 
-    // Persistent DB notification for partner
+    // 4. Persistent DB notification for partner
     try {
       await notifyOrderStatusChanged(orderId, oldStatus, newStatus);
     } catch (err) {
       console.error("[Alerts] Failed to create persistent notification:", err);
+    }
+
+    // 5. Send push notifications to all partner users' mobile devices
+    try {
+      const { sendOrderStatusPush } = await import("./push-notifications");
+      const { getDb } = await import("./db");
+      const { users } = await import("../drizzle/schema");
+      const { eq, and } = await import("drizzle-orm");
+      const drizzleDb = await getDb();
+
+      // Get all active users of this partner
+      const partnerUsers = await drizzleDb
+        .select({ id: users.id })
+        .from(users)
+        .where(
+          and(
+            eq(users.partnerId, order.partnerId),
+            eq(users.isActive, true)
+          )
+        );
+
+      // Send push to each user
+      for (const pu of partnerUsers) {
+        await sendOrderStatusPush(pu.id, order.orderNumber, newStatus);
+      }
+      console.log(`[Alerts] Push notifications sent to ${partnerUsers.length} partner users for order ${orderId}`);
+    } catch (err) {
+      console.error("[Alerts] Failed to send push notifications:", err);
     }
 
     console.log(`[Alerts] Order status change notification sent for order ${orderId}`);

@@ -1209,6 +1209,233 @@ router.post("/api/mobile/v1/sav", async (req: AuthenticatedRequest, res: Respons
 });
 
 // ============================================
+// GET /api/mobile/v1/orders/:id/tracking
+// Order tracking timeline with status history
+// ============================================
+router.get("/api/mobile/v1/orders/:id/tracking", requireMobileAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const orderId = parseInt(req.params.id);
+    if (isNaN(orderId)) return res.status(400).json({ error: "INVALID_ID", message: "ID de commande invalide" });
+
+    const { getDb } = await import("../db");
+    const { orders, orderStatusHistory, users: usersTable } = await import("../../drizzle/schema");
+    const { eq, and, desc } = await import("drizzle-orm");
+    const drizzleDb = await getDb();
+
+    // Get order
+    const [order] = await drizzleDb.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+    if (!order) return res.status(404).json({ error: "NOT_FOUND", message: "Commande non trouv\u00e9e" });
+
+    // Check partner access
+    const user = req.mobileUser!;
+    if (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN" && order.partnerId !== user.partnerId) {
+      return res.status(403).json({ error: "FORBIDDEN", message: "Acc\u00e8s non autoris\u00e9" });
+    }
+
+    // Get status history
+    const history = await drizzleDb
+      .select()
+      .from(orderStatusHistory)
+      .where(eq(orderStatusHistory.orderId, orderId))
+      .orderBy(desc(orderStatusHistory.createdAt));
+
+    const statusLabels: Record<string, string> = {
+      DRAFT: "Brouillon",
+      PENDING_APPROVAL: "En attente de validation",
+      PENDING_DEPOSIT: "En attente d'acompte",
+      DEPOSIT_PAID: "Acompte re\u00e7u",
+      IN_PRODUCTION: "En production",
+      READY_TO_SHIP: "Pr\u00eat \u00e0 exp\u00e9dier",
+      PARTIALLY_SHIPPED: "Partiellement exp\u00e9di\u00e9",
+      SHIPPED: "Exp\u00e9di\u00e9",
+      DELIVERED: "Livr\u00e9",
+      COMPLETED: "Termin\u00e9e",
+      CANCELLED: "Annul\u00e9e",
+      REFUNDED: "Rembours\u00e9e",
+    };
+
+    // Build tracking steps (all possible steps in order)
+    const allSteps = [
+      "PENDING_APPROVAL",
+      "PENDING_DEPOSIT",
+      "DEPOSIT_PAID",
+      "IN_PRODUCTION",
+      "READY_TO_SHIP",
+      "SHIPPED",
+      "DELIVERED",
+      "COMPLETED",
+    ];
+
+    const currentStatusIndex = allSteps.indexOf(order.status as string);
+
+    const trackingSteps = allSteps.map((step, index) => {
+      const historyEntry = history.find((h) => h.newStatus === step);
+      let stepStatus: "completed" | "current" | "upcoming" = "upcoming";
+      if (index < currentStatusIndex) stepStatus = "completed";
+      else if (index === currentStatusIndex) stepStatus = "current";
+
+      return {
+        status: step,
+        label: statusLabels[step] || step,
+        stepStatus,
+        date: historyEntry?.createdAt?.toISOString() || null,
+        note: historyEntry?.note || null,
+      };
+    });
+
+    // Build carrier tracking info
+    const carrierTracking = order.trackingNumber
+      ? {
+          carrier: order.shippingCarrier || null,
+          trackingNumber: order.trackingNumber,
+          trackingUrl: order.trackingUrl || null,
+          shippedAt: order.shippedAt?.toISOString() || null,
+          deliveredAt: order.deliveredAt?.toISOString() || null,
+          estimatedDeliveryDate: null as string | null,
+        }
+      : null;
+
+    // Get estimated delivery from latest history entry with estimatedDeliveryDate
+    if (carrierTracking) {
+      const withEstimate = history.find((h) => h.estimatedDeliveryDate);
+      if (withEstimate?.estimatedDeliveryDate) {
+        carrierTracking.estimatedDeliveryDate = withEstimate.estimatedDeliveryDate.toISOString();
+      }
+    }
+
+    return res.json({
+      order: {
+        id: order.id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        statusLabel: statusLabels[order.status as string] || order.status,
+        createdAt: order.createdAt?.toISOString() || null,
+        totalTTC: order.totalTTC,
+      },
+      carrierTracking,
+      trackingSteps,
+      statusHistory: history.map((h) => ({
+        id: h.id,
+        oldStatus: h.oldStatus,
+        oldStatusLabel: statusLabels[h.oldStatus || ""] || h.oldStatus,
+        newStatus: h.newStatus,
+        newStatusLabel: statusLabels[h.newStatus] || h.newStatus,
+        note: h.note,
+        trackingNumber: h.trackingNumber,
+        trackingCarrier: h.trackingCarrier,
+        trackingUrl: h.trackingUrl,
+        date: h.createdAt?.toISOString() || null,
+      })),
+    });
+  } catch (err: any) {
+    console.error("[Mobile API] Order tracking error:", err);
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// PUT /api/mobile/v1/orders/:id/tracking
+// Update tracking info (admin only)
+// ============================================
+router.put("/api/mobile/v1/orders/:id/tracking", requireMobileAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const user = req.mobileUser!;
+    if (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN") {
+      return res.status(403).json({ error: "FORBIDDEN", message: "R\u00e9serv\u00e9 aux administrateurs" });
+    }
+
+    const orderId = parseInt(req.params.id);
+    if (isNaN(orderId)) return res.status(400).json({ error: "INVALID_ID", message: "ID invalide" });
+
+    const { trackingNumber, trackingCarrier, trackingUrl, estimatedDeliveryDate, note } = req.body;
+
+    if (!trackingNumber) {
+      return res.status(400).json({ error: "MISSING_FIELDS", message: "Num\u00e9ro de suivi requis" });
+    }
+
+    const { getDb } = await import("../db");
+    const { orders, orderStatusHistory } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const drizzleDb = await getDb();
+
+    // Get order
+    const [order] = await drizzleDb.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+    if (!order) return res.status(404).json({ error: "NOT_FOUND", message: "Commande non trouv\u00e9e" });
+
+    // Generate tracking URL if carrier is known
+    let finalTrackingUrl = trackingUrl || null;
+    if (!finalTrackingUrl && trackingCarrier && trackingNumber) {
+      const carrierUrls: Record<string, string> = {
+        BPOST: `https://track.bpost.cloud/btr/web/#/search?itemCode=${trackingNumber}`,
+        DHL: `https://www.dhl.com/fr-fr/home/tracking.html?tracking-id=${trackingNumber}`,
+        UPS: `https://www.ups.com/track?tracknum=${trackingNumber}`,
+        GLS: `https://gls-group.com/FR/fr/suivi-colis?match=${trackingNumber}`,
+        MONDIAL_RELAY: `https://www.mondialrelay.fr/suivi-de-colis/?NumeroExpedition=${trackingNumber}`,
+        CHRONOPOST: `https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT=${trackingNumber}`,
+        COLISSIMO: `https://www.laposte.fr/outils/suivre-vos-envois?code=${trackingNumber}`,
+        TNT: `https://www.tnt.com/express/fr_fr/site/outils-expedition/suivi.html?searchType=con&cons=${trackingNumber}`,
+      };
+      finalTrackingUrl = carrierUrls[trackingCarrier] || null;
+    }
+
+    // Update order tracking fields
+    const updateData: Record<string, any> = {
+      trackingNumber,
+      trackingUrl: finalTrackingUrl,
+      updatedAt: new Date(),
+    };
+    if (trackingCarrier) updateData.shippingCarrier = trackingCarrier;
+
+    // If status is READY_TO_SHIP or earlier, auto-advance to SHIPPED
+    const oldStatus = order.status as string;
+    let newStatus = oldStatus;
+    if (["READY_TO_SHIP", "IN_PRODUCTION", "DEPOSIT_PAID", "PENDING_DEPOSIT", "PENDING_APPROVAL"].includes(oldStatus)) {
+      updateData.status = "SHIPPED";
+      updateData.shippedAt = new Date();
+      newStatus = "SHIPPED";
+    }
+
+    await drizzleDb.update(orders).set(updateData).where(eq(orders.id, orderId));
+
+    // Record in history
+    await drizzleDb.insert(orderStatusHistory).values({
+      orderId,
+      oldStatus,
+      newStatus: newStatus !== oldStatus ? newStatus : oldStatus,
+      note: note || `Num\u00e9ro de suivi ajout\u00e9: ${trackingNumber}`,
+      changedByUserId: parseInt(user.sub),
+      trackingNumber,
+      trackingCarrier: trackingCarrier || null,
+      trackingUrl: finalTrackingUrl,
+      estimatedDeliveryDate: estimatedDeliveryDate ? new Date(estimatedDeliveryDate) : null,
+    });
+
+    // If status changed, trigger full notification chain
+    if (newStatus !== oldStatus) {
+      try {
+        const { notifyOrderStatusChange } = await import("../alerts");
+        await notifyOrderStatusChange(orderId, oldStatus, newStatus, parseInt(user.sub), { skipHistory: true });
+      } catch (err) {
+        console.error("[Mobile API] Failed to send status change notifications:", err);
+      }
+    }
+
+    return res.json({
+      success: true,
+      trackingNumber,
+      trackingCarrier: trackingCarrier || null,
+      trackingUrl: finalTrackingUrl,
+      statusChanged: newStatus !== oldStatus,
+      newStatus,
+      message: "Informations de suivi mises \u00e0 jour",
+    });
+  } catch (err: any) {
+    console.error("[Mobile API] Update tracking error:", err);
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
 // GET /api/mobile/health
 // Health check endpoint (public)
 // ============================================
