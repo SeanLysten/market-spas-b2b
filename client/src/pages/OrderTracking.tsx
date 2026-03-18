@@ -316,8 +316,12 @@ export default function OrderTracking() {
                     <span>{formatPrice(order.totalHT)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">TVA (21%)</span>
-                    <span>{formatPrice(Number(order.totalTTC) - Number(order.totalHT))}</span>
+                    <span className="text-muted-foreground">
+                      TVA {Number((order as any).totalHT) > 0 && Number((order as any).totalVAT) > 0
+                        ? `(${Math.round(Number((order as any).totalVAT) / Number((order as any).totalHT) * 100)}%)`
+                        : "(0%)"}
+                    </span>
+                    <span>{formatPrice(Number((order as any).totalVAT ?? 0))}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-base font-semibold text-display">

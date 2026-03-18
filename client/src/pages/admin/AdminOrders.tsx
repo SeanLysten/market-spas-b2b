@@ -449,8 +449,12 @@ export default function AdminOrders() {
                     <span>{formatPrice(selectedOrder.totalHT)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">TVA (21%)</span>
-                    <span>{formatPrice(Number(selectedOrder.totalTTC) - Number(selectedOrder.totalHT))}</span>
+                    <span className="text-muted-foreground">
+                      TVA {Number(selectedOrder.totalHT) > 0 && Number(selectedOrder.totalVAT) > 0
+                        ? `(${Math.round(Number(selectedOrder.totalVAT) / Number(selectedOrder.totalHT) * 100)}%)`
+                        : "(0%)"}
+                    </span>
+                    <span>{formatPrice(Number(selectedOrder.totalVAT ?? 0))}</span>
                   </div>
                   <div className="flex justify-between text-base font-semibold text-display">
                     <span>Total TTC</span>

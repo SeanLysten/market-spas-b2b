@@ -3085,3 +3085,8 @@
 - [x] Corriger les données de test : CMD-TEST-001 (FR, 20%) TVA=905€, CMD-TEST-002 (FR, 20%) TVA=1474€
 - [x] Corriger la commande CMD-202603-0001 (ES, 0%) TVA=0€
 - [x] 72 tests passent (supplier + order-pricing)
+
+## Bug - Affichage TVA toujours "21%" dans le frontend
+- [x] AdminOrders.tsx : taux TVA calculé dynamiquement (totalVAT / totalHT * 100)
+- [x] OrderTracking.tsx : même correction
+- [x] ProductDetail.tsx : supprimé le prix TTC 21% en dur, remplacé par "Prix partenaire HT — TVA selon pays de livraison"

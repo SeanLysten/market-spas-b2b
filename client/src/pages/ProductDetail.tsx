@@ -285,7 +285,7 @@ export default function ProductDetail() {
                 <span className="text-lg text-muted-foreground dark:text-muted-foreground">HT</span>
               </div>
               <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground mt-1">
-                Prix TTC: {formatPrice(price * 1.21)} € (TVA 21%)
+                Prix partenaire HT — TVA selon pays de livraison
               </p>
             </div>
 
