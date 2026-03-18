@@ -112,6 +112,7 @@ function Router() {
       <Route path="/admin/partners/:id" component={AdminPartnerDetail} />
       <Route path="/admin/partners" component={AdminPartners} />
       <Route path="/admin/reports" component={AdminReports} />
+      <Route path="/admin/orders/:id" component={AdminOrders} />
       <Route path="/admin/orders" component={AdminOrders} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin/leads" component={AdminLeads} />

@@ -3057,3 +3057,4 @@
 
 ## Bugs
 - [x] Route /admin/sav retourne une erreur 404 (redirection vers /admin/after-sales)
+- [x] Route /admin/orders/:id retourne une erreur 404 (détail commande admin) - ajout route + auto-open dialog

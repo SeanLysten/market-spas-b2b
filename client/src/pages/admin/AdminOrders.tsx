@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
+import { useParams } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ const ORDER_STATUSES: { value: OrderStatus; label: string; color: string; icon: 
 ];
 
 export default function AdminOrders() {
+  const params = useParams<{ id?: string }>();
   const onboarding = useOnboarding("admin-orders");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -59,6 +61,18 @@ export default function AdminOrders() {
     limit: 100,
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
+
+  // Auto-open order detail when accessed via /admin/orders/:id
+  useEffect(() => {
+    if (params?.id && orders && !isDetailOpen) {
+      const orderId = parseInt(params.id, 10);
+      const order = orders.find((o: any) => o.id === orderId);
+      if (order) {
+        setSelectedOrder(order);
+        setIsDetailOpen(true);
+      }
+    }
+  }, [params?.id, orders]);
 
   const updateStatusMutation = trpc.orders.updateStatus.useMutation({
     onSuccess: () => {
