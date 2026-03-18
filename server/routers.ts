@@ -1026,9 +1026,9 @@ export const appRouter = router({
         const partnerInfo = await db.getPartnerById(ctx.user.partnerId);
         const partnerGlobalDiscount = partnerInfo?.discountPercent ? parseFloat(partnerInfo.discountPercent) : 0;
 
-        // Get dynamic VAT rate from system settings
-        const taxConfig = await db.getTaxConfig();
-        const dynamicVatRate = taxConfig.vatRate;
+        // Get VAT rate based on partner country (FR=20%, others=0%)
+        const vatConfig = await db.getVatRateForPartner(ctx.user.partnerId);
+        const dynamicVatRate = vatConfig.vatRate;
 
         // Build order items with product details and per-product discounts
         const orderItems = [];

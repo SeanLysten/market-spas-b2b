@@ -1,0 +1,28 @@
+{
+  "query": "SELECT p.id, p.companyName, p.addressCountry, p.billingCountry \nFROM partners p \nWHERE p.id IN (\n  SELECT partnerId FROM orders WHERE orderNumber IN ('CMD-202603-0001', 'CMD-TEST-001', 'CMD-TEST-002')\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT p.id, p.companyName, p.addressCountry, p.billingCountry \nFROM partners p \nWHERE p.id IN (\n  SELECT partnerId FROM orders WHERE orderNumber IN ('CMD-202603-0001', 'CMD-TEST-001', 'CMD-TEST-002')\n);",
+  "rows": [
+    {
+      "id": "60001",
+      "companyName": "Market Spas Palmones",
+      "addressCountry": "ES",
+      "billingCountry": "NULL"
+    },
+    {
+      "id": "60002",
+      "companyName": "Fab'Elec",
+      "addressCountry": "FR",
+      "billingCountry": "NULL"
+    },
+    {
+      "id": "60003",
+      "companyName": "Projet d'eau",
+      "addressCountry": "FR",
+      "billingCountry": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcompanyName\taddressCountry\tbillingCountry\n60001\tMarket Spas Palmones\tES\tNULL\n60002\tFab'Elec\tFR\tNULL\n60003\tProjet d'eau\tFR\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

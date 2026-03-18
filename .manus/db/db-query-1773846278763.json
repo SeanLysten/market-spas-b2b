@@ -1,0 +1,50 @@
+{
+  "query": "-- Mettre vatRate=20 pour les items des commandes FR (id 2 et 3)\nUPDATE order_items SET vatRate = '20.00' WHERE orderId IN (2, 3);\n-- Mettre vatRate=0 pour les items de la commande ES (id 1)\nUPDATE order_items SET vatRate = '0.00' WHERE orderId = 1;\n\n-- Recalculer totalVAT et totalTTC des items pour CMD-TEST-001 et CMD-TEST-002\n-- orderId=2 : Easy Relax totalHT=2090 (avec remise), mais on stocke avec remise en base\n-- Note: on ne touche pas totalHT des items (c'est recalculé à la volée dans l'API)\n-- On met juste vatRate à jour pour cohérence\nSELECT oi.orderId, oi.name, oi.vatRate, oi.totalHT, oi.totalVAT, oi.totalTTC \nFROM order_items oi WHERE oi.orderId IN (1, 2, 3);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute -- Mettre vatRate=20 pour les items des commandes FR (id 2 et 3)\nUPDATE order_items SET vatRate = '20.00' WHERE orderId IN (2, 3);\n-- Mettre vatRate=0 pour les items de la commande ES (id 1)\nUPDATE order_items SET vatRate = '0.00' WHERE orderId = 1;\n\n-- Recalculer totalVAT et totalTTC des items pour CMD-TEST-001 et CMD-TEST-002\n-- orderId=2 : Easy Relax totalHT=2090 (avec remise), mais on stocke avec remise en base\n-- Note: on ne touche pas totalHT des items (c'est recalculé à la volée dans l'API)\n-- On met juste vatRate à jour pour cohérence\nSELECT oi.orderId, oi.name, oi.vatRate, oi.totalHT, oi.totalVAT, oi.totalTTC \nFROM order_items oi WHERE oi.orderId IN (1, 2, 3);",
+  "rows": [
+    {
+      "orderId": "1",
+      "name": "Twin Plug & Play - Twin Plug & Play - Sterling Marble",
+      "vatRate": "0.00",
+      "totalHT": "2200.00",
+      "totalVAT": "0.00",
+      "totalTTC": "2200.00"
+    },
+    {
+      "orderId": "2",
+      "name": "Easy Relax - Sterling Marble",
+      "vatRate": "20.00",
+      "totalHT": "2090.00",
+      "totalVAT": "438.90",
+      "totalTTC": "2528.90"
+    },
+    {
+      "orderId": "2",
+      "name": "Mykonos - Sterling Marble",
+      "vatRate": "20.00",
+      "totalHT": "2185.00",
+      "totalVAT": "458.85",
+      "totalTTC": "2643.85"
+    },
+    {
+      "orderId": "3",
+      "name": "Neptune V2 - Sterling Marble",
+      "vatRate": "20.00",
+      "totalHT": "4680.00",
+      "totalVAT": "982.80",
+      "totalTTC": "5662.80"
+    },
+    {
+      "orderId": "3",
+      "name": "Volcano - Sterling Marble",
+      "vatRate": "20.00",
+      "totalHT": "2880.00",
+      "totalVAT": "604.80",
+      "totalTTC": "3484.80"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderId\tname\tvatRate\ttotalHT\ttotalVAT\ttotalTTC\n1\tTwin Plug & Play - Twin Plug & Play - Sterling Marble\t0.00\t2200.00\t0.00\t2200.00\n2\tEasy Relax - Sterling Marble\t20.00\t2090.00\t438.90\t2528.90\n2\tMykonos - Sterling Marble\t20.00\t2185.00\t458.85\t2643.85\n3\tNeptune V2 - Sterling Marble\t20.00\t4680.00\t982.80\t5662.80\n3\tVolcano - Sterling Marble\t20.00\t2880.00\t604.80\t3484.80\n",
+  "stderr": "",
+  "execution_time_ms": 67
+}

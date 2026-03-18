@@ -3073,3 +3073,15 @@
 - [x] CMD-TEST-002 : Neptune V2 TotalHT=4680 (avec remise 10%) → corrigé à 5200, Volcano → corrigé à 3200
 - [x] Recalcul dans l'API (PrixUnitaireHT × Quantité) sans toucher la base de données
 - [x] subtotalHT de la commande reste correct (sans remise) — confirmé ✓
+
+## Bug - TVA incorrecte sur les commandes
+- [x] TVA doit être 0% pour les partenaires hors France (vente intracommunautaire B2B)
+- [x] TVA doit être 20% pour les partenaires français (pays = FR)
+- [x] Création de getVatRateForPartner() dans db.ts (FR=20%, autres=0%)
+- [x] Corriger le calcul dans getCart (db.ts)
+- [x] Corriger le calcul dans createOrder (db.ts)
+- [x] Corriger le calcul dans routers.ts (checkout web)
+- [x] Corriger le calcul dans mobile-api.ts (API mobile)
+- [x] Corriger les données de test : CMD-TEST-001 (FR, 20%) TVA=905€, CMD-TEST-002 (FR, 20%) TVA=1474€
+- [x] Corriger la commande CMD-202603-0001 (ES, 0%) TVA=0€
+- [x] 72 tests passent (supplier + order-pricing)

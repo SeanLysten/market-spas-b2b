@@ -879,9 +879,11 @@ export async function getCart(userId: number) {
   // Calculate shipping from system settings
   const { shippingHT } = await calculateShippingCost(subtotalAfterDiscount, "standard");
   
-  // Get dynamic VAT rate from system settings
-  const taxConfig = await getTaxConfig();
-  const vatRate = taxConfig.vatRate / 100; // Convert percentage to decimal
+  // Get VAT rate based on partner country (FR=20%, others=0%)
+  const vatConfig = partnerId
+    ? await getVatRateForPartner(partnerId)
+    : { vatRate: 0, vatLabel: "TVA" };
+  const vatRate = vatConfig.vatRate / 100;
   
   const subtotalWithShipping = subtotalAfterDiscount + shippingHT;
   const vatAmount = subtotalAfterDiscount * vatRate;
@@ -896,8 +898,8 @@ export async function getCart(userId: number) {
     discountAmount,
     shippingHT,
     shippingVAT,
-    vatRate: taxConfig.vatRate,
-    vatLabel: taxConfig.vatLabel,
+    vatRate: vatConfig.vatRate,
+    vatLabel: vatConfig.vatLabel,
     vatAmount: totalVAT,
     totalTTC,
   };
@@ -1627,9 +1629,11 @@ export async function createOrder(input: CreateOrderInput) {
   
   const totalHT = totalHTBeforeShipping + shippingHT;
   
-  // Calculate VAT from dynamic system settings
-  const taxConfig = await getTaxConfig();
-  const vatRateDecimal = taxConfig.vatRate / 100;
+  // Calculate VAT based on partner country:
+  // - France (FR): 20% TVA
+  // - Other EU countries: 0% (intra-EU B2B reverse charge)
+  const vatConfig = await getVatRateForPartner(input.partnerId);
+  const vatRateDecimal = vatConfig.vatRate / 100;
   const productsVAT = totalHTBeforeShipping * vatRateDecimal;
   const shippingVAT = shippingHT * vatRateDecimal;
   const totalVAT = productsVAT + shippingVAT;
@@ -5078,6 +5082,27 @@ export async function getTaxConfig(): Promise<TaxConfig> {
   } catch {
     return DEFAULT_TAX;
   }
+}
+
+/**
+ * Get the applicable VAT rate for a given partner.
+ * Rules:
+ * - Partner in France (addressCountry = 'FR') → 20% TVA
+ * - Partner outside France (BE, ES, LU, DE, etc.) → 0% (intra-EU B2B)
+ * - If country unknown → 0% (safe default)
+ */
+export async function getVatRateForPartner(partnerId: number): Promise<{ vatRate: number; vatLabel: string }> {
+  const partner = await getPartnerById(partnerId);
+  if (!partner) return { vatRate: 0, vatLabel: "TVA" };
+
+  // Use billing country if set, otherwise fall back to address country
+  const country = (partner.billingCountry || partner.addressCountry || "").toUpperCase();
+
+  if (country === "FR") {
+    return { vatRate: 20, vatLabel: "TVA (20%)" };
+  }
+  // All other countries: 0% (intra-EU B2B reverse charge)
+  return { vatRate: 0, vatLabel: "TVA (0% - Autoliquidation)" };
 }
 
 /**
