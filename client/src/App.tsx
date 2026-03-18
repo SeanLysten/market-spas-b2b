@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -116,6 +116,7 @@ function Router() {
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin/leads" component={AdminLeads} />
       <Route path="/admin/after-sales" component={AdminAfterSales} />
+      <Route path="/admin/sav">{() => <Redirect to="/admin/after-sales" />}</Route>
       <Route path="/admin/partner-map" component={AdminPartnerMap} />
       <Route path="/admin/spare-parts" component={AdminSpareParts} />
       <Route path="/admin/newsletter" component={AdminNewsletter} />

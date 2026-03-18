@@ -3054,3 +3054,6 @@
 - [x] Correction bug ENV manquant dans alerts.ts
 - [x] Correction bug /me endpoint mobile (TypeError)
 - [x] Mettre à jour le guide d'intégration avec les nouveaux endpoints tracking
+
+## Bugs
+- [x] Route /admin/sav retourne une erreur 404 (redirection vers /admin/after-sales)
