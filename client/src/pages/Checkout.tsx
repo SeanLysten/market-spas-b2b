@@ -18,18 +18,27 @@ function isDepositPayment(method: string): boolean {
   return method === "CARD_DEPOSIT" || method === "BANK_TRANSFER";
 }
 
-// Build the list of selectable delivery dates based on payment type
-// Deposit (acompte): 14 days window from today
-// Full payment: 6 weeks (42 days) window from today
-function buildDeliveryDateOptions(isDeposit: boolean): { value: string; label: string }[] {
+// Build the list of selectable delivery dates based on payment type and optional arrival date
+// Deposit (acompte): 14 days window from startDate
+// Full payment: 6 weeks (42 days) window from startDate
+// startDate: today if all items in stock, or the latest preorder arrival date
+function buildDeliveryDateOptions(isDeposit: boolean, latestArrivalDate?: string | null): { value: string; label: string }[] {
+  // Determine the start date: today or the arrival date (whichever is later)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  let startDate = new Date(today);
+  if (latestArrivalDate) {
+    const arrival = new Date(latestArrivalDate + "T12:00:00Z");
+    arrival.setHours(0, 0, 0, 0);
+    if (arrival > startDate) startDate = arrival;
+  }
+
   const maxDays = isDeposit ? 14 : 42;
   const options: { value: string; label: string }[] = [];
 
   for (let i = 1; i <= maxDays; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
+    const d = new Date(startDate);
+    d.setDate(startDate.getDate() + i);
     // Skip Sundays (0)
     if (d.getDay() === 0) continue;
     const iso = d.toISOString().split("T")[0]; // YYYY-MM-DD
@@ -70,9 +79,12 @@ export default function Checkout() {
   const vatAmount = cartData?.vatAmount || 0;
   const totalTTC = cartData?.totalTTC || 0;
 
-  // Recompute delivery date options when payment method changes
+  // Get latest arrival date from cart (for preorder items)
+  const latestArrivalDate = (cartData as any)?.latestArrivalDate || null;
+
+  // Recompute delivery date options when payment method or arrival date changes
   const isDeposit = isDepositPayment(paymentMethod);
-  const deliveryDateOptions = useMemo(() => buildDeliveryDateOptions(isDeposit), [isDeposit]);
+  const deliveryDateOptions = useMemo(() => buildDeliveryDateOptions(isDeposit, latestArrivalDate), [isDeposit, latestArrivalDate]);
   const maxDaysLabel = isDeposit ? "14 jours" : "6 semaines";
 
   // Reset selected date when payment method changes (window may differ)
@@ -379,12 +391,22 @@ export default function Checkout() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Info banner */}
+                {latestArrivalDate && (
+                  <div className="flex gap-3 p-3 rounded-lg border text-sm bg-blue-500/5 border-blue-500/20 text-blue-800 dark:text-blue-300">
+                    <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Votre commande contient un spa en arrivage estimé le{" "}
+                      <strong>{new Date(latestArrivalDate + "T12:00:00Z").toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}</strong>.
+                      La plage de livraison commence à partir de cette date.
+                    </span>
+                  </div>
+                )}
                 <div className={`flex gap-3 p-3 rounded-lg border text-sm ${isDeposit ? 'bg-amber-500/5 border-amber-500/20 text-amber-800 dark:text-amber-300' : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-800 dark:text-emerald-300'}`}>
                   <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <span>
                     {isDeposit
-                      ? `Acompte 30% : plage de livraison de 14 jours à partir d'aujourd'hui.`
-                      : `Paiement intégral : plage de livraison de 6 semaines (42 jours) à partir d'aujourd'hui.`}
+                      ? `Acompte 30% : plage de livraison de 14 jours à partir ${latestArrivalDate ? "de la date d'arrivée" : "d'aujourd'hui"}.`
+                      : `Paiement intégral : plage de livraison de 6 semaines (42 jours) à partir ${latestArrivalDate ? "de la date d'arrivée" : "d'aujourd'hui"}.`}
                   </span>
                 </div>
 

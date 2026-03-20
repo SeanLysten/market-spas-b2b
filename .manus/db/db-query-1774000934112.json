@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, name, estimatedArrival, inTransitQuantity FROM product_variants WHERE estimatedArrival IS NOT NULL LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id, name, estimatedArrival, inTransitQuantity FROM product_variants WHERE estimatedArrival IS NOT NULL LIMIT 10;",
+  "rows": [
+    {
+      "id": "30002",
+      "name": "Easy Relax - Sterling Marble",
+      "estimatedArrival": "202611",
+      "inTransitQuantity": "56"
+    },
+    {
+      "id": "30010",
+      "name": "Mykonos - Sterling Marble",
+      "estimatedArrival": "202620",
+      "inTransitQuantity": "15"
+    },
+    {
+      "id": "30014",
+      "name": "Neptune V2 - Sterling Marble",
+      "estimatedArrival": "202611",
+      "inTransitQuantity": "154"
+    },
+    {
+      "id": "30018",
+      "name": "Volcano - Sterling Marble",
+      "estimatedArrival": "202611",
+      "inTransitQuantity": "24"
+    },
+    {
+      "id": "60001",
+      "name": "Neptune V2 - Odyssey",
+      "estimatedArrival": "202620",
+      "inTransitQuantity": "28"
+    },
+    {
+      "id": "60002",
+      "name": "Neptune V2 - Midnight Opal",
+      "estimatedArrival": "202611",
+      "inTransitQuantity": "28"
+    },
+    {
+      "id": "60003",
+      "name": "Easy Relax - Odyssey",
+      "estimatedArrival": "202620",
+      "inTransitQuantity": "14"
+    },
+    {
+      "id": "60005",
+      "name": "Volcano - Odyssey",
+      "estimatedArrival": "202620",
+      "inTransitQuantity": "12"
+    },
+    {
+      "id": "60006",
+      "name": "Volcano - Midnight Opal",
+      "estimatedArrival": "202620",
+      "inTransitQuantity": "12"
+    },
+    {
+      "id": "60007",
+      "name": "Mykonos - Odyssey",
+      "estimatedArrival": "202620",
+      "inTransitQuantity": "8"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\testimatedArrival\tinTransitQuantity\n30002\tEasy Relax - Sterling Marble\t202611\t56\n30010\tMykonos - Sterling Marble\t202620\t15\n30014\tNeptune V2 - Sterling Marble\t202611\t154\n30018\tVolcano - Sterling Marble\t202611\t24\n60001\tNeptune V2 - Odyssey\t202620\t28\n60002\tNeptune V2 - Midnight Opal\t202611\t28\n60003\tEasy Relax - Odyssey\t202620\t14\n60005\tVolcano - Odyssey\t202620\t12\n60006\tVolcano - Midnight Opal\t202620\t12\n60007\tMykonos - Odyssey\t202620\t8\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

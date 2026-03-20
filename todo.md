@@ -3108,3 +3108,8 @@
 - [x] supplier-stock.ts : export deliveryRequestedDate dans le JSON fournisseur
 - [x] Données de test : CMD-TEST-001=2026-03-30, CMD-TEST-002=2026-04-17
 - [x] 52 tests supplier-stock passent
+
+## Fix - Date livraison : départ à la date d'arrivée si spa en arrivage
+- [x] Backend cart.get : retourner latestArrivalDate (date d'arrivée la plus tardive parmi les items en pré-commande)
+- [x] Frontend Checkout.tsx : utiliser latestArrivalDate comme point de départ si présente, sinon aujourd'hui
+- [x] Afficher un bandeau bleu explicatif si la date de départ est différée ("Votre commande contient un spa en arrivage estimé le XX/XX/XXXX")

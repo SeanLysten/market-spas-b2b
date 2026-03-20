@@ -891,6 +891,34 @@ export async function getCart(userId: number) {
   const totalVAT = vatAmount + shippingVAT;
   const totalTTC = subtotalWithShipping + totalVAT;
 
+  // Calculate the latest arrival date for preorder items (determines delivery date range start)
+  let latestArrivalDate: string | null = null;
+  for (const item of itemsWithDiscounts) {
+    if (item.isPreorder) {
+      // Get estimatedArrival from variant or product
+      let arrivalWeek: string | null = null;
+      if (item.variantId && item.variant) {
+        arrivalWeek = (item.variant as any).estimatedArrival || null;
+      } else if ((item.product as any).estimatedArrival) {
+        arrivalWeek = (item.product as any).estimatedArrival;
+      }
+      if (arrivalWeek && arrivalWeek.length === 6) {
+        // Convert YYYYWW to ISO date (Monday of that week)
+        const year = parseInt(arrivalWeek.substring(0, 4));
+        const week = parseInt(arrivalWeek.substring(4, 6));
+        // ISO week: Jan 4 is always in week 1
+        const jan4 = new Date(year, 0, 4);
+        const dayOfWeek = jan4.getDay() || 7; // 1=Mon..7=Sun
+        const weekStart = new Date(jan4);
+        weekStart.setDate(jan4.getDate() - (dayOfWeek - 1) + (week - 1) * 7);
+        const weekStartStr = weekStart.toISOString().split('T')[0];
+        if (!latestArrivalDate || weekStartStr > latestArrivalDate) {
+          latestArrivalDate = weekStartStr;
+        }
+      }
+    }
+  }
+
   return {
     items: itemsWithDiscounts,
     subtotalHT,
@@ -902,6 +930,7 @@ export async function getCart(userId: number) {
     vatLabel: vatConfig.vatLabel,
     vatAmount: totalVAT,
     totalTTC,
+    latestArrivalDate, // null if all items are in stock, ISO date string if preorder items exist
   };
 }
 
