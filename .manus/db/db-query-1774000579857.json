@@ -1,0 +1,22 @@
+{
+  "query": "\nUPDATE orders SET deliveryRequestedDate = DATE_ADD(CURDATE(), INTERVAL 10 DAY) WHERE orderNumber = 'CMD-TEST-001';\nUPDATE orders SET deliveryRequestedDate = DATE_ADD(CURDATE(), INTERVAL 28 DAY) WHERE orderNumber = 'CMD-TEST-002';\nSELECT orderNumber, deliveryRequestedDate FROM orders WHERE orderNumber IN ('CMD-TEST-001', 'CMD-TEST-002', 'CMD-202603-0001');\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute \nUPDATE orders SET deliveryRequestedDate = DATE_ADD(CURDATE(), INTERVAL 10 DAY) WHERE orderNumber = 'CMD-TEST-001';\nUPDATE orders SET deliveryRequestedDate = DATE_ADD(CURDATE(), INTERVAL 28 DAY) WHERE orderNumber = 'CMD-TEST-002';\nSELECT orderNumber, deliveryRequestedDate FROM orders WHERE orderNumber IN ('CMD-TEST-001', 'CMD-TEST-002', 'CMD-202603-0001');\n",
+  "rows": [
+    {
+      "orderNumber": "CMD-TEST-001",
+      "deliveryRequestedDate": "2026-03-30 00:00:00"
+    },
+    {
+      "orderNumber": "CMD-TEST-002",
+      "deliveryRequestedDate": "2026-04-17 00:00:00"
+    },
+    {
+      "orderNumber": "CMD-202603-0001",
+      "deliveryRequestedDate": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderNumber\tdeliveryRequestedDate\nCMD-TEST-001\t2026-03-30 00:00:00\nCMD-TEST-002\t2026-04-17 00:00:00\nCMD-202603-0001\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 76
+}

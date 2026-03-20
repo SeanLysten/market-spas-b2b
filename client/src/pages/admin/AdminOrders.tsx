@@ -473,6 +473,16 @@ export default function AdminOrders() {
                   <p className="text-muted-foreground">Dernière mise à jour</p>
                   <p className="font-medium">{formatDate(selectedOrder.updatedAt)}</p>
                 </div>
+                {(selectedOrder as any).deliveryRequestedDate && (
+                  <div className="col-span-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <p className="text-muted-foreground flex items-center gap-1">
+                      <span>📅</span> Date de livraison souhaitée
+                    </p>
+                    <p className="font-semibold text-primary">
+                      {new Date((selectedOrder as any).deliveryRequestedDate).toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}

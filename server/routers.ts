@@ -1009,6 +1009,7 @@ export const appRouter = router({
           paymentMethod: z.string(),
           shippingType: z.enum(["standard", "express"]).optional(),
           customerNotes: z.string().optional(),
+          deliveryRequestedDate: z.string().optional(), // ISO date YYYY-MM-DD
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -1089,6 +1090,7 @@ export const appRouter = router({
           shippingType: input.shippingType || "standard",
           customerNotes: input.customerNotes,
           discountPercent: avgDiscountPercent,
+          deliveryRequestedDate: input.deliveryRequestedDate || null,
         });
 
         // Clear the cart after successful order

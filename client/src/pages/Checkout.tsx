@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,15 +9,42 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Package, MapPin, CreditCard, FileText, Calendar, TruckIcon, BadgePercent, Zap } from "lucide-react";
+import { ArrowLeft, Package, MapPin, CreditCard, FileText, Calendar, TruckIcon, BadgePercent, Zap, Info } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
+
+// Returns true if the payment method is a deposit (acompte 30%)
+function isDepositPayment(method: string): boolean {
+  return method === "CARD_DEPOSIT" || method === "BANK_TRANSFER";
+}
+
+// Build the list of selectable delivery dates based on payment type
+// Deposit (acompte): 14 days window from today
+// Full payment: 6 weeks (42 days) window from today
+function buildDeliveryDateOptions(isDeposit: boolean): { value: string; label: string }[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const maxDays = isDeposit ? 14 : 42;
+  const options: { value: string; label: string }[] = [];
+
+  for (let i = 1; i <= maxDays; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    // Skip Sundays (0)
+    if (d.getDay() === 0) continue;
+    const iso = d.toISOString().split("T")[0]; // YYYY-MM-DD
+    const label = d.toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+    options.push({ value: iso, label: label.charAt(0).toUpperCase() + label.slice(1) });
+  }
+  return options;
+}
 
 export default function Checkout() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [paymentMethod, setPaymentMethod] = useState<string>("CARD_FULL");
   const [shippingType, setShippingType] = useState<"standard" | "express">("standard");
+  const [deliveryRequestedDate, setDeliveryRequestedDate] = useState<string>("");
   const [deliveryAddress, setDeliveryAddress] = useState({
     street: "",
     city: "",
@@ -37,26 +64,38 @@ export default function Checkout() {
   const subtotalHT = cartData?.subtotalHT || 0;
   const discountPercent = cartData?.discountPercent || 0;
   const discountAmount = cartData?.discountAmount || 0;
-
   const shippingHT = (cartData as any)?.shippingHT || 0;
   const vatRate = (cartData as any)?.vatRate ?? 0;
   const vatLabel = (cartData as any)?.vatLabel || "TVA";
   const vatAmount = cartData?.vatAmount || 0;
   const totalTTC = cartData?.totalTTC || 0;
 
+  // Recompute delivery date options when payment method changes
+  const isDeposit = isDepositPayment(paymentMethod);
+  const deliveryDateOptions = useMemo(() => buildDeliveryDateOptions(isDeposit), [isDeposit]);
+  const maxDaysLabel = isDeposit ? "14 jours" : "6 semaines";
+
+  // Reset selected date when payment method changes (window may differ)
+  const handlePaymentMethodChange = (value: string) => {
+    setPaymentMethod(value);
+    setDeliveryRequestedDate(""); // reset so user picks again
+  };
+
   const handleSubmitOrder = async () => {
     if (!deliveryAddress.street || !deliveryAddress.city || !deliveryAddress.postalCode) {
       toast.error("Veuillez remplir l'adresse de livraison complète");
       return;
     }
-
     if (!deliveryAddress.contactName || !deliveryAddress.contactPhone) {
       toast.error("Veuillez fournir un nom et téléphone de contact");
       return;
     }
-
     if (cartItems.length === 0) {
       toast.error("Votre panier est vide");
+      return;
+    }
+    if (!deliveryRequestedDate) {
+      toast.error("Veuillez choisir une date de livraison souhaitée");
       return;
     }
 
@@ -80,6 +119,7 @@ export default function Checkout() {
         paymentMethod,
         shippingType,
         customerNotes: deliveryAddress.instructions,
+        deliveryRequestedDate,
       });
 
       toast.success("Commande créée avec succès !");
@@ -175,6 +215,7 @@ export default function Checkout() {
                         <SelectItem value="FR">France</SelectItem>
                         <SelectItem value="LU">Luxembourg</SelectItem>
                         <SelectItem value="NL">Pays-Bas</SelectItem>
+                        <SelectItem value="ES">Espagne</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -258,7 +299,6 @@ export default function Checkout() {
                       </div>
                     </Label>
                     <div className="text-right">
-                      {/* Express shipping is never free */}
                       <div className="font-bold text-primary">{formatPrice(shippingHT > 0 ? shippingHT * 2 : 300)} € HT</div>
                     </div>
                   </div>
@@ -278,14 +318,11 @@ export default function Checkout() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                <RadioGroup value={paymentMethod} onValueChange={handlePaymentMethodChange}>
                   <div className={`flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors ${paymentMethod === 'CARD_FULL' ? 'border-primary bg-primary/5' : ''}`}>
                     <RadioGroupItem value="CARD_FULL" id="card-full" />
                     <Label htmlFor="card-full" className="flex-1 cursor-pointer">
-                      <div className="font-medium flex items-center gap-2">
-                        Paiement par carte (100%)
-                        <span className="text-xs bg-emerald-600 dark:bg-emerald-500 text-white px-2 py-0.5 rounded">Recommandé</span>
-                      </div>
+                      <div className="font-medium">Paiement intégral par carte</div>
                       <div className="text-sm text-muted-foreground">
                         Payez la totalité de votre commande maintenant par carte bancaire
                       </div>
@@ -326,6 +363,56 @@ export default function Checkout() {
                 </RadioGroup>
               </CardContent>
             </Card>
+
+            {/* Delivery Date Selection */}
+            <Card className="border-primary/30">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  <CardTitle>Date de livraison souhaitée *</CardTitle>
+                </div>
+                <CardDescription>
+                  {isDeposit
+                    ? "Avec un acompte, vous pouvez choisir une date dans les 14 prochains jours."
+                    : "Avec un paiement intégral, vous pouvez choisir une date dans les 6 prochaines semaines."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Info banner */}
+                <div className={`flex gap-3 p-3 rounded-lg border text-sm ${isDeposit ? 'bg-amber-500/5 border-amber-500/20 text-amber-800 dark:text-amber-300' : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-800 dark:text-emerald-300'}`}>
+                  <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>
+                    {isDeposit
+                      ? `Acompte 30% : plage de livraison de 14 jours à partir d'aujourd'hui.`
+                      : `Paiement intégral : plage de livraison de 6 semaines (42 jours) à partir d'aujourd'hui.`}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="deliveryDate">Choisissez votre date *</Label>
+                  <Select value={deliveryRequestedDate} onValueChange={setDeliveryRequestedDate}>
+                    <SelectTrigger id="deliveryDate" className={!deliveryRequestedDate ? "border-primary/50" : ""}>
+                      <SelectValue placeholder={`Sélectionner une date (${maxDaysLabel} disponibles)`} />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-64">
+                      {deliveryDateOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {!deliveryRequestedDate && (
+                    <p className="text-xs text-muted-foreground">Ce champ est obligatoire pour valider la commande.</p>
+                  )}
+                  {deliveryRequestedDate && (
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                      Date souhaitée : {new Date(deliveryRequestedDate + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Right Column - Order Summary */}
@@ -362,17 +449,13 @@ export default function Checkout() {
                     </div>
                   ))}
                 </div>
-
                 <Separator />
-
                 {/* Totals */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Sous-total HT</span>
                     <span>{formatPrice(subtotalHT)} €</span>
                   </div>
-
-                  {/* Partner Discount */}
                   {discountPercent > 0 && (
                     <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
                       <span className="flex items-center gap-1">
@@ -382,8 +465,6 @@ export default function Checkout() {
                       <span>-{formatPrice(discountAmount)} €</span>
                     </div>
                   )}
-
-                  {/* Shipping */}
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground flex items-center gap-1">
                       <TruckIcon className="w-3.5 h-3.5" />
@@ -391,7 +472,6 @@ export default function Checkout() {
                     </span>
                     <span>{formatPrice(shippingType === "express" ? (shippingHT > 0 ? shippingHT * 2 : 300) : shippingHT)} €</span>
                   </div>
-
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{vatLabel} ({vatRate}%)</span>
                     <span>{formatPrice(vatAmount)} €</span>
@@ -403,13 +483,28 @@ export default function Checkout() {
                   </div>
                 </div>
 
-                {/* Partner Discount Info */}
                 {discountPercent > 0 && (
                   <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
                     <p className="text-xs text-emerald-700 dark:text-emerald-400">
                       <BadgePercent className="w-4 h-4 inline mr-1" />
                       Remise partenaire de {discountPercent.toFixed(1)}% appliquée automatiquement.
                     </p>
+                  </div>
+                )}
+
+                {/* Delivery date recap */}
+                {deliveryRequestedDate && (
+                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Calendar className="w-4 h-4 text-primary flex-shrink-0" />
+                      <div>
+                        <span className="font-medium text-primary">Livraison souhaitée :</span>
+                        <br />
+                        <span className="text-muted-foreground text-xs">
+                          {new Date(deliveryRequestedDate + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -433,11 +528,15 @@ export default function Checkout() {
                   className="w-full"
                   size="lg"
                   onClick={handleSubmitOrder}
-                  disabled={createOrderMutation.isPending || cartItems.length === 0}
+                  disabled={createOrderMutation.isPending || cartItems.length === 0 || !deliveryRequestedDate}
                 >
                   {createOrderMutation.isPending ? "Traitement..." : "Valider la commande"}
                 </Button>
-
+                {!deliveryRequestedDate && (
+                  <p className="text-xs text-center text-amber-600 dark:text-amber-400">
+                    Choisissez une date de livraison pour continuer
+                  </p>
+                )}
                 <p className="text-xs text-center text-muted-foreground">
                   En validant, vous acceptez nos conditions générales de vente
                 </p>

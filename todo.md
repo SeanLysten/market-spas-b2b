@@ -3096,3 +3096,15 @@
 - [x] companyName et country ajoutés au niveau racine du client dans l'API fournisseur
 - [ ] supplierClientCode NULL pour tous les partenaires (à renseigner manuellement dans l'admin par Sean)
 - [ ] Paiement CMD-TEST-001 : amount=1357.50 (acompte enregistré avant correction TVA, à corriger si besoin)
+
+## Feature - Date de livraison souhaitée lors du paiement
+- [x] Analyser le schéma existant : deliveryRequestedDate (timestamp) déjà présent en base
+- [x] Checkout.tsx : sélecteur de date dynamique (acompte=14j, intégral=6 semaines), dimanches exclus
+- [x] Checkout.tsx : bouton "Valider" désactivé si pas de date choisie
+- [x] routers.ts : ajout deliveryRequestedDate dans le schéma zod et l'appel createOrder
+- [x] db.ts : ajout deliveryRequestedDate dans CreateOrderInput et l'insert SQL
+- [x] AdminOrders.tsx : affichage de la date souhaitée dans le ticket commande
+- [x] OrderTracking.tsx : affichage de la date souhaitée dans le suivi client
+- [x] supplier-stock.ts : export deliveryRequestedDate dans le JSON fournisseur
+- [x] Données de test : CMD-TEST-001=2026-03-30, CMD-TEST-002=2026-04-17
+- [x] 52 tests supplier-stock passent

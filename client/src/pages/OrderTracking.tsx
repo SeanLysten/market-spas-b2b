@@ -348,6 +348,25 @@ export default function OrderTracking() {
               </CardContent>
             </Card>
 
+            {/* Delivery Requested Date */}
+            {(order as any).deliveryRequestedDate && (
+              <Card className="border-primary/30">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Calendar className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Date de livraison souhaitée</p>
+                      <p className="font-semibold text-primary">
+                        {new Date((order as any).deliveryRequestedDate).toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Delivery Address */}
             <Card>
               <CardHeader>

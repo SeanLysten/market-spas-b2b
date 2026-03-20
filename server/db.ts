@@ -1561,6 +1561,7 @@ export interface CreateOrderInput {
   shippingType?: "standard" | "express";
   customerNotes?: string;
   discountPercent?: number;
+  deliveryRequestedDate?: string | null; // ISO date YYYY-MM-DD
 }
 
 async function generateOrderNumber(): Promise<string> {
@@ -1673,6 +1674,7 @@ export async function createOrder(input: CreateOrderInput) {
     paymentMethod: input.paymentMethod,
     status: "PENDING_APPROVAL",
     customerNotes: input.customerNotes || null,
+    deliveryRequestedDate: input.deliveryRequestedDate ? new Date(input.deliveryRequestedDate + "T12:00:00Z") : null,
   });
 
   // Get the created order by orderNumber
