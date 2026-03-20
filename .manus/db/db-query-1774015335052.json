@@ -1,0 +1,58 @@
+{
+  "query": "SELECT pv.id, pv.sku, pv.name, pv.color, pv.supplierProductCode, pv.ean13 FROM product_variants pv WHERE pv.productId = 60002 ORDER BY pv.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT pv.id, pv.sku, pv.name, pv.color, pv.supplierProductCode, pv.ean13 FROM product_variants pv WHERE pv.productId = 60002 ORDER BY pv.id;",
+  "rows": [
+    {
+      "id": "30005",
+      "sku": "SPA-KOS-BLANC",
+      "name": "Kos - Sterling Marble",
+      "color": "Sterling Marble",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30007",
+      "sku": "SPA-KOS-NOIR",
+      "name": "Kos - Midnight Opal",
+      "color": "Midnight Opal",
+      "supplierProductCode": "663000 080 38",
+      "ean13": "3364549284848"
+    },
+    {
+      "id": "30008",
+      "sku": "SPA-KOS-GRIS",
+      "name": "Kos - Odyssey",
+      "color": "Odyssey",
+      "supplierProductCode": "663000 079 38",
+      "ean13": "3364549284831"
+    },
+    {
+      "id": "30043",
+      "sku": "SPA-KOS-BEI",
+      "name": "Kos - Beige",
+      "color": "Beige",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "30044",
+      "sku": "SPA-KOS-BRN",
+      "name": "Kos - Brun",
+      "color": "Brun",
+      "supplierProductCode": "NULL",
+      "ean13": "NULL"
+    },
+    {
+      "id": "90001",
+      "sku": "SPA-KOS-SS",
+      "name": "Kos - Sterling Silver",
+      "color": "Sterling Silver",
+      "supplierProductCode": "663000 078 38",
+      "ean13": "3364549284824"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsku\tname\tcolor\tsupplierProductCode\tean13\n30005\tSPA-KOS-BLANC\tKos - Sterling Marble\tSterling Marble\tNULL\tNULL\n30007\tSPA-KOS-NOIR\tKos - Midnight Opal\tMidnight Opal\t663000 080 38\t3364549284848\n30008\tSPA-KOS-GRIS\tKos - Odyssey\tOdyssey\t663000 079 38\t3364549284831\n30043\tSPA-KOS-BEI\tKos - Beige\tBeige\tNULL\tNULL\n30044\tSPA-KOS-BRN\tKos - Brun\tBrun\tNULL\tNULL\n90001\tSPA-KOS-SS\tKos - Sterling Silver\tSterling Silver\t663000 078 38\t3364549284824\n",
+  "stderr": "",
+  "execution_time_ms": 74
+}

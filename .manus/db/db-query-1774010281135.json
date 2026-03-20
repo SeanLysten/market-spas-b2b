@@ -1,0 +1,18 @@
+{
+  "query": "SELECT p.id, p.name, p.sku, p.category, p.pricePublicHT, p.pricePartnerHT FROM products p WHERE p.name LIKE '%Kos%' OR p.name LIKE '%KOS%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT p.id, p.name, p.sku, p.category, p.pricePublicHT, p.pricePartnerHT FROM products p WHERE p.name LIKE '%Kos%' OR p.name LIKE '%KOS%';",
+  "rows": [
+    {
+      "id": "60002",
+      "name": "Kos",
+      "sku": "SPA-KOS",
+      "category": "SPAS",
+      "pricePublicHT": "4000.00",
+      "pricePartnerHT": "4000.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tsku\tcategory\tpricePublicHT\tpricePartnerHT\n60002\tKos\tSPA-KOS\tSPAS\t4000.00\t4000.00\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

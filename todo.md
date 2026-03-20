@@ -3113,3 +3113,11 @@
 - [x] Backend cart.get : retourner latestArrivalDate (date d'arrivée la plus tardive parmi les items en pré-commande)
 - [x] Frontend Checkout.tsx : utiliser latestArrivalDate comme point de départ si présente, sinon aujourd'hui
 - [x] Afficher un bandeau bleu explicatif si la date de départ est différée ("Votre commande contient un spa en arrivage estimé le XX/XX/XXXX")
+
+## Ajout produits - KOS nouvelles variantes + MARBELLA nouveau modèle
+- [x] KOS Sterling Silver : SKU 663000 078 38, EAN13 3364549284824 (nouvelle variante créée)
+- [x] KOS Odyssey : SKU 663000 079 38, EAN13 3364549284831 (variante existante mise à jour)
+- [x] KOS Midnight Opal : SKU 663000 080 38, EAN13 3364549284848 (variante existante mise à jour)
+- [x] MARBELLA Sterling Silver : SKU 663100 078 38, EAN13 3364549284855 (nouveau produit + variante)
+- [x] MARBELLA Odyssey : SKU 663100 079 38, EAN13 3364549284862 (variante créée)
+- [x] MARBELLA Midnight Opal : SKU 663100 080 38, EAN13 3364549284879 (variante créée)

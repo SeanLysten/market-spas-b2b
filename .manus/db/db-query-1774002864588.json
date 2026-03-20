@@ -1,0 +1,15 @@
+{
+  "query": "SELECT o.id as order_id, p.id as payment_id, p.amount FROM orders o JOIN payments p ON p.orderId = o.id WHERE o.orderNumber = 'CMD-TEST-001';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT o.id as order_id, p.id as payment_id, p.amount FROM orders o JOIN payments p ON p.orderId = o.id WHERE o.orderNumber = 'CMD-TEST-001';",
+  "rows": [
+    {
+      "order_id": "2",
+      "payment_id": "1",
+      "amount": "1357.50"
+    }
+  ],
+  "messages": [],
+  "stdout": "order_id\tpayment_id\tamount\n2\t1\t1357.50\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

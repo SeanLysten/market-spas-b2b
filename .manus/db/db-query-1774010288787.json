@@ -1,0 +1,50 @@
+{
+  "query": "SELECT pv.id, pv.sku, pv.color, pv.ean13, pv.pricePartnerHT, pv.stockQuantity FROM product_variants pv WHERE pv.productId = 60002;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT pv.id, pv.sku, pv.color, pv.ean13, pv.pricePartnerHT, pv.stockQuantity FROM product_variants pv WHERE pv.productId = 60002;",
+  "rows": [
+    {
+      "id": "30005",
+      "sku": "SPA-KOS-BLANC",
+      "color": "Sterling Marble",
+      "ean13": "NULL",
+      "pricePartnerHT": "NULL",
+      "stockQuantity": "0"
+    },
+    {
+      "id": "30007",
+      "sku": "SPA-KOS-NOIR",
+      "color": "Midnight Opal",
+      "ean13": "NULL",
+      "pricePartnerHT": "NULL",
+      "stockQuantity": "0"
+    },
+    {
+      "id": "30008",
+      "sku": "SPA-KOS-GRIS",
+      "color": "Odyssey",
+      "ean13": "NULL",
+      "pricePartnerHT": "NULL",
+      "stockQuantity": "0"
+    },
+    {
+      "id": "30043",
+      "sku": "SPA-KOS-BEI",
+      "color": "Beige",
+      "ean13": "NULL",
+      "pricePartnerHT": "NULL",
+      "stockQuantity": "0"
+    },
+    {
+      "id": "30044",
+      "sku": "SPA-KOS-BRN",
+      "color": "Brun",
+      "ean13": "NULL",
+      "pricePartnerHT": "NULL",
+      "stockQuantity": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsku\tcolor\tean13\tpricePartnerHT\tstockQuantity\n30005\tSPA-KOS-BLANC\tSterling Marble\tNULL\tNULL\t0\n30007\tSPA-KOS-NOIR\tMidnight Opal\tNULL\tNULL\t0\n30008\tSPA-KOS-GRIS\tOdyssey\tNULL\tNULL\t0\n30043\tSPA-KOS-BEI\tBeige\tNULL\tNULL\t0\n30044\tSPA-KOS-BRN\tBrun\tNULL\tNULL\t0\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

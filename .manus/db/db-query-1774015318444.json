@@ -1,0 +1,13 @@
+{
+  "query": "SELECT id FROM products WHERE sku = 'SPA-MARBELLA';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT id FROM products WHERE sku = 'SPA-MARBELLA';",
+  "rows": [
+    {
+      "id": "120001"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\n120001\n",
+  "stderr": "",
+  "execution_time_ms": 68
+}

@@ -1,0 +1,34 @@
+{
+  "query": "SELECT pv.id, pv.sku, pv.name, pv.color, pv.supplierProductCode, pv.ean13 FROM product_variants pv WHERE pv.productId = 120001 ORDER BY pv.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user KKo9odT1HVTXECY.26f2cde391d3 --database jX4Ppf2KXZ8z9Tppipem7T --execute SELECT pv.id, pv.sku, pv.name, pv.color, pv.supplierProductCode, pv.ean13 FROM product_variants pv WHERE pv.productId = 120001 ORDER BY pv.id;",
+  "rows": [
+    {
+      "id": "90002",
+      "sku": "SPA-MARBELLA-SS",
+      "name": "Marbella - Sterling Silver",
+      "color": "Sterling Silver",
+      "supplierProductCode": "663100 078 38",
+      "ean13": "3364549284855"
+    },
+    {
+      "id": "90003",
+      "sku": "SPA-MARBELLA-ODY",
+      "name": "Marbella - Odyssey",
+      "color": "Odyssey",
+      "supplierProductCode": "663100 079 38",
+      "ean13": "3364549284862"
+    },
+    {
+      "id": "90004",
+      "sku": "SPA-MARBELLA-MO",
+      "name": "Marbella - Midnight Opal",
+      "color": "Midnight Opal",
+      "supplierProductCode": "663100 080 38",
+      "ean13": "3364549284879"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsku\tname\tcolor\tsupplierProductCode\tean13\n90002\tSPA-MARBELLA-SS\tMarbella - Sterling Silver\tSterling Silver\t663100 078 38\t3364549284855\n90003\tSPA-MARBELLA-ODY\tMarbella - Odyssey\tOdyssey\t663100 079 38\t3364549284862\n90004\tSPA-MARBELLA-MO\tMarbella - Midnight Opal\tMidnight Opal\t663100 080 38\t3364549284879\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}
