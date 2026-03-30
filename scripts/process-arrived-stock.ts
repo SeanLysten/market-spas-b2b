@@ -53,7 +53,7 @@ async function main() {
       console.log("[ProcessArrivedStock] ✓ Aucun arrivage à traiter pour cette semaine.");
     } else {
       console.log(`[ProcessArrivedStock] ✓ ${result.processed} arrivage(s) traité(s) avec succès.`);
-      console.log("[ProcessArrivedStock]   → Statut mis à jour : PENDING → ARRIVED");
+      console.log("[ProcessArrivedStock]   → Entrée supprimée de la table incoming_stock");
       console.log("[ProcessArrivedStock]   → Stock incrémenté dans products / product_variants");
     }
     console.log(`[ProcessArrivedStock] Durée d'exécution : ${durationMs}ms`);

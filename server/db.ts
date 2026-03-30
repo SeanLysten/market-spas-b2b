@@ -1398,10 +1398,12 @@ export async function processArrivedStock() {
 
   // Get current ISO week and year
   const now = new Date();
-  const currentYear = now.getFullYear();
-  const startOfYear = new Date(currentYear, 0, 1);
-  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-  const currentWeek = Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7);
+  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const currentWeek = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  const currentYear = d.getUTCFullYear();
 
   // Find all pending incoming stock that should have arrived
   const arrivedStock = await db
@@ -1440,16 +1442,13 @@ export async function processArrivedStock() {
         .where(eq(products.id, stock.productId));
     }
 
-    // Mark as arrived
+    // Supprimer l'entrée de la table incoming_stock
     await db
-      .update(incomingStock)
-      .set({
-        status: "ARRIVED",
-        arrivedAt: new Date(),
-      })
+      .delete(incomingStock)
       .where(eq(incomingStock.id, stock.id));
   }
 
+  console.log(`[processArrivedStock] ${arrivedStock.length} arrivage(s) traité(s).`);
   return { processed: arrivedStock.length };
 }
 
