@@ -466,7 +466,8 @@ interface OrderItem {
   name: string;
   quantity: number;
   unitPriceHT: number | string;
-  totalTTC: number | string;
+  totalHT: number | string;
+  color?: string;
 }
 
 interface NewOrderNotificationParams {
@@ -475,9 +476,15 @@ interface NewOrderNotificationParams {
   partnerEmail: string;
   items: OrderItem[];
   totalHT: number | string;
-  totalTTC: number | string;
+  shippingCostHT: number | string;
+  depositAmount: number | string;
+  remainingBalance: number | string;
+  deliveryStreet: string;
   deliveryCity: string;
   deliveryPostalCode: string;
+  deliveryCountry: string;
+  deliveryContactName: string;
+  deliveryContactPhone: string;
   createdAt: Date;
   portalUrl: string;
 }
@@ -492,12 +499,22 @@ export async function sendNewOrderNotificationToAdmins(
     partnerEmail,
     items,
     totalHT,
-    totalTTC,
+    shippingCostHT,
+    depositAmount,
+    remainingBalance,
+    deliveryStreet,
     deliveryCity,
     deliveryPostalCode,
+    deliveryCountry,
+    deliveryContactName,
+    deliveryContactPhone,
     createdAt,
     portalUrl,
   } = params;
+
+  const countryNames: Record<string, string> = {
+    BE: 'Belgique', FR: 'France', NL: 'Pays-Bas', DE: 'Allemagne', LU: 'Luxembourg',
+  };
 
   const formatPrice = (price: number | string): string => {
     const num = typeof price === 'string' ? parseFloat(price) : price;
@@ -514,10 +531,12 @@ export async function sendNewOrderNotificationToAdmins(
 
   const itemsHtml = items.map(item => `
     <tr>
-      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${item.name}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">
+        ${item.name}${item.color ? `<br><span style="color: #64748b; font-size: 12px;">Couleur : ${item.color}</span>` : ''}
+      </td>
       <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center;">${item.quantity}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right;">${formatPrice(item.unitPriceHT)} €</td>
-      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600;">${formatPrice(item.totalTTC)} €</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600;">${formatPrice(item.totalHT)} €</td>
     </tr>
   `).join('');
 
@@ -583,8 +602,14 @@ export async function sendNewOrderNotificationToAdmins(
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Livraison :</td>
-                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px;">${deliveryPostalCode} ${deliveryCity}</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px;">
+                    ${deliveryStreet ? `${deliveryStreet}<br>` : ''}${deliveryPostalCode} ${deliveryCity}${deliveryCountry ? `, ${countryNames[deliveryCountry] || deliveryCountry}` : ''}
+                  </td>
                 </tr>
+                ${deliveryContactName ? `<tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Contact :</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px;">${deliveryContactName}${deliveryContactPhone ? ` - ${deliveryContactPhone}` : ''}</td>
+                </tr>` : ''}
               </table>
             </td>
           </tr>
@@ -601,7 +626,7 @@ export async function sendNewOrderNotificationToAdmins(
                     <th style="padding: 12px; text-align: left; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase;">Produit</th>
                     <th style="padding: 12px; text-align: center; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase;">Qté</th>
                     <th style="padding: 12px; text-align: right; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase;">Prix HT</th>
-                    <th style="padding: 12px; text-align: right; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase;">Total TTC</th>
+                    <th style="padding: 12px; text-align: right; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase;">Total HT</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -613,14 +638,42 @@ export async function sendNewOrderNotificationToAdmins(
               <table role="presentation" style="width: 100%; margin-top: 20px;">
                 <tr>
                   <td style="text-align: right; padding: 8px 0;">
-                    <span style="color: #64748b; font-size: 14px;">Total HT :</span>
+                    <span style="color: #64748b; font-size: 14px;">Sous-total HT :</span>
                     <span style="color: #1e293b; font-size: 14px; font-weight: 600; margin-left: 20px;">${formatPrice(totalHT)} €</span>
                   </td>
                 </tr>
+                ${parseFloat(String(shippingCostHT)) > 0 ? `<tr>
+                  <td style="text-align: right; padding: 8px 0;">
+                    <span style="color: #64748b; font-size: 14px;">Frais de livraison HT :</span>
+                    <span style="color: #1e293b; font-size: 14px; font-weight: 600; margin-left: 20px;">${formatPrice(shippingCostHT)} €</span>
+                  </td>
+                </tr>` : ''}
                 <tr>
                   <td style="text-align: right; padding: 12px 0; border-top: 2px solid #e2e8f0;">
-                    <span style="color: #1e293b; font-size: 18px; font-weight: 700;">Total TTC :</span>
-                    <span style="color: #059669; font-size: 20px; font-weight: 700; margin-left: 20px;">${formatPrice(totalTTC)} €</span>
+                    <span style="color: #1e293b; font-size: 18px; font-weight: 700;">Total HT :</span>
+                    <span style="color: #059669; font-size: 20px; font-weight: 700; margin-left: 20px;">${formatPrice(parseFloat(String(totalHT)) + parseFloat(String(shippingCostHT)))} €</span>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Acompte & Solde -->
+              <table role="presentation" style="width: 100%; margin-top: 15px; background-color: #f0fdf4; border-radius: 8px; padding: 15px;">
+                <tr>
+                  <td style="padding: 10px 15px;">
+                    <table role="presentation" style="width: 100%;">
+                      <tr>
+                        <td style="padding: 6px 0;">
+                          <span style="color: #065f46; font-size: 14px; font-weight: 600;">Acompte à régler :</span>
+                          <span style="color: #059669; font-size: 16px; font-weight: 700; float: right;">${formatPrice(depositAmount)} € HT</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 6px 0; border-top: 1px solid #bbf7d0;">
+                          <span style="color: #64748b; font-size: 13px;">Solde restant à payer :</span>
+                          <span style="color: #1e293b; font-size: 14px; font-weight: 600; float: right;">${formatPrice(remainingBalance)} € HT</span>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
@@ -659,6 +712,8 @@ export async function sendNewOrderNotificationToAdmins(
 </html>
   `;
 
+  const fullAddress = [deliveryStreet, `${deliveryPostalCode} ${deliveryCity}`, countryNames[deliveryCountry] || deliveryCountry].filter(Boolean).join(', ');
+
   const textContent = `
 NOUVELLE COMMANDE - #${orderNumber}
 =====================================
@@ -671,14 +726,18 @@ PARTENAIRE
 ----------
 Entreprise : ${partnerName}
 Email : ${partnerEmail}
-Livraison : ${deliveryPostalCode} ${deliveryCity}
+Livraison : ${fullAddress}
+${deliveryContactName ? `Contact : ${deliveryContactName}${deliveryContactPhone ? ` - ${deliveryContactPhone}` : ''}` : ''}
 
 PRODUITS
 --------
-${items.map(item => `- ${item.name} x${item.quantity} : ${formatPrice(item.totalTTC)} €`).join('\n')}
+${items.map(item => `- ${item.name}${item.color ? ` (${item.color})` : ''} x${item.quantity} : ${formatPrice(item.totalHT)} € HT`).join('\n')}
 
-TOTAL HT : ${formatPrice(totalHT)} €
-TOTAL TTC : ${formatPrice(totalTTC)} €
+Sous-total HT : ${formatPrice(totalHT)} €
+${parseFloat(String(shippingCostHT)) > 0 ? `Frais de livraison HT : ${formatPrice(shippingCostHT)} €\n` : ''}Total HT : ${formatPrice(parseFloat(String(totalHT)) + parseFloat(String(shippingCostHT)))} €
+
+Acompte à régler : ${formatPrice(depositAmount)} € HT
+Solde restant : ${formatPrice(remainingBalance)} € HT
 
 Voir la commande : ${portalUrl}/admin/orders
 
@@ -811,7 +870,9 @@ interface OrderStatusChangeParams {
   contactName: string;
   oldStatus: string;
   newStatus: string;
-  totalTTC: number | string;
+  totalHT: number | string;
+  depositAmount?: number | string;
+  remainingBalance?: number | string;
   portalUrl: string;
   trackingNumber?: string;
   estimatedDelivery?: string;
@@ -827,7 +888,9 @@ export async function sendOrderStatusChangeToPartner(
     contactName,
     oldStatus,
     newStatus,
-    totalTTC,
+    totalHT,
+    depositAmount,
+    remainingBalance,
     portalUrl,
     trackingNumber,
     estimatedDelivery,
@@ -949,9 +1012,17 @@ export async function sendOrderStatusChangeToPartner(
                         <td style="padding: 5px 0; color: #1e293b; font-size: 14px; text-align: right;">${partnerName}</td>
                       </tr>
                       <tr>
-                        <td style="padding: 5px 0; color: #64748b; font-size: 14px;">Total TTC :</td>
-                        <td style="padding: 5px 0; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">${formatPrice(totalTTC)} €</td>
+                        <td style="padding: 5px 0; color: #64748b; font-size: 14px;">Total HT :</td>
+                        <td style="padding: 5px 0; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">${formatPrice(totalHT)} €</td>
                       </tr>
+                      ${depositAmount ? `<tr>
+                        <td style="padding: 5px 0; color: #64748b; font-size: 14px;">Acompte payé :</td>
+                        <td style="padding: 5px 0; color: #059669; font-size: 14px; font-weight: 600; text-align: right;">${formatPrice(depositAmount)} €</td>
+                      </tr>` : ''}
+                      ${remainingBalance ? `<tr>
+                        <td style="padding: 5px 0; color: #64748b; font-size: 14px;">Solde restant :</td>
+                        <td style="padding: 5px 0; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">${formatPrice(remainingBalance)} €</td>
+                      </tr>` : ''}
                     </table>
                   </td>
                 </tr>
@@ -1013,7 +1084,9 @@ ${estimatedDelivery ? `Livraison estimée : ${estimatedDelivery}` : ''}
 RÉCAPITULATIF
 -------------
 Entreprise : ${partnerName}
-Total TTC : ${formatPrice(totalTTC)} €
+Total HT : ${formatPrice(totalHT)} €
+${depositAmount ? `Acompte payé : ${formatPrice(depositAmount)} €` : ''}
+${remainingBalance ? `Solde restant : ${formatPrice(remainingBalance)} €` : ''}
 
 Suivre ma commande : ${portalUrl}/order/${orderNumber}
 
@@ -1057,7 +1130,7 @@ interface DepositReminderParams {
   partnerName: string;
   contactName: string;
   depositAmount: number | string;
-  totalTTC: number | string;
+  totalHT: number | string;
   orderDate: Date;
   portalUrl: string;
   hoursOverdue: number;
@@ -1072,7 +1145,7 @@ export async function sendDepositReminderEmail(
     partnerName,
     contactName,
     depositAmount,
-    totalTTC,
+    totalHT,
     orderDate,
     portalUrl,
     hoursOverdue,
@@ -1167,8 +1240,8 @@ export async function sendDepositReminderEmail(
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Total de la commande :</td>
-                        <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${formatPrice(totalTTC)} €</td>
+                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Total HT de la commande :</td>
+                        <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${formatPrice(totalHT)} €</td>
                       </tr>
                       <tr>
                         <td style="padding: 8px 0; color: ${urgencyColor}; font-size: 16px; font-weight: 600;">Acompte à régler :</td>
@@ -1237,7 +1310,7 @@ N° de commande : #${orderNumber}
 Date de commande : ${formatDate(orderDate)}
 Entreprise : ${partnerName}
 
-Total de la commande : ${formatPrice(totalTTC)} €
+Total HT de la commande : ${formatPrice(totalHT)} €
 ACOMPTE À RÉGLER : ${formatPrice(depositAmount)} €
 
 Payer mon acompte : ${portalUrl}/order/${orderNumber}

@@ -3908,7 +3908,7 @@ export const appRouter = router({
         // Update ticket with Mollie payment ID
         await savDb.updateSavPayment(input.serviceId, {
           totalAmount: total.totalTTC.toFixed(2),
-          stripePaymentIntentId: molliePayment.id, // reuse field for Mollie ID
+          stripePaymentIntentId: molliePayment.id, // Legacy DB column - stores Mollie payment ID
         });
         await savDb.updateSavTicket(input.serviceId, { status: "PAYMENT_PENDING" as any });
 

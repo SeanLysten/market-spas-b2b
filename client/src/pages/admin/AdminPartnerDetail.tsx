@@ -333,7 +333,7 @@ export default function AdminPartnerDetail() {
                 </div>
                 <div>
                   <p className="text-muted-foreground text-sm mb-1">Mollie Customer ID</p>
-                  <p className="font-mono text-xs">{partner.mollieCustomerId || partner.stripeCustomerId || "Non lié"}</p>
+                  <p className="font-mono text-xs">{partner.mollieCustomerId || "Non lié"}</p>
                 </div>
               </div>
               {partner.internalNotes && (

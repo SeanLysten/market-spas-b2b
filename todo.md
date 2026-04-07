@@ -3212,3 +3212,18 @@
 - [x] Cron job : releaseExpiredCartReservations toutes les 60s dans index.ts + route cron
 - [x] Lors du paiement : stock déjà retiré définitivement dans createOrder
 - [x] Tests unitaires : 75 fichiers, 1093 tests passent
+
+## Fix emails et détails commande + nettoyage routes
+- [x] Email nouvelle commande : ajouter adresse de livraison complète (rue, ville, code postal, pays) - déjà fait dans sendNewOrderNotificationToAdmins
+- [x] Email nouvelle commande : afficher quantité et couleur/variante de chaque produit - déjà fait
+- [x] Email nouvelle commande : supprimer le TTC, afficher uniquement HT - déjà fait
+- [x] Email nouvelle commande : ajouter montant acompte payé et solde restant à payer - déjà fait
+- [x] Email changement de statut : remplacé totalTTC par totalHT + acompte + solde restant
+- [x] Email rappel de dépôt : remplacé totalTTC par totalHT
+- [x] alerts.ts : corrigé les appels pour passer totalHT au lieu de totalTTC
+- [x] Pages admin détail commande : adresse de livraison, quantité, couleur, acompte et solde déjà affichés correctement
+- [x] Supprimer les anciennes routes Stripe obsolètes dans routers.ts - aucune route Stripe restante, SDK supprimé
+- [x] Supprimer les références Stripe restantes dans le code - colonnes DB conservées (backward compat), commentées Legacy
+- [x] AdminPartnerDetail : supprimé fallback stripeCustomerId, affiche uniquement mollieCustomerId
+- [x] db.ts : ajouté alias getPaymentTransactionByMollieId, legacy getPaymentTransactionByStripeId conservé
+- [x] Vérifier la cohérence globale des informations affichées - 1093 tests passent

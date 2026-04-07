@@ -320,18 +320,16 @@ export default function OrderTracking() {
                     <span className="text-muted-foreground">Sous-total HT</span>
                     <span>{formatPrice(order.totalHT)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      TVA {Number((order as any).totalHT) > 0 && Number((order as any).totalVAT) > 0
-                        ? `(${Math.round(Number((order as any).totalVAT) / Number((order as any).totalHT) * 100)}%)`
-                        : "(0%)"}
-                    </span>
-                    <span>{formatPrice(Number((order as any).totalVAT ?? 0))}</span>
-                  </div>
+                  {Number((order as any).shippingHT || 0) > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Frais de livraison HT</span>
+                      <span>{formatPrice((order as any).shippingHT)}</span>
+                    </div>
+                  )}
                   <Separator />
                   <div className="flex justify-between text-base font-semibold text-display">
-                    <span>Total TTC</span>
-                    <span className="text-primary">{formatPrice(order.totalTTC)}</span>
+                    <span>Total HT</span>
+                    <span className="text-primary">{formatPrice(Number(order.totalHT || 0) + Number((order as any).shippingHT || 0))}</span>
                   </div>
                 </div>
 
@@ -339,13 +337,13 @@ export default function OrderTracking() {
                   <>
                     <Separator />
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Acompte versé</span>
-                        <span className="text-emerald-600 dark:text-emerald-400">{formatPrice(order.depositAmount)}</span>
+                      <div className="flex justify-between text-sm text-emerald-700 bg-emerald-50 p-2 rounded">
+                        <span className="font-medium">Acompte versé</span>
+                        <span className="font-semibold">{formatPrice(order.depositAmount)} HT</span>
                       </div>
-                      <div className="flex justify-between text-sm font-medium">
-                        <span>Reste à payer</span>
-                        <span>{formatPrice(Number(order.totalTTC) - Number(order.depositAmount))}</span>
+                      <div className="flex justify-between text-sm text-amber-700 bg-amber-50 p-2 rounded font-medium">
+                        <span>Solde restant</span>
+                        <span>{formatPrice(Number(order.totalHT || 0) + Number((order as any).shippingHT || 0) - Number(order.depositAmount || 0))} HT</span>
                       </div>
                     </div>
                   </>

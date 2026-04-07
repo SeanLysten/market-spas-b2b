@@ -125,7 +125,7 @@ export async function notifyOrderStatusChange(
 
     await notifyOwner({
       title: `📦 Commande ${order.orderNumber} - Changement de statut`,
-      content: `Partenaire: ${partner.companyName}\nStatut: ${statusLabels[oldStatus] || oldStatus} → ${statusLabels[newStatus] || newStatus}\nMontant: ${order.totalTTC} €\n\nConsulter la commande dans l'admin.`,
+      content: `Partenaire: ${partner.companyName}\nStatut: ${statusLabels[oldStatus] || oldStatus} → ${statusLabels[newStatus] || newStatus}\nMontant HT: ${order.totalHT} €\nAcompte: ${order.depositAmount || '0'} €\n\nConsulter la commande dans l'admin.`,
     });
 
     // 2. Send real-time WebSocket notification to partner
@@ -145,13 +145,20 @@ export async function notifyOrderStatusChange(
       const partnerEmail = partner.primaryContactEmail;
       if (partnerEmail) {
         const portalUrl = ENV.siteUrl;
+        const depositAmt = parseFloat(order.depositAmount || '0');
+        const totalHTAmt = parseFloat(order.totalHT || '0');
+        const shippingAmt = parseFloat(order.shippingHT || '0');
+        const remainingBal = totalHTAmt + shippingAmt - depositAmt;
+
         const emailResult = await sendOrderStatusChangeToPartner(partnerEmail, {
           orderNumber: order.orderNumber,
           partnerName: partner.companyName,
           contactName: partner.primaryContactName || partner.companyName,
           oldStatus,
           newStatus,
-          totalTTC: order.totalTTC,
+          totalHT: (totalHTAmt + shippingAmt).toFixed(2),
+          depositAmount: depositAmt > 0 ? depositAmt.toFixed(2) : undefined,
+          remainingBalance: remainingBal > 0 ? remainingBal.toFixed(2) : undefined,
           portalUrl,
         });
         console.log(`[Alerts] Email notification sent to partner ${partnerEmail}:`, emailResult);
@@ -228,7 +235,7 @@ export async function notifyNewOrder(orderId: number) {
 
     await notifyOwner({
       title: `🎉 Nouvelle Commande ${order.orderNumber}`,
-      content: `Partenaire: ${partner.companyName}\nMontant HT: ${order.subtotalHT} €\nMontant TTC: ${order.totalTTC} €\nStatut: En attente d'approbation\n\nConsulter la commande dans l'admin.`,
+      content: `Partenaire: ${partner.companyName}\nMontant HT: ${order.totalHT} €\nAcompte: ${order.depositAmount} €\nStatut: En attente de paiement\n\nConsulter la commande dans l'admin.`,
     });
 
     // Send real-time WebSocket notification to admins
@@ -247,6 +254,11 @@ export async function notifyNewOrder(orderId: number) {
       const adminEmails = await db.getAdminEmails();
       if (adminEmails.length > 0) {
         const portalUrl = ENV.siteUrl;
+        const depositAmt = parseFloat(order.depositAmount || '0');
+        const totalHTAmt = parseFloat(order.totalHT || '0');
+        const shippingAmt = parseFloat(order.shippingHT || '0');
+        const remainingBal = totalHTAmt + shippingAmt - depositAmt;
+
         const emailResult = await sendNewOrderNotificationToAdmins(adminEmails, {
           orderNumber: order.orderNumber,
           partnerName: partner.companyName,
@@ -255,12 +267,19 @@ export async function notifyNewOrder(orderId: number) {
             name: item.name,
             quantity: item.quantity,
             unitPriceHT: item.unitPriceHT,
-            totalTTC: item.totalTTC,
+            totalHT: item.totalHT,
+            color: item.color || undefined,
           })),
           totalHT: order.totalHT,
-          totalTTC: order.totalTTC,
+          shippingCostHT: order.shippingHT || '0',
+          depositAmount: order.depositAmount || '0',
+          remainingBalance: remainingBal > 0 ? remainingBal.toFixed(2) : '0',
+          deliveryStreet: order.deliveryStreet || '',
           deliveryCity: order.deliveryCity || '',
           deliveryPostalCode: order.deliveryPostalCode || '',
+          deliveryCountry: order.deliveryCountry || '',
+          deliveryContactName: order.deliveryContactName || '',
+          deliveryContactPhone: order.deliveryContactPhone || '',
           createdAt: order.createdAt,
           portalUrl,
         });
@@ -326,12 +345,14 @@ export async function processDepositReminders(hoursThreshold: number = 48) {
         }
 
         // Send reminder email
+        const totalHTVal = parseFloat(order.totalHT || '0');
+        const shippingVal = parseFloat(order.shippingHT || '0');
         const emailResult = await sendDepositReminderEmail(partnerEmail, {
           orderNumber: order.orderNumber,
           partnerName: partner.companyName,
           contactName: partner.primaryContactName || partner.companyName,
           depositAmount: order.depositAmount,
-          totalTTC: order.totalTTC,
+          totalHT: (totalHTVal + shippingVal).toFixed(2),
           orderDate: order.createdAt,
           portalUrl,
           hoursOverdue: order.hoursOverdue,

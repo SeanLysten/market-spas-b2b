@@ -349,7 +349,7 @@ export async function updateSavPayment(
   data: {
     shippingCost?: string;
     totalAmount?: string;
-    stripePaymentIntentId?: string;
+    stripePaymentIntentId?: string; // Legacy field name - stores Mollie payment ID
     paidAt?: Date;
   }
 ) {

@@ -2638,7 +2638,8 @@ export async function createPaymentTransaction(data: {
   amount: number;
   currency: string;
   paymentMethod: string;
-  stripePaymentIntentId?: string;
+  molliePaymentId?: string;
+  stripePaymentIntentId?: string; // Legacy alias for molliePaymentId
   status: string;
 }) {
   const db = await getDb();
@@ -2650,6 +2651,7 @@ export async function createPaymentTransaction(data: {
     throw new Error(`Order ${data.orderId} not found`);
   }
 
+  const paymentId = data.molliePaymentId || data.stripePaymentIntentId;
   const [payment] = await db.insert(payments).values({
     partnerId: order[0].partnerId,
     orderId: data.orderId,
@@ -2657,7 +2659,7 @@ export async function createPaymentTransaction(data: {
     currency: data.currency,
     method: data.paymentMethod,
     status: data.status as any,
-    stripePaymentIntentId: data.stripePaymentIntentId,
+    stripePaymentIntentId: paymentId, // DB column kept for backward compat
     paidAt: data.status === "COMPLETED" ? new Date() : null,
     failedAt: data.status === "FAILED" ? new Date() : null,
     refundedAt: data.status === "REFUNDED" ? new Date() : null,
@@ -2666,18 +2668,21 @@ export async function createPaymentTransaction(data: {
   return payment;
 }
 
-export async function getPaymentTransactionByStripeId(stripePaymentIntentId: string) {
+export async function getPaymentTransactionByMollieId(molliePaymentId: string) {
   const db = await getDb();
   if (!db) return null;
 
   const result = await db
     .select()
     .from(payments)
-    .where(eq(payments.stripePaymentIntentId, stripePaymentIntentId))
+    .where(eq(payments.stripePaymentIntentId, molliePaymentId)) // DB column kept for backward compat
     .limit(1);
 
   return result[0] || null;
 }
+
+// Legacy alias
+export const getPaymentTransactionByStripeId = getPaymentTransactionByMollieId;
 
 
 // ============================================

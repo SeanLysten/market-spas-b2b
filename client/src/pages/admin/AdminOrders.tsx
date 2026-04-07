@@ -301,7 +301,7 @@ export default function AdminOrders() {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <div className="font-semibold">{formatPrice(order.totalTTC)}</div>
+                          <div className="font-semibold">{formatPrice(order.totalHT)} HT</div>
                           <div className="text-sm text-muted-foreground">
                             {order.items?.length || 0} article(s)
                           </div>
@@ -400,10 +400,13 @@ export default function AdminOrders() {
                   Adresse de livraison
                 </h4>
                 <div className="p-4 bg-muted/30 rounded-lg">
-                  <p>{selectedOrder.shippingStreet || "N/A"}</p>
-                  {selectedOrder.shippingStreet2 && <p>{selectedOrder.shippingStreet2}</p>}
-                  <p>{selectedOrder.shippingPostalCode} {selectedOrder.shippingCity}</p>
-                  <p>{selectedOrder.shippingCountry}</p>
+                  <p>{selectedOrder.deliveryStreet || selectedOrder.shippingStreet || "N/A"}</p>
+                  {(selectedOrder.deliveryStreet2 || selectedOrder.shippingStreet2) && <p>{selectedOrder.deliveryStreet2 || selectedOrder.shippingStreet2}</p>}
+                  <p>{selectedOrder.deliveryPostalCode || selectedOrder.shippingPostalCode} {selectedOrder.deliveryCity || selectedOrder.shippingCity}</p>
+                  <p>{{BE: 'Belgique', FR: 'France', NL: 'Pays-Bas', DE: 'Allemagne', LU: 'Luxembourg'}[selectedOrder.deliveryCountry || selectedOrder.shippingCountry || ''] || selectedOrder.deliveryCountry || selectedOrder.shippingCountry || ''}</p>
+                  {selectedOrder.deliveryContactName && (
+                    <p className="mt-2 text-sm text-muted-foreground">Contact : {selectedOrder.deliveryContactName}{selectedOrder.deliveryContactPhone ? ` - ${selectedOrder.deliveryContactPhone}` : ''}</p>
+                  )}
                 </div>
               </div>
 
@@ -433,6 +436,9 @@ export default function AdminOrders() {
                           {item.variant && (
                             <p className="text-xs md:text-sm text-muted-foreground">{item.variant.name}</p>
                           )}
+                          {item.color && (
+                            <p className="text-xs text-muted-foreground">Couleur : {item.color}</p>
+                          )}
                         </div>
                       </div>
                       <div className="text-right">
@@ -451,18 +457,28 @@ export default function AdminOrders() {
                     <span className="text-muted-foreground">Sous-total HT</span>
                     <span>{formatPrice(selectedOrder.totalHT)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      TVA {Number(selectedOrder.totalHT) > 0 && Number(selectedOrder.totalVAT) > 0
-                        ? `(${Math.round(Number(selectedOrder.totalVAT) / Number(selectedOrder.totalHT) * 100)}%)`
-                        : "(0%)"}
-                    </span>
-                    <span>{formatPrice(Number(selectedOrder.totalVAT ?? 0))}</span>
+                  {Number(selectedOrder.shippingHT || selectedOrder.shippingCost || 0) > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Frais de livraison HT</span>
+                      <span>{formatPrice(selectedOrder.shippingHT || selectedOrder.shippingCost || 0)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-base font-semibold">
+                    <span>Total HT</span>
+                    <span>{formatPrice(Number(selectedOrder.totalHT || 0) + Number(selectedOrder.shippingHT || selectedOrder.shippingCost || 0))}</span>
                   </div>
-                  <div className="flex justify-between text-base font-semibold text-display">
-                    <span>Total TTC</span>
-                    <span>{formatPrice(selectedOrder.totalTTC)}</span>
-                  </div>
+                  {Number(selectedOrder.depositAmount || 0) > 0 && (
+                    <>
+                      <div className="flex justify-between text-emerald-700 bg-emerald-50 p-2 rounded">
+                        <span className="font-medium">Acompte</span>
+                        <span className="font-semibold">{formatPrice(selectedOrder.depositAmount)} HT</span>
+                      </div>
+                      <div className="flex justify-between text-amber-700 bg-amber-50 p-2 rounded">
+                        <span className="font-medium">Solde restant</span>
+                        <span className="font-semibold">{formatPrice(Number(selectedOrder.totalHT || 0) + Number(selectedOrder.shippingHT || selectedOrder.shippingCost || 0) - Number(selectedOrder.depositAmount || 0))} HT</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
