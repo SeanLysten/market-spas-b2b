@@ -1436,13 +1436,312 @@ router.put("/api/mobile/v1/orders/:id/tracking", requireMobileAuth, async (req: 
 });
 
 // ============================================
+// GET /api/mobile/v1/network
+// Carte du réseau partenaires
+// ============================================
+router.get("/api/mobile/v1/network", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { partners } = await import("../../drizzle/schema");
+    const { eq, and } = await import("drizzle-orm");
+    const db = await getDb();
+    const country = req.query.country as string | undefined;
+    const statusFilter = req.query.status as string | undefined;
+    const conditions: any[] = [];
+    if (country) conditions.push(eq(partners.addressCountry, country.toUpperCase()));
+    if (statusFilter) conditions.push(eq(partners.status, statusFilter as any));
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const rows = await db.select({
+      id: partners.id,
+      companyName: partners.companyName,
+      tradeName: partners.tradeName,
+      addressStreet: partners.addressStreet,
+      addressCity: partners.addressCity,
+      addressPostalCode: partners.addressPostalCode,
+      addressCountry: partners.addressCountry,
+      contactPhone: partners.primaryContactPhone,
+      contactEmail: partners.primaryContactEmail,
+      partnerLevel: partners.level,
+      partnerStatus: partners.status,
+      website: partners.website,
+    }).from(partners).where(whereClause);
+    const result = rows.map((p) => ({ ...p, latitude: null, longitude: null }));
+    return res.json({ partners: result, total: result.length });
+  } catch (err: any) {
+    console.error("[Mobile API] Network error:", err);
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// GET /api/mobile/v1/leads
+// Leads du partenaire connecté (ou tous si admin)
+// ============================================
+router.get("/api/mobile/v1/leads", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const partnerId = req.mobileUser!.partnerId;
+    const role = req.mobileUser!.role;
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(50, parseInt(req.query.limit as string) || 20);
+    const offset = (page - 1) * limit;
+    const statusFilter = req.query.status as string | undefined;
+    const { getDb } = await import("../db");
+    const { leads } = await import("../../drizzle/schema");
+    const { eq, and, desc, sql } = await import("drizzle-orm");
+    const db = await getDb();
+    const conditions: any[] = [];
+    if (role !== "SUPER_ADMIN" && role !== "ADMIN" && partnerId) {
+      conditions.push(eq(leads.assignedPartnerId, partnerId));
+    }
+    if (statusFilter) conditions.push(eq(leads.status, statusFilter as any));
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const [rows, countResult] = await Promise.all([
+      db.select().from(leads).where(whereClause).orderBy(desc(leads.createdAt)).limit(limit).offset(offset),
+      db.select({ count: sql<number>`COUNT(*)` }).from(leads).where(whereClause),
+    ]);
+    const total = Number(countResult[0]?.count ?? 0);
+    return res.json({ leads: rows, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+  } catch (err: any) {
+    console.error("[Mobile API] Leads error:", err);
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/v1/leads/:id
+router.get("/api/mobile/v1/leads/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const leadId = parseInt(req.params.id);
+    const partnerId = req.mobileUser!.partnerId;
+    const role = req.mobileUser!.role;
+    const { getDb } = await import("../db");
+    const { leads } = await import("../../drizzle/schema");
+    const { eq, and } = await import("drizzle-orm");
+    const db = await getDb();
+    const conditions: any[] = [eq(leads.id, leadId)];
+    if (role !== "SUPER_ADMIN" && role !== "ADMIN" && partnerId) conditions.push(eq(leads.assignedPartnerId, partnerId));
+    const [lead] = await db.select().from(leads).where(and(...conditions)).limit(1);
+    if (!lead) return res.status(404).json({ error: "NOT_FOUND", message: "Lead introuvable" });
+    return res.json({ lead });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// PATCH /api/mobile/v1/leads/:id
+router.patch("/api/mobile/v1/leads/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const leadId = parseInt(req.params.id);
+    const partnerId = req.mobileUser!.partnerId;
+    const role = req.mobileUser!.role;
+    const { getDb } = await import("../db");
+    const { leads } = await import("../../drizzle/schema");
+    const { eq, and } = await import("drizzle-orm");
+    const db = await getDb();
+    const conditions: any[] = [eq(leads.id, leadId)];
+    if (role !== "SUPER_ADMIN" && role !== "ADMIN" && partnerId) conditions.push(eq(leads.assignedPartnerId, partnerId));
+    const { status, notes, phone } = req.body;
+    const updateData: any = { updatedAt: new Date() };
+    if (status) updateData.status = status;
+    if (notes !== undefined) updateData.message = notes;
+    if (phone) updateData.phone = phone;
+    await db.update(leads).set(updateData).where(and(...conditions));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// ADMIN MIDDLEWARE
+// ============================================
+async function requireAdminRole(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  const role = req.mobileUser?.role;
+  if (role !== "SUPER_ADMIN" && role !== "ADMIN") {
+    return res.status(403).json({ error: "FORBIDDEN", message: "Accès réservé aux administrateurs" });
+  }
+  next();
+}
+router.use("/api/mobile/admin", requireMobileAuth, requireAdminRole);
+
+// GET /api/mobile/admin/stats
+router.get("/api/mobile/admin/stats", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { partners, orders, leads, customerSavTickets } = await import("../../drizzle/schema");
+    const { eq, desc, sql } = await import("drizzle-orm");
+    const db = await getDb();
+    const [totalPartners, activePartners, totalOrders, pendingOrders, totalRevenue, totalLeads, openSav, recentOrders] = await Promise.all([
+      db.select({ count: sql<number>`COUNT(*)` }).from(partners),
+      db.select({ count: sql<number>`COUNT(*)` }).from(partners).where(eq(partners.status, "ACTIVE")),
+      db.select({ count: sql<number>`COUNT(*)` }).from(orders),
+      db.select({ count: sql<number>`COUNT(*)` }).from(orders).where(eq(orders.status, "PENDING")),
+      db.select({ total: sql<number>`COALESCE(SUM(totalTTC), 0)` }).from(orders),
+      db.select({ count: sql<number>`COUNT(*)` }).from(leads),
+      db.select({ count: sql<number>`COUNT(*)` }).from(customerSavTickets).where(eq(customerSavTickets.status, "OPEN")),
+      db.select({ id: orders.id, orderNumber: orders.orderNumber, status: orders.status, totalTTC: orders.totalTTC, createdAt: orders.createdAt, partnerId: orders.partnerId }).from(orders).orderBy(desc(orders.createdAt)).limit(10),
+    ]);
+    return res.json({
+      totalPartners: Number(totalPartners[0]?.count ?? 0),
+      activePartners: Number(activePartners[0]?.count ?? 0),
+      totalOrders: Number(totalOrders[0]?.count ?? 0),
+      pendingOrders: Number(pendingOrders[0]?.count ?? 0),
+      totalRevenueTTC: Number(totalRevenue[0]?.total ?? 0),
+      totalLeads: Number(totalLeads[0]?.count ?? 0),
+      openSavTickets: Number(openSav[0]?.count ?? 0),
+      recentOrders,
+    });
+  } catch (err: any) {
+    console.error("[Mobile Admin] Stats error:", err);
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/partners
+router.get("/api/mobile/admin/partners", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(50, parseInt(req.query.limit as string) || 20);
+    const offset = (page - 1) * limit;
+    const search = req.query.search as string | undefined;
+    const statusFilter = req.query.status as string | undefined;
+    const { getDb } = await import("../db");
+    const { partners } = await import("../../drizzle/schema");
+    const { eq, like, or, and, desc, sql } = await import("drizzle-orm");
+    const db = await getDb();
+    const conditions: any[] = [];
+    if (statusFilter) conditions.push(eq(partners.status, statusFilter as any));
+    if (search) conditions.push(or(like(partners.companyName, `%${search}%`), like(partners.primaryContactEmail, `%${search}%`)));
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const [rows, countResult] = await Promise.all([
+      db.select({
+        id: partners.id, companyName: partners.companyName, tradeName: partners.tradeName,
+        contactName: partners.primaryContactName, contactEmail: partners.primaryContactEmail,
+        contactPhone: partners.primaryContactPhone, addressCity: partners.addressCity,
+        addressCountry: partners.addressCountry, partnerLevel: partners.level,
+        partnerStatus: partners.status, discountPercent: partners.discountPercent,
+        supplierClientCode: partners.supplierClientCode, totalOrders: partners.totalOrders,
+        createdAt: partners.createdAt,
+      }).from(partners).where(whereClause).orderBy(desc(partners.createdAt)).limit(limit).offset(offset),
+      db.select({ count: sql<number>`COUNT(*)` }).from(partners).where(whereClause),
+    ]);
+    const total = Number(countResult[0]?.count ?? 0);
+    return res.json({ partners: rows, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+  } catch (err: any) {
+    console.error("[Mobile Admin] Partners error:", err);
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/partners/:id
+router.get("/api/mobile/admin/partners/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const partnerId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { partners, orders, leads } = await import("../../drizzle/schema");
+    const { eq, desc } = await import("drizzle-orm");
+    const db = await getDb();
+    const [partner] = await db.select().from(partners).where(eq(partners.id, partnerId)).limit(1);
+    if (!partner) return res.status(404).json({ error: "NOT_FOUND", message: "Partenaire introuvable" });
+    const [recentOrders, partnerLeads] = await Promise.all([
+      db.select().from(orders).where(eq(orders.partnerId, partnerId)).orderBy(desc(orders.createdAt)).limit(10),
+      db.select().from(leads).where(eq(leads.assignedPartnerId, partnerId)).orderBy(desc(leads.createdAt)).limit(20),
+    ]);
+    return res.json({ partner, recentOrders, leads: partnerLeads });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/orders
+router.get("/api/mobile/admin/orders", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(50, parseInt(req.query.limit as string) || 20);
+    const offset = (page - 1) * limit;
+    const statusFilter = req.query.status as string | undefined;
+    const partnerIdFilter = req.query.partnerId ? parseInt(req.query.partnerId as string) : undefined;
+    const { getDb } = await import("../db");
+    const { orders, partners } = await import("../../drizzle/schema");
+    const { eq, and, desc, sql } = await import("drizzle-orm");
+    const db = await getDb();
+    const conditions: any[] = [];
+    if (statusFilter) conditions.push(eq(orders.status, statusFilter as any));
+    if (partnerIdFilter) conditions.push(eq(orders.partnerId, partnerIdFilter));
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const [rows, countResult] = await Promise.all([
+      db.select({
+        id: orders.id, orderNumber: orders.orderNumber, status: orders.status,
+        totalHT: orders.totalHT, totalTTC: orders.totalTTC, depositPaid: orders.depositPaid,
+        deliveryRequestedDate: orders.deliveryRequestedDate, createdAt: orders.createdAt,
+        partnerId: orders.partnerId, partnerName: partners.primaryContactName, partnerCompany: partners.companyName,
+      }).from(orders).leftJoin(partners, eq(orders.partnerId, partners.id)).where(whereClause).orderBy(desc(orders.createdAt)).limit(limit).offset(offset),
+      db.select({ count: sql<number>`COUNT(*)` }).from(orders).where(whereClause),
+    ]);
+    const total = Number(countResult[0]?.count ?? 0);
+    return res.json({ orders: rows, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+  } catch (err: any) {
+    console.error("[Mobile Admin] Orders error:", err);
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/orders/:id
+router.get("/api/mobile/admin/orders/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const orderId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { orders, orderItems, partners, payments } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const [order] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+    if (!order) return res.status(404).json({ error: "NOT_FOUND", message: "Commande introuvable" });
+    const [items, partner, orderPayments] = await Promise.all([
+      db.select().from(orderItems).where(eq(orderItems.orderId, orderId)),
+      order.partnerId ? db.select({ id: partners.id, companyName: partners.companyName, contactName: partners.primaryContactName, contactEmail: partners.primaryContactEmail, contactPhone: partners.primaryContactPhone }).from(partners).where(eq(partners.id, order.partnerId)).limit(1) : Promise.resolve([]),
+      db.select().from(payments).where(eq(payments.orderId, orderId)),
+    ]);
+    return res.json({ order: { ...order, items, payments: orderPayments, partner: partner[0] ?? null } });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/leads
+router.get("/api/mobile/admin/leads", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(50, parseInt(req.query.limit as string) || 20);
+    const offset = (page - 1) * limit;
+    const statusFilter = req.query.status as string | undefined;
+    const partnerIdFilter = req.query.partnerId ? parseInt(req.query.partnerId as string) : undefined;
+    const { getDb } = await import("../db");
+    const { leads } = await import("../../drizzle/schema");
+    const { eq, and, desc, sql } = await import("drizzle-orm");
+    const db = await getDb();
+    const conditions: any[] = [];
+    if (statusFilter) conditions.push(eq(leads.status, statusFilter as any));
+    if (partnerIdFilter) conditions.push(eq(leads.assignedPartnerId, partnerIdFilter));
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const [rows, countResult] = await Promise.all([
+      db.select().from(leads).where(whereClause).orderBy(desc(leads.createdAt)).limit(limit).offset(offset),
+      db.select({ count: sql<number>`COUNT(*)` }).from(leads).where(whereClause),
+    ]);
+    const total = Number(countResult[0]?.count ?? 0);
+    return res.json({ leads: rows, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+  } catch (err: any) {
+    console.error("[Mobile Admin] Leads error:", err);
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
 // GET /api/mobile/health
 // Health check endpoint (public)
 // ============================================
 router.get("/api/mobile/health", (_req: Request, res: Response) => {
   return res.json({
     status: "ok",
-    version: "1.1.0",
+    version: "1.2.0",
     timestamp: new Date().toISOString(),
   });
 });

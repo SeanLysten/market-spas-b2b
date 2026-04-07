@@ -3121,3 +3121,14 @@
 - [x] MARBELLA Sterling Silver : SKU 663100 078 38, EAN13 3364549284855 (nouveau produit + variante)
 - [x] MARBELLA Odyssey : SKU 663100 079 38, EAN13 3364549284862 (variante créée)
 - [x] MARBELLA Midnight Opal : SKU 663100 080 38, EAN13 3364549284879 (variante créée)
+
+## Feature - API Mobile : corrections et routes admin (07/04/2026)
+
+- [x] GET /api/mobile/v1/network : carte du réseau avec tous les partenaires (adresse, ville, pays, téléphone)
+- [x] GET /api/mobile/v1/leads : liste des leads du partenaire connecté (pagination, filtres statut/source)
+- [x] GET /api/mobile/admin/stats : statistiques globales (partenaires, commandes, leads, SAV, CA total)
+- [x] GET /api/mobile/admin/orders : toutes les commandes (admin uniquement, pagination, filtres)
+- [x] GET /api/mobile/admin/partners : tous les partenaires (admin uniquement, pagination)
+- [x] GET /api/mobile/admin/leads : tous les leads (admin uniquement, pagination, filtres)
+- [x] Correction admin/stats : savTickets → customerSavTickets (bon nom de table)
+- [x] 1053 tests passent (72 fichiers de test)
