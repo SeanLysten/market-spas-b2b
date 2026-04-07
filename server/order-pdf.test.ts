@@ -134,7 +134,7 @@ describe("OrderSummary Page", () => {
   it("should link to order tracking from summary", () => {
     const pagePath = path.resolve(__dirname, "../client/src/pages/OrderSummary.tsx");
     const content = fs.readFileSync(pagePath, "utf-8");
-    expect(content).toContain("/tracking");
+    expect(content).toContain("/order/");
     expect(content).toContain("Suivi");
   });
 });

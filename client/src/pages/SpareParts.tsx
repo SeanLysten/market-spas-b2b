@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
-import DashboardLayout from "@/components/DashboardLayout";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -477,7 +477,7 @@ export default function SpareParts() {
   );
 
   return (
-    <DashboardLayout>
+    <>
       <div className="p-4 md:p-6">
         {breadcrumb}
         {step === "brand" && <BrandSelection onSelect={handleSelectBrand} />}
@@ -488,6 +488,6 @@ export default function SpareParts() {
           <PartsList model={selectedModel} brand={selectedBrand} onBack={handleBackToModels} />
         )}
       </div>
-    </DashboardLayout>
+    </>
   );
 }

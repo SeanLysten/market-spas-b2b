@@ -55,7 +55,7 @@ export default function OrderSummary() {
   const params = useParams<{ orderId: string }>();
   const orderId = parseInt(params.orderId || "0");
 
-  const { data: order, isLoading } = trpc.orders.getById.useQuery(
+  const { data: order, isLoading } = trpc.orders.getWithItems.useQuery(
     { id: orderId },
     { enabled: orderId > 0 }
   );
@@ -142,7 +142,7 @@ export default function OrderSummary() {
 
   const statusInfo = STATUS_LABELS[order.status] || { label: order.status, color: "bg-muted text-muted-foreground", icon: Clock };
   const StatusIcon = statusInfo.icon;
-  const items = (order as any).items || [];
+  const items = order.items || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -167,7 +167,7 @@ export default function OrderSummary() {
               </div>
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
-              <Link href={`/orders/${orderId}/tracking`} className="flex-1 sm:flex-none">
+              <Link href={`/order/${orderId}`} className="flex-1 sm:flex-none">
                 <Button variant="outline" className="gap-2 w-full">
                   <Truck className="w-4 h-4" />
                   <span className="hidden sm:inline">Suivi</span>
@@ -253,20 +253,26 @@ export default function OrderSummary() {
                     {items.map((item: any, index: number) => (
                       <tr key={item.id || index} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                         <td className="py-3 px-3">
-                          <div>
-                            <p className="font-medium">{item.name || item.product?.name || "Produit"}</p>
-                            {(item.variant?.name || item.color) && (
-                              <p className="text-xs text-muted-foreground">{item.variant?.name || item.color}</p>
+                          <div className="flex items-center gap-3">
+                            {item.imageUrl ? (
+                              <img src={item.imageUrl} alt={item.productName} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                            ) : (
+                              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                                <Package className="w-5 h-5 text-muted-foreground" />
+                              </div>
                             )}
+                            <div>
+                              <p className="font-medium">{item.productName || "Produit"}</p>
+                              {item.color && (
+                                <p className="text-xs text-muted-foreground">Couleur : {item.color}</p>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="py-3 px-3">
                           <div className="space-y-0.5">
-                            {(item.supplierProductCode || item.product?.supplierProductCode) && (
-                              <p className="text-xs font-mono">{item.supplierProductCode || item.product?.supplierProductCode}</p>
-                            )}
-                            {(item.ean13 || item.product?.ean13) && (
-                              <p className="text-xs text-muted-foreground font-mono">EAN: {item.ean13 || item.product?.ean13}</p>
+                            {item.sku && (
+                              <p className="text-xs font-mono">{item.sku}</p>
                             )}
                           </div>
                         </td>
@@ -296,9 +302,9 @@ export default function OrderSummary() {
                   <div key={item.id || index} className="border rounded-lg p-3 space-y-2">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-medium text-sm">{item.name || item.product?.name || "Produit"}</p>
-                        {(item.variant?.name || item.color) && (
-                          <p className="text-xs text-muted-foreground">{item.variant?.name || item.color}</p>
+                        <p className="font-medium text-sm">{item.productName || "Produit"}</p>
+                        {item.color && (
+                          <p className="text-xs text-muted-foreground">Couleur : {item.color}</p>
                         )}
                       </div>
                       <p className="font-semibold text-sm">{formatPrice(item.totalHT)}</p>
@@ -315,9 +321,9 @@ export default function OrderSummary() {
                         </Badge>
                       )}
                     </div>
-                    {(item.supplierProductCode || item.product?.supplierProductCode) && (
+                    {item.sku && (
                       <p className="text-xs text-muted-foreground font-mono">
-                        Réf: {item.supplierProductCode || item.product?.supplierProductCode}
+                        Réf: {item.sku}
                       </p>
                     )}
                   </div>
@@ -489,7 +495,7 @@ export default function OrderSummary() {
               <Download className="w-4 h-4" />
               Télécharger le récapitulatif PDF
             </Button>
-            <Link href={`/orders/${orderId}/tracking`} className="flex-1 sm:flex-none">
+            <Link href={`/order/${orderId}`} className="flex-1 sm:flex-none">
               <Button variant="outline" className="gap-2 w-full">
                 <Truck className="w-4 h-4" />
                 Voir le suivi de commande

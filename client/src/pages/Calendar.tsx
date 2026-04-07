@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import DashboardLayout from "@/components/DashboardLayout";
+
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -166,16 +166,14 @@ export default function Calendar() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center py-32">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center py-32">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <div className="p-4 md:p-6 space-y-4 md:space-y-6">
         {/* Page header */}
         <div data-tour="calendar-header" className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -549,6 +547,6 @@ export default function Calendar() {
         onSkip={onboarding.skipTour}
         onComplete={onboarding.markCompleted}
       />
-    </DashboardLayout>
+    </>
   );
 }

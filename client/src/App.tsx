@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import DashboardLayout from "./components/DashboardLayout";
 import Home from "./pages/Home";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminResources from "./pages/admin/AdminResources";
@@ -62,47 +63,63 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import { useWebSocket } from "./hooks/useWebSocket";
 
+/** Helper: wrap a page component in DashboardLayout */
+function withDashboard(Component: React.ComponentType<any>) {
+  return function WrappedWithDashboard(props: any) {
+    return (
+      <DashboardLayout>
+        <Component {...props} />
+      </DashboardLayout>
+    );
+  };
+}
+
 function Router() {
   // Initialize WebSocket connection for real-time notifications
   useWebSocket();
   return (
     <Switch>
-      {/* Authentication routes */}
+      {/* Authentication routes (no sidebar) */}
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
+      <Route path="/accept-invitation" component={AcceptInvitation} />
       
+      {/* Landing / onboarding (no sidebar) */}
       <Route path="/" component={Home} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/catalog" component={Catalog} />
-      <Route path="/orders" component={Orders} />
-      <Route path="/resources" component={Resources} />
-      <Route path="/cart" component={Cart} />
-      <Route path="/checkout" component={Checkout} />
-      <Route path="/order-confirmation/:orderId" component={OrderConfirmation} />
-      <Route path="/profile" component={Profile} />
-      <Route path="/product/:id" component={ProductDetail} />
       <Route path="/partner-onboarding" component={PartnerOnboarding} />
       <Route path="/partner-pending" component={PartnerPending} />
-      <Route path="/order/:orderId" component={OrderTracking} />
-      <Route path="/order/:orderId/summary" component={OrderSummary} />
-      <Route path="/favorites" component={Favorites} />
-      <Route path="/calendar" component={Calendar} />
-      <Route path="/leads" component={Leads} />
-      <Route path="/after-sales" component={AfterSales} />
-      <Route path="/after-sales/:id" component={AfterSales} />
-      <Route path="/spare-parts" component={SpareParts} />
-      <Route path="/technical-resources" component={TechnicalResources} />
-      <Route path="/technical-resources/forum/new" component={ForumNewTopic} />
-      <Route path="/technical-resources/forum/:id" component={ForumTopicDetail} />
-      <Route path="/accept-invitation" component={AcceptInvitation} />
-      <Route path="/notifications" component={Notifications} />
-      <Route path="/notification-preferences" component={NotificationPreferences} />
-      <Route path="/team" component={TeamManagement} />
-      <Route path="/company-profile" component={CompanyProfile} />
+
+      {/* Partner pages (with sidebar) */}
+      <Route path="/dashboard" component={withDashboard(Dashboard)} />
+      <Route path="/catalog" component={withDashboard(Catalog)} />
+      <Route path="/orders" component={withDashboard(Orders)} />
+      <Route path="/resources" component={withDashboard(Resources)} />
+      <Route path="/cart" component={withDashboard(Cart)} />
+      <Route path="/checkout" component={withDashboard(Checkout)} />
+      <Route path="/order-confirmation/:orderId" component={withDashboard(OrderConfirmation)} />
+      <Route path="/profile" component={withDashboard(Profile)} />
+      <Route path="/product/:id" component={withDashboard(ProductDetail)} />
+      <Route path="/order/:orderId" component={withDashboard(OrderTracking)} />
+      <Route path="/order/:orderId/summary" component={withDashboard(OrderSummary)} />
+      <Route path="/favorites" component={withDashboard(Favorites)} />
+      <Route path="/calendar" component={withDashboard(Calendar)} />
+      <Route path="/leads" component={withDashboard(Leads)} />
+      <Route path="/after-sales" component={withDashboard(AfterSales)} />
+      <Route path="/after-sales/:id" component={withDashboard(AfterSales)} />
+      <Route path="/spare-parts" component={withDashboard(SpareParts)} />
+      <Route path="/technical-resources" component={withDashboard(TechnicalResources)} />
+      <Route path="/technical-resources/forum/new" component={withDashboard(ForumNewTopic)} />
+      <Route path="/technical-resources/forum/:id" component={withDashboard(ForumTopicDetail)} />
+      <Route path="/notifications" component={withDashboard(Notifications)} />
+      <Route path="/notification-preferences" component={withDashboard(NotificationPreferences)} />
+      <Route path="/team" component={withDashboard(TeamManagement)} />
+      <Route path="/company-profile" component={withDashboard(CompanyProfile)} />
+
+      {/* Admin routes (admin has its own layout) */}
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/resources" component={AdminResources} />
       <Route path="/admin/users" component={AdminUsers} />

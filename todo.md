@@ -3288,3 +3288,13 @@
 - [x] Mise à jour optimiste du cache tRPC après markCompleted (setData au lieu de invalidate)
 - [x] Double-vérification de completion juste avant l'affichage du tutoriel
 - [x] 75 fichiers de tests, 1093 tests passent
+
+## Bugs côté partenaire : détail commande, tracking, calendrier
+- [x] Articles commandés dans OrderTracking.tsx : déjà corrigé (getWithItems + productName/sku/color/imageUrl)
+- [x] Récapitulatif (OrderSummary.tsx) : corrigé avec getWithItems + propriétés correctes
+- [x] Lien "Suivre la commande" : corrigé de /orders/:id/tracking vers /order/:orderId
+- [x] Sidebar de navigation : ajoutée sur toutes les pages partenaire via withDashboard() dans App.tsx
+- [x] Supprimé DashboardLayout interne de Calendar.tsx et SpareParts.tsx pour éviter double-wrapping
+- [x] Simplifié le header du Dashboard (supprimé boutons redondants avec la sidebar)
+- [x] Test order-pdf.test.ts mis à jour pour refléter le nouveau lien
+- [x] 75 fichiers de tests, 1093 tests passent

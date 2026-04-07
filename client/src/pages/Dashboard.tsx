@@ -179,7 +179,7 @@ export default function Dashboard() {
       {/* Header */}
       <header data-tour="dashboard-header" className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container py-4">
-          <div className="space-y-3">
+          <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl md:text-2xl text-display font-bold">Tableau de bord</h1>
               <p className="text-xs md:text-sm text-muted-foreground">
@@ -195,9 +195,7 @@ export default function Dashboard() {
                 )}
               </p>
             </div>
-            {/* Boutons empilés sur mobile */}
-            <div className="flex flex-wrap items-center gap-2">
-              <ThemeToggle />
+            <div className="flex items-center gap-2">
               <Link href="/notifications">
                 <Button variant="outline" size="sm" className="relative">
                   <Bell className="w-4 h-4" />
@@ -208,22 +206,6 @@ export default function Dashboard() {
                   )}
                 </Button>
               </Link>
-              {user?.role === 'PARTNER_ADMIN' && user?.partnerId && (
-                <Link href="/company-profile">
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Building2 className="w-4 h-4" />
-                    <span className="hidden sm:inline">Ma Société</span>
-                  </Button>
-                </Link>
-              )}
-              {(isOwner || canTeam) && (
-                <Link href="/team">
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <UserCog className="w-4 h-4" />
-                    <span className="hidden sm:inline">Mon Équipe</span>
-                  </Button>
-                </Link>
-              )}
               {isAdmin && (
                 <Link href="/admin">
                   <Button variant="outline" size="sm" className="gap-2">
@@ -232,15 +214,6 @@ export default function Dashboard() {
                   </Button>
                 </Link>
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => logout()}
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Déconnexion</span>
-              </Button>
             </div>
           </div>
         </div>

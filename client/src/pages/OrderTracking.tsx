@@ -72,7 +72,7 @@ export default function OrderTracking() {
   const params = useParams<{ orderId: string }>();
   const orderId = parseInt(params.orderId || "0");
 
-  const { data: order, isLoading } = trpc.orders.getById.useQuery(
+  const { data: order, isLoading } = trpc.orders.getWithItems.useQuery(
     { id: orderId },
     { enabled: orderId > 0 }
   );
@@ -274,34 +274,41 @@ export default function OrderTracking() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {(order as any).items?.map((item: any, index: number) => (
-                    <div key={index} className="flex gap-4 p-4 rounded-lg border">
-                      <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                        {item.product?.imageUrl ? (
-                          <img
-                            src={item.product.imageUrl}
-                            alt={item.product?.name}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                        ) : (
-                          <Package className="w-8 h-8 text-muted-foreground" />
-                        )}
+                  {order.items && order.items.length > 0 ? (
+                    order.items.map((item: any, index: number) => (
+                      <div key={index} className="flex gap-4 p-4 rounded-lg border">
+                        <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                          {item.imageUrl ? (
+                            <img
+                              src={item.imageUrl}
+                              alt={item.productName}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                          ) : (
+                            <Package className="w-8 h-8 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{item.productName || "Produit"}</h4>
+                          {item.color && (
+                            <p className="text-xs md:text-sm text-muted-foreground">Couleur : {item.color}</p>
+                          )}
+                          <p className="text-xs md:text-sm text-muted-foreground font-mono">
+                            {item.sku || 'N/A'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold">{formatPrice(item.totalHT)}</p>
+                          <p className="text-xs md:text-sm text-muted-foreground">Qté: {item.quantity}</p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{item.product?.name || "Produit"}</h4>
-                        {item.variant && (
-                          <p className="text-xs md:text-sm text-muted-foreground">{item.variant.name}</p>
-                        )}
-                        <p className="text-xs md:text-sm text-muted-foreground font-mono">
-                          {item.product?.ean13 ? `EAN: ${item.product.ean13}` : (item.product?.supplierProductCode || item.product?.sku || 'N/A')}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold">{formatPrice(item.totalHT)}</p>
-                        <p className="text-xs md:text-sm text-muted-foreground">Qté: {item.quantity}</p>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>Aucun article trouvé</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
