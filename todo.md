@@ -3243,3 +3243,6 @@
 - [x] Ajouter le comptage des items (itemCount) dans getAllOrders via GROUP BY COUNT sur orderItems
 - [x] Mettre à jour AdminOrders.tsx pour utiliser order.itemCount au lieu de order.items?.length
 - [x] 75 fichiers de tests, 1093 tests passent
+
+## Bug : Compteur articles affiche nombre de lignes au lieu de la quantité totale
+- [x] Corriger getAllOrders : utiliser SUM(quantity) au lieu de COUNT(*) pour itemCount

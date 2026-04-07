@@ -400,12 +400,12 @@ export async function getAllOrders(filters?: {
   const itemCounts = await db
     .select({
       orderId: orderItems.orderId,
-      count: sql<number>`count(*)`,
+      totalQty: sql<number>`COALESCE(SUM(${orderItems.quantity}), 0)`,
     })
     .from(orderItems)
     .where(inArray(orderItems.orderId, orderIds))
     .groupBy(orderItems.orderId);
-  const itemCountMap = new Map(itemCounts.map((ic) => [ic.orderId, ic.count]));
+  const itemCountMap = new Map(itemCounts.map((ic) => [ic.orderId, ic.totalQty]));
 
   // Enrich orders with partner data for admin display
   const partnerIds = [...new Set(rows.map((r: any) => r.partnerId).filter(Boolean))];
