@@ -393,28 +393,43 @@ export async function getAllOrders(filters?: {
 
   const rows = await query;
 
+  if (rows.length === 0) return rows;
+
+  // Count items per order
+  const orderIds = rows.map((r: any) => r.id);
+  const itemCounts = await db
+    .select({
+      orderId: orderItems.orderId,
+      count: sql<number>`count(*)`,
+    })
+    .from(orderItems)
+    .where(inArray(orderItems.orderId, orderIds))
+    .groupBy(orderItems.orderId);
+  const itemCountMap = new Map(itemCounts.map((ic) => [ic.orderId, ic.count]));
+
   // Enrich orders with partner data for admin display
   const partnerIds = [...new Set(rows.map((r: any) => r.partnerId).filter(Boolean))];
-  if (partnerIds.length === 0) return rows;
-
-  const partnerRows = await db
-    .select({
-      id: partners.id,
-      companyName: partners.companyName,
-      tradeName: partners.tradeName,
-      primaryContactName: partners.primaryContactName,
-      primaryContactEmail: partners.primaryContactEmail,
-      primaryContactPhone: partners.primaryContactPhone,
-      level: partners.level,
-    })
-    .from(partners)
-    .where(inArray(partners.id, partnerIds as number[]));
-
-  const partnerMap = new Map(partnerRows.map((p) => [p.id, p]));
+  let partnerMap = new Map();
+  if (partnerIds.length > 0) {
+    const partnerRows = await db
+      .select({
+        id: partners.id,
+        companyName: partners.companyName,
+        tradeName: partners.tradeName,
+        primaryContactName: partners.primaryContactName,
+        primaryContactEmail: partners.primaryContactEmail,
+        primaryContactPhone: partners.primaryContactPhone,
+        level: partners.level,
+      })
+      .from(partners)
+      .where(inArray(partners.id, partnerIds as number[]));
+    partnerMap = new Map(partnerRows.map((p) => [p.id, p]));
+  }
 
   return rows.map((row: any) => ({
     ...row,
     partner: partnerMap.get(row.partnerId) || null,
+    itemCount: itemCountMap.get(row.id) || 0,
   }));
 }
 

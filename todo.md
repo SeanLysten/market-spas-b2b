@@ -3238,3 +3238,8 @@
 - [x] Enrichir getOrderWithItems pour joindre l'imageUrl du produit à chaque item (variante prioritaire, puis produit)
 - [x] Mettre à jour AdminOrders.tsx pour utiliser item.imageUrl au lieu de item.product?.imageUrl
 - [x] 75 fichiers de tests, 1093 tests passent
+
+## Bug : 0 article(s) dans la liste des commandes admin
+- [x] Ajouter le comptage des items (itemCount) dans getAllOrders via GROUP BY COUNT sur orderItems
+- [x] Mettre à jour AdminOrders.tsx pour utiliser order.itemCount au lieu de order.items?.length
+- [x] 75 fichiers de tests, 1093 tests passent

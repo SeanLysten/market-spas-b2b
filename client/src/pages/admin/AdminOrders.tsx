@@ -325,7 +325,7 @@ export default function AdminOrders() {
                         <div className="text-right">
                           <div className="font-semibold">{formatPrice(order.totalHT)} HT</div>
                           <div className="text-sm text-muted-foreground">
-                            {order.items?.length || 0} article(s)
+                            {order.itemCount || order.items?.length || 0} article(s)
                           </div>
                         </div>
                         <div className="flex gap-2">
