@@ -127,6 +127,31 @@ export async function expireUnpaidOrders(): Promise<number> {
         note: "Paiement non reçu dans les 3 jours - commande refusée et stock restauré automatiquement",
       });
 
+      // Send order refused email to partner
+      try {
+        const { sendOrderRefusedEmail } = await import("./email");
+        const { partners, users } = await import("../drizzle/schema");
+        const partner = await db.select().from(partners).where(eq(partners.id, order.partnerId)).limit(1);
+        if (partner.length > 0) {
+          const partnerUsers = await db.select().from(users).where(eq(users.partnerId, order.partnerId)).limit(5);
+          const emailTargets = partnerUsers.length > 0
+            ? partnerUsers.map((u: any) => u.email).filter(Boolean)
+            : [partner[0].email].filter(Boolean);
+          for (const targetEmail of emailTargets) {
+            await sendOrderRefusedEmail(
+              targetEmail,
+              order.orderNumber,
+              parseFloat(order.depositAmount || "0"),
+              parseFloat(order.totalTTC || "0"),
+              partner[0].companyName
+            );
+          }
+          console.log(`[Stock] Order ${order.orderNumber}: Refused email sent to ${emailTargets.length} recipient(s)`);
+        }
+      } catch (emailError: any) {
+        console.error(`[Stock] Order ${order.orderNumber}: Failed to send refused email:`, emailError.message);
+      }
+
       count++;
       console.log(`[Stock] Order ${order.orderNumber} expired: PAYMENT_PENDING → REFUSED (stock restored)`);
     } catch (error: any) {

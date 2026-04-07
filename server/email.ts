@@ -1848,3 +1848,162 @@ export function createNewsletterTemplate(
 </html>
   `.trim();
 }
+
+
+/**
+ * Send order refused email when payment was not received within the deadline
+ */
+export async function sendOrderRefusedEmail(
+  email: string,
+  orderNumber: string,
+  depositAmount: number,
+  totalAmount: number,
+  partnerName?: string
+) {
+  const formatPrice = (price: number | string): string => {
+    const num = typeof price === "string" ? parseFloat(price) : price;
+    return new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+  };
+
+  const greeting = partnerName ? `Bonjour ${partnerName},` : "Bonjour,";
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .header h1 { margin: 0 0 8px 0; font-size: 24px; }
+    .header p { margin: 0; opacity: 0.9; font-size: 14px; }
+    .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
+    .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
+    .alert-box { background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 0 6px 6px 0; }
+    .alert-box p { margin: 0; color: #991b1b; }
+    .info-box { background: #ffffff; border: 1px solid #e2e8f0; padding: 20px; margin: 20px 0; border-radius: 8px; }
+    .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+    .info-label { color: #64748b; font-size: 14px; }
+    .info-value { color: #1e293b; font-weight: 600; font-size: 14px; }
+    .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; font-weight: 600; }
+    .btn:hover { background: #1d4ed8; }
+    .note { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 20px 0; border-radius: 0 6px 6px 0; font-size: 13px; color: #92400e; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Commande refusée</h1>
+      <p>Market Spas - Portail B2B</p>
+    </div>
+    <div class="content">
+      <div class="alert-box">
+        <p><strong>Votre commande #${orderNumber} a été annulée</strong> car le paiement de l'acompte n'a pas été reçu dans le délai imparti de 3 jours.</p>
+      </div>
+      
+      <h2 style="color: #1e293b; margin-top: 24px;">${greeting}</h2>
+      
+      <p>Nous vous informons que votre commande <strong>#${orderNumber}</strong> a été automatiquement refusée car nous n'avons pas reçu le virement bancaire correspondant à l'acompte dans les 3 jours suivant la validation de la commande.</p>
+      
+      <div class="info-box">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Commande</td>
+            <td style="padding: 8px 0; text-align: right; color: #1e293b; font-weight: 600;">#${orderNumber}</td>
+          </tr>
+          <tr style="border-top: 1px solid #f1f5f9;">
+            <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Acompte attendu</td>
+            <td style="padding: 8px 0; text-align: right; color: #dc2626; font-weight: 600;">${formatPrice(depositAmount)} €</td>
+          </tr>
+          <tr style="border-top: 1px solid #f1f5f9;">
+            <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Montant total de la commande</td>
+            <td style="padding: 8px 0; text-align: right; color: #1e293b; font-weight: 600;">${formatPrice(totalAmount)} €</td>
+          </tr>
+          <tr style="border-top: 1px solid #f1f5f9;">
+            <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Statut</td>
+            <td style="padding: 8px 0; text-align: right; color: #dc2626; font-weight: 600;">Refusée</td>
+          </tr>
+        </table>
+      </div>
+
+      <p><strong>Conséquences :</strong></p>
+      <ul style="color: #475569; padding-left: 20px;">
+        <li>Les produits réservés ont été remis en stock</li>
+        <li>La commande est définitivement annulée</li>
+        <li>Aucun montant n'a été débité</li>
+      </ul>
+
+      <div class="note">
+        <strong>Vous souhaitez repasser commande ?</strong> Les produits sont de nouveau disponibles dans le catalogue. N'hésitez pas à repasser commande et à effectuer le virement dans les 3 jours suivant la validation.
+      </div>
+
+      <div style="text-align: center;">
+        <a href="${ENV.siteUrl}/catalog" class="btn">Voir le catalogue</a>
+      </div>
+
+      <p style="margin-top: 24px; color: #64748b; font-size: 13px;">Si vous avez effectué un virement qui n'a pas encore été traité, veuillez nous contacter directement pour régulariser la situation.</p>
+    </div>
+    <div class="footer">
+      <p>Market Spas - Votre partenaire wellness</p>
+      <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+      <p>&copy; ${new Date().getFullYear()} Market Spas. Tous droits réservés.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const textContent = `
+COMMANDE REFUSÉE
+Market Spas - Portail B2B
+
+${greeting}
+
+Votre commande #${orderNumber} a été automatiquement refusée car le paiement de l'acompte n'a pas été reçu dans le délai imparti de 3 jours.
+
+DÉTAILS :
+- Commande : #${orderNumber}
+- Acompte attendu : ${formatPrice(depositAmount)} €
+- Montant total : ${formatPrice(totalAmount)} €
+- Statut : Refusée
+
+CONSÉQUENCES :
+- Les produits réservés ont été remis en stock
+- La commande est définitivement annulée
+- Aucun montant n'a été débité
+
+Vous souhaitez repasser commande ? Les produits sont de nouveau disponibles dans le catalogue.
+Voir le catalogue : ${ENV.siteUrl}/catalog
+
+Si vous avez effectué un virement qui n'a pas encore été traité, veuillez nous contacter directement.
+
+---
+© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
+Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+  `.trim();
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [email],
+      subject: `Commande #${orderNumber} refusée - Paiement non reçu`,
+      html: htmlContent,
+      text: textContent,
+    });
+
+    if (error) {
+      console.error(`[Email] Error sending order refused to ${email}:`, error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`[Email] Order refused email sent to ${email}:`, data?.id);
+    return { success: true, messageId: data?.id };
+  } catch (error) {
+    console.error(`[Email] Exception sending order refused to ${email}:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}

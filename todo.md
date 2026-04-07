@@ -3195,3 +3195,9 @@
 - [x] Ajouter le statut REFUSED à l'enum et aux labels frontend (10 fichiers)
 - [x] Configurer l'expiration Mollie à 3 jours via dueDate
 - [x] Tests unitaires : 75 fichiers, 1093 tests passent
+
+## Email automatique commande refusée
+- [x] Créer la fonction sendOrderRefusedEmail dans email.ts
+- [x] Intégrer l'envoi dans le webhook Mollie (expired/failed/cancelled → REFUSED)
+- [x] Intégrer l'envoi dans le cron job expireUnpaidOrders
+- [x] Tests unitaires : 75 fichiers, 1093 tests passent

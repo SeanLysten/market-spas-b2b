@@ -159,6 +159,32 @@ async function handleOrderPaymentUpdate(
       } catch (e) {
         console.log("[Mollie Webhook] notifyPaymentFailed skipped:", (e as any).message);
       }
+
+      // Send order refused email to partner
+      try {
+        const { sendOrderRefusedEmail } = await import("./email");
+        const { partners, users } = await import("../drizzle/schema");
+        const partner = await db.select().from(partners).where(eq(partners.id, currentOrder.partnerId)).limit(1);
+        if (partner.length > 0) {
+          // Find the partner's contact email
+          const partnerUsers = await db.select().from(users).where(eq(users.partnerId, currentOrder.partnerId)).limit(5);
+          const emailTargets = partnerUsers.length > 0
+            ? partnerUsers.map((u: any) => u.email).filter(Boolean)
+            : [partner[0].email].filter(Boolean);
+          for (const targetEmail of emailTargets) {
+            await sendOrderRefusedEmail(
+              targetEmail,
+              currentOrder.orderNumber,
+              parseFloat(currentOrder.depositAmount || "0"),
+              parseFloat(currentOrder.totalTTC || "0"),
+              partner[0].companyName
+            );
+          }
+          console.log(`[Mollie Webhook] Order ${orderId}: Refused email sent to ${emailTargets.length} recipient(s)`);
+        }
+      } catch (emailError: any) {
+        console.error(`[Mollie Webhook] Order ${orderId}: Failed to send refused email:`, emailError.message);
+      }
       
       // Restore stock for all items in this order
       try {
@@ -173,6 +199,31 @@ async function handleOrderPaymentUpdate(
     case MOLLIE_STATUS.CANCELLED:
       newStatus = "REFUSED";
       console.log(`[Mollie Webhook] Order ${orderId}: Payment cancelled → REFUSED`);
+
+      // Send order refused email for cancelled payments too
+      try {
+        const { sendOrderRefusedEmail: sendRefusedEmail } = await import("./email");
+        const { partners: partnersTable, users: usersTable } = await import("../drizzle/schema");
+        const partnerData = await db.select().from(partnersTable).where(eq(partnersTable.id, currentOrder.partnerId)).limit(1);
+        if (partnerData.length > 0) {
+          const partnerUsersList = await db.select().from(usersTable).where(eq(usersTable.partnerId, currentOrder.partnerId)).limit(5);
+          const targets = partnerUsersList.length > 0
+            ? partnerUsersList.map((u: any) => u.email).filter(Boolean)
+            : [partnerData[0].email].filter(Boolean);
+          for (const t of targets) {
+            await sendRefusedEmail(
+              t,
+              currentOrder.orderNumber,
+              parseFloat(currentOrder.depositAmount || "0"),
+              parseFloat(currentOrder.totalTTC || "0"),
+              partnerData[0].companyName
+            );
+          }
+          console.log(`[Mollie Webhook] Order ${orderId}: Refused email sent after cancellation`);
+        }
+      } catch (emailError: any) {
+        console.error(`[Mollie Webhook] Order ${orderId}: Failed to send refused email:`, emailError.message);
+      }
       
       // Restore stock for cancelled orders too
       try {
