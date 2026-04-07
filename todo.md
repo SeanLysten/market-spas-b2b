@@ -3233,3 +3233,8 @@
 - [x] Corriger le chargement des données pour inclure les items avec nom, SKU, couleur, quantité, prix - ajouté appel orders.getWithItems au clic sur Détails
 - [x] Affichage enrichi : nom produit, référence SKU, couleur, quantité x prix unitaire HT, total HT
 - [x] 75 fichiers de tests, 1093 tests passent
+
+## Image produit dans le détail commande admin
+- [x] Enrichir getOrderWithItems pour joindre l'imageUrl du produit à chaque item (variante prioritaire, puis produit)
+- [x] Mettre à jour AdminOrders.tsx pour utiliser item.imageUrl au lieu de item.product?.imageUrl
+- [x] 75 fichiers de tests, 1093 tests passent

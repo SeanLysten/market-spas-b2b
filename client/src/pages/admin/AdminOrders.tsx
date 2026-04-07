@@ -442,10 +442,10 @@ export default function AdminOrders() {
                   {selectedOrder.items?.map((item: any, index: number) => (
                     <div key={index} className="flex items-center justify-between p-4">
                       <div className="flex items-center gap-3">
-                        {item.product?.imageUrl ? (
+                        {item.imageUrl ? (
                           <img 
-                            src={item.product.imageUrl} 
-                            alt={item.product?.name} 
+                            src={item.imageUrl} 
+                            alt={item.name || "Produit"} 
                             className="w-12 h-12 rounded object-cover"
                           />
                         ) : (

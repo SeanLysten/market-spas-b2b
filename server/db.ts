@@ -2028,9 +2028,39 @@ export async function getOrderWithItems(orderId: number) {
 
   const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
 
+  // Enrich items with product imageUrl
+  const productIds = [...new Set(items.map((i) => i.productId).filter(Boolean))] as number[];
+  const variantIds = [...new Set(items.map((i) => i.variantId).filter(Boolean))] as number[];
+
+  let productImageMap = new Map<number, string | null>();
+  let variantImageMap = new Map<number, string | null>();
+
+  if (productIds.length > 0) {
+    const productRows = await db
+      .select({ id: products.id, imageUrl: products.imageUrl })
+      .from(products)
+      .where(inArray(products.id, productIds));
+    productImageMap = new Map(productRows.map((p) => [p.id, p.imageUrl]));
+  }
+
+  if (variantIds.length > 0) {
+    const variantRows = await db
+      .select({ id: productVariants.id, imageUrl: productVariants.imageUrl })
+      .from(productVariants)
+      .where(inArray(productVariants.id, variantIds));
+    variantImageMap = new Map(variantRows.map((v) => [v.id, v.imageUrl]));
+  }
+
+  const enrichedItems = items.map((item) => ({
+    ...item,
+    imageUrl: (item.variantId ? variantImageMap.get(item.variantId) : null)
+      || (item.productId ? productImageMap.get(item.productId) : null)
+      || null,
+  }));
+
   return {
     ...order[0],
-    items,
+    items: enrichedItems,
   };
 }
 
