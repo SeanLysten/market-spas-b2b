@@ -3258,3 +3258,14 @@
 - [x] Bouton Réinitialiser les filtres
 - [x] Responsive mobile (grille adaptive 1/2/4 colonnes)
 - [x] 75 fichiers de tests, 1093 tests passent
+
+## Filtres avancés pour "Mes commandes" côté partenaire
+- [x] Filtre par période (date de début / date de fin)
+- [x] Filtre par statut (dropdown avec tous les statuts)
+- [x] Tri par date (récent/ancien) et montant HT (croissant/décroissant)
+- [x] Recherche par numéro de commande
+- [x] Récapitulatif (nombre de commandes filtrées + montant total HT) dans le header
+- [x] Bouton Filtres avec badge compteur + Réinitialiser les filtres
+- [x] Responsive mobile (grille 1/3 colonnes)
+- [x] Message vide adapté selon que des filtres sont actifs ou non
+- [x] 75 fichiers de tests, 1093 tests passent
