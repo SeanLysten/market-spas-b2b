@@ -1111,11 +1111,15 @@ export const cartItems = mysqlTable(
     isPreorder: boolean("isPreorder").default(false),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+    reservedAt: timestamp("reservedAt"),
+    reservedUntil: timestamp("reservedUntil"),
+    stockReserved: boolean("stockReserved").default(false),
   },
   (table) => ({
     userIdIdx: index("userId_idx").on(table.userId),
     productIdIdx: index("productId_idx").on(table.productId),
     userProductUniq: unique("user_product_variant_uniq").on(table.userId, table.productId, table.variantId),
+    reservedUntilIdx: index("reserved_until_idx").on(table.reservedUntil),
   })
 );
 

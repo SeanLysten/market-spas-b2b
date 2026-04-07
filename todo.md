@@ -3201,3 +3201,14 @@
 - [x] Intégrer l'envoi dans le webhook Mollie (expired/failed/cancelled → REFUSED)
 - [x] Intégrer l'envoi dans le cron job expireUnpaidOrders
 - [x] Tests unitaires : 75 fichiers, 1093 tests passent
+
+## Réservation temporaire panier (chrono 20 min)
+- [x] Ajouter colonne reservedAt, reservedUntil, stockReserved à cart_items + stockReserved à products/variants
+- [x] Backend : réserver le stock à l'ajout au panier (incrémenter stockReserved) pour spas/swim_spas
+- [x] Backend : libérer le stock à la suppression/modification d'un item du panier
+- [x] Backend : route getCart retourne cartReservedUntil pour le frontend
+- [x] Frontend : chrono décompte 20 min dans Cart.tsx et Checkout.tsx (bannière + récapitulatif)
+- [x] Frontend : redirection vers panier si chrono expire au checkout, bouton désactivé
+- [x] Cron job : releaseExpiredCartReservations toutes les 60s dans index.ts + route cron
+- [x] Lors du paiement : stock déjà retiré définitivement dans createOrder
+- [x] Tests unitaires : 75 fichiers, 1093 tests passent

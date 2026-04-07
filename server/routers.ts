@@ -438,7 +438,27 @@ export const appRouter = router({
         
         const { expireUnpaidOrders } = await import("./stock-management");
         const expiredCount = await expireUnpaidOrders();
-        return { success: true, expiredCount };
+        
+        // Also release expired cart reservations
+        const { releaseExpiredCartReservations } = await import("./cart-reservation");
+        const releasedCartItems = await releaseExpiredCartReservations();
+        
+        return { success: true, expiredCount, releasedCartItems };
+      }),
+
+    releaseExpiredCartReservations: publicProcedure
+      .input(z.object({ 
+        secret: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const CRON_SECRET = process.env.CRON_SECRET || 'default-secret-change-me';
+        if (input.secret !== CRON_SECRET) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid secret key' });
+        }
+        
+        const { releaseExpiredCartReservations } = await import("./cart-reservation");
+        const releasedCount = await releaseExpiredCartReservations();
+        return { success: true, releasedCount };
       }),
   }),
 

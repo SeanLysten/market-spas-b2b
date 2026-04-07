@@ -828,6 +828,8 @@ export async function getCart(userId: number) {
         product: product[0],
         variant: variant,
         unitPriceHT: unitPrice,
+        reservedUntil: item.reservedUntil ? item.reservedUntil.toISOString() : null,
+        stockReserved: item.stockReserved || false,
       });
     }
   }
@@ -946,6 +948,16 @@ export async function getCart(userId: number) {
   const balanceAmount = totalTTC - depositAmount;
   const hasSpaItems = spaUnitCount > 0;
 
+  // Find the earliest reservation expiration for the countdown timer
+  let cartReservedUntil: string | null = null;
+  for (const item of itemsWithDiscounts) {
+    if ((item as any).reservedUntil) {
+      if (!cartReservedUntil || (item as any).reservedUntil < cartReservedUntil) {
+        cartReservedUntil = (item as any).reservedUntil;
+      }
+    }
+  }
+
   return {
     items: itemsWithDiscounts,
     subtotalHT,
@@ -962,6 +974,7 @@ export async function getCart(userId: number) {
     hasSpaItems,
     spaUnitCount,
     latestArrivalDate, // null if all items are in stock, ISO date string if preorder items exist
+    cartReservedUntil, // ISO string of earliest reservation expiration, null if no reservations
   };
 }
 
@@ -996,14 +1009,7 @@ export async function addToCart(userId: number, productId: number, quantity: num
   try {
     // Check available quantity
     const availability = await getAvailableQuantity(productId, variantId);
-    if (quantity > availability.available) {
-      return {
-        success: false,
-        error: `Quantit\u00e9 demand\u00e9e (${quantity}) sup\u00e9rieure \u00e0 la quantit\u00e9 disponible (${availability.available})`,
-        availableQuantity: availability.available,
-      };
-    }
-
+    
     // Check if item already exists in cart
     const existing = await db.select().from(cartItems).where(
       and(
@@ -1013,11 +1019,47 @@ export async function addToCart(userId: number, productId: number, quantity: num
       )
     ).limit(1);
 
+    // Calculate net new quantity needed (subtract already reserved quantity)
+    const existingQty = existing[0] ? existing[0].quantity : 0;
+    const existingReserved = existing[0]?.stockReserved ? existingQty : 0;
+    const netNewQty = quantity - existingReserved;
+    
+    if (netNewQty > 0 && netNewQty > (availability.available + existingReserved)) {
+      return {
+        success: false,
+        error: `Quantit\u00e9 demand\u00e9e (${quantity}) sup\u00e9rieure \u00e0 la quantit\u00e9 disponible (${availability.available + existingReserved})`,
+        availableQuantity: availability.available + existingReserved,
+      };
+    }
+
+    // Check if this is a spa product (needs stock reservation)
+    const product = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+    const isSpa = product[0] && (product[0].category === "SPAS" || product[0].category === "SWIM_SPAS");
+    
+    const now = new Date();
+    const reservedUntil = new Date(now.getTime() + 20 * 60 * 1000); // 20 minutes
+
     if (existing[0]) {
-      // Replace quantity instead of accumulating
+      const oldQty = existing[0].quantity;
+      const wasReserved = existing[0].stockReserved;
+      
+      // Update cart item
       await db.update(cartItems)
-        .set({ quantity: quantity })
+        .set({ 
+          quantity,
+          reservedAt: isSpa ? now : null,
+          reservedUntil: isSpa ? reservedUntil : null,
+          stockReserved: isSpa ? true : false,
+        })
         .where(eq(cartItems.id, existing[0].id));
+      
+      // Adjust stock reservation for spas
+      if (isSpa) {
+        const qtyDiff = quantity - (wasReserved ? oldQty : 0);
+        if (qtyDiff !== 0) {
+          await adjustStockReservation(productId, variantId, qtyDiff);
+        }
+      }
     } else {
       // Insert new item
       await db.insert(cartItems).values({
@@ -1026,14 +1068,45 @@ export async function addToCart(userId: number, productId: number, quantity: num
         variantId: variantId || null,
         quantity,
         isPreorder,
+        reservedAt: isSpa ? now : null,
+        reservedUntil: isSpa ? reservedUntil : null,
+        stockReserved: isSpa ? true : false,
       });
+      
+      // Reserve stock for spas
+      if (isSpa) {
+        await adjustStockReservation(productId, variantId, quantity);
+      }
     }
 
-    return { success: true, availableQuantity: availability.available };
+    return { success: true, availableQuantity: availability.available, reservedUntil: isSpa ? reservedUntil.toISOString() : null };
   } catch (error: any) {
     console.error("Error adding to cart:", error);
     return { success: false, error: error.message };
   }
+}
+
+/**
+ * Adjust stock reservation: positive qty = reserve more, negative qty = release
+ */
+async function adjustStockReservation(productId: number, variantId: number | undefined | null, qtyDiff: number) {
+  const db = await getDb();
+  if (!db || qtyDiff === 0) return;
+
+  if (variantId) {
+    await db.update(productVariants)
+      .set({
+        stockReserved: sql`GREATEST(0, COALESCE(${productVariants.stockReserved}, 0) + ${qtyDiff})`,
+      })
+      .where(eq(productVariants.id, variantId));
+  } else {
+    await db.update(products)
+      .set({
+        stockReserved: sql`GREATEST(0, COALESCE(${products.stockReserved}, 0) + ${qtyDiff})`,
+      })
+      .where(eq(products.id, productId));
+  }
+  console.log(`[Cart Reservation] Adjusted stock reservation for product ${productId}${variantId ? ` variant ${variantId}` : ''}: ${qtyDiff > 0 ? '+' : ''}${qtyDiff}`);
 }
 
 export async function updateCartQuantity(userId: number, productId: number, quantity: number, variantId?: number) {
@@ -1041,18 +1114,43 @@ export async function updateCartQuantity(userId: number, productId: number, quan
   if (!db) return { success: false, error: "Database not available" };
 
   try {
-    // Check available quantity
+    // Get existing cart item
+    const existing = await db.select().from(cartItems).where(
+      and(
+        eq(cartItems.userId, userId),
+        eq(cartItems.productId, productId),
+        variantId ? eq(cartItems.variantId, variantId) : sql`${cartItems.variantId} IS NULL`
+      )
+    ).limit(1);
+
+    const oldQty = existing[0]?.quantity || 0;
+    const wasReserved = existing[0]?.stockReserved || false;
+
+    // Check available quantity (account for already reserved stock)
     const availability = await getAvailableQuantity(productId, variantId);
-    if (quantity > availability.available) {
+    const effectiveAvailable = availability.available + (wasReserved ? oldQty : 0);
+    if (quantity > effectiveAvailable) {
       return {
         success: false,
-        error: `Quantit\u00e9 demand\u00e9e (${quantity}) sup\u00e9rieure \u00e0 la quantit\u00e9 disponible (${availability.available})`,
-        availableQuantity: availability.available,
+        error: `Quantit\u00e9 demand\u00e9e (${quantity}) sup\u00e9rieure \u00e0 la quantit\u00e9 disponible (${effectiveAvailable})`,
+        availableQuantity: effectiveAvailable,
       };
     }
 
+    // Check if spa product
+    const product = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+    const isSpa = product[0] && (product[0].category === "SPAS" || product[0].category === "SWIM_SPAS");
+
+    const now = new Date();
+    const reservedUntil = new Date(now.getTime() + 20 * 60 * 1000);
+
     await db.update(cartItems)
-      .set({ quantity })
+      .set({ 
+        quantity,
+        reservedAt: isSpa ? now : existing[0]?.reservedAt,
+        reservedUntil: isSpa ? reservedUntil : existing[0]?.reservedUntil,
+        stockReserved: isSpa ? true : (existing[0]?.stockReserved || false),
+      })
       .where(
         and(
           eq(cartItems.userId, userId),
@@ -1060,7 +1158,16 @@ export async function updateCartQuantity(userId: number, productId: number, quan
           variantId ? eq(cartItems.variantId, variantId) : sql`${cartItems.variantId} IS NULL`
         )
       );
-    return { success: true, availableQuantity: availability.available };
+
+    // Adjust stock reservation for spas
+    if (isSpa) {
+      const qtyDiff = quantity - (wasReserved ? oldQty : 0);
+      if (qtyDiff !== 0) {
+        await adjustStockReservation(productId, variantId, qtyDiff);
+      }
+    }
+
+    return { success: true, availableQuantity: effectiveAvailable, reservedUntil: isSpa ? reservedUntil.toISOString() : null };
   } catch (error: any) {
     console.error("Error updating cart quantity:", error);
     return { success: false, error: error.message };
@@ -1072,6 +1179,20 @@ export async function removeFromCart(userId: number, productId: number, variantI
   if (!db) return { success: false };
 
   try {
+    // Get item before deleting to release stock reservation
+    const existing = await db.select().from(cartItems).where(
+      and(
+        eq(cartItems.userId, userId),
+        eq(cartItems.productId, productId),
+        variantId ? eq(cartItems.variantId, variantId) : sql`${cartItems.variantId} IS NULL`
+      )
+    ).limit(1);
+
+    if (existing[0] && existing[0].stockReserved) {
+      // Release stock reservation
+      await adjustStockReservation(productId, variantId, -existing[0].quantity);
+    }
+
     await db.delete(cartItems).where(
       and(
         eq(cartItems.userId, userId),
@@ -1086,11 +1207,20 @@ export async function removeFromCart(userId: number, productId: number, variantI
   }
 }
 
-export async function clearCart(userId: number) {
+export async function clearCart(userId: number, releaseStock: boolean = true) {
   const db = await getDb();
   if (!db) return { success: false };
 
   try {
+    if (releaseStock) {
+      // Release all stock reservations before clearing
+      const items = await db.select().from(cartItems).where(eq(cartItems.userId, userId));
+      for (const item of items) {
+        if (item.stockReserved) {
+          await adjustStockReservation(item.productId, item.variantId, -item.quantity);
+        }
+      }
+    }
     await db.delete(cartItems).where(eq(cartItems.userId, userId));
     return { success: true };
   } catch (error) {

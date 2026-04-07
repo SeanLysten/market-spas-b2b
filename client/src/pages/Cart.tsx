@@ -1,20 +1,67 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
-import { Minus, Plus, ShoppingCart, Trash2, ArrowRight, TruckIcon, Package, BadgePercent } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2, ArrowRight, TruckIcon, Package, BadgePercent, Clock, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Cart() {
   const { user } = useAuth();
-  const { data: cart, refetch } = trpc.cart.get.useQuery();
+  const { data: cart, refetch } = trpc.cart.get.useQuery(undefined, { refetchInterval: 30000 });
   const updateQuantityMutation = trpc.cart.updateQuantity.useMutation();
   const removeItemMutation = trpc.cart.removeItem.useMutation();
+  const clearCartMutation = trpc.cart.clear.useMutation();
+
+  // Countdown timer for cart reservation
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [expired, setExpired] = useState(false);
+
+  const cartReservedUntil = (cart as any)?.cartReservedUntil;
+
+  useEffect(() => {
+    if (!cartReservedUntil) {
+      setTimeLeft(null);
+      setExpired(false);
+      return;
+    }
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const expiry = new Date(cartReservedUntil).getTime();
+      const remaining = Math.max(0, Math.floor((expiry - now) / 1000));
+      setTimeLeft(remaining);
+
+      if (remaining <= 0) {
+        setExpired(true);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [cartReservedUntil]);
+
+  // When timer expires, show message and refetch cart (items will be removed by cron)
+  useEffect(() => {
+    if (expired) {
+      toast.error("Le temps de réservation de votre panier a expiré. Les produits ont été remis en stock.");
+      // Refetch after a short delay to let the cron job clean up
+      const timeout = setTimeout(() => refetch(), 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [expired, refetch]);
+
+  const formatTime = useCallback((seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }, []);
 
   const handleUpdateQuantity = async (productId: number, quantity: number, variantId?: number) => {
     if (quantity < 1) return;
@@ -96,6 +143,38 @@ export default function Cart() {
       </header>
 
       <div className="container py-8">
+        {/* Reservation countdown banner */}
+        {timeLeft !== null && timeLeft > 0 && !expired && (
+          <Alert className={`mb-6 ${timeLeft <= 120 ? 'border-red-500/50 bg-red-50 dark:bg-red-950/30' : 'border-amber-500/50 bg-amber-50 dark:bg-amber-950/30'}`}>
+            <Clock className={`w-5 h-5 ${timeLeft <= 120 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`} />
+            <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <span className={`text-sm font-medium ${timeLeft <= 120 ? 'text-red-800 dark:text-red-300' : 'text-amber-800 dark:text-amber-300'}`}>
+                Vos spas sont r\u00e9serv\u00e9s temporairement. Finalisez votre commande avant l'expiration.
+              </span>
+              <span className={`text-2xl font-mono font-bold tabular-nums ${timeLeft <= 120 ? 'text-red-600 dark:text-red-400 animate-pulse' : 'text-amber-600 dark:text-amber-400'}`}>
+                {formatTime(timeLeft)}
+              </span>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Expired reservation banner */}
+        {expired && (
+          <Alert className="mb-6 border-red-500/50 bg-red-50 dark:bg-red-950/30">
+            <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <span className="text-sm font-medium text-red-800 dark:text-red-300">
+                Le temps de r\u00e9servation a expir\u00e9. Les produits ont \u00e9t\u00e9 remis en stock.
+              </span>
+              <Link href="/catalog">
+                <Button size="sm" variant="outline" className="border-red-500/50 text-red-700 dark:text-red-400">
+                  Retourner au catalogue
+                </Button>
+              </Link>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {isEmpty ? (
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-12 pb-12 text-center">
@@ -330,9 +409,23 @@ export default function Cart() {
                     </div>
                   )}
                 </CardContent>
+                {/* Countdown in summary */}
+                {timeLeft !== null && timeLeft > 0 && !expired && (
+                  <CardContent className="pt-0">
+                    <div className={`p-3 rounded-lg text-center ${timeLeft <= 120 ? 'bg-red-50 dark:bg-red-950/30 border border-red-500/20' : 'bg-amber-50 dark:bg-amber-950/30 border border-amber-500/20'}`}>
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Clock className={`w-4 h-4 ${timeLeft <= 120 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`} />
+                        <span className={`text-xs font-medium ${timeLeft <= 120 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}>R\u00e9servation expire dans</span>
+                      </div>
+                      <span className={`text-xl font-mono font-bold tabular-nums ${timeLeft <= 120 ? 'text-red-600 dark:text-red-400 animate-pulse' : 'text-amber-600 dark:text-amber-400'}`}>
+                        {formatTime(timeLeft)}
+                      </span>
+                    </div>
+                  </CardContent>
+                )}
                 <CardFooter className="flex-col gap-2">
                   <Link href="/checkout" className="w-full">
-                    <Button className="w-full gap-2" size="lg">
+                    <Button className="w-full gap-2" size="lg" disabled={expired}>
                       Valider la commande
                       <ArrowRight className="w-4 h-4" />
                     </Button>

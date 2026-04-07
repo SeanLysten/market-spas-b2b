@@ -566,6 +566,18 @@ async function startServer() {
     import("../jobs/sendScheduledNewsletters").then(({ startScheduledNewsletterJob }) => {
       startScheduledNewsletterJob();
     }).catch(console.error);
+
+    // Démarrer le job de libération des réservations de panier expirées (toutes les 60 secondes)
+    import("../cart-reservation").then(({ releaseExpiredCartReservations }) => {
+      setInterval(async () => {
+        try {
+          await releaseExpiredCartReservations();
+        } catch (err) {
+          console.error("[Cart Reservation Job] Error:", err);
+        }
+      }, 60 * 1000); // Every 60 seconds
+      console.log("[Cart Reservation] Cleanup job started (every 60s)");
+    }).catch(console.error);
   });
 }
 

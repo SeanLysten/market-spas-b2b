@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Package, MapPin, CreditCard, FileText, Calendar, TruckIcon, BadgePercent, Info, AlertTriangle, Building2 } from "lucide-react";
+import { ArrowLeft, Package, MapPin, CreditCard, FileText, Calendar, TruckIcon, BadgePercent, Info, AlertTriangle, Building2, Clock } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Build the list of selectable delivery dates
 function buildDeliveryDateOptions(latestArrivalDate?: string | null): { value: string; label: string }[] {
@@ -52,8 +53,44 @@ export default function Checkout() {
     instructions: "",
   });
 
-  const { data: cartData } = trpc.cart.get.useQuery();
+  const { data: cartData, refetch: refetchCart } = trpc.cart.get.useQuery(undefined, { refetchInterval: 30000 });
   const createOrderMutation = trpc.orders.create.useMutation();
+
+  // Countdown timer for cart reservation
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [expired, setExpired] = useState(false);
+  const cartReservedUntil = (cartData as any)?.cartReservedUntil;
+
+  useEffect(() => {
+    if (!cartReservedUntil) {
+      setTimeLeft(null);
+      setExpired(false);
+      return;
+    }
+    const updateTimer = () => {
+      const now = Date.now();
+      const expiry = new Date(cartReservedUntil).getTime();
+      const remaining = Math.max(0, Math.floor((expiry - now) / 1000));
+      setTimeLeft(remaining);
+      if (remaining <= 0) setExpired(true);
+    };
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [cartReservedUntil]);
+
+  useEffect(() => {
+    if (expired) {
+      toast.error("Le temps de r\u00e9servation a expir\u00e9. Les produits ont \u00e9t\u00e9 remis en stock.");
+      setTimeout(() => setLocation("/cart"), 3000);
+    }
+  }, [expired, setLocation]);
+
+  const formatTime = useCallback((seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }, []);
 
   // Dynamic shipping cost lookup based on delivery address
   const shippingLookup = trpc.shippingZones.lookup.useQuery(
@@ -167,6 +204,28 @@ export default function Checkout() {
       </header>
 
       <div className="container py-8">
+        {/* Reservation countdown banner */}
+        {timeLeft !== null && timeLeft > 0 && !expired && (
+          <Alert className={`mb-6 ${timeLeft <= 120 ? 'border-red-500/50 bg-red-50 dark:bg-red-950/30' : 'border-amber-500/50 bg-amber-50 dark:bg-amber-950/30'}`}>
+            <Clock className={`w-5 h-5 ${timeLeft <= 120 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`} />
+            <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <span className={`text-sm font-medium ${timeLeft <= 120 ? 'text-red-800 dark:text-red-300' : 'text-amber-800 dark:text-amber-300'}`}>
+                Vos spas sont r\u00e9serv\u00e9s temporairement. Finalisez votre commande avant l'expiration.
+              </span>
+              <span className={`text-2xl font-mono font-bold tabular-nums ${timeLeft <= 120 ? 'text-red-600 dark:text-red-400 animate-pulse' : 'text-amber-600 dark:text-amber-400'}`}>
+                {formatTime(timeLeft)}
+              </span>
+            </AlertDescription>
+          </Alert>
+        )}
+        {expired && (
+          <Alert className="mb-6 border-red-500/50 bg-red-50 dark:bg-red-950/30">
+            <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            <AlertDescription className="text-sm font-medium text-red-800 dark:text-red-300">
+              Le temps de r\u00e9servation a expir\u00e9. Vous allez \u00eatre redirig\u00e9 vers votre panier...
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-3 md:p-8">
           {/* Left Column - Forms */}
           <div className="lg:col-span-2 space-y-6">
@@ -557,7 +616,7 @@ export default function Checkout() {
                   className="w-full"
                   size="lg"
                   onClick={handleSubmitOrder}
-                  disabled={createOrderMutation.isPending || cartItems.length === 0 || !deliveryRequestedDate}
+                  disabled={createOrderMutation.isPending || cartItems.length === 0 || !deliveryRequestedDate || expired}
                 >
                   {createOrderMutation.isPending ? "Traitement..." : `Valider et payer ${formatPrice(depositAmount)} €`}
                 </Button>
