@@ -32,12 +32,14 @@ import { OnboardingTour } from "@/components/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { adminOrdersTour } from "@/config/onboarding-tours";
 
-type OrderStatus = "PENDING_APPROVAL" | "PENDING_DEPOSIT" | "DEPOSIT_PAID" | "IN_PRODUCTION" | "READY_TO_SHIP" | "SHIPPED" | "DELIVERED" | "COMPLETED" | "CANCELLED";
+type OrderStatus = "PENDING_APPROVAL" | "PENDING_DEPOSIT" | "PAYMENT_PENDING" | "DEPOSIT_PAID" | "PAYMENT_FAILED" | "IN_PRODUCTION" | "READY_TO_SHIP" | "SHIPPED" | "DELIVERED" | "COMPLETED" | "CANCELLED";
 
 const ORDER_STATUSES: { value: OrderStatus; label: string; color: string; icon: any }[] = [
   { value: "PENDING_APPROVAL", label: "En attente d'approbation", color: "bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400", icon: Clock },
   { value: "PENDING_DEPOSIT", label: "Acompte requis", color: "bg-orange-500/15 dark:bg-orange-500/25 text-orange-800 dark:text-orange-400", icon: Euro },
+  { value: "PAYMENT_PENDING", label: "Paiement en cours", color: "bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400", icon: Clock },
   { value: "DEPOSIT_PAID", label: "Acompte payé", color: "bg-info/15 dark:bg-info-light text-info dark:text-info-dark", icon: CheckCircle2 },
+  { value: "PAYMENT_FAILED", label: "Paiement échoué", color: "bg-destructive/15 dark:bg-destructive/25 text-destructive", icon: XCircle },
   { value: "IN_PRODUCTION", label: "En production", color: "bg-purple-500/15 dark:bg-purple-500/25 text-purple-800 dark:text-purple-400", icon: Package },
   { value: "READY_TO_SHIP", label: "Prêt à expédier", color: "bg-indigo-500/15 dark:bg-indigo-500/25 text-indigo-800", icon: Package },
   { value: "SHIPPED", label: "Expédié", color: "bg-cyan-500/15 dark:bg-cyan-500/25 text-cyan-800", icon: Truck },
@@ -141,7 +143,7 @@ export default function AdminOrders() {
   const stats = {
     total: orders?.length || 0,
     pending: orders?.filter((o: any) => o.status === "PENDING_APPROVAL").length || 0,
-    inProgress: orders?.filter((o: any) => ["DEPOSIT_PAID", "IN_PRODUCTION", "READY_TO_SHIP"].includes(o.status)).length || 0,
+    inProgress: orders?.filter((o: any) => ["PAYMENT_PENDING", "DEPOSIT_PAID", "IN_PRODUCTION", "READY_TO_SHIP"].includes(o.status)).length || 0,
     shipped: orders?.filter((o: any) => ["SHIPPED", "DELIVERED"].includes(o.status)).length || 0,
   };
 

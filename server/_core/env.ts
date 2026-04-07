@@ -20,10 +20,10 @@ export const ENV = {
   frontendForgeApiUrl: process.env.VITE_FRONTEND_FORGE_API_URL ?? "",
   frontendForgeApiKey: process.env.VITE_FRONTEND_FORGE_API_KEY ?? "",
   
-  // Stripe
-  stripeSecretKey: process.env.STRIPE_SECRET_KEY ?? "",
-  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? "",
-  stripePublishableKey: process.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "",
+  // Mollie
+  mollieApiKeyLive: process.env.MOLLIE_API_KEY_LIVE ?? "",
+  mollieApiKeyTest: process.env.MOLLIE_API_KEY_TEST ?? "",
+  mollieProfileId: process.env.MOLLIE_PROFILE_ID ?? "",
   
   // Email
   resendApiKey: process.env.RESEND_API_KEY ?? "",

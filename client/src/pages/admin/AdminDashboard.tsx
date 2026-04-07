@@ -603,7 +603,9 @@ function OrdersDashboardSection() {
     const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
       PENDING_APPROVAL: { label: "En attente", variant: "secondary" },
       PENDING_DEPOSIT: { label: "Acompte requis", variant: "outline" },
+      PAYMENT_PENDING: { label: "Paiement en cours", variant: "outline" },
       DEPOSIT_PAID: { label: "Acompte payé", variant: "default" },
+      PAYMENT_FAILED: { label: "Paiement échoué", variant: "destructive" },
       IN_PRODUCTION: { label: "En production", variant: "default" },
       READY_TO_SHIP: { label: "Prêt à expédier", variant: "default" },
       SHIPPED: { label: "Expédié", variant: "default" },
@@ -822,7 +824,9 @@ function FullAdminDashboardSection() {
     const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
       PENDING_APPROVAL: { label: "En attente", variant: "secondary" },
       PENDING_DEPOSIT: { label: "Acompte requis", variant: "outline" },
+      PAYMENT_PENDING: { label: "Paiement en cours", variant: "outline" },
       DEPOSIT_PAID: { label: "Acompte payé", variant: "default" },
+      PAYMENT_FAILED: { label: "Paiement échoué", variant: "destructive" },
       IN_PRODUCTION: { label: "En production", variant: "default" },
       READY_TO_SHIP: { label: "Prêt à expédier", variant: "default" },
       SHIPPED: { label: "Expédié", variant: "default" },

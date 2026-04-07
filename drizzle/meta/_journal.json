@@ -351,6 +351,13 @@
       "when": 1773831128871,
       "tag": "0049_famous_katie_power",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "5",
+      "when": 1775557948378,
+      "tag": "0050_opposite_ricochet",
+      "breakpoints": true
     }
   ]
 }

@@ -1380,7 +1380,7 @@ Cet email a été envoyé automatiquement, merci de ne pas y répondre.
 }
 
 /**
- * Send payment confirmation email (Stripe)
+ * Send payment confirmation email (Mollie SEPA)
  */
 export async function sendPaymentConfirmationEmail(
   email: string,
@@ -1501,7 +1501,7 @@ Cet email a été envoyé automatiquement, merci de ne pas y répondre.
 }
 
 /**
- * Send payment failure email (Stripe)
+ * Send payment failure email (Mollie SEPA)
  */
 export async function sendPaymentFailureEmail(
   email: string,
@@ -1601,7 +1601,7 @@ Cet email a été envoyé automatiquement, merci de ne pas y répondre.
 }
 
 /**
- * Send refund confirmation email (Stripe)
+ * Send refund confirmation email
  */
 export async function sendRefundConfirmationEmail(
   email: string,

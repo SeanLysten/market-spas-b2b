@@ -1021,6 +1021,27 @@ router.post("/api/mobile/v1/orders", async (req: AuthenticatedRequest, res: Resp
       console.error("[Mobile API] Failed to send order notification:", err);
     }
 
+    // Create Mollie payment for the deposit/full amount
+    let mollieCheckoutUrl: string | null = null;
+    try {
+      const { createMolliePayment } = await import("../mollie");
+      const paymentAmount = result.depositAmount || result.totalTTC;
+      const mollieResult = await createMolliePayment({
+        amount: paymentAmount,
+        description: `Commande ${result.orderNumber} - ${result.depositAmount < result.totalTTC ? 'Acompte' : 'Paiement int\u00e9gral'}`,
+        redirectUrl: `${req.headers.origin || process.env.SITE_URL}/order-confirmation/${result.orderId}`,
+        webhookUrl: `${process.env.SITE_URL}/api/webhooks/mollie`,
+        metadata: {
+          type: "order",
+          orderId: result.orderId.toString(),
+          orderNumber: result.orderNumber,
+        },
+      });
+      mollieCheckoutUrl = mollieResult.checkoutUrl;
+    } catch (mollieErr) {
+      console.error("[Mobile API] Mollie payment creation failed:", mollieErr);
+    }
+
     return res.status(201).json({
       success: true,
       orderId: result.orderId,
@@ -1031,6 +1052,7 @@ router.post("/api/mobile/v1/orders", async (req: AuthenticatedRequest, res: Resp
       depositAmount: result.depositAmount,
       balanceAmount: result.balanceAmount,
       discountPercent: avgDiscountPercent,
+      mollieCheckoutUrl,
       message: "Commande créée avec succès",
     });
   } catch (err: any) {

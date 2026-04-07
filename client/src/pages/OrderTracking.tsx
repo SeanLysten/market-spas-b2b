@@ -22,11 +22,12 @@ import {
   Download,
 } from "lucide-react";
 
-type OrderStatus = "PENDING_APPROVAL" | "PENDING_DEPOSIT" | "DEPOSIT_PAID" | "IN_PRODUCTION" | "READY_TO_SHIP" | "SHIPPED" | "DELIVERED" | "COMPLETED" | "CANCELLED";
+type OrderStatus = "PENDING_APPROVAL" | "PENDING_DEPOSIT" | "PAYMENT_PENDING" | "DEPOSIT_PAID" | "PAYMENT_FAILED" | "IN_PRODUCTION" | "READY_TO_SHIP" | "SHIPPED" | "DELIVERED" | "COMPLETED" | "CANCELLED";
 
 const STATUS_STEPS: { status: OrderStatus; label: string; description: string; icon: any }[] = [
   { status: "PENDING_APPROVAL", label: "En attente", description: "Commande en cours de validation", icon: Clock },
   { status: "PENDING_DEPOSIT", label: "Acompte requis", description: "En attente du paiement de l'acompte", icon: Euro },
+  { status: "PAYMENT_PENDING", label: "Paiement en cours", description: "Virement SEPA en cours de traitement", icon: Clock },
   { status: "DEPOSIT_PAID", label: "Acompte payé", description: "Acompte reçu, commande confirmée", icon: CheckCircle2 },
   { status: "IN_PRODUCTION", label: "En production", description: "Votre commande est en cours de préparation", icon: Package },
   { status: "READY_TO_SHIP", label: "Prêt à expédier", description: "Commande prête pour l'expédition", icon: Package },
@@ -45,7 +46,10 @@ const getStatusColor = (status: string): string => {
   switch (status) {
     case "PENDING_APPROVAL":
     case "PENDING_DEPOSIT":
+    case "PAYMENT_PENDING":
       return "bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400 border-yellow-300";
+    case "PAYMENT_FAILED":
+      return "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive border-red-300";
     case "DEPOSIT_PAID":
     case "IN_PRODUCTION":
     case "READY_TO_SHIP":

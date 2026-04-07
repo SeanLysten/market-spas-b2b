@@ -124,7 +124,9 @@ const levelColors: Record<string, string> = {
 const orderStatusLabels: Record<string, string> = {
   DRAFT: "Brouillon",
   PENDING_DEPOSIT: "En attente d'acompte",
+  PAYMENT_PENDING: "Paiement en cours",
   DEPOSIT_PAID: "Acompte payé",
+  PAYMENT_FAILED: "Paiement échoué",
   IN_PRODUCTION: "En production",
   SHIPPED: "Expédié",
   DELIVERED: "Livré",
@@ -329,8 +331,8 @@ export default function AdminPartnerDetail() {
                   <SupplierCodeField partnerId={partner.id} currentCode={partner.supplierClientCode} />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-sm mb-1">Stripe Customer ID</p>
-                  <p className="font-mono text-xs">{partner.stripeCustomerId || "Non lié"}</p>
+                  <p className="text-muted-foreground text-sm mb-1">Mollie Customer ID</p>
+                  <p className="font-mono text-xs">{partner.mollieCustomerId || partner.stripeCustomerId || "Non lié"}</p>
                 </div>
               </div>
               {partner.internalNotes && (

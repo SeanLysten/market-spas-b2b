@@ -1100,6 +1100,56 @@ export const appRouter = router({
         const { notifyNewOrder } = await import("./alerts");
         await notifyNewOrder(result.orderId);
 
+        // Create Mollie payment for the deposit (SEPA Bank Transfer)
+        let mollieCheckoutUrl: string | null = null;
+        try {
+          const { createMolliePayment } = await import("./mollie");
+          const origin = ctx.req?.headers?.origin || process.env.SITE_URL || "";
+          const paymentAmount = result.depositAmount; // deposit amount in EUR
+
+          const molliePayment = await createMolliePayment({
+            amount: paymentAmount,
+            description: `Acompte commande ${result.orderNumber}`,
+            redirectUrl: `${origin}/orders?payment=success&order=${result.orderNumber}`,
+            webhookUrl: `${process.env.SITE_URL}/api/webhooks/mollie`,
+            metadata: {
+              type: "order",
+              orderId: result.orderId.toString(),
+              orderNumber: result.orderNumber,
+            },
+          });
+
+          mollieCheckoutUrl = molliePayment.checkoutUrl;
+
+          // Store Mollie payment in DB
+          const { getDb } = await import("./db");
+          const drizzleDb = await getDb();
+          if (drizzleDb) {
+            const { molliePayments, orders: ordersTable } = await import("../drizzle/schema");
+            await drizzleDb.insert(molliePayments).values({
+              orderId: result.orderId,
+              molliePaymentId: molliePayment.id,
+              mollieStatus: molliePayment.status,
+              amount: paymentAmount.toFixed(2),
+              description: `Acompte commande ${result.orderNumber}`,
+              redirectUrl: `${origin}/orders?payment=success&order=${result.orderNumber}`,
+              webhookUrl: `${process.env.SITE_URL}/api/webhooks/mollie`,
+              metadata: JSON.stringify({ type: "order", orderId: result.orderId, orderNumber: result.orderNumber }),
+              expiresAt: molliePayment.expiresAt ? new Date(molliePayment.expiresAt) : null,
+            });
+            // Update order with Mollie payment ID
+            const { eq } = await import("drizzle-orm");
+            await drizzleDb.update(ordersTable).set({
+              molliePaymentId: molliePayment.id,
+              mollieStatus: molliePayment.status,
+              status: "PAYMENT_PENDING",
+            }).where(eq(ordersTable.id, result.orderId));
+          }
+        } catch (mollieError: any) {
+          console.error("[Orders] Mollie payment creation failed:", mollieError.message);
+          // Order is still created, payment can be retried
+        }
+
         return {
           success: true,
           orderId: result.orderId,
@@ -1109,6 +1159,7 @@ export const appRouter = router({
           shippingHT: result.shippingHT,
           depositAmount: result.depositAmount,
           discountPercent: avgDiscountPercent,
+          mollieCheckoutUrl,
           message: "Commande créée avec succès",
         };
       }),
@@ -1960,31 +2011,10 @@ export const appRouter = router({
         }),
     }),
 
-    // Stripe payments
+    // Mollie payments (SEPA Bank Transfer)
     payments: router({
-      createPaymentIntent: adminProcedure
-        .input(
-          z.object({
-            orderId: z.number(),
-            amount: z.number(), // Amount in cents
-          })
-        )
-        .mutation(async ({ input }) => {
-          const { createPaymentIntent } = await import("./stripe");
-          const order = await db.getOrderById(input.orderId);
-          if (!order) {
-            throw new TRPCError({ code: "NOT_FOUND", message: "Commande non trouvée" });
-          }
-          
-          const result = await createPaymentIntent({
-            amount: input.amount,
-            orderId: input.orderId,
-            orderNumber: order.orderNumber,
-            description: `Acompte commande ${order.orderNumber}`,
-          });
-          
-          return result;
-        }),
+      // Payment creation is handled via the checkout flow in orders.create
+      // Webhook validation is handled via POST /api/webhooks/mollie
     }),
 
     partners: router({
@@ -3805,7 +3835,7 @@ export const appRouter = router({
         return { success: true, total };
       }),
 
-    // ===== CREATE PAYMENT (Stripe) =====
+    // ===== CREATE PAYMENT (Mollie SEPA) =====
     createPayment: protectedProcedure
       .input(z.object({ serviceId: z.number() }))
       .mutation(async ({ ctx, input }) => {
@@ -3822,61 +3852,31 @@ export const appRouter = router({
           throw new TRPCError({ code: "BAD_REQUEST", message: "Aucun montant à payer." });
         }
 
-        // Create Stripe Checkout Session
-        const stripe = (await import("stripe")).default;
-        const stripeClient = new stripe(process.env.STRIPE_SECRET_KEY!);
-
-        const lineItems = total.parts.map(p => ({
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name: `${p.name} (${p.reference})`,
-              description: p.coveragePercentage > 0 ? `Couverture garantie: ${p.coveragePercentage}%` : undefined,
-            },
-            unit_amount: Math.round(p.customerPrice * 100 / p.quantity), // cents
-          },
-          quantity: p.quantity,
-        }));
-
-        if (total.shippingCost > 0) {
-          lineItems.push({
-            price_data: {
-              currency: "eur",
-              product_data: {
-                name: "Frais de livraison",
-                description: undefined,
-              },
-              unit_amount: Math.round(total.shippingCost * 100),
-            },
-            quantity: 1,
-          });
-        }
-
+        // Create Mollie payment (SEPA Bank Transfer)
+        const { createMolliePayment } = await import("./mollie");
         const origin = ctx.req?.headers?.origin || process.env.SITE_URL || "";
-        const session = await stripeClient.checkout.sessions.create({
-          payment_method_types: ["card"],
-          line_items: lineItems,
-          mode: "payment",
-          success_url: `${origin}/after-sales/${input.serviceId}?payment=success`,
-          cancel_url: `${origin}/after-sales/${input.serviceId}?payment=cancelled`,
-          customer_email: ctx.user.email || undefined,
-          client_reference_id: ctx.user.id.toString(),
+        const description = `SAV ${service.service.ticketNumber} - Pièces détachées`;
+        
+        const molliePayment = await createMolliePayment({
+          amount: total.totalTTC,
+          description,
+          redirectUrl: `${origin}/after-sales/${input.serviceId}?payment=success`,
+          webhookUrl: `${process.env.SITE_URL}/api/webhooks/mollie`,
           metadata: {
-            sav_id: input.serviceId.toString(),
-            ticket_number: service.service.ticketNumber,
-            user_id: ctx.user.id.toString(),
+            type: "sav",
+            savId: input.serviceId.toString(),
+            ticketNumber: service.service.ticketNumber,
           },
-          allow_promotion_codes: true,
         });
 
-        // Update ticket with payment intent
+        // Update ticket with Mollie payment ID
         await savDb.updateSavPayment(input.serviceId, {
           totalAmount: total.totalTTC.toFixed(2),
-          stripePaymentIntentId: session.payment_intent as string || session.id,
+          stripePaymentIntentId: molliePayment.id, // reuse field for Mollie ID
         });
         await savDb.updateSavTicket(input.serviceId, { status: "PAYMENT_PENDING" as any });
 
-        return { checkoutUrl: session.url };
+        return { checkoutUrl: molliePayment.checkoutUrl };
       }),
 
     // ===== ADD TRACKING (admin) =====
@@ -5298,9 +5298,10 @@ export const appRouter = router({
     // Get integration statuses (checks env vars)
     integrationStatus: adminProcedure.query(async () => {
       return {
-        stripe: {
-          connected: !!process.env.STRIPE_SECRET_KEY,
-          mode: process.env.STRIPE_SECRET_KEY?.startsWith("sk_live") ? "live" : "test",
+        mollie: {
+          connected: !!process.env.MOLLIE_API_KEY_LIVE || !!process.env.MOLLIE_API_KEY_TEST,
+          mode: process.env.MOLLIE_API_KEY_LIVE ? "live" : "test",
+          profileId: process.env.MOLLIE_PROFILE_ID || null,
         },
         resend: {
           connected: !!process.env.RESEND_API_KEY,

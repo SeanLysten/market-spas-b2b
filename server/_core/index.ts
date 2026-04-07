@@ -12,9 +12,10 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { verifyMetaWebhook, processMetaWebhook } from "../meta-leads";
-import { handleStripeWebhook } from "../stripe-webhook";
+
 import { initializeWebSocket } from "./websocket";
 import { webhooksRouter } from "../webhooks";
+import { handleMollieWebhook } from "../mollie-webhook";
 import { getPrivacyHTML, getTermsHTML } from "../static-pages";
 import { inboundLeadsRouter } from "../routes/inbound-leads";
 import { uploadResourceRouter } from "../routes/upload-resource";
@@ -113,8 +114,6 @@ async function startServer() {
   app.use(express.json({ limit: "100mb" }));
   app.use(express.urlencoded({ limit: "100mb", extended: true }));
 
-  // Stripe Webhook - Must be before express.json() middleware
-  app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), handleStripeWebhook);
 
   // Meta OAuth Callback - Redirects to frontend with code parameter
   app.get("/api/auth/meta/callback", (req, res) => {
@@ -337,6 +336,9 @@ async function startServer() {
       res.status(500).send("Error processing webhook");
     }
   });
+
+  // Mollie Webhook - payment status updates
+  app.post("/api/webhooks/mollie", handleMollieWebhook);
 
   // Webhooks Make (routes HTTP standard)
   app.use("/api/webhooks", webhooksRouter);

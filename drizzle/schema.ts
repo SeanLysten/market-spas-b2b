@@ -45,7 +45,9 @@ export const orderStatusEnum = mysqlEnum("order_status", [
   "DRAFT",
   "PENDING_APPROVAL",
   "PENDING_DEPOSIT",
+  "PAYMENT_PENDING",
   "DEPOSIT_PAID",
+  "PAYMENT_FAILED",
   "IN_PRODUCTION",
   "READY_TO_SHIP",
   "PARTIALLY_SHIPPED",
@@ -764,15 +766,8 @@ export const orders = mysqlTable(
 
     // Payment
     paymentMethod: varchar("paymentMethod", { length: 50 }),
-    stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
-    stripePaymentStatus: mysqlEnum("stripePaymentStatus", [
-      "PENDING",
-      "PROCESSING",
-      "SUCCEEDED",
-      "FAILED",
-      "REFUNDED",
-      "PARTIALLY_REFUNDED",
-    ]),
+    molliePaymentId: varchar("molliePaymentId", { length: 100 }),
+    mollieStatus: varchar("mollieStatus", { length: 50 }),
 
     // Odoo
     odooQuoteId: int("odooQuoteId"),
@@ -783,7 +778,9 @@ export const orders = mysqlTable(
       "DRAFT",
       "PENDING_APPROVAL",
       "PENDING_DEPOSIT",
+      "PAYMENT_PENDING",
       "DEPOSIT_PAID",
+      "PAYMENT_FAILED",
       "IN_PRODUCTION",
       "READY_TO_SHIP",
       "PARTIALLY_SHIPPED",
@@ -2847,3 +2844,68 @@ export const orderStatusHistory = mysqlTable(
 );
 
 export type OrderStatusHistory = typeof orderStatusHistory.$inferSelect;
+
+
+// ============================================
+// SHIPPING ZONES (Frais de transport forfaitaires)
+// ============================================
+export const shippingZones = mysqlTable(
+  "shipping_zones",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    country: varchar("country", { length: 2 }).notNull(),
+    postalCodeFrom: varchar("postalCodeFrom", { length: 10 }),
+    postalCodeTo: varchar("postalCodeTo", { length: 10 }),
+    postalCodePrefix: varchar("postalCodePrefix", { length: 10 }),
+    shippingCostHT: decimal("shippingCostHT", { precision: 10, scale: 2 }).notNull(),
+    isActive: boolean("isActive").default(true),
+    notes: text("notes"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    countryIdx: index("sz_country_idx").on(table.country),
+    postalPrefixIdx: index("sz_postalPrefix_idx").on(table.postalCodePrefix),
+  })
+);
+export type ShippingZone = typeof shippingZones.$inferSelect;
+export type InsertShippingZone = typeof shippingZones.$inferInsert;
+
+// ============================================
+// MOLLIE PAYMENTS (Paiements Mollie SEPA)
+// ============================================
+export const molliePayments = mysqlTable(
+  "mollie_payments",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    orderId: int("orderId"),
+    savTicketId: int("savTicketId"),
+    molliePaymentId: varchar("molliePaymentId", { length: 100 }).notNull(),
+    mollieStatus: varchar("mollieStatus", { length: 50 }).notNull(),
+    amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+    currency: varchar("currency", { length: 3 }).default("EUR"),
+    method: varchar("method", { length: 50 }),
+    description: varchar("description", { length: 500 }),
+    redirectUrl: varchar("redirectUrl", { length: 500 }),
+    webhookUrl: varchar("webhookUrl", { length: 500 }),
+    metadata: text("metadata"),
+    transferReference: varchar("transferReference", { length: 255 }),
+    bankName: varchar("bankName", { length: 255 }),
+    bankAccount: varchar("bankAccount", { length: 100 }),
+    bankBic: varchar("bankBic", { length: 20 }),
+    expiresAt: timestamp("expiresAt"),
+    paidAt: timestamp("paidAt"),
+    failedAt: timestamp("failedAt"),
+    cancelledAt: timestamp("cancelledAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    orderIdIdx: index("mp_orderId_idx").on(table.orderId),
+    molliePaymentIdIdx: index("mp_molliePaymentId_idx").on(table.molliePaymentId),
+    statusIdx: index("mp_status_idx").on(table.mollieStatus),
+  })
+);
+export type MolliePayment = typeof molliePayments.$inferSelect;
+export type InsertMolliePayment = typeof molliePayments.$inferInsert;

@@ -24,7 +24,9 @@ import {
 type OrderStatus =
   | "PENDING_APPROVAL"
   | "PENDING_DEPOSIT"
+  | "PAYMENT_PENDING"
   | "DEPOSIT_PAID"
+  | "PAYMENT_FAILED"
   | "IN_PRODUCTION"
   | "READY_TO_SHIP"
   | "SHIPPED"
@@ -35,7 +37,9 @@ type OrderStatus =
 const STATUS_LABELS: Record<string, { label: string; color: string; icon: any }> = {
   PENDING_APPROVAL: { label: "En attente de validation", color: "bg-amber-500/15 text-amber-800 dark:text-amber-400 border-yellow-300", icon: Clock },
   PENDING_DEPOSIT: { label: "Acompte requis", color: "bg-amber-500/15 text-amber-800 dark:text-amber-400 border-yellow-300", icon: Euro },
+  PAYMENT_PENDING: { label: "Paiement en cours", color: "bg-amber-500/15 text-amber-800 dark:text-amber-400 border-yellow-300", icon: Clock },
   DEPOSIT_PAID: { label: "Acompte payé", color: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-400 border-green-300", icon: CheckCircle2 },
+  PAYMENT_FAILED: { label: "Paiement échoué", color: "bg-destructive/15 text-destructive border-red-300", icon: AlertCircle },
   IN_PRODUCTION: { label: "En production", color: "bg-info/15 text-info dark:text-info-dark border-blue-300", icon: Package },
   READY_TO_SHIP: { label: "Prêt à expédier", color: "bg-info/15 text-info dark:text-info-dark border-blue-300", icon: Package },
   SHIPPED: { label: "Expédié", color: "bg-cyan-500/15 text-cyan-800 border-cyan-300", icon: Truck },

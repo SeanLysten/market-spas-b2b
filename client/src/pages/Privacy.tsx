@@ -93,7 +93,7 @@ export default function Privacy() {
             Nous ne vendons jamais vos données personnelles. Nous pouvons partager vos données avec :
           </p>
           <ul className="list-disc list-inside text-slate-700 space-y-2 ml-4">
-            <li>Stripe pour le traitement sécurisé des paiements</li>
+            <li>Mollie pour le traitement sécurisé des paiements par virement SEPA</li>
             <li>Google pour l'authentification OAuth et l'accès aux données Google Ads</li>
             <li>Nos prestataires de services (hébergement, email) sous contrat de confidentialité</li>
             <li>Les autorités légales si requis par la loi</li>

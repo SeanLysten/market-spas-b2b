@@ -593,6 +593,9 @@ router.get("/api/supplier/orders/export", async (req, res) => {
           depositPaymentMethod: order.paymentMethod || null,
           balanceAmount: order.balanceAmount,
           balancePaid: order.balancePaid || false,
+          balanceDueInfo: order.depositPaid && !order.balancePaid
+            ? `Solde de ${order.balanceAmount || 0}€ à facturer au client. L'acompte sera perdu si le solde n'est pas réglé dans les 14 jours suivant la réception de l'acompte.`
+            : null,
           customerNotes: order.customerNotes || null,
           deliveryRequestedWeek: order.deliveryRequestedWeek || null,
           deliveryRequestedDate: order.deliveryRequestedDate ? (order.deliveryRequestedDate instanceof Date ? order.deliveryRequestedDate.toISOString().split('T')[0] : String(order.deliveryRequestedDate).split('T')[0]) : null,

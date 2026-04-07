@@ -673,21 +673,21 @@ export default function AdminSettings() {
               <>
               <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
                 <IntegrationCard
-                  title="Stripe (Paiements)"
-                  description="Traitement des paiements et acomptes"
+                  title="Mollie (Paiements SEPA)"
+                  description="Virement bancaire SEPA pour acomptes et paiements"
                   icon={CreditCard}
-                  connected={integrations?.stripe?.connected ?? false}
+                  connected={(integrations as any)?.mollie?.connected ?? false}
                   statusLabel={
-                    integrations?.stripe?.connected
-                      ? `Connecté (Mode ${integrations.stripe.mode === "live" ? "production" : "test"})`
+                    (integrations as any)?.mollie?.connected
+                      ? `Connecté (Mode ${(integrations as any).mollie.mode === "live" ? "production" : "test"})`
                       : "Non connecté"
                   }
                   details={
-                    integrations?.stripe?.connected
-                      ? integrations.stripe.mode === "test"
-                        ? "Les paiements sont en mode test. Aucun paiement réel ne sera traité."
-                        : "Mode production actif. Les paiements réels sont traités."
-                      : "Configurez la clé API Stripe dans les secrets pour activer les paiements."
+                    (integrations as any)?.mollie?.connected
+                      ? (integrations as any).mollie.mode === "test"
+                        ? "Les paiements sont en mode test. Aucun virement réel ne sera traité."
+                        : "Mode production actif. Les virements SEPA sont traités."
+                      : "Configurez les clés API Mollie dans les secrets pour activer les paiements."
                   }
                 />
 

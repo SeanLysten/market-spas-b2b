@@ -72,7 +72,7 @@ export function getPrivacyHTML(): string {
         <h2>5. Partage des Données</h2>
         <p>Nous ne vendons jamais vos données personnelles. Nous pouvons partager vos données avec :</p>
         <ul>
-            <li>Stripe pour le traitement sécurisé des paiements</li>
+            <li>Mollie pour le traitement sécurisé des paiements par virement SEPA</li>
             <li>Google pour l'authentification OAuth et l'accès aux données Google Ads</li>
             <li>Nos prestataires de services (hébergement, email) sous contrat de confidentialité</li>
             <li>Les autorités légales si requis par la loi</li>
@@ -172,7 +172,7 @@ export function getTermsHTML(): string {
         <p>L'accès au Portail est réservé aux partenaires professionnels agréés par Market Spas. Vous devez recevoir une invitation pour créer un compte. Vous êtes responsable de la confidentialité de vos identifiants.</p>
 
         <h2>4. Commandes et Paiements</h2>
-        <p>Les commandes passées via le Portail sont soumises à validation par Market Spas. Les prix affichés sont hors taxes et peuvent varier selon votre niveau partenaire. Les paiements sont traités de manière sécurisée via Stripe.</p>
+        <p>Les commandes passées via le Portail sont soumises à validation par Market Spas. Les prix affichés sont hors taxes et peuvent varier selon votre niveau partenaire. Les paiements sont traités de manière sécurisée via Mollie (virement SEPA).</p>
 
         <h2>5. Intégration Google Ads</h2>
         <p>Le Portail offre une intégration avec Google Ads en lecture seule pour vous permettre de suivre vos campagnes publicitaires. La connexion est optionnelle et vous pouvez révoquer l'accès à tout moment.</p>
@@ -181,7 +181,7 @@ export function getTermsHTML(): string {
         <p>Tous les contenus du Portail sont la propriété de Market Spas ou de ses fournisseurs et sont protégés par les lois sur la propriété intellectuelle.</p>
 
         <h2>7. Limitation de Responsabilité</h2>
-        <p>Market Spas ne peut être tenu responsable des interruptions temporaires du service, des pertes de données dues à des problèmes techniques, ou des problèmes liés aux services tiers (Stripe, Google Ads).</p>
+        <p>Market Spas ne peut être tenu responsable des interruptions temporaires du service, des pertes de données dues à des problèmes techniques, ou des problèmes liés aux services tiers (Mollie, Google Ads).</p>
 
         <h2>8. Confidentialité</h2>
         <p>L'utilisation de vos données personnelles est régie par notre <a href="/privacy">Politique de Confidentialité</a>.</p>

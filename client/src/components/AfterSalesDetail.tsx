@@ -68,7 +68,7 @@ export default function AfterSalesDetail({ serviceId, onClose }: AfterSalesDetai
     onSuccess: (data) => {
       if (data.checkoutUrl) {
         window.open(data.checkoutUrl, "_blank");
-        alert("Vous allez être redirigé vers la page de paiement Stripe.");
+        alert("Vous allez être redirigé vers la page de paiement par virement SEPA.");
       }
     },
     onError: (error) => {

@@ -69,7 +69,7 @@ export default function Terms() {
             <li>Toutes les commandes sont soumises à validation par Market Spas</li>
             <li>Les prix affichés sont hors taxes et peuvent varier selon votre niveau partenaire</li>
             <li>Un acompte peut être requis pour certaines commandes</li>
-            <li>Les paiements sont traités de manière sécurisée via Stripe</li>
+            <li>Les paiements sont traités de manière sécurisée via Mollie (virement SEPA)</li>
             <li>Les délais de livraison sont indicatifs et non contractuels</li>
             <li>Market Spas se réserve le droit d'annuler toute commande en cas de stock insuffisant</li>
           </ul>
@@ -142,7 +142,7 @@ export default function Terms() {
             <li>Pertes de données dues à des problèmes techniques</li>
             <li>Erreurs dans les informations affichées sur le Portail</li>
             <li>Dommages indirects ou consécutifs résultant de l'utilisation du Portail</li>
-            <li>Problèmes liés aux services tiers (Stripe, Google Ads)</li>
+            <li>Problèmes liés aux services tiers (Mollie, Google Ads)</li>
           </ul>
         </section>
 

@@ -919,6 +919,24 @@ export async function getCart(userId: number) {
     }
   }
 
+  // Calculate deposit amount: 300€ fixed per spa/swim_spa unit, full payment for accessories
+  let spaUnitCount = 0;
+  for (const item of itemsWithDiscounts) {
+    const cat = (item.product as any).category;
+    if (cat === "SPAS" || cat === "SWIM_SPAS") {
+      spaUnitCount += item.quantity;
+    }
+  }
+  let depositAmount: number;
+  if (spaUnitCount > 0) {
+    depositAmount = spaUnitCount * 300;
+    if (depositAmount > totalTTC) depositAmount = totalTTC;
+  } else {
+    depositAmount = totalTTC; // Full payment for non-spa items
+  }
+  const balanceAmount = totalTTC - depositAmount;
+  const hasSpaItems = spaUnitCount > 0;
+
   return {
     items: itemsWithDiscounts,
     subtotalHT,
@@ -930,6 +948,10 @@ export async function getCart(userId: number) {
     vatLabel: vatConfig.vatLabel,
     vatAmount: totalVAT,
     totalTTC,
+    depositAmount,
+    balanceAmount,
+    hasSpaItems,
+    spaUnitCount,
     latestArrivalDate, // null if all items are in stock, ISO date string if preorder items exist
   };
 }
@@ -1668,9 +1690,33 @@ export async function createOrder(input: CreateOrderInput) {
   const totalVAT = productsVAT + shippingVAT;
   const totalTTC = totalHT + totalVAT;
 
-  // Deposit (30% by default)
-  const depositPercent = 30;
-  const depositAmount = (totalTTC * depositPercent) / 100;
+  // Deposit calculation: 300€ fixed per spa/swim_spa unit, full payment for accessories
+  // Count spa/swim_spa units in the order
+  let spaUnitCount = 0;
+  for (const item of input.items) {
+    // Check product category to determine if it's a spa
+    const product = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
+    if (product.length > 0) {
+      const cat = (product[0] as any).category;
+      if (cat === "SPAS" || cat === "SWIM_SPAS") {
+        spaUnitCount += item.quantity;
+      }
+    }
+  }
+  
+  let depositAmount: number;
+  let depositPercent: number;
+  if (spaUnitCount > 0) {
+    // Fixed deposit of 300€ per spa/swim_spa unit (TTC)
+    depositAmount = spaUnitCount * 300;
+    // Ensure deposit doesn't exceed total
+    if (depositAmount > totalTTC) depositAmount = totalTTC;
+    depositPercent = (depositAmount / totalTTC) * 100;
+  } else {
+    // No spas in order = full payment required (accessories, chemicals, etc.)
+    depositAmount = totalTTC;
+    depositPercent = 100;
+  }
   const balanceAmount = totalTTC - depositAmount;
 
   // Create the order

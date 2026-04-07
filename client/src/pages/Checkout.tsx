@@ -9,21 +9,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Package, MapPin, CreditCard, FileText, Calendar, TruckIcon, BadgePercent, Zap, Info } from "lucide-react";
+import { ArrowLeft, Package, MapPin, CreditCard, FileText, Calendar, TruckIcon, BadgePercent, Info, AlertTriangle, Building2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 
-// Returns true if the payment method is a deposit (acompte 30%)
-function isDepositPayment(method: string): boolean {
-  return method === "CARD_DEPOSIT" || method === "BANK_TRANSFER";
-}
-
-// Build the list of selectable delivery dates based on payment type and optional arrival date
-// Deposit (acompte): 14 days window from startDate
-// Full payment: 6 weeks (42 days) window from startDate
-// startDate: today if all items in stock, or the latest preorder arrival date
-function buildDeliveryDateOptions(isDeposit: boolean, latestArrivalDate?: string | null): { value: string; label: string }[] {
-  // Determine the start date: today or the arrival date (whichever is later)
+// Build the list of selectable delivery dates
+function buildDeliveryDateOptions(latestArrivalDate?: string | null): { value: string; label: string }[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   let startDate = new Date(today);
@@ -33,15 +24,14 @@ function buildDeliveryDateOptions(isDeposit: boolean, latestArrivalDate?: string
     if (arrival > startDate) startDate = arrival;
   }
 
-  const maxDays = isDeposit ? 14 : 42;
+  const maxDays = 42; // 6 weeks
   const options: { value: string; label: string }[] = [];
 
   for (let i = 1; i <= maxDays; i++) {
     const d = new Date(startDate);
     d.setDate(startDate.getDate() + i);
-    // Skip Sundays (0)
-    if (d.getDay() === 0) continue;
-    const iso = d.toISOString().split("T")[0]; // YYYY-MM-DD
+    if (d.getDay() === 0) continue; // Skip Sundays
+    const iso = d.toISOString().split("T")[0];
     const label = d.toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
     options.push({ value: iso, label: label.charAt(0).toUpperCase() + label.slice(1) });
   }
@@ -51,7 +41,6 @@ function buildDeliveryDateOptions(isDeposit: boolean, latestArrivalDate?: string
 export default function Checkout() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [paymentMethod, setPaymentMethod] = useState<string>("CARD_FULL");
   const [shippingType, setShippingType] = useState<"standard" | "express">("standard");
   const [deliveryRequestedDate, setDeliveryRequestedDate] = useState<string>("");
   const [deliveryAddress, setDeliveryAddress] = useState({
@@ -69,7 +58,7 @@ export default function Checkout() {
 
   const cartItems = cartData?.items || [];
 
-  // Use the backend-calculated values from cart
+  // Backend-calculated values
   const subtotalHT = cartData?.subtotalHT || 0;
   const discountPercent = cartData?.discountPercent || 0;
   const discountAmount = cartData?.discountAmount || 0;
@@ -78,20 +67,13 @@ export default function Checkout() {
   const vatLabel = (cartData as any)?.vatLabel || "TVA";
   const vatAmount = cartData?.vatAmount || 0;
   const totalTTC = cartData?.totalTTC || 0;
-
-  // Get latest arrival date from cart (for preorder items)
+  const depositAmount = (cartData as any)?.depositAmount || 0;
+  const balanceAmount = (cartData as any)?.balanceAmount || 0;
+  const hasSpaItems = (cartData as any)?.hasSpaItems || false;
+  const spaUnitCount = (cartData as any)?.spaUnitCount || 0;
   const latestArrivalDate = (cartData as any)?.latestArrivalDate || null;
 
-  // Recompute delivery date options when payment method or arrival date changes
-  const isDeposit = isDepositPayment(paymentMethod);
-  const deliveryDateOptions = useMemo(() => buildDeliveryDateOptions(isDeposit, latestArrivalDate), [isDeposit, latestArrivalDate]);
-  const maxDaysLabel = isDeposit ? "14 jours" : "6 semaines";
-
-  // Reset selected date when payment method changes (window may differ)
-  const handlePaymentMethodChange = (value: string) => {
-    setPaymentMethod(value);
-    setDeliveryRequestedDate(""); // reset so user picks again
-  };
+  const deliveryDateOptions = useMemo(() => buildDeliveryDateOptions(latestArrivalDate), [latestArrivalDate]);
 
   const handleSubmitOrder = async () => {
     if (!deliveryAddress.street || !deliveryAddress.city || !deliveryAddress.postalCode) {
@@ -128,14 +110,21 @@ export default function Checkout() {
           contactPhone: deliveryAddress.contactPhone,
           instructions: deliveryAddress.instructions,
         },
-        paymentMethod,
+        paymentMethod: "BANK_TRANSFER",
         shippingType,
         customerNotes: deliveryAddress.instructions,
         deliveryRequestedDate,
       });
 
-      toast.success("Commande créée avec succès !");
-      setLocation(`/order-confirmation/${result.orderId}`);
+      // If Mollie checkout URL is available, redirect to it
+      if ((result as any).mollieCheckoutUrl) {
+        toast.success("Commande créée ! Redirection vers la page de paiement...");
+        window.open((result as any).mollieCheckoutUrl, "_blank");
+        setLocation(`/order-confirmation/${result.orderId}`);
+      } else {
+        toast.success("Commande créée avec succès !");
+        setLocation(`/order-confirmation/${result.orderId}`);
+      }
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la création de la commande");
     }
@@ -180,46 +169,41 @@ export default function Checkout() {
                   <MapPin className="w-5 h-5 text-primary" />
                   <CardTitle>Adresse de livraison</CardTitle>
                 </div>
-                <CardDescription>
-                  Où souhaitez-vous recevoir votre commande ?
-                </CardDescription>
+                <CardDescription>Indiquez l'adresse de livraison pour cette commande</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="col-span-2 space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2 space-y-2">
                     <Label htmlFor="street">Adresse *</Label>
                     <Input
                       id="street"
+                      placeholder="Numéro et nom de rue"
                       value={deliveryAddress.street}
                       onChange={(e) => setDeliveryAddress({ ...deliveryAddress, street: e.target.value })}
-                      placeholder="Rue de la Paix, 123"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="city">Ville *</Label>
-                    <Input
-                      id="city"
-                      value={deliveryAddress.city}
-                      onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })}
-                      placeholder="Bruxelles"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="postalCode">Code postal *</Label>
                     <Input
                       id="postalCode"
+                      placeholder="1000"
                       value={deliveryAddress.postalCode}
                       onChange={(e) => setDeliveryAddress({ ...deliveryAddress, postalCode: e.target.value })}
-                      placeholder="1000"
                     />
                   </div>
-                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="country">Pays</Label>
-                    <Select
-                      value={deliveryAddress.country}
-                      onValueChange={(value) => setDeliveryAddress({ ...deliveryAddress, country: value })}
-                    >
-                      <SelectTrigger>
+                  <div className="space-y-2">
+                    <Label htmlFor="city">Ville *</Label>
+                    <Input
+                      id="city"
+                      placeholder="Bruxelles"
+                      value={deliveryAddress.city}
+                      onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="country">Pays *</Label>
+                    <Select value={deliveryAddress.country} onValueChange={(v) => setDeliveryAddress({ ...deliveryAddress, country: v })}>
+                      <SelectTrigger id="country">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -227,44 +211,38 @@ export default function Checkout() {
                         <SelectItem value="FR">France</SelectItem>
                         <SelectItem value="LU">Luxembourg</SelectItem>
                         <SelectItem value="NL">Pays-Bas</SelectItem>
-                        <SelectItem value="ES">Espagne</SelectItem>
+                        <SelectItem value="DE">Allemagne</SelectItem>
+                        <SelectItem value="CH">Suisse</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-
-                <Separator />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="contactName">Nom du contact *</Label>
                     <Input
                       id="contactName"
+                      placeholder="Jean Dupont"
                       value={deliveryAddress.contactName}
                       onChange={(e) => setDeliveryAddress({ ...deliveryAddress, contactName: e.target.value })}
-                      placeholder="Jean Dupont"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="contactPhone">Téléphone *</Label>
                     <Input
                       id="contactPhone"
+                      placeholder="+32 xxx xx xx xx"
                       value={deliveryAddress.contactPhone}
                       onChange={(e) => setDeliveryAddress({ ...deliveryAddress, contactPhone: e.target.value })}
-                      placeholder="+32 2 123 45 67"
                     />
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="instructions">Instructions de livraison</Label>
-                  <Textarea
-                    id="instructions"
-                    value={deliveryAddress.instructions}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, instructions: e.target.value })}
-                    placeholder="Code d'accès, étage, horaires préférés..."
-                    rows={3}
-                  />
+                  <div className="md:col-span-2 space-y-2">
+                    <Label htmlFor="instructions">Instructions de livraison</Label>
+                    <Textarea
+                      id="instructions"
+                      placeholder="Instructions particulières pour la livraison..."
+                      value={deliveryAddress.instructions}
+                      onChange={(e) => setDeliveryAddress({ ...deliveryAddress, instructions: e.target.value })}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -276,39 +254,24 @@ export default function Checkout() {
                   <TruckIcon className="w-5 h-5 text-primary" />
                   <CardTitle>Mode de livraison</CardTitle>
                 </div>
-                <CardDescription>
-                  Choisissez votre mode de livraison
-                </CardDescription>
               </CardHeader>
               <CardContent>
-                <RadioGroup value={shippingType} onValueChange={(v) => setShippingType(v as "standard" | "express")}>
+                <RadioGroup value={shippingType} onValueChange={(v: "standard" | "express") => setShippingType(v)}>
                   <div className={`flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors ${shippingType === 'standard' ? 'border-primary bg-primary/5' : ''}`}>
                     <RadioGroupItem value="standard" id="shipping-standard" />
                     <Label htmlFor="shipping-standard" className="flex-1 cursor-pointer">
-                      <div className="font-medium flex items-center gap-2">
-                        <TruckIcon className="w-4 h-4" />
-                        Livraison standard
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Délai estimé : 10-14 jours ouvrés
-                      </div>
+                      <div className="font-medium">Livraison standard</div>
+                      <div className="text-sm text-muted-foreground">Délai estimé : 5-10 jours ouvrés</div>
                     </Label>
                     <div className="text-right">
                       <div className="font-bold text-primary">{formatPrice(shippingHT)} € HT</div>
                     </div>
                   </div>
-
                   <div className={`flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors ${shippingType === 'express' ? 'border-primary bg-primary/5' : ''}`}>
                     <RadioGroupItem value="express" id="shipping-express" />
                     <Label htmlFor="shipping-express" className="flex-1 cursor-pointer">
-                      <div className="font-medium flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-amber-500" />
-                        Livraison express
-                        <span className="text-xs bg-amber-500/15 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded">Rapide</span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Délai estimé : 3-5 jours ouvrés
-                      </div>
+                      <div className="font-medium">Livraison express</div>
+                      <div className="text-sm text-muted-foreground">Délai estimé : 3-5 jours ouvrés</div>
                     </Label>
                     <div className="text-right">
                       <div className="font-bold text-primary">{formatPrice(shippingHT > 0 ? shippingHT * 2 : 300)} € HT</div>
@@ -318,61 +281,73 @@ export default function Checkout() {
               </CardContent>
             </Card>
 
-            {/* Payment Method */}
+            {/* Payment Method - SEPA Bank Transfer via Mollie */}
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-primary" />
+                  <Building2 className="w-5 h-5 text-primary" />
                   <CardTitle>Mode de paiement</CardTitle>
                 </div>
                 <CardDescription>
-                  Choisissez votre mode de paiement préféré
+                  Paiement par virement bancaire SEPA via Mollie
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <RadioGroup value={paymentMethod} onValueChange={handlePaymentMethodChange}>
-                  <div className={`flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors ${paymentMethod === 'CARD_FULL' ? 'border-primary bg-primary/5' : ''}`}>
-                    <RadioGroupItem value="CARD_FULL" id="card-full" />
-                    <Label htmlFor="card-full" className="flex-1 cursor-pointer">
-                      <div className="font-medium">Paiement intégral par carte</div>
-                      <div className="text-sm text-muted-foreground">
-                        Payez la totalité de votre commande maintenant par carte bancaire
-                      </div>
-                    </Label>
-                    <div className="text-right">
-                      <div className="font-bold text-primary">{formatPrice(totalTTC)} €</div>
-                      <div className="text-xs text-muted-foreground">TTC</div>
+              <CardContent className="space-y-4">
+                <div className="flex items-center space-x-3 border rounded-lg p-4 border-primary bg-primary/5">
+                  <CreditCard className="w-6 h-6 text-primary flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="font-medium">Virement bancaire SEPA</div>
+                    <div className="text-sm text-muted-foreground">
+                      Vous recevrez les coordonnées bancaires pour effectuer le virement. Le paiement sera validé automatiquement à réception des fonds.
                     </div>
                   </div>
+                  <div className="text-right">
+                    <div className="font-bold text-primary text-lg">{formatPrice(depositAmount)} €</div>
+                    <div className="text-xs text-muted-foreground">
+                      {hasSpaItems ? "Acompte TTC" : "Total TTC"}
+                    </div>
+                  </div>
+                </div>
 
-                  <div className={`flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors ${paymentMethod === 'CARD_DEPOSIT' ? 'border-primary bg-primary/5' : ''}`}>
-                    <RadioGroupItem value="CARD_DEPOSIT" id="card-deposit" />
-                    <Label htmlFor="card-deposit" className="flex-1 cursor-pointer">
-                      <div className="font-medium">Paiement par carte (acompte 30%)</div>
-                      <div className="text-sm text-muted-foreground">
-                        Payez un acompte de 30% maintenant, le solde à la livraison
+                {/* Deposit info for spa orders */}
+                {hasSpaItems && (
+                  <div className="space-y-3">
+                    <div className="flex gap-3 p-4 rounded-lg border bg-blue-500/5 border-blue-500/20 text-blue-800 dark:text-blue-300">
+                      <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm space-y-1">
+                        <div className="font-semibold">Acompte de {formatPrice(depositAmount)} € ({spaUnitCount} spa{spaUnitCount > 1 ? "s" : ""} x 300 €)</div>
+                        <div>
+                          Un acompte fixe de <strong>300 € par spa</strong> est demandé pour confirmer votre commande.
+                          Le solde restant de <strong>{formatPrice(balanceAmount)} €</strong> sera facturé ultérieurement via votre fournisseur.
+                        </div>
                       </div>
-                    </Label>
-                    <div className="text-right">
-                      <div className="font-bold text-primary">{formatPrice(totalTTC * 0.3)} €</div>
-                      <div className="text-xs text-muted-foreground">Acompte TTC</div>
                     </div>
-                  </div>
 
-                  <div className={`flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors ${paymentMethod === 'BANK_TRANSFER' ? 'border-primary bg-primary/5' : ''}`}>
-                    <RadioGroupItem value="BANK_TRANSFER" id="bank-transfer" />
-                    <Label htmlFor="bank-transfer" className="flex-1 cursor-pointer">
-                      <div className="font-medium">Virement bancaire</div>
-                      <div className="text-sm text-muted-foreground">
-                        Vous recevrez les coordonnées bancaires par email
+                    {/* WARNING: Deposit loss if balance not paid within 14 days */}
+                    <div className="flex gap-3 p-4 rounded-lg border bg-amber-500/10 border-amber-500/30 text-amber-800 dark:text-amber-300">
+                      <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm space-y-1">
+                        <div className="font-semibold">Conditions de l'acompte</div>
+                        <div>
+                          L'acompte sera <strong>définitivement perdu</strong> si l'intégralité du solde restant ({formatPrice(balanceAmount)} €) n'est pas réglée dans les <strong>14 jours</strong> suivant la réception de l'acompte par nos services.
+                        </div>
                       </div>
-                    </Label>
-                    <div className="text-right">
-                      <div className="font-bold text-primary">{formatPrice(totalTTC)} €</div>
-                      <div className="text-xs text-muted-foreground">TTC</div>
                     </div>
                   </div>
-                </RadioGroup>
+                )}
+
+                {/* Full payment info for non-spa orders */}
+                {!hasSpaItems && (
+                  <div className="flex gap-3 p-4 rounded-lg border bg-emerald-500/5 border-emerald-500/20 text-emerald-800 dark:text-emerald-300">
+                    <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <div className="font-semibold">Paiement intégral requis</div>
+                      <div>
+                        Pour les commandes d'accessoires et produits d'entretien, le paiement intégral est requis pour valider la commande.
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -384,13 +359,10 @@ export default function Checkout() {
                   <CardTitle>Date de livraison souhaitée *</CardTitle>
                 </div>
                 <CardDescription>
-                  {isDeposit
-                    ? "Avec un acompte, vous pouvez choisir une date dans les 14 prochains jours."
-                    : "Avec un paiement intégral, vous pouvez choisir une date dans les 6 prochaines semaines."}
+                  Choisissez une date dans les 6 prochaines semaines.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Info banner */}
                 {latestArrivalDate && (
                   <div className="flex gap-3 p-3 rounded-lg border text-sm bg-blue-500/5 border-blue-500/20 text-blue-800 dark:text-blue-300">
                     <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -401,20 +373,12 @@ export default function Checkout() {
                     </span>
                   </div>
                 )}
-                <div className={`flex gap-3 p-3 rounded-lg border text-sm ${isDeposit ? 'bg-amber-500/5 border-amber-500/20 text-amber-800 dark:text-amber-300' : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-800 dark:text-emerald-300'}`}>
-                  <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <span>
-                    {isDeposit
-                      ? `Acompte 30% : plage de livraison de 14 jours à partir ${latestArrivalDate ? "de la date d'arrivée" : "d'aujourd'hui"}.`
-                      : `Paiement intégral : plage de livraison de 6 semaines (42 jours) à partir ${latestArrivalDate ? "de la date d'arrivée" : "d'aujourd'hui"}.`}
-                  </span>
-                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="deliveryDate">Choisissez votre date *</Label>
                   <Select value={deliveryRequestedDate} onValueChange={setDeliveryRequestedDate}>
                     <SelectTrigger id="deliveryDate" className={!deliveryRequestedDate ? "border-primary/50" : ""}>
-                      <SelectValue placeholder={`Sélectionner une date (${maxDaysLabel} disponibles)`} />
+                      <SelectValue placeholder="Sélectionner une date de livraison" />
                     </SelectTrigger>
                     <SelectContent className="max-h-64">
                       {deliveryDateOptions.map((opt) => (
@@ -461,7 +425,7 @@ export default function Checkout() {
                         <div className="text-xs text-muted-foreground">
                           Quantité: {item.quantity}
                           {(item as any).isPreorder && (
-                            <span className="ml-2 text-orange-600 dark:text-orange-400">• Pré-commande</span>
+                            <span className="ml-2 text-orange-600 dark:text-orange-400">Pré-commande</span>
                           )}
                         </div>
                       </div>
@@ -505,6 +469,29 @@ export default function Checkout() {
                   </div>
                 </div>
 
+                {/* Deposit / Payment Amount */}
+                <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="font-semibold text-sm">
+                        {hasSpaItems ? "Acompte à régler" : "Montant à régler"}
+                      </div>
+                      {hasSpaItems && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {spaUnitCount} spa{spaUnitCount > 1 ? "s" : ""} x 300 € = {formatPrice(depositAmount)} €
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-xl font-bold text-primary">{formatPrice(depositAmount)} €</div>
+                  </div>
+                  {hasSpaItems && balanceAmount > 0 && (
+                    <div className="mt-2 pt-2 border-t border-primary/10 flex justify-between text-sm text-muted-foreground">
+                      <span>Solde restant</span>
+                      <span>{formatPrice(balanceAmount)} €</span>
+                    </div>
+                  )}
+                </div>
+
                 {discountPercent > 0 && (
                   <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
                     <p className="text-xs text-emerald-700 dark:text-emerald-400">
@@ -535,11 +522,11 @@ export default function Checkout() {
                 {/* Info Box */}
                 <div className="bg-info/10 dark:bg-blue-950/20 border border-info/20 dark:border-blue-800 rounded-lg p-4">
                   <div className="flex gap-2">
-                    <Calendar className="w-5 h-5 text-info dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                    <Building2 className="w-5 h-5 text-info dark:text-blue-400 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-blue-900 dark:text-blue-100">
-                      <div className="font-medium mb-1">Après validation</div>
+                      <div className="font-medium mb-1">Paiement par virement SEPA</div>
                       <div className="text-blue-700 dark:text-blue-300">
-                        Vous recevrez un devis détaillé par email. La commande sera traitée après confirmation du paiement.
+                        Après validation, vous serez redirigé vers la page de paiement Mollie pour effectuer votre virement bancaire.
                       </div>
                     </div>
                   </div>
@@ -552,7 +539,7 @@ export default function Checkout() {
                   onClick={handleSubmitOrder}
                   disabled={createOrderMutation.isPending || cartItems.length === 0 || !deliveryRequestedDate}
                 >
-                  {createOrderMutation.isPending ? "Traitement..." : "Valider la commande"}
+                  {createOrderMutation.isPending ? "Traitement..." : `Valider et payer ${formatPrice(depositAmount)} €`}
                 </Button>
                 {!deliveryRequestedDate && (
                   <p className="text-xs text-center text-amber-600 dark:text-amber-400">

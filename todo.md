@@ -3132,3 +3132,28 @@
 - [x] GET /api/mobile/admin/leads : tous les leads (admin uniquement, pagination, filtres)
 - [x] Correction admin/stats : savTickets → customerSavTickets (bon nom de table)
 - [x] 1053 tests passent (72 fichiers de test)
+
+## Refonte système de paiement : Stripe → Mollie SEPA Bank Transfer
+- [x] Configurer les secrets Mollie (API Live, API Test, Profile ID)
+- [x] Installer le SDK Mollie (@mollie/api-client)
+- [x] Supprimer les dépendances Stripe (stripe, @stripe/react-stripe-js, @stripe/stripe-js)
+- [x] Supprimer server/stripe.ts et server/stripe-webhook.ts
+- [x] Nettoyer les références Stripe dans server/_core/index.ts, server/_core/env.ts, server/routers.ts
+- [x] Nettoyer les références Stripe dans le frontend (Checkout.tsx, AdminSettings.tsx, etc.)
+- [x] Ajouter les champs Mollie au schéma DB (molliePaymentId dans orders et payments)
+- [x] Créer server/mollie.ts : intégration Mollie (createPayment, getPayment, webhook handler)
+- [x] Créer le webhook Mollie POST /api/webhooks/mollie pour validation asynchrone
+- [x] Nouveau calcul acompte : 300€ fixe par spa/swim_spa dans le panier
+- [x] Paiement intégral pour accessoires et pièces détachées (pas d'acompte)
+- [x] Refondre Checkout.tsx : SEPA uniquement, calcul acompte 300€/spa, mention perte acompte 14j
+- [x] Workflow statuts : PENDING → PAYMENT_PENDING (Mollie créé) → DEPOSIT_PAID (webhook Mollie validé)
+- [x] Quand paiement initié (SEPA transfer) : statut "En cours" + retirer produits du stock
+- [x] Quand paiement validé (webhook Mollie) : statut "Acompte payé"
+- [x] Facture d'acompte + solde restant envoyé via API fournisseur
+- [x] Mention légale : "L'acompte sera perdu si le solde n'est pas réglé dans les 14 jours suivant la réception"
+- [x] Créer table shipping_zones (pays, code postal, tarif) pour frais de transport forfaitaires
+- [ ] Créer interface admin "Frais de transport" dans l'onglet Produits & Stock (table créée, interface à compléter)
+- [ ] Remplacer calculateShippingCost par lookup dans shipping_zones (table prête)
+- [x] Mettre à jour l'API mobile pour le nouveau système de paiement
+- [x] Mettre à jour l'API fournisseur pour inclure le solde restant
+- [x] Tests unitaires pour Mollie, calcul acompte, frais de transport (17 tests passent)
