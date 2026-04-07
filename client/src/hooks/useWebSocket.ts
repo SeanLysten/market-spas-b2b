@@ -139,6 +139,7 @@ function getStatusLabel(status: string): string {
     SHIPPED: "Expédiée",
     DELIVERED: "Livrée",
     CANCELLED: "Annulée",
+    REFUSED: "Refusée",
   };
   return labels[status] || status;
 }

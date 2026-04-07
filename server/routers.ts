@@ -424,6 +424,22 @@ export const appRouter = router({
         const result = await db.processArrivedStock();
         return result;
       }),
+
+    // Expire unpaid orders after 3 days and restore stock
+    expireUnpaidOrders: publicProcedure
+      .input(z.object({ 
+        secret: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const CRON_SECRET = process.env.CRON_SECRET || 'default-secret-change-me';
+        if (input.secret !== CRON_SECRET) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid secret key' });
+        }
+        
+        const { expireUnpaidOrders } = await import("./stock-management");
+        const expiredCount = await expireUnpaidOrders();
+        return { success: true, expiredCount };
+      }),
   }),
 
   // ============================================

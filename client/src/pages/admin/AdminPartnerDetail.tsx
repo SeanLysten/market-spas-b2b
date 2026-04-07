@@ -133,6 +133,7 @@ const orderStatusLabels: Record<string, string> = {
   COMPLETED: "Terminé",
   CANCELLED: "Annulé",
   REFUNDED: "Remboursé",
+  REFUSED: "Refusé",
 };
 
 export default function AdminPartnerDetail() {

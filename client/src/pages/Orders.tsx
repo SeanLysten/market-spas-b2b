@@ -68,6 +68,7 @@ export default function Orders() {
       DELIVERED: "bg-green-200 text-green-900 border-green-300",
       COMPLETED: "bg-green-300 text-green-950 border-green-400",
       CANCELLED: "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive border-destructive/20 dark:border-destructive/30",
+      REFUSED: "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive border-destructive/20 dark:border-destructive/30",
     };
     return colors[status] || "bg-muted dark:bg-muted/50 text-gray-800 border-border dark:border-border";
   };
@@ -86,6 +87,7 @@ export default function Orders() {
       COMPLETED: "Terminé",
       CANCELLED: "Annulé",
       REFUNDED: "Remboursé",
+      REFUSED: "Refusé",
     };
     return labels[status] || status;
   };

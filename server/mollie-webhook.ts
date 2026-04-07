@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { getMolliePaymentById, MOLLIE_STATUS } from "./mollie";
+import { notifyPaymentReceived, notifyPaymentFailed } from "./notification-service";
 
 /**
  * Handle Mollie webhook notifications
@@ -115,6 +116,13 @@ async function handleOrderPaymentUpdate(
       depositPaid = true;
       console.log(`[Mollie Webhook] Order ${orderId}: Deposit paid (Acompte payé)`);
 
+      // Send payment received notification
+      try {
+        await notifyPaymentReceived(orderId, currentOrder.orderNumber, "deposit");
+      } catch (e) {
+        console.log("[Mollie Webhook] notifyPaymentReceived skipped:", (e as any).message);
+      }
+
       // Send notification email
       try {
         const { sendPaymentConfirmationEmail } = await import("./email");
@@ -141,13 +149,39 @@ async function handleOrderPaymentUpdate(
 
     case MOLLIE_STATUS.FAILED:
     case MOLLIE_STATUS.EXPIRED:
-      newStatus = "PAYMENT_FAILED";
-      console.log(`[Mollie Webhook] Order ${orderId}: Payment ${status}`);
+      // Payment not received within deadline → REFUSED + restore stock
+      newStatus = "REFUSED";
+      console.log(`[Mollie Webhook] Order ${orderId}: Payment ${status} → REFUSED`);
+
+      // Send payment failed notification
+      try {
+        await notifyPaymentFailed(orderId, currentOrder.orderNumber, status);
+      } catch (e) {
+        console.log("[Mollie Webhook] notifyPaymentFailed skipped:", (e as any).message);
+      }
+      
+      // Restore stock for all items in this order
+      try {
+        const { restoreStockForOrder } = await import("./stock-management");
+        await restoreStockForOrder(orderId);
+        console.log(`[Mollie Webhook] Order ${orderId}: Stock restored successfully`);
+      } catch (stockError: any) {
+        console.error(`[Mollie Webhook] Order ${orderId}: Failed to restore stock:`, stockError.message);
+      }
       break;
 
     case MOLLIE_STATUS.CANCELLED:
-      newStatus = "CANCELLED";
-      console.log(`[Mollie Webhook] Order ${orderId}: Payment cancelled`);
+      newStatus = "REFUSED";
+      console.log(`[Mollie Webhook] Order ${orderId}: Payment cancelled → REFUSED`);
+      
+      // Restore stock for cancelled orders too
+      try {
+        const { restoreStockForOrder: restoreStock } = await import("./stock-management");
+        await restoreStock(orderId);
+        console.log(`[Mollie Webhook] Order ${orderId}: Stock restored after cancellation`);
+      } catch (stockError: any) {
+        console.error(`[Mollie Webhook] Order ${orderId}: Failed to restore stock:`, stockError.message);
+      }
       break;
 
     case MOLLIE_STATUS.OPEN:

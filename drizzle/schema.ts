@@ -56,6 +56,7 @@ export const orderStatusEnum = mysqlEnum("order_status", [
   "COMPLETED",
   "CANCELLED",
   "REFUNDED",
+  "REFUSED",
 ]);
 
 export const paymentStatusEnum = mysqlEnum("payment_status", [

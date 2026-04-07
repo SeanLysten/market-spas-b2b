@@ -32,7 +32,8 @@ type OrderStatus =
   | "SHIPPED"
   | "DELIVERED"
   | "COMPLETED"
-  | "CANCELLED";
+  | "CANCELLED"
+  | "REFUSED";
 
 const STATUS_LABELS: Record<string, { label: string; color: string; icon: any }> = {
   PENDING_APPROVAL: { label: "En attente de validation", color: "bg-amber-500/15 text-amber-800 dark:text-amber-400 border-yellow-300", icon: Clock },
@@ -46,6 +47,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string; icon: any }>
   DELIVERED: { label: "Livré", color: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-400 border-green-300", icon: CheckCircle2 },
   COMPLETED: { label: "Terminé", color: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-400 border-green-300", icon: CheckCircle2 },
   CANCELLED: { label: "Annulé", color: "bg-destructive/15 text-destructive border-red-300", icon: AlertCircle },
+  REFUSED: { label: "Refusé", color: "bg-destructive/15 text-destructive border-red-300", icon: AlertCircle },
 };
 
 export default function OrderSummary() {

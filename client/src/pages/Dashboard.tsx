@@ -395,6 +395,7 @@ export default function Dashboard() {
                       ORDER_STATUS_CHANGED: <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
                       PAYMENT_RECEIVED: <CreditCard className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
                       PAYMENT_FAILED: <XCircle className="w-5 h-5 text-red-600" />,
+                      REFUSED: <XCircle className="w-5 h-5 text-red-600" />,
                       REFUND_PROCESSED: <RefreshCw className="w-5 h-5 text-orange-600" />,
                       DEPOSIT_REMINDER: <AlertCircle className="w-5 h-5 text-yellow-600" />,
                       NEW_PARTNER: <Building2 className="w-5 h-5 text-blue-600" />,

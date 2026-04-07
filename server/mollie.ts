@@ -33,6 +33,12 @@ interface CreateMolliePaymentInput {
 export async function createMolliePayment(input: CreateMolliePaymentInput) {
   const mollieClient = getMollieClient();
 
+  // Calculate dueDate: 3 days from now for payment expiration
+  // Mollie requires YYYY-MM-DD format, minimum is tomorrow, max 100 days
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + 3);
+  const dueDateStr = dueDate.toISOString().split("T")[0];
+
   const payment = await mollieClient.payments.create({
     amount: {
       currency: "EUR",
@@ -43,7 +49,8 @@ export async function createMolliePayment(input: CreateMolliePaymentInput) {
     webhookUrl: input.webhookUrl,
     metadata: input.metadata,
     method: PaymentMethod.banktransfer,
-  });
+    dueDate: dueDateStr,
+  } as any);
 
   console.log(`[Mollie] Payment created: ${payment.id} - Status: ${payment.status} - Amount: ${input.amount.toFixed(2)} EUR`);
 

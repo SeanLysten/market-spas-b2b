@@ -22,7 +22,7 @@ import {
   Download,
 } from "lucide-react";
 
-type OrderStatus = "PENDING_APPROVAL" | "PENDING_DEPOSIT" | "PAYMENT_PENDING" | "DEPOSIT_PAID" | "PAYMENT_FAILED" | "IN_PRODUCTION" | "READY_TO_SHIP" | "SHIPPED" | "DELIVERED" | "COMPLETED" | "CANCELLED";
+type OrderStatus = "PENDING_APPROVAL" | "PENDING_DEPOSIT" | "PAYMENT_PENDING" | "DEPOSIT_PAID" | "PAYMENT_FAILED" | "IN_PRODUCTION" | "READY_TO_SHIP" | "SHIPPED" | "DELIVERED" | "COMPLETED" | "CANCELLED" | "REFUSED";
 
 const STATUS_STEPS: { status: OrderStatus; label: string; description: string; icon: any }[] = [
   { status: "PENDING_APPROVAL", label: "En attente", description: "Commande en cours de validation", icon: Clock },
@@ -37,7 +37,7 @@ const STATUS_STEPS: { status: OrderStatus; label: string; description: string; i
 ];
 
 const getStatusIndex = (status: string): number => {
-  if (status === "CANCELLED") return -1;
+  if (status === "CANCELLED" || status === "REFUSED") return -1;
   const index = STATUS_STEPS.findIndex(s => s.status === status);
   return index >= 0 ? index : 0;
 };
@@ -60,6 +60,7 @@ const getStatusColor = (status: string): string => {
     case "COMPLETED":
       return "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400 border-green-300";
     case "CANCELLED":
+    case "REFUSED":
       return "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive border-red-300";
     default:
       return "bg-muted dark:bg-muted/50 text-gray-800 border-gray-300";
@@ -144,7 +145,7 @@ export default function OrderTracking() {
   }
 
   const currentStatusIndex = getStatusIndex(order.status);
-  const isCancelled = order.status === "CANCELLED";
+  const isCancelled = order.status === "CANCELLED" || order.status === "REFUSED";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -206,8 +207,8 @@ export default function OrderTracking() {
                   <div className="flex items-center gap-4 p-4 md:p-6 bg-destructive/10 dark:bg-destructive/20 border border-destructive/20 dark:border-destructive/30 rounded-lg">
                     <XCircle className="w-12 h-12 text-red-500" />
                     <div>
-                      <h3 className="text-lg font-semibold text-destructive dark:text-destructive">Commande annulée</h3>
-                      <p className="text-destructive dark:text-destructive">Cette commande a été annulée.</p>
+                      <h3 className="text-lg font-semibold text-destructive dark:text-destructive">{order.status === "REFUSED" ? "Commande refusée" : "Commande annulée"}</h3>
+                      <p className="text-destructive dark:text-destructive">{order.status === "REFUSED" ? "Le paiement n'a pas été reçu dans les délais. Les produits ont été remis en stock." : "Cette commande a été annulée."}</p>
                     </div>
                   </div>
                 ) : (

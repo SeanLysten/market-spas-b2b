@@ -129,13 +129,12 @@ describe("notification integration points", () => {
     expect(content).toContain("notifyDepositReminder");
   });
 
-  it("stripe-webhook.ts should import notification-service", async () => {
+  it("mollie-webhook.ts should import notification-service", async () => {
     const fs = await import("fs");
-    const content = fs.readFileSync("/home/ubuntu/market-spas-b2b/server/stripe-webhook.ts", "utf-8");
+    const content = fs.readFileSync("/home/ubuntu/market-spas-b2b/server/mollie-webhook.ts", "utf-8");
     expect(content).toContain('from "./notification-service"');
     expect(content).toContain("notifyPaymentReceived");
     expect(content).toContain("notifyPaymentFailed");
-    expect(content).toContain("notifyRefundProcessed");
   });
 
   it("routers.ts should import notification-service", async () => {

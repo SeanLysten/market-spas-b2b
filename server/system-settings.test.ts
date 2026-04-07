@@ -149,7 +149,7 @@ describe("settings routes", () => {
     it("returns integration statuses for admin", async () => {
       const result = await adminCaller.settings.integrationStatus();
       expect(result).toBeDefined();
-      expect(result).toHaveProperty("stripe");
+      expect(result).toHaveProperty("mollie");
       expect(result).toHaveProperty("resend");
       expect(result).toHaveProperty("meta");
       expect(result).toHaveProperty("googleAds");
@@ -157,7 +157,7 @@ describe("settings routes", () => {
       expect(result).toHaveProperty("shopify");
 
       // Each integration should have a connected boolean
-      expect(typeof result.stripe.connected).toBe("boolean");
+      expect(typeof result.mollie.connected).toBe("boolean");
       expect(typeof result.resend.connected).toBe("boolean");
       expect(typeof result.meta.connected).toBe("boolean");
       expect(typeof result.googleAds.connected).toBe("boolean");

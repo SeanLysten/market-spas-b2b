@@ -68,6 +68,7 @@ export default function OrderConfirmation() {
     DELIVERED: { label: "Livré", color: "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400" },
     COMPLETED: { label: "Terminé", color: "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400" },
     CANCELLED: { label: "Annulé", color: "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive" },
+    REFUSED: { label: "Refusé", color: "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive" },
   };
 
   const paymentMethodLabels: Record<string, string> = {

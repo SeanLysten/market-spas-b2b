@@ -612,6 +612,7 @@ function OrdersDashboardSection() {
       DELIVERED: { label: "Livré", variant: "default" },
       COMPLETED: { label: "Terminé", variant: "default" },
       CANCELLED: { label: "Annulé", variant: "destructive" },
+      REFUSED: { label: "Refusé", variant: "destructive" },
     };
     const config = statusConfig[status] || { label: status, variant: "secondary" };
     return <Badge variant={config.variant}>{config.label}</Badge>;
@@ -833,6 +834,7 @@ function FullAdminDashboardSection() {
       DELIVERED: { label: "Livré", variant: "default" },
       COMPLETED: { label: "Terminé", variant: "default" },
       CANCELLED: { label: "Annulé", variant: "destructive" },
+      REFUSED: { label: "Refusé", variant: "destructive" },
     };
     const config = statusConfig[status] || { label: status, variant: "secondary" };
     return <Badge variant={config.variant}>{config.label}</Badge>;

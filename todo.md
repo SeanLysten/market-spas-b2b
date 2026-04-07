@@ -3171,3 +3171,27 @@
 - [x] Calculer automatiquement les frais de livraison selon pays + code postal de l'adresse saisie
 - [x] Afficher le prix de livraison calculé (pas un choix)
 - [x] Investiguer l'erreur "pas associé à un partenaire" : comportement normal B2B, le compte doit être lié à un partenaire
+- [x] Fix: erreur "pas associé à un partenaire" - user Marketing Wellis (id=1) avait partnerId=null, associé à PLANET SUN SRL (id=90001)
+
+## Virement SEPA direct (remplacement Mollie)
+- [ ] Configurer secrets IBAN/BIC/Bénéficiaire du marchand
+- [ ] Supprimer SDK Mollie et fichiers mollie.ts, mollie-webhook.ts
+- [ ] Supprimer route webhook Mollie dans index.ts
+- [ ] Nettoyer les références Mollie dans routers.ts, env.ts, frontend
+- [ ] Générer une référence unique par commande (format RF + numéro)
+- [ ] Refondre Checkout.tsx : afficher coordonnées bancaires + référence après validation
+- [ ] Refondre OrderConfirmation.tsx : afficher les coordonnées bancaires pour le virement
+- [ ] Ajouter bouton admin "Confirmer réception paiement" sur les commandes en attente
+- [ ] Workflow : commande créée → PAYMENT_PENDING → admin confirme → DEPOSIT_PAID
+- [ ] Mettre à jour les pages admin (AdminOrders) avec le bouton de confirmation
+- [ ] Tests unitaires pour la génération de référence et le workflow
+
+## Réservation temporaire du stock + expiration 3 jours
+- [x] Vérifier que le stock est bien retiré à la création de commande
+- [x] Créer une tâche CRON/scheduler qui vérifie les commandes PAYMENT_PENDING > 3 jours
+- [x] Commandes expirées : statut → REFUSED, remettre les produits dans le stock
+- [x] Webhook Mollie expired/failed : remettre le stock et passer en REFUSED
+- [x] Webhook Mollie paid : confirmer le retrait définitif du stock (DEPOSIT_PAID)
+- [x] Ajouter le statut REFUSED à l'enum et aux labels frontend (10 fichiers)
+- [x] Configurer l'expiration Mollie à 3 jours via dueDate
+- [x] Tests unitaires : 75 fichiers, 1093 tests passent
