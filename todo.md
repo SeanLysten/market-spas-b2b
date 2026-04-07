@@ -3165,3 +3165,9 @@
 - [x] Connecter calculateShippingCost au lookup dans shipping_zones
 - [x] Tests unitaires pour les routes et le calcul de frais (19 tests passent)
 - [x] Fix: zonesQuery.refetch is not a function dans AdminShippingZones (useSafeQuery ne retourne pas refetch)
+
+## Fix Checkout - Frais de livraison automatiques
+- [x] Supprimer le choix standard/express du checkout
+- [x] Calculer automatiquement les frais de livraison selon pays + code postal de l'adresse saisie
+- [x] Afficher le prix de livraison calculé (pas un choix)
+- [x] Investiguer l'erreur "pas associé à un partenaire" : comportement normal B2B, le compte doit être lié à un partenaire

@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
 import { ArrowLeft, Package, MapPin, CreditCard, FileText, Calendar, TruckIcon, BadgePercent, Info, AlertTriangle, Building2 } from "lucide-react";
@@ -41,7 +40,7 @@ function buildDeliveryDateOptions(latestArrivalDate?: string | null): { value: s
 export default function Checkout() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [shippingType, setShippingType] = useState<"standard" | "express">("standard");
+
   const [deliveryRequestedDate, setDeliveryRequestedDate] = useState<string>("");
   const [deliveryAddress, setDeliveryAddress] = useState({
     street: "",
@@ -55,6 +54,15 @@ export default function Checkout() {
 
   const { data: cartData } = trpc.cart.get.useQuery();
   const createOrderMutation = trpc.orders.create.useMutation();
+
+  // Dynamic shipping cost lookup based on delivery address
+  const shippingLookup = trpc.shippingZones.lookup.useQuery(
+    { country: deliveryAddress.country, postalCode: deliveryAddress.postalCode },
+    { enabled: deliveryAddress.country.length === 2 && deliveryAddress.postalCode.length >= 2 }
+  );
+  const dynamicShippingHT = shippingLookup.data?.shippingCostHT ?? null;
+  const shippingZoneName = shippingLookup.data?.zoneName ?? null;
+  const shippingSource = shippingLookup.data?.source ?? "default";
 
   const cartItems = cartData?.items || [];
 
@@ -111,7 +119,7 @@ export default function Checkout() {
           instructions: deliveryAddress.instructions,
         },
         paymentMethod: "BANK_TRANSFER",
-        shippingType,
+        shippingType: "standard" as const,
         customerNotes: deliveryAddress.instructions,
         deliveryRequestedDate,
       });
@@ -247,37 +255,49 @@ export default function Checkout() {
               </CardContent>
             </Card>
 
-            {/* Shipping Type */}
+            {/* Shipping Cost - Auto-calculated */}
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <TruckIcon className="w-5 h-5 text-primary" />
-                  <CardTitle>Mode de livraison</CardTitle>
+                  <CardTitle>Frais de livraison</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
-                <RadioGroup value={shippingType} onValueChange={(v: "standard" | "express") => setShippingType(v)}>
-                  <div className={`flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors ${shippingType === 'standard' ? 'border-primary bg-primary/5' : ''}`}>
-                    <RadioGroupItem value="standard" id="shipping-standard" />
-                    <Label htmlFor="shipping-standard" className="flex-1 cursor-pointer">
-                      <div className="font-medium">Livraison standard</div>
-                      <div className="text-sm text-muted-foreground">Délai estimé : 5-10 jours ouvrés</div>
-                    </Label>
-                    <div className="text-right">
-                      <div className="font-bold text-primary">{formatPrice(shippingHT)} € HT</div>
+                <div className="flex items-center justify-between border rounded-lg p-4 border-primary bg-primary/5">
+                  <div className="flex items-center gap-3">
+                    <TruckIcon className="w-6 h-6 text-primary flex-shrink-0" />
+                    <div>
+                      <div className="font-medium">Livraison</div>
+                      {shippingLookup.isLoading ? (
+                        <div className="text-sm text-muted-foreground">Calcul en cours...</div>
+                      ) : dynamicShippingHT !== null ? (
+                        <div className="text-sm text-muted-foreground">
+                          {shippingZoneName ? (
+                            <span>Zone : {shippingZoneName}</span>
+                          ) : shippingSource === "default" ? (
+                            <span>Tarif standard</span>
+                          ) : (
+                            <span>Tarif zone</span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-muted-foreground">
+                          Renseignez le pays et code postal pour calculer les frais
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className={`flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors ${shippingType === 'express' ? 'border-primary bg-primary/5' : ''}`}>
-                    <RadioGroupItem value="express" id="shipping-express" />
-                    <Label htmlFor="shipping-express" className="flex-1 cursor-pointer">
-                      <div className="font-medium">Livraison express</div>
-                      <div className="text-sm text-muted-foreground">Délai estimé : 3-5 jours ouvrés</div>
-                    </Label>
-                    <div className="text-right">
-                      <div className="font-bold text-primary">{formatPrice(shippingHT > 0 ? shippingHT * 2 : 300)} € HT</div>
-                    </div>
+                  <div className="text-right">
+                    {shippingLookup.isLoading ? (
+                      <div className="text-sm text-muted-foreground">...</div>
+                    ) : dynamicShippingHT !== null ? (
+                      <div className="font-bold text-primary text-lg">{formatPrice(dynamicShippingHT)} € HT</div>
+                    ) : (
+                      <div className="font-bold text-primary text-lg">{formatPrice(shippingHT)} € HT</div>
+                    )}
                   </div>
-                </RadioGroup>
+                </div>
               </CardContent>
             </Card>
 
@@ -454,9 +474,9 @@ export default function Checkout() {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground flex items-center gap-1">
                       <TruckIcon className="w-3.5 h-3.5" />
-                      Livraison {shippingType === "express" ? "express" : "standard"}
+                      Livraison
                     </span>
-                    <span>{formatPrice(shippingType === "express" ? (shippingHT > 0 ? shippingHT * 2 : 300) : shippingHT)} €</span>
+                    <span>{formatPrice(dynamicShippingHT ?? shippingHT)} €</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{vatLabel} ({vatRate}%)</span>
