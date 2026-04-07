@@ -3278,3 +3278,13 @@
 - [x] Responsive mobile pour les contrôles de pagination
 - [x] Reset automatique de la page quand les filtres changent
 - [x] 75 fichiers de tests, 1093 tests passent
+
+## Bug : Tutoriel onboarding s'affiche à chaque visite au lieu d'une seule fois
+- [x] Analyser le hook useOnboarding et le composant OnboardingTour
+- [x] Persistance côté serveur déjà en place (colonne completedOnboarding + endpoints)
+- [x] Corrigé le hook useOnboarding : staleTime 5min, refetchOnMount/WindowFocus/Reconnect désactivés
+- [x] Remplacé hasStartedRef par autoStartAttemptedRef lié au pageKey pour éviter les faux démarrages
+- [x] Supprimé le reset de ref à chaque changement de pageKey qui causait les ré-affichages
+- [x] Mise à jour optimiste du cache tRPC après markCompleted (setData au lieu de invalidate)
+- [x] Double-vérification de completion juste avant l'affichage du tutoriel
+- [x] 75 fichiers de tests, 1093 tests passent
