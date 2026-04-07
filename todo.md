@@ -3227,3 +3227,9 @@
 - [x] AdminPartnerDetail : supprimé fallback stripeCustomerId, affiche uniquement mollieCustomerId
 - [x] db.ts : ajouté alias getPaymentTransactionByMollieId, legacy getPaymentTransactionByStripeId conservé
 - [x] Vérifier la cohérence globale des informations affichées - 1093 tests passent
+
+## Bug : Articles commandés ne s'affichent pas dans le détail admin
+- [x] Diagnostiquer pourquoi selectedOrder.items est vide dans AdminOrders.tsx - orders.list ne charge pas les items
+- [x] Corriger le chargement des données pour inclure les items avec nom, SKU, couleur, quantité, prix - ajouté appel orders.getWithItems au clic sur Détails
+- [x] Affichage enrichi : nom produit, référence SKU, couleur, quantité x prix unitaire HT, total HT
+- [x] 75 fichiers de tests, 1093 tests passent

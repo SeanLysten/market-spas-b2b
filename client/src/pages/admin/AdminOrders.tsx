@@ -65,12 +65,33 @@ export default function AdminOrders() {
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
 
+  // Fetch full order with items when a specific order is selected
+  const [detailOrderId, setDetailOrderId] = useState<number | null>(null);
+  const { data: orderDetail } = trpc.orders.getWithItems.useQuery(
+    { id: detailOrderId! },
+    { enabled: !!detailOrderId }
+  );
+
+  // Merge order detail (with items) into selectedOrder when loaded
+  useEffect(() => {
+    if (orderDetail && detailOrderId) {
+      // Merge partner info from list data with items from detail
+      const listOrder = orders?.find((o: any) => o.id === detailOrderId);
+      setSelectedOrder({
+        ...listOrder,
+        ...orderDetail,
+        partner: listOrder?.partner || orderDetail.partner,
+      });
+    }
+  }, [orderDetail, detailOrderId]);
+
   // Auto-open order detail when accessed via /admin/orders/:id
   useEffect(() => {
     if (params?.id && orders && !isDetailOpen) {
       const orderId = parseInt(params.id, 10);
       const order = orders.find((o: any) => o.id === orderId);
       if (order) {
+        setDetailOrderId(orderId);
         setSelectedOrder(order);
         setIsDetailOpen(true);
       }
@@ -119,6 +140,7 @@ export default function AdminOrders() {
   }) || [];
 
   const handleViewOrder = (order: any) => {
+    setDetailOrderId(order.id);
     setSelectedOrder(order);
     setIsDetailOpen(true);
   };
@@ -432,7 +454,10 @@ export default function AdminOrders() {
                           </div>
                         )}
                         <div>
-                          <p className="font-medium">{item.product?.name || "Produit"}</p>
+                          <p className="font-medium">{item.name || item.product?.name || "Produit"}</p>
+                          {item.sku && (
+                            <p className="text-xs text-muted-foreground font-mono">Réf : {item.sku}</p>
+                          )}
                           {item.variant && (
                             <p className="text-xs md:text-sm text-muted-foreground">{item.variant.name}</p>
                           )}
@@ -443,7 +468,7 @@ export default function AdminOrders() {
                       </div>
                       <div className="text-right">
                         <p className="font-medium">{formatPrice(item.totalHT)}</p>
-                        <p className="text-xs md:text-sm text-muted-foreground">Qté: {item.quantity}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">{item.quantity} x {formatPrice(item.unitPriceHT)} HT</p>
                       </div>
                     </div>
                   ))}
