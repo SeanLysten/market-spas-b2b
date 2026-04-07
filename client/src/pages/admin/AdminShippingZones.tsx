@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
-import { useSafeQuery } from "@/hooks/useSafeQuery";
+
 import { TableSkeleton } from "@/components/TableSkeleton";
 import { Plus, Edit, Trash2, Truck, Search, Filter, MapPin } from "lucide-react";
 import { toast } from "sonner";
@@ -101,7 +101,7 @@ export default function AdminShippingZones() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCountry, setFilterCountry] = useState<string>("all");
 
-  const zonesQuery = useSafeQuery(trpc.shippingZones.list);
+  const zonesQuery = trpc.shippingZones.list.useQuery();
   const createMutation = trpc.shippingZones.create.useMutation({
     onSuccess: () => {
       toast.success("Zone de transport créée avec succès");
@@ -130,7 +130,7 @@ export default function AdminShippingZones() {
     onError: (err) => toast.error(err.message),
   });
 
-  const zones = zonesQuery.data || [];
+  const zones = Array.isArray(zonesQuery.data) ? zonesQuery.data : [];
 
   const filteredZones = zones.filter((zone: any) => {
     const matchesSearch =

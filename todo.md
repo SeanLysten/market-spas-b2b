@@ -3164,3 +3164,4 @@
 - [x] Intégrer la page dans la navigation admin (onglet Produits & Stock)
 - [x] Connecter calculateShippingCost au lookup dans shipping_zones
 - [x] Tests unitaires pour les routes et le calcul de frais (19 tests passent)
+- [x] Fix: zonesQuery.refetch is not a function dans AdminShippingZones (useSafeQuery ne retourne pas refetch)
