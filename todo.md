@@ -3246,3 +3246,15 @@
 
 ## Bug : Compteur articles affiche nombre de lignes au lieu de la quantité totale
 - [x] Corriger getAllOrders : utiliser SUM(quantity) au lieu de COUNT(*) pour itemCount
+
+## Filtres avancés pour la liste des commandes admin
+- [x] Filtre par période (date de début / date de fin)
+- [x] Filtre par partenaire (dropdown avec la liste des partenaires)
+- [x] Tri par montant HT (croissant/décroissant)
+- [x] Tri par date (plus récent/plus ancien)
+- [x] Tri par partenaire (A-Z / Z-A)
+- [x] Récapitulatif en haut (nombre de commandes filtrées + montant cumulé HT)
+- [x] Bouton Filtres avec badge compteur de filtres actifs
+- [x] Bouton Réinitialiser les filtres
+- [x] Responsive mobile (grille adaptive 1/2/4 colonnes)
+- [x] 75 fichiers de tests, 1093 tests passent

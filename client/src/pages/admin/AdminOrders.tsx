@@ -25,7 +25,12 @@ import {
   FileText,
   ChevronRight,
   RefreshCw,
-  Download
+  Download,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  X,
+  SlidersHorizontal
 } from "lucide-react";
 import { toast } from "sonner";
 import { OnboardingTour } from "@/components/OnboardingTour";
@@ -54,10 +59,15 @@ export default function AdminOrders() {
   const onboarding = useOnboarding("admin-orders");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [partnerFilter, setPartnerFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("date-desc");
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
-  const [newStatus, setNewStatus] = useState<OrderStatus | "">("");
+  const [newStatus, setNewStatus] = useState<OrderStatus | "">("")
   const [statusNote, setStatusNote] = useState("");
 
   const { data: orders, isLoading, refetch } = trpc.orders.list.useQuery({
@@ -130,14 +140,72 @@ export default function AdminOrders() {
     return `${Number(price).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €`;
   };
 
+  // Extract unique partners for filter dropdown
+  const uniquePartners = orders ? [...new Map(orders.map((o: any) => [
+    o.partnerId, 
+    { id: o.partnerId, name: o.partner?.companyName || "Inconnu" }
+  ])).values()].sort((a, b) => a.name.localeCompare(b.name)) : [];
+
   const filteredOrders = orders?.filter((order: any) => {
-    if (!search) return true;
-    const searchLower = search.toLowerCase();
-    return (
-      order.orderNumber?.toLowerCase().includes(searchLower) ||
-      order.partner?.companyName?.toLowerCase().includes(searchLower)
-    );
+    // Text search
+    if (search) {
+      const searchLower = search.toLowerCase();
+      const matchesSearch = (
+        order.orderNumber?.toLowerCase().includes(searchLower) ||
+        order.partner?.companyName?.toLowerCase().includes(searchLower)
+      );
+      if (!matchesSearch) return false;
+    }
+    // Partner filter
+    if (partnerFilter !== "all" && order.partnerId?.toString() !== partnerFilter) {
+      return false;
+    }
+    // Date from filter
+    if (dateFrom) {
+      const orderDate = new Date(order.createdAt);
+      const fromDate = new Date(dateFrom);
+      fromDate.setHours(0, 0, 0, 0);
+      if (orderDate < fromDate) return false;
+    }
+    // Date to filter
+    if (dateTo) {
+      const orderDate = new Date(order.createdAt);
+      const toDate = new Date(dateTo);
+      toDate.setHours(23, 59, 59, 999);
+      if (orderDate > toDate) return false;
+    }
+    return true;
+  }).sort((a: any, b: any) => {
+    switch (sortBy) {
+      case "date-asc":
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case "date-desc":
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case "amount-asc":
+        return Number(a.totalHT || 0) - Number(b.totalHT || 0);
+      case "amount-desc":
+        return Number(b.totalHT || 0) - Number(a.totalHT || 0);
+      case "partner-asc":
+        return (a.partner?.companyName || "").localeCompare(b.partner?.companyName || "");
+      case "partner-desc":
+        return (b.partner?.companyName || "").localeCompare(a.partner?.companyName || "");
+      default:
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
   }) || [];
+
+  // Summary stats for filtered results
+  const filteredTotalHT = filteredOrders.reduce((sum: number, o: any) => sum + Number(o.totalHT || 0), 0);
+  const activeFiltersCount = [partnerFilter !== "all", !!dateFrom, !!dateTo, statusFilter !== "all"].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+    setPartnerFilter("all");
+    setDateFrom("");
+    setDateTo("");
+    setSortBy("date-desc");
+  };
 
   const handleViewOrder = (order: any) => {
     setDetailOrderId(order.id);
@@ -241,30 +309,123 @@ export default function AdminOrders() {
         {/* Filters */}
         <Card data-tour="admin-orders-filters">
           <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher par numéro ou partenaire..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="flex flex-col gap-4">
+              {/* Row 1: Search + Status + Toggle advanced */}
+              <div className="flex flex-col md:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher par numéro ou partenaire..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full md:w-[220px]">
+                    <Filter className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Filtrer par statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les statuts</SelectItem>
+                    {ORDER_STATUSES.map((status) => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant={showAdvancedFilters ? "default" : "outline"}
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className="gap-2 w-full md:w-auto"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Filtres
+                  {activeFiltersCount > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
+                      {activeFiltersCount}
+                    </Badge>
+                  )}
+                </Button>
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full md:w-[220px]">
-                  <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Filtrer par statut" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  {ORDER_STATUSES.map((status) => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+              {/* Row 2: Advanced filters (collapsible) */}
+              {showAdvancedFilters && (
+                <div className="flex flex-col gap-3 pt-3 border-t">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {/* Partner filter */}
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Partenaire</Label>
+                      <Select value={partnerFilter} onValueChange={setPartnerFilter}>
+                        <SelectTrigger className="w-full">
+                          <Building2 className="w-4 h-4 mr-2" />
+                          <SelectValue placeholder="Tous les partenaires" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Tous les partenaires</SelectItem>
+                          {uniquePartners.map((p) => (
+                            <SelectItem key={p.id} value={p.id?.toString()}>
+                              {p.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Date from */}
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Date de début</Label>
+                      <Input
+                        type="date"
+                        value={dateFrom}
+                        onChange={(e) => setDateFrom(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+
+                    {/* Date to */}
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Date de fin</Label>
+                      <Input
+                        type="date"
+                        value={dateTo}
+                        onChange={(e) => setDateTo(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+
+                    {/* Sort by */}
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Trier par</Label>
+                      <Select value={sortBy} onValueChange={setSortBy}>
+                        <SelectTrigger className="w-full">
+                          <ArrowUpDown className="w-4 h-4 mr-2" />
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="date-desc">Date (récent → ancien)</SelectItem>
+                          <SelectItem value="date-asc">Date (ancien → récent)</SelectItem>
+                          <SelectItem value="amount-desc">Montant (décroissant)</SelectItem>
+                          <SelectItem value="amount-asc">Montant (croissant)</SelectItem>
+                          <SelectItem value="partner-asc">Partenaire (A → Z)</SelectItem>
+                          <SelectItem value="partner-desc">Partenaire (Z → A)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Clear filters */}
+                  {activeFiltersCount > 0 && (
+                    <div className="flex justify-end">
+                      <Button variant="ghost" size="sm" onClick={clearAllFilters} className="gap-2 text-muted-foreground hover:text-foreground">
+                        <X className="w-4 h-4" />
+                        Réinitialiser les filtres
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -273,8 +434,10 @@ export default function AdminOrders() {
         <Card>
           <CardHeader>
             <CardTitle>Liste des commandes</CardTitle>
-            <CardDescription>
-              {filteredOrders.length} commande(s) trouvée(s)
+            <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+              <span>{filteredOrders.length} commande(s) trouvée(s)</span>
+              <span className="hidden sm:inline text-muted-foreground/40">·</span>
+              <span className="font-medium">Total : {formatPrice(filteredTotalHT)} HT</span>
             </CardDescription>
           </CardHeader>
           <CardContent>
