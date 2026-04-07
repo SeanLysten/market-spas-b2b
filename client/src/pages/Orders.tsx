@@ -21,7 +21,11 @@ import {
   SlidersHorizontal,
   ArrowUpDown,
   X,
-  Filter
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
 } from "lucide-react";
 import { Link } from "wouter";
 import { ExportButton } from "@/components/ExportButton";
@@ -61,6 +65,8 @@ export default function Orders() {
   const [dateTo, setDateTo] = useState("");
   const [sortBy, setSortBy] = useState("date-desc");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   const { data: orders, isLoading } = trpc.orders.list.useQuery({
     limit: 100,
@@ -183,10 +189,21 @@ export default function Orders() {
     return { filteredOrders: filtered, filteredTotalHT: totalHT, activeFiltersCount: count };
   }, [orders, search, statusFilter, dateFrom, dateTo, sortBy]);
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, filteredOrders.length);
+
   const formatPrice = (price: number | string | null) => {
     if (!price) return "0,00 €";
     return `${Number(price).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €`;
   };
+
+  const resetPage = () => setCurrentPage(1);
 
   const clearAllFilters = () => {
     setSearch("");
@@ -194,7 +211,15 @@ export default function Orders() {
     setDateFrom("");
     setDateTo("");
     setSortBy("date-desc");
+    setCurrentPage(1);
   };
+
+  const handleSearchChange = (value: string) => { setSearch(value); resetPage(); };
+  const handleStatusFilterChange = (value: string) => { setStatusFilter(value); resetPage(); };
+  const handleDateFromChange = (value: string) => { setDateFrom(value); resetPage(); };
+  const handleDateToChange = (value: string) => { setDateTo(value); resetPage(); };
+  const handleSortByChange = (value: string) => { setSortBy(value); resetPage(); };
+  const handleItemsPerPageChange = (value: string) => { setItemsPerPage(Number(value)); setCurrentPage(1); };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -244,11 +269,11 @@ export default function Orders() {
                   <Input
                     placeholder="Rechercher par n° de commande..."
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     className="pl-10"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
                   <SelectTrigger className="w-full sm:w-[220px]">
                     <Filter className="w-4 h-4 mr-2" />
                     <SelectValue placeholder="Filtrer par statut" />
@@ -287,7 +312,7 @@ export default function Orders() {
                       <Input
                         type="date"
                         value={dateFrom}
-                        onChange={(e) => setDateFrom(e.target.value)}
+                        onChange={(e) => handleDateFromChange(e.target.value)}
                         className="w-full"
                       />
                     </div>
@@ -298,7 +323,7 @@ export default function Orders() {
                       <Input
                         type="date"
                         value={dateTo}
-                        onChange={(e) => setDateTo(e.target.value)}
+                        onChange={(e) => handleDateToChange(e.target.value)}
                         className="w-full"
                       />
                     </div>
@@ -306,7 +331,7 @@ export default function Orders() {
                     {/* Sort by */}
                     <div>
                       <Label className="text-xs text-muted-foreground mb-1.5 block">Trier par</Label>
-                      <Select value={sortBy} onValueChange={setSortBy}>
+                      <Select value={sortBy} onValueChange={handleSortByChange}>
                         <SelectTrigger className="w-full">
                           <ArrowUpDown className="w-4 h-4 mr-2" />
                           <SelectValue />
@@ -363,7 +388,7 @@ export default function Orders() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredOrders.map((order: any) => (
+                  {paginatedOrders.map((order: any) => (
                     <TableRow key={order.id} className="hover:bg-accent/5">
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
@@ -418,11 +443,49 @@ export default function Orders() {
                   ))}
                 </TableBody>
               </Table>
+              {/* Pagination desktop */}
+              {totalPages > 1 && (
+                <div className="px-4 pb-4">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>Afficher</span>
+                      <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                        <SelectTrigger className="w-[70px] h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="25">25</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span>par page</span>
+                      <span className="hidden sm:inline text-muted-foreground/40 mx-1">·</span>
+                      <span className="hidden sm:inline">{startIndex}–{endIndex} sur {filteredOrders.length}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+                        <ChevronsLeft className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      <span className="text-sm px-3 font-medium">Page {currentPage} sur {totalPages}</span>
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
+                        <ChevronsRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </Card>
 
             {/* Vue mobile : Cartes empilées */}
             <div className="md:hidden space-y-4">
-              {filteredOrders.map((order: any) => (
+              {paginatedOrders.map((order: any) => (
                 <Card key={order.id} className="overflow-hidden">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
@@ -481,6 +544,43 @@ export default function Orders() {
                   </CardContent>
                 </Card>
               ))}
+              {/* Pagination mobile */}
+              {totalPages > 1 && (
+                <Card className="p-4">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>Afficher</span>
+                      <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                        <SelectTrigger className="w-[70px] h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="25">25</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span>par page</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+                        <ChevronsLeft className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      <span className="text-sm px-3 font-medium">Page {currentPage}/{totalPages}</span>
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
+                        <ChevronsRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{startIndex}–{endIndex} sur {filteredOrders.length}</span>
+                  </div>
+                </Card>
+              )}
             </div>
           </>
         ) : (

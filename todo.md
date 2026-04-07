@@ -3269,3 +3269,12 @@
 - [x] Responsive mobile (grille 1/3 colonnes)
 - [x] Message vide adapté selon que des filtres sont actifs ou non
 - [x] 75 fichiers de tests, 1093 tests passent
+
+## Pagination des listes de commandes
+- [x] Pagination côté admin (AdminOrders.tsx) avec contrôles page précédente/suivante
+- [x] Pagination côté partenaire (Orders.tsx) avec contrôles page précédente/suivante (desktop tableau + mobile cartes)
+- [x] Sélecteur du nombre d'éléments par page (10, 25, 50)
+- [x] Affichage "Page X sur Y" et "X-Y sur Z résultats"
+- [x] Responsive mobile pour les contrôles de pagination
+- [x] Reset automatique de la page quand les filtres changent
+- [x] 75 fichiers de tests, 1093 tests passent
