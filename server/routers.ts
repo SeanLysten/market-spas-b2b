@@ -5399,5 +5399,143 @@ export const appRouter = router({
         return rows[0] || null;
       }),
   }),
+
+  // ============================================
+  // SHIPPING ZONES (Frais de transport par zone)
+  // ============================================
+  shippingZones: router({
+    list: adminProcedure.query(async () => {
+      const { shippingZones } = await import("../drizzle/schema");
+      const { getDb } = await import("./db");
+      const { asc } = await import("drizzle-orm");
+      const database = await getDb();
+      if (!database) return [];
+      return database.select().from(shippingZones).orderBy(asc(shippingZones.country), asc(shippingZones.postalCodePrefix));
+    }),
+
+    create: superAdminProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        country: z.string().length(2),
+        postalCodeFrom: z.string().optional(),
+        postalCodeTo: z.string().optional(),
+        postalCodePrefix: z.string().optional(),
+        shippingCostHT: z.number().min(0),
+        isActive: z.boolean().default(true),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { shippingZones } = await import("../drizzle/schema");
+        const { getDb } = await import("./db");
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        const result = await database.insert(shippingZones).values({
+          name: input.name,
+          country: input.country,
+          postalCodeFrom: input.postalCodeFrom || null,
+          postalCodeTo: input.postalCodeTo || null,
+          postalCodePrefix: input.postalCodePrefix || null,
+          shippingCostHT: input.shippingCostHT.toFixed(2),
+          isActive: input.isActive,
+          notes: input.notes || null,
+        });
+        return { success: true, id: (result as any)[0]?.insertId };
+      }),
+
+    update: superAdminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1).optional(),
+        country: z.string().length(2).optional(),
+        postalCodeFrom: z.string().nullable().optional(),
+        postalCodeTo: z.string().nullable().optional(),
+        postalCodePrefix: z.string().nullable().optional(),
+        shippingCostHT: z.number().min(0).optional(),
+        isActive: z.boolean().optional(),
+        notes: z.string().nullable().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { shippingZones } = await import("../drizzle/schema");
+        const { getDb } = await import("./db");
+        const { eq } = await import("drizzle-orm");
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        const updateData: Record<string, any> = {};
+        if (input.name !== undefined) updateData.name = input.name;
+        if (input.country !== undefined) updateData.country = input.country;
+        if (input.postalCodeFrom !== undefined) updateData.postalCodeFrom = input.postalCodeFrom;
+        if (input.postalCodeTo !== undefined) updateData.postalCodeTo = input.postalCodeTo;
+        if (input.postalCodePrefix !== undefined) updateData.postalCodePrefix = input.postalCodePrefix;
+        if (input.shippingCostHT !== undefined) updateData.shippingCostHT = input.shippingCostHT.toFixed(2);
+        if (input.isActive !== undefined) updateData.isActive = input.isActive;
+        if (input.notes !== undefined) updateData.notes = input.notes;
+        await database.update(shippingZones).set(updateData).where(eq(shippingZones.id, input.id));
+        return { success: true };
+      }),
+
+    delete: superAdminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { shippingZones } = await import("../drizzle/schema");
+        const { getDb } = await import("./db");
+        const { eq } = await import("drizzle-orm");
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        await database.delete(shippingZones).where(eq(shippingZones.id, input.id));
+        return { success: true };
+      }),
+
+    // Lookup shipping cost for a given country + postal code
+    lookup: protectedProcedure
+      .input(z.object({
+        country: z.string().length(2),
+        postalCode: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const { shippingZones } = await import("../drizzle/schema");
+        const { getDb } = await import("./db");
+        const { eq, and } = await import("drizzle-orm");
+        const database = await getDb();
+        if (!database) return { shippingCostHT: 150, source: "default" };
+
+        // Get all active zones for this country
+        const zones = await database
+          .select()
+          .from(shippingZones)
+          .where(and(
+            eq(shippingZones.country, input.country),
+            eq(shippingZones.isActive, true)
+          ));
+
+        if (zones.length === 0) {
+          return { shippingCostHT: 150, source: "default" };
+        }
+
+        // Try to match by postal code prefix (most specific)
+        for (const zone of zones) {
+          if (zone.postalCodePrefix && input.postalCode.startsWith(zone.postalCodePrefix)) {
+            return { shippingCostHT: parseFloat(zone.shippingCostHT), source: "zone", zoneName: zone.name };
+          }
+        }
+
+        // Try to match by postal code range
+        for (const zone of zones) {
+          if (zone.postalCodeFrom && zone.postalCodeTo) {
+            const code = input.postalCode;
+            if (code >= zone.postalCodeFrom && code <= zone.postalCodeTo) {
+              return { shippingCostHT: parseFloat(zone.shippingCostHT), source: "zone", zoneName: zone.name };
+            }
+          }
+        }
+
+        // Fallback: country-level zone (no postal code filter)
+        const countryZone = zones.find(z => !z.postalCodePrefix && !z.postalCodeFrom && !z.postalCodeTo);
+        if (countryZone) {
+          return { shippingCostHT: parseFloat(countryZone.shippingCostHT), source: "zone", zoneName: countryZone.name };
+        }
+
+        return { shippingCostHT: 150, source: "default" };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;

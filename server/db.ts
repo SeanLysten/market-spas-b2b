@@ -876,8 +876,17 @@ export async function getCart(userId: number) {
   const discountAmount = totalDiscountAmount;
   const subtotalAfterDiscount = subtotalHT - discountAmount;
   
-  // Calculate shipping from system settings
-  const { shippingHT } = await calculateShippingCost(subtotalAfterDiscount, "standard");
+  // Calculate shipping from shipping_zones table (with partner country fallback)
+  let partnerCountry: string | undefined;
+  let partnerPostalCode: string | undefined;
+  if (partnerId) {
+    const partnerInfo = await getPartnerById(partnerId);
+    if (partnerInfo) {
+      partnerCountry = (partnerInfo.billingCountry || partnerInfo.addressCountry || "").toUpperCase() || undefined;
+      partnerPostalCode = (partnerInfo.billingPostalCode || partnerInfo.addressPostalCode || "") || undefined;
+    }
+  }
+  const { shippingHT } = await calculateShippingCost(subtotalAfterDiscount, "standard", partnerCountry, partnerPostalCode);
   
   // Get VAT rate based on partner country (FR=20%, others=0%)
   const vatConfig = partnerId
@@ -1672,10 +1681,12 @@ export async function createOrder(input: CreateOrderInput) {
   const orderDiscountAmount = (subtotalHT * orderDiscountPercent) / 100;
   const totalHTBeforeShipping = subtotalHT - orderDiscountAmount;
   
-  // Calculate shipping cost from system settings
+  // Calculate shipping cost from shipping_zones table
   const { shippingHT } = await calculateShippingCost(
     totalHTBeforeShipping,
-    input.shippingType || "standard"
+    input.shippingType || "standard",
+    input.deliveryAddress?.country,
+    input.deliveryAddress?.postalCode
   );
   
   const totalHT = totalHTBeforeShipping + shippingHT;
@@ -5182,19 +5193,66 @@ export async function getVatRateForPartner(partnerId: number): Promise<{ vatRate
 }
 
 /**
- * Calculate shipping cost based on shipping type.
+ * Calculate shipping cost based on delivery country + postal code.
+ * Priority: shipping_zones table lookup > system settings fallback.
  */
 export async function calculateShippingCost(
   subtotalHT: number,
-  shippingType: "standard" | "express" = "standard"
-): Promise<{ shippingHT: number; config: ShippingConfig }> {
+  shippingType: "standard" | "express" = "standard",
+  deliveryCountry?: string,
+  deliveryPostalCode?: string
+): Promise<{ shippingHT: number; config: ShippingConfig; source: string; zoneName?: string }> {
   const config = await getShippingConfig();
 
+  // Try shipping_zones table lookup if country is provided
+  if (deliveryCountry) {
+    try {
+      const db = await getDb();
+      if (db) {
+        const { shippingZones } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+
+        const zones = await db
+          .select()
+          .from(shippingZones)
+          .where(and(
+            eq(shippingZones.country, deliveryCountry),
+            eq(shippingZones.isActive, true)
+          ));
+
+        if (zones.length > 0 && deliveryPostalCode) {
+          // 1. Match by postal code prefix (most specific)
+          for (const zone of zones) {
+            if (zone.postalCodePrefix && deliveryPostalCode.startsWith(zone.postalCodePrefix)) {
+              return { shippingHT: parseFloat(zone.shippingCostHT), config, source: "zone", zoneName: zone.name };
+            }
+          }
+          // 2. Match by postal code range
+          for (const zone of zones) {
+            if (zone.postalCodeFrom && zone.postalCodeTo) {
+              if (deliveryPostalCode >= zone.postalCodeFrom && deliveryPostalCode <= zone.postalCodeTo) {
+                return { shippingHT: parseFloat(zone.shippingCostHT), config, source: "zone", zoneName: zone.name };
+              }
+            }
+          }
+        }
+        // 3. Fallback: country-level zone (no postal code filter)
+        const countryZone = zones.find(z => !z.postalCodePrefix && !z.postalCodeFrom && !z.postalCodeTo);
+        if (countryZone) {
+          return { shippingHT: parseFloat(countryZone.shippingCostHT), config, source: "zone", zoneName: countryZone.name };
+        }
+      }
+    } catch (err) {
+      console.error("[ShippingZones] Lookup error:", (err as any).message);
+    }
+  }
+
+  // Fallback to system settings
   const shippingHT = shippingType === "express"
     ? config.expressShippingCost
     : config.defaultShippingCost;
 
-  return { shippingHT, config };
+  return { shippingHT, config, source: "default" };
 }
 
 /**

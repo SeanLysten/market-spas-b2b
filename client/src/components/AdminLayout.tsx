@@ -30,6 +30,7 @@ import {
   BarChart3,
   CalendarDays,
   ArrowRightLeft,
+  Truck as TruckIcon,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
@@ -134,6 +135,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       items: [
         { name: "Produits", href: "/admin/products", icon: Package },
         { name: "Prévisions Stock", href: "/admin/forecast", icon: TrendingUp },
+        { name: "Frais de transport", href: "/admin/shipping-zones", icon: TruckIcon },
       ],
     },
     {

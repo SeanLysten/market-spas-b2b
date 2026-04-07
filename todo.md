@@ -3152,8 +3152,15 @@
 - [x] Facture d'acompte + solde restant envoyé via API fournisseur
 - [x] Mention légale : "L'acompte sera perdu si le solde n'est pas réglé dans les 14 jours suivant la réception"
 - [x] Créer table shipping_zones (pays, code postal, tarif) pour frais de transport forfaitaires
-- [ ] Créer interface admin "Frais de transport" dans l'onglet Produits & Stock (table créée, interface à compléter)
-- [ ] Remplacer calculateShippingCost par lookup dans shipping_zones (table prête)
+- [x] Créer interface admin "Frais de transport" dans l'onglet Produits & Stock
+- [x] Remplacer calculateShippingCost par lookup dans shipping_zones
 - [x] Mettre à jour l'API mobile pour le nouveau système de paiement
 - [x] Mettre à jour l'API fournisseur pour inclure le solde restant
 - [x] Tests unitaires pour Mollie, calcul acompte, frais de transport (17 tests passent)
+
+## Interface admin Frais de transport (shipping_zones)
+- [x] Créer les routes tRPC CRUD pour shipping_zones (list, create, update, delete)
+- [x] Créer la page AdminShippingZones.tsx avec tableau, formulaire ajout/édition, suppression
+- [x] Intégrer la page dans la navigation admin (onglet Produits & Stock)
+- [x] Connecter calculateShippingCost au lookup dans shipping_zones
+- [x] Tests unitaires pour les routes et le calcul de frais (19 tests passent)
