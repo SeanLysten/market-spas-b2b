@@ -227,7 +227,7 @@ export default function Dashboard() {
               const Icon = card.icon;
               return (
                 <Link key={card.href} href={card.href}>
-                  <Card className="card-hover cursor-pointer h-full hover:border-primary/50 transition-all">
+                  <Card className="card-hover cursor-pointer h-full hover:border-primary/50">
                     <CardContent className="pt-6 text-center">
                       <div className={`w-16 h-16 mx-auto mb-4 rounded-full ${card.color} flex items-center justify-center`}>
                         <Icon className={`w-8 h-8 ${card.iconColor}`} />
@@ -245,7 +245,7 @@ export default function Dashboard() {
         {/* Section Leads - only if leads access */}
         {canLeads && (
           <Link href="/leads">
-            <Card data-tour="leads-section" className="card-hover cursor-pointer hover:border-primary/50 transition-all bg-gradient-to-r from-blue-500/5 to-purple-500/5">
+            <Card data-tour="leads-section" className="card-hover cursor-pointer hover:border-primary/50 bg-gradient-to-r from-blue-500/5 to-purple-500/5">
               <CardContent className="py-6">
                 <div className="flex items-center gap-4 md:gap-6">
                   <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
@@ -396,7 +396,7 @@ export default function Dashboard() {
                       <div
                         key={notification.id}
                         onClick={handleClick}
-                        className={`flex items-start gap-3 p-4 rounded-lg border transition-all ${
+                        className={`flex items-start gap-3 p-4 rounded-lg border transition-colors ${
                           notification.isRead ? 'bg-card' : 'bg-accent/5 border-primary/20'
                         } ${hasLink ? 'cursor-pointer hover:bg-accent/10 hover:border-primary/30' : ''}`}
                       >

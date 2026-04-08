@@ -215,7 +215,7 @@
   
   /* Elegant card hover effect */
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+    @apply transition-[box-shadow,transform] duration-300 hover:shadow-lg hover:-translate-y-1;
   }
   
   /* Status badges */

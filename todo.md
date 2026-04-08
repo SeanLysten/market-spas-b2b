@@ -3328,3 +3328,22 @@
 - [x] Supprimé .flex { min-height:0; min-width:0 } dans index.css (causait des recalculs de layout au hover)
 - [x] Désactivé le grain body::after z-index 9999 dans design-system.css (interférait avec la composition)
 - [x] Problème confirmé résolu par l'utilisateur
+
+## Bug persistant v4 : Clignotement au hover TOUJOURS présent
+- [ ] Investigation approfondie dans le navigateur - les corrections CSS n'ont pas résolu le problème
+- [ ] Vérifier si c'est un problème de re-render React (pas CSS)
+- [ ] Appliquer la correction définitive
+
+## Bug fix - Flickering/clignotement au hover (08/04/2026)
+- [x] Corriger le bug de flickering au hover sur les éléments de la sidebar et du dashboard
+- [x] Remplacer transition-all par transition-colors dans button.tsx (composant shadcn)
+- [x] Remplacer transition-all par transition-[box-shadow,transform] dans card.tsx
+- [x] Remplacer transition-all par transition-[box-shadow,transform] dans .card-hover (index.css)
+- [x] Remplacer transition-all par transition-colors dans accordion.tsx
+- [x] Remplacer transition-all par transition-colors dans switch.tsx
+- [x] Remplacer transition-all par transition-colors dans input-otp.tsx
+- [x] Remplacer transition-all par transition-transform dans progress.tsx
+- [x] Remplacer transition-all par transition-colors dans sidebar.tsx (rail)
+- [x] Remplacer transition-all par transition-[transform] dans ThemeToggle.tsx
+- [x] Supprimer les transition-all redondants dans Dashboard.tsx
+- [x] Vérifier que 0 éléments ont transition-all avec durée non nulle (était 28 avant fix)
