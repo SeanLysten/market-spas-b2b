@@ -3322,3 +3322,9 @@
 - [x] DashboardLayout.tsx : supprimé transition-all sur les boutons de menu
 - [x] Tooltips ne wrappent plus les boutons quand sidebar est expanded
 - [x] 75 fichiers de tests, 1093 tests passent
+
+## Correction définitive du hover flickering (v3)
+- [x] Agent de débogage spécialisé a identifié les causes racines
+- [x] Supprimé .flex { min-height:0; min-width:0 } dans index.css (causait des recalculs de layout au hover)
+- [x] Désactivé le grain body::after z-index 9999 dans design-system.css (interférait avec la composition)
+- [x] Problème confirmé résolu par l'utilisateur
