@@ -3388,3 +3388,7 @@
 - [x] Bouton "Confirmer et payer" pour valider définitivement
 - [x] Confirmation explicite de l'utilisateur avant redirection vers le paiement
 - [x] Tests unitaires pour l'annulation et la remise en stock (8 tests passent)
+
+## Bug - Erreur SQL annulation commande (08/04/2026)
+- [x] Clause WHERE incomplète dans cancelOrder: utilisait `incomingStock.arrivalWeek` (inexistant) au lieu de `expectedWeek` + `expectedYear`
+- [x] Requête incoming_stock corrigée: parse stockSourceArrivalWeek ("202620") en year=2026 et week=20 séparément

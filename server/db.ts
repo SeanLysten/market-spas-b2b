@@ -2163,6 +2163,11 @@ export async function cancelOrder(orderId: number, userId: number, reason?: stri
 
     // Restore incoming stock if it was a preorder linked to an arrival
     if (isPreorder && item.stockSourceArrivalWeek) {
+      // Parse stockSourceArrivalWeek (e.g. "202620") into year and week
+      const arrivalStr = item.stockSourceArrivalWeek;
+      const arrivalYear = parseInt(arrivalStr.substring(0, 4), 10);
+      const arrivalWeek = parseInt(arrivalStr.substring(4), 10);
+
       // Find the incoming stock entry and restore quantity
       const incomingEntries = await db
         .select()
@@ -2170,7 +2175,8 @@ export async function cancelOrder(orderId: number, userId: number, reason?: stri
         .where(
           and(
             item.variantId ? eq(incomingStock.variantId, item.variantId) : eq(incomingStock.productId, item.productId!),
-            eq(incomingStock.arrivalWeek, item.stockSourceArrivalWeek)
+            eq(incomingStock.expectedYear, arrivalYear),
+            eq(incomingStock.expectedWeek, arrivalWeek)
           )
         )
         .limit(1);
