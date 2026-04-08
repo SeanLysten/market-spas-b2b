@@ -1234,7 +1234,7 @@ export const appRouter = router({
 
         const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
         if (!isAdmin && order.partnerId !== ctx.user.partnerId) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Vous n'avez pas acc\u00e8s \u00e0 cette commande" });
+          throw new TRPCError({ code: "FORBIDDEN", message: "Vous n'avez pas accès à cette commande" });
         }
 
         const result = await db.cancelOrder(input.orderId, ctx.user.id, input.reason);
@@ -1809,7 +1809,7 @@ export const appRouter = router({
         )
         .mutation(async ({ input }) => {
           await db.linkUserToPartner(input.userId, input.partnerId);
-          return { success: true, message: 'Partenaire associ\u00e9 avec succ\u00e8s' };
+          return { success: true, message: 'Partenaire associé avec succès' };
         }),
 
       // List all invitations
@@ -4132,7 +4132,7 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         const model = await spaModelsDb.getSpaModelById(input.id);
-        if (!model) throw new TRPCError({ code: "NOT_FOUND", message: "Mod\u00e8le non trouv\u00e9." });
+        if (!model) throw new TRPCError({ code: "NOT_FOUND", message: "Modèle non trouvé." });
         return model;
       }),
 
@@ -4442,7 +4442,7 @@ export const appRouter = router({
         try {
           const isValid = await metaOAuth.validateToken(targetAccount.accessToken);
           if (!isValid) {
-            return { connected: true, dailyData: [], error: "Token expir\u00e9" };
+            return { connected: true, dailyData: [], error: "Token expiré" };
           }
 
           const timeRange = input?.since && input?.until
@@ -4457,7 +4457,7 @@ export const appRouter = router({
 
           return { connected: true, dailyData };
         } catch (error: any) {
-          console.error("[Meta] Erreur r\u00e9cup\u00e9ration insights quotidiens:", error);
+          console.error("[Meta] Erreur récupération insights quotidiens:", error);
           return { connected: true, dailyData: [], error: error.message };
         }
       }),

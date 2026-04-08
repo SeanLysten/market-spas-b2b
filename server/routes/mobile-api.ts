@@ -1028,7 +1028,7 @@ router.post("/api/mobile/v1/orders", async (req: AuthenticatedRequest, res: Resp
       const paymentAmount = result.depositAmount || result.totalTTC;
       const mollieResult = await createMolliePayment({
         amount: paymentAmount,
-        description: `Commande ${result.orderNumber} - ${result.depositAmount < result.totalTTC ? 'Acompte' : 'Paiement int\u00e9gral'}`,
+        description: `Commande ${result.orderNumber} - ${result.depositAmount < result.totalTTC ? 'Acompte' : 'Paiement intégral'}`,
         redirectUrl: `${req.headers.origin || process.env.SITE_URL}/order-confirmation/${result.orderId}`,
         webhookUrl: `${process.env.SITE_URL}/api/webhooks/mollie`,
         metadata: {
@@ -1246,12 +1246,12 @@ router.get("/api/mobile/v1/orders/:id/tracking", requireMobileAuth, async (req: 
 
     // Get order
     const [order] = await drizzleDb.select().from(orders).where(eq(orders.id, orderId)).limit(1);
-    if (!order) return res.status(404).json({ error: "NOT_FOUND", message: "Commande non trouv\u00e9e" });
+    if (!order) return res.status(404).json({ error: "NOT_FOUND", message: "Commande non trouvée" });
 
     // Check partner access
     const user = req.mobileUser!;
     if (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN" && order.partnerId !== user.partnerId) {
-      return res.status(403).json({ error: "FORBIDDEN", message: "Acc\u00e8s non autoris\u00e9" });
+      return res.status(403).json({ error: "FORBIDDEN", message: "Accès non autorisé" });
     }
 
     // Get status history
@@ -1265,15 +1265,15 @@ router.get("/api/mobile/v1/orders/:id/tracking", requireMobileAuth, async (req: 
       DRAFT: "Brouillon",
       PENDING_APPROVAL: "En attente de validation",
       PENDING_DEPOSIT: "En attente d'acompte",
-      DEPOSIT_PAID: "Acompte re\u00e7u",
+      DEPOSIT_PAID: "Acompte reçu",
       IN_PRODUCTION: "En production",
-      READY_TO_SHIP: "Pr\u00eat \u00e0 exp\u00e9dier",
-      PARTIALLY_SHIPPED: "Partiellement exp\u00e9di\u00e9",
-      SHIPPED: "Exp\u00e9di\u00e9",
-      DELIVERED: "Livr\u00e9",
-      COMPLETED: "Termin\u00e9e",
-      CANCELLED: "Annul\u00e9e",
-      REFUNDED: "Rembours\u00e9e",
+      READY_TO_SHIP: "Prêt à expédier",
+      PARTIALLY_SHIPPED: "Partiellement expédié",
+      SHIPPED: "Expédié",
+      DELIVERED: "Livré",
+      COMPLETED: "Terminée",
+      CANCELLED: "Annulée",
+      REFUNDED: "Remboursée",
     };
 
     // Build tracking steps (all possible steps in order)
@@ -1363,7 +1363,7 @@ router.put("/api/mobile/v1/orders/:id/tracking", requireMobileAuth, async (req: 
   try {
     const user = req.mobileUser!;
     if (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN") {
-      return res.status(403).json({ error: "FORBIDDEN", message: "R\u00e9serv\u00e9 aux administrateurs" });
+      return res.status(403).json({ error: "FORBIDDEN", message: "Réservé aux administrateurs" });
     }
 
     const orderId = parseInt(req.params.id);
@@ -1372,7 +1372,7 @@ router.put("/api/mobile/v1/orders/:id/tracking", requireMobileAuth, async (req: 
     const { trackingNumber, trackingCarrier, trackingUrl, estimatedDeliveryDate, note } = req.body;
 
     if (!trackingNumber) {
-      return res.status(400).json({ error: "MISSING_FIELDS", message: "Num\u00e9ro de suivi requis" });
+      return res.status(400).json({ error: "MISSING_FIELDS", message: "Numéro de suivi requis" });
     }
 
     const { getDb } = await import("../db");
@@ -1382,7 +1382,7 @@ router.put("/api/mobile/v1/orders/:id/tracking", requireMobileAuth, async (req: 
 
     // Get order
     const [order] = await drizzleDb.select().from(orders).where(eq(orders.id, orderId)).limit(1);
-    if (!order) return res.status(404).json({ error: "NOT_FOUND", message: "Commande non trouv\u00e9e" });
+    if (!order) return res.status(404).json({ error: "NOT_FOUND", message: "Commande non trouvée" });
 
     // Generate tracking URL if carrier is known
     let finalTrackingUrl = trackingUrl || null;
@@ -1424,7 +1424,7 @@ router.put("/api/mobile/v1/orders/:id/tracking", requireMobileAuth, async (req: 
       orderId,
       oldStatus,
       newStatus: newStatus !== oldStatus ? newStatus : oldStatus,
-      note: note || `Num\u00e9ro de suivi ajout\u00e9: ${trackingNumber}`,
+      note: note || `Numéro de suivi ajouté: ${trackingNumber}`,
       changedByUserId: parseInt(user.sub),
       trackingNumber,
       trackingCarrier: trackingCarrier || null,
@@ -1449,7 +1449,7 @@ router.put("/api/mobile/v1/orders/:id/tracking", requireMobileAuth, async (req: 
       trackingUrl: finalTrackingUrl,
       statusChanged: newStatus !== oldStatus,
       newStatus,
-      message: "Informations de suivi mises \u00e0 jour",
+      message: "Informations de suivi mises à jour",
     });
   } catch (err: any) {
     console.error("[Mobile API] Update tracking error:", err);

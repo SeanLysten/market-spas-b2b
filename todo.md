@@ -3392,3 +3392,8 @@
 ## Bug - Erreur SQL annulation commande (08/04/2026)
 - [x] Clause WHERE incomplète dans cancelOrder: utilisait `incomingStock.arrivalWeek` (inexistant) au lieu de `expectedWeek` + `expectedYear`
 - [x] Requête incoming_stock corrigée: parse stockSourceArrivalWeek ("202620") en year=2026 et week=20 séparément
+
+## Bug - Encodage Unicode des caractères accentués (08/04/2026)
+- [x] Séquences Unicode échappées (\u00e9, \u00e8, etc.) affichées au lieu des caractères accentués
+- [x] 133 remplacements dans 8 fichiers (Cart, Checkout, OrderTracking, AdminProducts, db.ts, routers.ts, mobile-api.ts, mobile-auth.ts)
+- [x] 0 séquences Unicode restantes dans le code source

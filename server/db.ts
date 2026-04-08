@@ -1042,7 +1042,7 @@ export async function addToCart(userId: number, productId: number, quantity: num
     if (netNewQty > 0 && netNewQty > (availability.available + existingReserved)) {
       return {
         success: false,
-        error: `Quantit\u00e9 demand\u00e9e (${quantity}) sup\u00e9rieure \u00e0 la quantit\u00e9 disponible (${availability.available + existingReserved})`,
+        error: `Quantité demandée (${quantity}) supérieure à la quantité disponible (${availability.available + existingReserved})`,
         availableQuantity: availability.available + existingReserved,
       };
     }
@@ -1147,7 +1147,7 @@ export async function updateCartQuantity(userId: number, productId: number, quan
     if (quantity > effectiveAvailable) {
       return {
         success: false,
-        error: `Quantit\u00e9 demand\u00e9e (${quantity}) sup\u00e9rieure \u00e0 la quantit\u00e9 disponible (${effectiveAvailable})`,
+        error: `Quantité demandée (${quantity}) supérieure à la quantité disponible (${effectiveAvailable})`,
         availableQuantity: effectiveAvailable,
       };
     }
@@ -1791,7 +1791,7 @@ export async function createOrder(input: CreateOrderInput) {
   for (const item of input.items) {
     const availability = await getAvailableQuantity(item.productId, item.variantId);
     if (item.quantity > availability.available) {
-      stockErrors.push(`${item.name}: ${item.quantity} demand\u00e9(s), ${availability.available} disponible(s)`);
+      stockErrors.push(`${item.name}: ${item.quantity} demandé(s), ${availability.available} disponible(s)`);
     }
   }
   if (stockErrors.length > 0) {

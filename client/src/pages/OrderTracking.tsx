@@ -95,7 +95,7 @@ export default function OrderTracking() {
   const [cancelReason, setCancelReason] = useState("");
   const cancelOrderMutation = trpc.orders.cancel.useMutation({
     onSuccess: () => {
-      toast.success("Commande annul\u00e9e avec succ\u00e8s. Les produits ont \u00e9t\u00e9 remis en stock.");
+      toast.success("Commande annulée avec succès. Les produits ont été remis en stock.");
       setShowCancelDialog(false);
       setCancelReason("");
       refetch();
@@ -223,7 +223,7 @@ export default function OrderTracking() {
               <Link href={`/order/${orderId}/summary`}>
                 <Button variant="outline" className="gap-2 w-full sm:w-auto">
                   <FileText className="w-4 h-4" />
-                  R\u00e9capitulatif
+                  Récapitulatif
                 </Button>
               </Link>
               <Button variant="outline" className="gap-2 w-full sm:w-auto" onClick={() => window.open(`/api/orders/${orderId}/pdf`, '_blank')}>
@@ -465,7 +465,7 @@ export default function OrderTracking() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <p className="text-xs text-muted-foreground">
-                    Vous pouvez annuler cette commande tant que le paiement n'a pas \u00e9t\u00e9 valid\u00e9. Les produits seront automatiquement remis en stock.
+                    Vous pouvez annuler cette commande tant que le paiement n'a pas été validé. Les produits seront automatiquement remis en stock.
                   </p>
                   <Button
                     variant="destructive"
@@ -487,7 +487,7 @@ export default function OrderTracking() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-xs md:text-sm text-muted-foreground">
-                  Notre \u00e9quipe est disponible pour r\u00e9pondre \u00e0 vos questions.
+                  Notre équipe est disponible pour répondre à vos questions.
                 </p>
                 <div className="space-y-2">
                   <Button variant="outline" className="w-full gap-2">
@@ -514,7 +514,7 @@ export default function OrderTracking() {
               Confirmer l'annulation
             </DialogTitle>
             <DialogDescription>
-              \u00cates-vous s\u00fbr de vouloir annuler la commande <strong>{order?.orderNumber}</strong> ? Cette action est irr\u00e9versible.
+              Êtes-vous sûr de vouloir annuler la commande <strong>{order?.orderNumber}</strong> ? Cette action est irréversible.
             </DialogDescription>
           </DialogHeader>
 
@@ -523,11 +523,11 @@ export default function OrderTracking() {
             <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
               <p className="text-sm text-amber-800 dark:text-amber-200 font-medium mb-1">Ce qui va se passer :</p>
               <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-1 list-disc list-inside">
-                <li>La commande sera marqu\u00e9e comme annul\u00e9e</li>
+                <li>La commande sera marquée comme annulée</li>
                 <li>Les produits seront remis en stock automatiquement</li>
-                <li>Vous et les administrateurs serez notifi\u00e9s</li>
+                <li>Vous et les administrateurs serez notifiés</li>
                 {order?.depositAmount && Number(order.depositAmount) > 0 && (
-                  <li>Si un paiement a \u00e9t\u00e9 initi\u00e9, il sera annul\u00e9 ou rembours\u00e9</li>
+                  <li>Si un paiement a été initié, il sera annulé ou remboursé</li>
                 )}
               </ul>
             </div>

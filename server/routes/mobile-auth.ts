@@ -355,7 +355,7 @@ router.get("/api/mobile/auth/me", async (req: Request, res: Response) => {
       if (!user || !user.isActive) {
         return res.status(403).json({
           error: "ACCOUNT_DISABLED",
-          message: "Votre compte a \u00e9t\u00e9 d\u00e9sactiv\u00e9",
+          message: "Votre compte a été désactivé",
         });
       }
 

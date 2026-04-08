@@ -83,7 +83,7 @@ export default function Checkout() {
 
   useEffect(() => {
     if (expired) {
-      toast.error("Le temps de r\u00e9servation a expir\u00e9. Les produits ont \u00e9t\u00e9 remis en stock.");
+      toast.error("Le temps de réservation a expiré. Les produits ont été remis en stock.");
       setTimeout(() => setLocation("/cart"), 3000);
     }
   }, [expired, setLocation]);
@@ -128,11 +128,11 @@ export default function Checkout() {
   // Validation before showing the confirmation modal
   const handleRequestConfirmation = () => {
     if (!deliveryAddress.street || !deliveryAddress.city || !deliveryAddress.postalCode) {
-      toast.error("Veuillez remplir l'adresse de livraison compl\u00e8te");
+      toast.error("Veuillez remplir l'adresse de livraison complète");
       return;
     }
     if (!deliveryAddress.contactName || !deliveryAddress.contactPhone) {
-      toast.error("Veuillez fournir un nom et t\u00e9l\u00e9phone de contact");
+      toast.error("Veuillez fournir un nom et téléphone de contact");
       return;
     }
     if (cartItems.length === 0) {
@@ -140,7 +140,7 @@ export default function Checkout() {
       return;
     }
     if (!deliveryRequestedDate) {
-      toast.error("Veuillez choisir une date de livraison souhait\u00e9e");
+      toast.error("Veuillez choisir une date de livraison souhaitée");
       return;
     }
     // Show confirmation modal
@@ -176,15 +176,15 @@ export default function Checkout() {
 
       // If Mollie checkout URL is available, redirect to it
       if ((result as any).mollieCheckoutUrl) {
-        toast.success("Commande cr\u00e9\u00e9e ! Redirection vers la page de paiement...");
+        toast.success("Commande créée ! Redirection vers la page de paiement...");
         window.open((result as any).mollieCheckoutUrl, "_blank");
         setLocation(`/order-confirmation/${result.orderId}`);
       } else {
-        toast.success("Commande cr\u00e9\u00e9e avec succ\u00e8s !");
+        toast.success("Commande créée avec succès !");
         setLocation(`/order-confirmation/${result.orderId}`);
       }
     } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la cr\u00e9ation de la commande");
+      toast.error(error.message || "Erreur lors de la création de la commande");
     }
   };
 
@@ -223,7 +223,7 @@ export default function Checkout() {
             <Clock className={`w-5 h-5 ${timeLeft <= 120 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`} />
             <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <span className={`text-sm font-medium ${timeLeft <= 120 ? 'text-red-800 dark:text-red-300' : 'text-amber-800 dark:text-amber-300'}`}>
-                Vos spas sont r\u00e9serv\u00e9s temporairement. Finalisez votre commande avant l'expiration.
+                Vos spas sont réservés temporairement. Finalisez votre commande avant l'expiration.
               </span>
               <span className={`text-2xl font-mono font-bold tabular-nums ${timeLeft <= 120 ? 'text-red-600 dark:text-red-400 animate-pulse' : 'text-amber-600 dark:text-amber-400'}`}>
                 {formatTime(timeLeft)}
@@ -235,7 +235,7 @@ export default function Checkout() {
           <Alert className="mb-6 border-red-500/50 bg-red-50 dark:bg-red-950/30">
             <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
             <AlertDescription className="text-sm font-medium text-red-800 dark:text-red-300">
-              Le temps de r\u00e9servation a expir\u00e9. Vous allez \u00eatre redirig\u00e9 vers votre panier...
+              Le temps de réservation a expiré. Vous allez être redirigé vers votre panier...
             </AlertDescription>
           </Alert>
         )}
@@ -631,7 +631,7 @@ export default function Checkout() {
                   onClick={handleRequestConfirmation}
                   disabled={createOrderMutation.isPending || cartItems.length === 0 || !deliveryRequestedDate || expired}
                 >
-                  {createOrderMutation.isPending ? "Traitement..." : `V\u00e9rifier et confirmer la commande`}
+                  {createOrderMutation.isPending ? "Traitement..." : `Vérifier et confirmer la commande`}
                 </Button>
                 {!deliveryRequestedDate && (
                   <p className="text-xs text-center text-amber-600 dark:text-amber-400">
@@ -650,7 +650,7 @@ export default function Checkout() {
   );
 
   // ========================================
-  // CONFIRMATION MODAL (Double s\u00e9curit\u00e9)
+  // CONFIRMATION MODAL (Double sécurité)
   // ========================================
   const confirmationModal = (
     <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
@@ -661,7 +661,7 @@ export default function Checkout() {
             Confirmation de commande
           </DialogTitle>
           <DialogDescription>
-            V\u00e9rifiez attentivement le r\u00e9capitulatif avant de valider votre commande.
+            Vérifiez attentivement le récapitulatif avant de valider votre commande.
           </DialogDescription>
         </DialogHeader>
 
@@ -680,11 +680,11 @@ export default function Checkout() {
                       <span className="font-medium">{item.product?.name || "Produit"}</span>
                       <span className="text-muted-foreground ml-1">x{item.quantity}</span>
                       {item.isPreorder && (
-                        <span className="ml-2 text-xs text-orange-600 dark:text-orange-400">(Pr\u00e9-commande)</span>
+                        <span className="ml-2 text-xs text-orange-600 dark:text-orange-400">(Pré-commande)</span>
                       )}
                     </div>
                     <span className="font-medium">
-                      {formatPrice(Number(item.product?.pricePartnerHT || item.product?.pricePublicHT || 0) * item.quantity)} \u20ac
+                      {formatPrice(Number(item.product?.pricePartnerHT || item.product?.pricePublicHT || 0) * item.quantity)} €
                     </span>
                   </div>
                 ))}
@@ -714,69 +714,69 @@ export default function Checkout() {
             <div>
               <h4 className="font-semibold text-sm mb-2 flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-primary" />
-                Date de livraison souhait\u00e9e
+                Date de livraison souhaitée
               </h4>
               <p className="text-sm bg-muted/50 p-3 rounded-md">
                 {deliveryRequestedDate
                   ? new Date(deliveryRequestedDate + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })
-                  : "Non s\u00e9lectionn\u00e9e"}
+                  : "Non sélectionnée"}
               </p>
             </div>
 
             <Separator />
 
-            {/* R\u00e9capitulatif financier */}
+            {/* Récapitulatif financier */}
             <div>
               <h4 className="font-semibold text-sm mb-2 flex items-center gap-1.5">
                 <CreditCard className="w-4 h-4 text-primary" />
-                R\u00e9capitulatif financier
+                Récapitulatif financier
               </h4>
               <div className="space-y-1.5 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Sous-total HT</span>
-                  <span>{formatPrice(subtotalHT)} \u20ac</span>
+                  <span>{formatPrice(subtotalHT)} €</span>
                 </div>
                 {discountPercent > 0 && (
                   <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                     <span>Remise partenaire ({discountPercent.toFixed(1)}%)</span>
-                    <span>-{formatPrice(discountAmount)} \u20ac</span>
+                    <span>-{formatPrice(discountAmount)} €</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Livraison HT</span>
-                  <span>{formatPrice(dynamicShippingHT ?? shippingHT)} \u20ac</span>
+                  <span>{formatPrice(dynamicShippingHT ?? shippingHT)} €</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{vatLabel} ({vatRate}%)</span>
-                  <span>{formatPrice(vatAmount)} \u20ac</span>
+                  <span>{formatPrice(vatAmount)} €</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-base">
                   <span>Total TTC</span>
-                  <span className="text-primary">{formatPrice(totalTTC)} \u20ac</span>
+                  <span className="text-primary">{formatPrice(totalTTC)} €</span>
                 </div>
               </div>
             </div>
 
-            {/* Montant \u00e0 payer maintenant */}
+            {/* Montant à payer maintenant */}
             <div className="p-4 rounded-lg bg-primary/10 border border-primary/30">
               <div className="flex justify-between items-center">
                 <div>
                   <p className="font-semibold text-sm">
-                    {hasSpaItems ? "Acompte \u00e0 r\u00e9gler maintenant" : "Montant \u00e0 r\u00e9gler"}
+                    {hasSpaItems ? "Acompte à régler maintenant" : "Montant à régler"}
                   </p>
                   {hasSpaItems && (
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {spaUnitCount} spa{spaUnitCount > 1 ? "s" : ""} x 300 \u20ac
+                      {spaUnitCount} spa{spaUnitCount > 1 ? "s" : ""} x 300 €
                     </p>
                   )}
                 </div>
-                <span className="text-xl font-bold text-primary">{formatPrice(depositAmount)} \u20ac</span>
+                <span className="text-xl font-bold text-primary">{formatPrice(depositAmount)} €</span>
               </div>
               {hasSpaItems && balanceAmount > 0 && (
                 <div className="mt-2 pt-2 border-t border-primary/20 flex justify-between text-sm text-muted-foreground">
-                  <span>Solde restant (\u00e0 r\u00e9gler \u00e0 la livraison)</span>
-                  <span>{formatPrice(balanceAmount)} \u20ac</span>
+                  <span>Solde restant (à régler à la livraison)</span>
+                  <span>{formatPrice(balanceAmount)} €</span>
                 </div>
               )}
             </div>
@@ -805,7 +805,7 @@ export default function Checkout() {
             className="w-full sm:w-auto gap-2"
           >
             <CheckCircle2 className="w-4 h-4" />
-            {createOrderMutation.isPending ? "Traitement..." : `Confirmer et payer ${formatPrice(depositAmount)} \u20ac`}
+            {createOrderMutation.isPending ? "Traitement..." : `Confirmer et payer ${formatPrice(depositAmount)} €`}
           </Button>
         </DialogFooter>
       </DialogContent>

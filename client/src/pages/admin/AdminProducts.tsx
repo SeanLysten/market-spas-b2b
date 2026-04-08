@@ -112,9 +112,9 @@ export default function AdminProducts() {
     try {
       await reorderMutation.mutateAsync({ orderedIds });
       refetch();
-      toast.success("Ordre des produits mis \u00e0 jour");
+      toast.success("Ordre des produits mis à jour");
     } catch (error: any) {
-      toast.error("Erreur lors de la r\u00e9organisation");
+      toast.error("Erreur lors de la réorganisation");
     }
   }, [products, reorderMutation, refetch]);
 
@@ -664,13 +664,13 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
         id: variantId,
         [editCodeField]: editCodeValue || null,
       });
-      toast.success(editCodeField === 'supplierProductCode' ? "Code produit mis \u00e0 jour" : "EAN13 mis \u00e0 jour");
+      toast.success(editCodeField === 'supplierProductCode' ? "Code produit mis à jour" : "EAN13 mis à jour");
       setEditingCodeVariantId(null);
       setEditCodeField(null);
       setEditCodeValue("");
       refetch();
     } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la mise \u00e0 jour");
+      toast.error(error.message || "Erreur lors de la mise à jour");
     }
   };
 
@@ -686,11 +686,11 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
         id: variantId,
         imageUrl: url,
       });
-      toast.success("Image mise \u00e0 jour");
+      toast.success("Image mise à jour");
       setUploadingVariantId(null);
       refetch();
     } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la mise \u00e0 jour de l'image");
+      toast.error(error.message || "Erreur lors de la mise à jour de l'image");
     }
   };
 
@@ -700,7 +700,7 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
         id: variantId,
         imageUrl: null,
       });
-      toast.success("Image supprim\u00e9e");
+      toast.success("Image supprimée");
       refetch();
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la suppression de l'image");

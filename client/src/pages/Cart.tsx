@@ -149,7 +149,7 @@ export default function Cart() {
             <Clock className={`w-5 h-5 ${timeLeft <= 120 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`} />
             <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <span className={`text-sm font-medium ${timeLeft <= 120 ? 'text-red-800 dark:text-red-300' : 'text-amber-800 dark:text-amber-300'}`}>
-                Vos spas sont r\u00e9serv\u00e9s temporairement. Finalisez votre commande avant l'expiration.
+                Vos spas sont réservés temporairement. Finalisez votre commande avant l'expiration.
               </span>
               <span className={`text-2xl font-mono font-bold tabular-nums ${timeLeft <= 120 ? 'text-red-600 dark:text-red-400 animate-pulse' : 'text-amber-600 dark:text-amber-400'}`}>
                 {formatTime(timeLeft)}
@@ -164,7 +164,7 @@ export default function Cart() {
             <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
             <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <span className="text-sm font-medium text-red-800 dark:text-red-300">
-                Le temps de r\u00e9servation a expir\u00e9. Les produits ont \u00e9t\u00e9 remis en stock.
+                Le temps de réservation a expiré. Les produits ont été remis en stock.
               </span>
               <Link href="/catalog">
                 <Button size="sm" variant="outline" className="border-red-500/50 text-red-700 dark:text-red-400">
@@ -415,7 +415,7 @@ export default function Cart() {
                     <div className={`p-3 rounded-lg text-center ${timeLeft <= 120 ? 'bg-red-50 dark:bg-red-950/30 border border-red-500/20' : 'bg-amber-50 dark:bg-amber-950/30 border border-amber-500/20'}`}>
                       <div className="flex items-center justify-center gap-2 mb-1">
                         <Clock className={`w-4 h-4 ${timeLeft <= 120 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`} />
-                        <span className={`text-xs font-medium ${timeLeft <= 120 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}>R\u00e9servation expire dans</span>
+                        <span className={`text-xs font-medium ${timeLeft <= 120 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}>Réservation expire dans</span>
                       </div>
                       <span className={`text-xl font-mono font-bold tabular-nums ${timeLeft <= 120 ? 'text-red-600 dark:text-red-400 animate-pulse' : 'text-amber-600 dark:text-amber-400'}`}>
                         {formatTime(timeLeft)}
