@@ -281,40 +281,18 @@ h4 {
 
 /* ═══════════════════════════════════════════════
    TRANSITION — animation fluide entre les thèmes
+   ═══════════════════════════════════════════════
+   La transition globale sur html * a été supprimée car elle
+   causait du flickering au hover sur tous les éléments cliquables.
+   La transition de thème est maintenant opt-in via la classe
+   .theme-transitioning ajoutée temporairement par le toggle.
    ═══════════════════════════════════════════════ */
 
-html,
-html * {
+html.theme-transitioning,
+html.theme-transitioning * {
   transition-property: background-color, border-color, color, box-shadow, fill, stroke;
   transition-duration: 0.35s;
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* Exclure les éléments interactifs rapides */
-.btn, .btn *,
-.sw,
-.tgl-track, .tgl-track::before,
-.pcard-fav,
-.badge-x,
-.alert-close,
-.modal-x {
-  transition-duration: var(--dur-base) !important;
-}
-
-/* Exclure sidebar, menus, tooltips et dropdowns de la transition lente
-   pour éviter le flickering au hover */
-[data-slot="sidebar"] *,
-[data-slot="sidebar-menu-button"],
-[data-slot="tooltip-content"],
-[data-slot="tooltip-trigger"],
-[role="menu"] *,
-[role="menuitem"],
-[data-radix-popper-content-wrapper] *,
-button:hover,
-a:hover {
-  transition-property: background-color, border-color, color, box-shadow, fill, stroke;
-  transition-duration: 0.15s !important;
-  transition-timing-function: ease-out !important;
 }
 
 

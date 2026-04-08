@@ -3312,3 +3312,13 @@
 - [x] Resize handle z-index réduit de 50 à 10
 - [x] CSS : sidebar, boutons, menus, tooltips exclus de la transition lente (0.15s au lieu de 0.35s)
 - [x] 75 fichiers de tests, 1093 tests passent
+
+## Bug persistant : Hover flickering toujours présent après corrections CSS
+- [x] Cause racine : transition globale 0.35s sur html * appliquait des transitions à TOUS les éléments
+- [x] Supprimé complètement la transition globale html * du design-system.css
+- [x] Transition de thème maintenant opt-in via classe .theme-transitioning (ajoutée 400ms au toggle)
+- [x] ThemeToggle.tsx et ThemeContext.tsx mis à jour pour ajouter/retirer la classe
+- [x] sidebar.tsx : transition-colors duration-150 au lieu de transition-[width,height,padding]
+- [x] DashboardLayout.tsx : supprimé transition-all sur les boutons de menu
+- [x] Tooltips ne wrappent plus les boutons quand sidebar est expanded
+- [x] 75 fichiers de tests, 1093 tests passent
