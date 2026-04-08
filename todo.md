@@ -3410,3 +3410,8 @@
 - [x] Ajouter endpoint admin POST /api/admin/simulate-payment (TEST MODE ONLY)
 - [x] Bouton "Simuler paiement" dans AdminOrders pour commandes PAYMENT_PENDING
 - [x] Garder SEPA comme méthode de paiement
+
+## Bug - Auth endpoint simulate-payment (08/04/2026)
+- [x] Erreur "Authentication required" : endpoint utilisait jsonwebtoken + cookie 'token' au lieu du SDK auth (cookie 'app_session_id' + jose)
+- [x] Corrigé : utilise sdk.authenticateRequest() comme les autres endpoints
+- [x] Corrigé : vérification rôle 'ADMIN'/'SUPER_ADMIN' au lieu de 'admin'

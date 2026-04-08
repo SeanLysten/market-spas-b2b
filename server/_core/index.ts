@@ -348,23 +348,16 @@ async function startServer() {
         return res.status(403).json({ error: "Simulation only available in test mode" });
       }
 
-      // Verify admin auth via JWT
-      const authHeader = req.headers.authorization;
-      const cookieToken = req.cookies?.token;
-      const token = authHeader?.replace('Bearer ', '') || cookieToken;
-      if (!token) {
+      // Authenticate using the same SDK as tRPC context
+      const { sdk: authSdk } = await import("./sdk");
+      let user;
+      try {
+        user = await authSdk.authenticateRequest(req);
+      } catch {
         return res.status(401).json({ error: "Authentication required" });
       }
 
-      const jwt = await import("jsonwebtoken");
-      let decoded: any;
-      try {
-        decoded = jwt.default.verify(token, process.env.JWT_SECRET || 'dev-secret');
-      } catch {
-        return res.status(401).json({ error: "Invalid token" });
-      }
-
-      if (decoded.role !== 'admin') {
+      if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -374,8 +367,8 @@ async function startServer() {
       }
 
       const { getDb } = await import("../db");
-      const db = await getDb();
-      if (!db) {
+      const dbInstance = await getDb();
+      if (!dbInstance) {
         return res.status(500).json({ error: "Database not available" });
       }
 
@@ -383,7 +376,7 @@ async function startServer() {
       const { eq } = await import("drizzle-orm");
 
       // Get the order
-      const [order] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+      const [order] = await dbInstance.select().from(orders).where(eq(orders.id, orderId)).limit(1);
       if (!order) {
         return res.status(404).json({ error: "Order not found" });
       }
@@ -393,7 +386,7 @@ async function startServer() {
       }
 
       // Update order status to DEPOSIT_PAID
-      await db.update(orders).set({
+      await dbInstance.update(orders).set({
         status: 'DEPOSIT_PAID',
         depositPaid: true,
         mollieStatus: 'paid',
@@ -401,18 +394,18 @@ async function startServer() {
 
       // Update mollie_payments table if exists
       if (order.molliePaymentId) {
-        await db.update(molliePayments).set({
+        await dbInstance.update(molliePayments).set({
           mollieStatus: 'paid',
           paidAt: new Date(),
         }).where(eq(molliePayments.molliePaymentId, order.molliePaymentId));
       }
 
       // Add status history
-      await db.insert(orderStatusHistory).values({
+      await dbInstance.insert(orderStatusHistory).values({
         orderId,
         oldStatus: order.status,
         newStatus: 'DEPOSIT_PAID',
-        note: `[TEST] Paiement simulé par admin (${decoded.email})`,
+        note: `[TEST] Paiement simulé par admin (${user.email || user.name})`,
       });
 
       // Send notification
@@ -423,7 +416,7 @@ async function startServer() {
         console.log("[Simulate] Notification skipped:", (e as any).message);
       }
 
-      console.log(`[Simulate Payment] Admin ${decoded.email} simulated payment for order ${order.orderNumber} (ID: ${orderId})`);
+      console.log(`[Simulate Payment] Admin ${user.email || user.name} simulated payment for order ${order.orderNumber} (ID: ${orderId})`);
 
       return res.json({
         success: true,
