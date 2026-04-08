@@ -157,6 +157,9 @@
 }
 
 @layer base {
+  html {
+    scrollbar-gutter: stable;
+  }
   * {
     @apply border-border outline-ring/50;
   }
@@ -215,7 +218,7 @@
   
   /* Elegant card hover effect */
   .card-hover {
-    @apply transition-[box-shadow,transform] duration-300 hover:shadow-lg hover:-translate-y-1;
+    @apply transition-shadow duration-300 hover:shadow-lg;
   }
   
   /* Status badges */

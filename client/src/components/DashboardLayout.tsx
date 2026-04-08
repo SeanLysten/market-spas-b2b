@@ -16,7 +16,6 @@ import {
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getLoginUrl } from "@/const";
@@ -136,19 +135,17 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <TooltipProvider delayDuration={300}>
-      <div className="flex min-h-svh w-full bg-background">
-        <DesktopSidebar collapsed={collapsed} onToggle={toggleSidebar} />
-        <main
-          className="flex-1 p-4 transition-[margin-left] duration-200 ease-linear"
-          style={{
-            marginLeft: collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH,
-          }}
-        >
-          {children}
-        </main>
-      </div>
-    </TooltipProvider>
+    <div className="flex min-h-svh w-full bg-background">
+      <DesktopSidebar collapsed={collapsed} onToggle={toggleSidebar} />
+      <main
+        className="flex-1 p-4 transition-[margin-left] duration-200 ease-linear"
+        style={{
+          marginLeft: collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH,
+        }}
+      >
+        {children}
+      </main>
+    </div>
   );
 }
 

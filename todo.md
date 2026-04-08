@@ -3358,3 +3358,19 @@
 - [x] Tooltips sur les icônes en mode collapsed
 - [x] Mobile: Sheet drawer pour la sidebar mobile
 - [x] 1093 tests passent toujours
+
+## Bug fix - Multi-clic / rebond sur les produits (08/04/2026)
+- [x] Clic sur un produit se comporte comme si ça cliquait plusieurs fois
+- [x] Identifier la source du problème (withDashboard inline + TooltipProvider triple nesting)
+- [x] Corriger le comportement de clic sur les cartes produits et éléments interactifs
+
+## Bug CRITIQUE - Clignotement/rafraîchissement rapide persistant (08/04/2026)
+- [x] Bug persistant de clignotement au hover sur les éléments (boutons, produits)
+- [x] Effet de multi-clic quand on clique sur un produit
+- [x] Bug apparu après l'ajout de la sidebar de navigation desktop
+- [x] Analyse approfondie via agent de débogage
+- [x] CAUSE RACINE: withDashboard() appelé inline dans les Routes créait une nouvelle instance à chaque render
+- [x] FIX: Pré-créer tous les composants wrappés au niveau module (stable references)
+- [x] FIX: Supprimer le triple nesting de TooltipProvider (App.tsx + DashboardLayout + tooltip.tsx)
+- [x] FIX: Ajouter scrollbar-gutter: stable sur html
+- [x] 1093 tests passent toujours

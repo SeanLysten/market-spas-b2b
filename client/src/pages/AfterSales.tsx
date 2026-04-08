@@ -232,7 +232,7 @@ function SavDashboard({ services, isLoading, onFilterClick }: {
           <button
             key={card.label}
             onClick={() => onFilterClick(card.filterValue)}
-            className={`relative flex flex-col items-center justify-center p-3 rounded-lg border transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98] ${card.bg}`}
+            className={`relative flex flex-col items-center justify-center p-3 rounded-lg border transition-shadow hover:shadow-md ${card.bg}`}
           >
             <Icon className={`h-5 w-5 mb-1 ${card.color}`} />
             <span className={`text-2xl font-bold ${card.color}`}>{card.value}</span>

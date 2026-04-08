@@ -121,7 +121,7 @@ function ProductCard({ product, onOpenDialog }: {
           <img
             src={displayImage}
             alt={selectedVariant ? `${product.name} - ${selectedVariant.color || selectedVariant.name}` : product.name}
-            className="w-full h-full object-cover transition-all duration-300"
+            className="w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -184,10 +184,10 @@ function ProductCard({ product, onOpenDialog }: {
                       e.stopPropagation();
                       setSelectedVariantId(isSelected ? null : variant.id);
                     }}
-                    className={`relative w-7 h-7 rounded-full transition-all duration-200 focus:outline-none ${
+                    className={`relative w-7 h-7 rounded-full transition-[box-shadow] duration-200 focus:outline-none ${
                       isSelected
-                        ? "ring-2 ring-primary ring-offset-2 scale-110"
-                        : "ring-1 ring-border hover:ring-2 hover:ring-primary/50 hover:scale-105"
+                        ? "ring-2 ring-primary ring-offset-2"
+                        : "ring-1 ring-border hover:ring-2 hover:ring-primary/50"
                     }`}
                     style={{ backgroundColor: colorHex }}
                     title={`${variant.color || variant.name} — Stock: ${varStock}${varTransit > 0 ? ` | Transit: ${varTransit}` : ''}`}

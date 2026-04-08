@@ -62,17 +62,51 @@ import ResetPassword from "./pages/ResetPassword";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import { useWebSocket } from "./hooks/useWebSocket";
+import React from "react";
 
-/** Helper: wrap a page component in DashboardLayout */
+/**
+ * CRITICAL FIX: Create wrapped components at MODULE level (outside any component).
+ * Previously, withDashboard() was called INLINE inside <Route>, which created a
+ * NEW wrapper function on every render of Router, causing React to unmount/remount
+ * the entire DashboardLayout tree on every re-render — the root cause of the
+ * flickering, multi-click, and rapid refresh bugs.
+ */
 function withDashboard(Component: React.ComponentType<any>) {
-  return function WrappedWithDashboard(props: any) {
+  const Wrapped = React.memo(function DashboardWrapped(props: any) {
     return (
       <DashboardLayout>
         <Component {...props} />
       </DashboardLayout>
     );
-  };
+  });
+  Wrapped.displayName = `withDashboard(${Component.displayName || Component.name || "Component"})`;
+  return Wrapped;
 }
+
+// Pre-create all dashboard-wrapped components at module level (stable references)
+const DashboardPage = withDashboard(Dashboard);
+const CatalogPage = withDashboard(Catalog);
+const OrdersPage = withDashboard(Orders);
+const ResourcesPage = withDashboard(Resources);
+const CartPage = withDashboard(Cart);
+const CheckoutPage = withDashboard(Checkout);
+const OrderConfirmationPage = withDashboard(OrderConfirmation);
+const ProfilePage = withDashboard(Profile);
+const ProductDetailPage = withDashboard(ProductDetail);
+const OrderTrackingPage = withDashboard(OrderTracking);
+const OrderSummaryPage = withDashboard(OrderSummary);
+const FavoritesPage = withDashboard(Favorites);
+const CalendarPage = withDashboard(Calendar);
+const LeadsPage = withDashboard(Leads);
+const AfterSalesPage = withDashboard(AfterSales);
+const SparePartsPage = withDashboard(SpareParts);
+const TechnicalResourcesPage = withDashboard(TechnicalResources);
+const ForumNewTopicPage = withDashboard(ForumNewTopic);
+const ForumTopicDetailPage = withDashboard(ForumTopicDetail);
+const NotificationsPage = withDashboard(Notifications);
+const NotificationPreferencesPage = withDashboard(NotificationPreferences);
+const TeamManagementPage = withDashboard(TeamManagement);
+const CompanyProfilePage = withDashboard(CompanyProfile);
 
 function Router() {
   // Initialize WebSocket connection for real-time notifications
@@ -93,31 +127,31 @@ function Router() {
       <Route path="/partner-onboarding" component={PartnerOnboarding} />
       <Route path="/partner-pending" component={PartnerPending} />
 
-      {/* Partner pages (with sidebar) */}
-      <Route path="/dashboard" component={withDashboard(Dashboard)} />
-      <Route path="/catalog" component={withDashboard(Catalog)} />
-      <Route path="/orders" component={withDashboard(Orders)} />
-      <Route path="/resources" component={withDashboard(Resources)} />
-      <Route path="/cart" component={withDashboard(Cart)} />
-      <Route path="/checkout" component={withDashboard(Checkout)} />
-      <Route path="/order-confirmation/:orderId" component={withDashboard(OrderConfirmation)} />
-      <Route path="/profile" component={withDashboard(Profile)} />
-      <Route path="/product/:id" component={withDashboard(ProductDetail)} />
-      <Route path="/order/:orderId" component={withDashboard(OrderTracking)} />
-      <Route path="/order/:orderId/summary" component={withDashboard(OrderSummary)} />
-      <Route path="/favorites" component={withDashboard(Favorites)} />
-      <Route path="/calendar" component={withDashboard(Calendar)} />
-      <Route path="/leads" component={withDashboard(Leads)} />
-      <Route path="/after-sales" component={withDashboard(AfterSales)} />
-      <Route path="/after-sales/:id" component={withDashboard(AfterSales)} />
-      <Route path="/spare-parts" component={withDashboard(SpareParts)} />
-      <Route path="/technical-resources" component={withDashboard(TechnicalResources)} />
-      <Route path="/technical-resources/forum/new" component={withDashboard(ForumNewTopic)} />
-      <Route path="/technical-resources/forum/:id" component={withDashboard(ForumTopicDetail)} />
-      <Route path="/notifications" component={withDashboard(Notifications)} />
-      <Route path="/notification-preferences" component={withDashboard(NotificationPreferences)} />
-      <Route path="/team" component={withDashboard(TeamManagement)} />
-      <Route path="/company-profile" component={withDashboard(CompanyProfile)} />
+      {/* Partner pages (with sidebar) — using pre-created stable components */}
+      <Route path="/dashboard" component={DashboardPage} />
+      <Route path="/catalog" component={CatalogPage} />
+      <Route path="/orders" component={OrdersPage} />
+      <Route path="/resources" component={ResourcesPage} />
+      <Route path="/cart" component={CartPage} />
+      <Route path="/checkout" component={CheckoutPage} />
+      <Route path="/order-confirmation/:orderId" component={OrderConfirmationPage} />
+      <Route path="/profile" component={ProfilePage} />
+      <Route path="/product/:id" component={ProductDetailPage} />
+      <Route path="/order/:orderId" component={OrderTrackingPage} />
+      <Route path="/order/:orderId/summary" component={OrderSummaryPage} />
+      <Route path="/favorites" component={FavoritesPage} />
+      <Route path="/calendar" component={CalendarPage} />
+      <Route path="/leads" component={LeadsPage} />
+      <Route path="/after-sales" component={AfterSalesPage} />
+      <Route path="/after-sales/:id" component={AfterSalesPage} />
+      <Route path="/spare-parts" component={SparePartsPage} />
+      <Route path="/technical-resources" component={TechnicalResourcesPage} />
+      <Route path="/technical-resources/forum/new" component={ForumNewTopicPage} />
+      <Route path="/technical-resources/forum/:id" component={ForumTopicDetailPage} />
+      <Route path="/notifications" component={NotificationsPage} />
+      <Route path="/notification-preferences" component={NotificationPreferencesPage} />
+      <Route path="/team" component={TeamManagementPage} />
+      <Route path="/company-profile" component={CompanyProfilePage} />
 
       {/* Admin routes (admin has its own layout) */}
       <Route path="/admin" component={AdminDashboard} />
