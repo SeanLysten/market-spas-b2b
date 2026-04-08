@@ -296,9 +296,11 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const user = await db.getUserByEmail(input.email);
         
-        // Renvoyer une erreur si l'email n'existe pas en base
+        // Pour des raisons de sécurité, toujours retourner success
+        // même si l'email n'existe pas en base (ne pas révéler l'existence d'un compte)
         if (!user) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Aucun compte n\'est associé à cette adresse email.' });
+          console.log(`[Auth] Password reset requested for unknown email: ${input.email}`);
+          return { success: true };
         }
 
         // Generate reset token

@@ -3298,3 +3298,9 @@
 - [x] Simplifié le header du Dashboard (supprimé boutons redondants avec la sidebar)
 - [x] Test order-pdf.test.ts mis à jour pour refléter le nouveau lien
 - [x] 75 fichiers de tests, 1093 tests passent
+
+## Bug : Page /forgot-password retourne "Email ou mot de passe incorrect"
+- [x] Analysé : le frontend appelle bien auth.forgotPassword (pas loginLocal)
+- [x] L'erreur "Email ou mot de passe incorrect" était un log résiduel d'une tentative de login précédente
+- [x] Corrigé forgotPassword : ne révèle plus si l'email existe (retourne toujours success pour la sécurité)
+- [x] 75 fichiers de tests, 1093 tests passent
