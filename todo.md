@@ -3304,3 +3304,11 @@
 - [x] L'erreur "Email ou mot de passe incorrect" était un log résiduel d'une tentative de login précédente
 - [x] Corrigé forgotPassword : ne révèle plus si l'email existe (retourne toujours success pour la sécurité)
 - [x] 75 fichiers de tests, 1093 tests passent
+
+## Bug : Hover flickering sur la sidebar et les menus
+- [x] Cause identifiée : transition globale de 0.35s sur html * + tooltips delayDuration=0 + sideOffset=0 + resize handle z-index=50
+- [x] Tooltip sideOffset augmenté de 0 à 8px + pointer-events-none ajouté
+- [x] TooltipProvider delayDuration augmenté de 0 à 300ms
+- [x] Resize handle z-index réduit de 50 à 10
+- [x] CSS : sidebar, boutons, menus, tooltips exclus de la transition lente (0.15s au lieu de 0.35s)
+- [x] 75 fichiers de tests, 1093 tests passent

@@ -257,7 +257,7 @@ function DashboardLayoutContent({
             if (isCollapsed) return;
             setIsResizing(true);
           }}
-          style={{ zIndex: 50 }}
+          style={{ zIndex: 10 }}
         />
       </div>
 

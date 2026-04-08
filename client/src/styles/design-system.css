@@ -301,6 +301,22 @@ html * {
   transition-duration: var(--dur-base) !important;
 }
 
+/* Exclure sidebar, menus, tooltips et dropdowns de la transition lente
+   pour éviter le flickering au hover */
+[data-slot="sidebar"] *,
+[data-slot="sidebar-menu-button"],
+[data-slot="tooltip-content"],
+[data-slot="tooltip-trigger"],
+[role="menu"] *,
+[role="menuitem"],
+[data-radix-popper-content-wrapper] *,
+button:hover,
+a:hover {
+  transition-property: background-color, border-color, color, box-shadow, fill, stroke;
+  transition-duration: 0.15s !important;
+  transition-timing-function: ease-out !important;
+}
+
 
 /* ═══════════════════════════════════════════════
    VARIABLES — remapping complet de la palette
