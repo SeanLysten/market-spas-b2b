@@ -1,3 +1,4 @@
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,6 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
 import { useParams, Link } from "wouter";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
   Package,
@@ -20,6 +31,8 @@ import {
   AlertCircle,
   XCircle,
   Download,
+  Ban,
+  AlertTriangle,
 } from "lucide-react";
 
 type OrderStatus = "PENDING_APPROVAL" | "PENDING_DEPOSIT" | "PAYMENT_PENDING" | "DEPOSIT_PAID" | "PAYMENT_FAILED" | "IN_PRODUCTION" | "READY_TO_SHIP" | "SHIPPED" | "DELIVERED" | "COMPLETED" | "CANCELLED" | "REFUSED";
@@ -72,10 +85,35 @@ export default function OrderTracking() {
   const params = useParams<{ orderId: string }>();
   const orderId = parseInt(params.orderId || "0");
 
-  const { data: order, isLoading } = trpc.orders.getWithItems.useQuery(
+  const { data: order, isLoading, refetch } = trpc.orders.getWithItems.useQuery(
     { id: orderId },
     { enabled: orderId > 0 }
   );
+
+  // Cancel order state
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const cancelOrderMutation = trpc.orders.cancel.useMutation({
+    onSuccess: () => {
+      toast.success("Commande annul\u00e9e avec succ\u00e8s. Les produits ont \u00e9t\u00e9 remis en stock.");
+      setShowCancelDialog(false);
+      setCancelReason("");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erreur lors de l'annulation de la commande");
+    },
+  });
+
+  const canCancel = order?.status === "PAYMENT_PENDING" || order?.status === "PAYMENT_FAILED";
+
+  const handleCancelOrder = () => {
+    if (!orderId) return;
+    cancelOrderMutation.mutate({
+      orderId,
+      reason: cancelReason || undefined,
+    });
+  };
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return "N/A";
@@ -172,10 +210,20 @@ export default function OrderTracking() {
               </div>
             </div>
             <div className="flex gap-2">
+              {canCancel && (
+                <Button
+                  variant="destructive"
+                  className="gap-2 w-full sm:w-auto"
+                  onClick={() => setShowCancelDialog(true)}
+                >
+                  <Ban className="w-4 h-4" />
+                  Annuler la commande
+                </Button>
+              )}
               <Link href={`/order/${orderId}/summary`}>
                 <Button variant="outline" className="gap-2 w-full sm:w-auto">
                   <FileText className="w-4 h-4" />
-                  Récapitulatif
+                  R\u00e9capitulatif
                 </Button>
               </Link>
               <Button variant="outline" className="gap-2 w-full sm:w-auto" onClick={() => window.open(`/api/orders/${orderId}/pdf`, '_blank')}>
@@ -406,6 +454,32 @@ export default function OrderTracking() {
               </CardContent>
             </Card>
 
+            {/* Cancel Order Card (visible only for PAYMENT_PENDING / PAYMENT_FAILED) */}
+            {canCancel && (
+              <Card className="border-amber-300 dark:border-amber-700">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400 text-sm">
+                    <AlertTriangle className="w-4 h-4" />
+                    Annuler cette commande ?
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Vous pouvez annuler cette commande tant que le paiement n'a pas \u00e9t\u00e9 valid\u00e9. Les produits seront automatiquement remis en stock.
+                  </p>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="w-full gap-2"
+                    onClick={() => setShowCancelDialog(true)}
+                  >
+                    <Ban className="w-4 h-4" />
+                    Annuler la commande
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Contact Support */}
             <Card>
               <CardHeader>
@@ -413,7 +487,7 @@ export default function OrderTracking() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-xs md:text-sm text-muted-foreground">
-                  Notre équipe est disponible pour répondre à vos questions.
+                  Notre \u00e9quipe est disponible pour r\u00e9pondre \u00e0 vos questions.
                 </p>
                 <div className="space-y-2">
                   <Button variant="outline" className="w-full gap-2">
@@ -430,6 +504,66 @@ export default function OrderTracking() {
           </div>
         </div>
       </div>
+
+      {/* Cancel Order Confirmation Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              Confirmer l'annulation
+            </DialogTitle>
+            <DialogDescription>
+              \u00cates-vous s\u00fbr de vouloir annuler la commande <strong>{order?.orderNumber}</strong> ? Cette action est irr\u00e9versible.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Recap of what will happen */}
+            <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+              <p className="text-sm text-amber-800 dark:text-amber-200 font-medium mb-1">Ce qui va se passer :</p>
+              <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-1 list-disc list-inside">
+                <li>La commande sera marqu\u00e9e comme annul\u00e9e</li>
+                <li>Les produits seront remis en stock automatiquement</li>
+                <li>Vous et les administrateurs serez notifi\u00e9s</li>
+                {order?.depositAmount && Number(order.depositAmount) > 0 && (
+                  <li>Si un paiement a \u00e9t\u00e9 initi\u00e9, il sera annul\u00e9 ou rembours\u00e9</li>
+                )}
+              </ul>
+            </div>
+
+            {/* Optional reason */}
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Raison de l'annulation (optionnel)</label>
+              <Textarea
+                placeholder="Ex: Erreur de commande, changement d'avis..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelDialog(false)}
+              className="w-full sm:w-auto"
+            >
+              Garder la commande
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelOrder}
+              disabled={cancelOrderMutation.isPending}
+              className="w-full sm:w-auto gap-2"
+            >
+              <Ban className="w-4 h-4" />
+              {cancelOrderMutation.isPending ? "Annulation..." : "Confirmer l'annulation"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

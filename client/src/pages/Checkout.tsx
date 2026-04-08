@@ -8,10 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Package, MapPin, CreditCard, FileText, Calendar, TruckIcon, BadgePercent, Info, AlertTriangle, Building2, Clock } from "lucide-react";
+import { ArrowLeft, Package, MapPin, CreditCard, FileText, Calendar, TruckIcon, BadgePercent, Info, AlertTriangle, Building2, Clock, CheckCircle2, ShieldCheck, Phone } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Build the list of selectable delivery dates
 function buildDeliveryDateOptions(latestArrivalDate?: string | null): { value: string; label: string }[] {
@@ -120,13 +122,17 @@ export default function Checkout() {
 
   const deliveryDateOptions = useMemo(() => buildDeliveryDateOptions(latestArrivalDate), [latestArrivalDate]);
 
-  const handleSubmitOrder = async () => {
+  // Confirmation modal state
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  // Validation before showing the confirmation modal
+  const handleRequestConfirmation = () => {
     if (!deliveryAddress.street || !deliveryAddress.city || !deliveryAddress.postalCode) {
-      toast.error("Veuillez remplir l'adresse de livraison complète");
+      toast.error("Veuillez remplir l'adresse de livraison compl\u00e8te");
       return;
     }
     if (!deliveryAddress.contactName || !deliveryAddress.contactPhone) {
-      toast.error("Veuillez fournir un nom et téléphone de contact");
+      toast.error("Veuillez fournir un nom et t\u00e9l\u00e9phone de contact");
       return;
     }
     if (cartItems.length === 0) {
@@ -134,9 +140,16 @@ export default function Checkout() {
       return;
     }
     if (!deliveryRequestedDate) {
-      toast.error("Veuillez choisir une date de livraison souhaitée");
+      toast.error("Veuillez choisir une date de livraison souhait\u00e9e");
       return;
     }
+    // Show confirmation modal
+    setShowConfirmation(true);
+  };
+
+  // Actual order submission (only called after confirmation)
+  const handleSubmitOrder = async () => {
+    setShowConfirmation(false);
 
     try {
       const result = await createOrderMutation.mutateAsync({
@@ -163,15 +176,15 @@ export default function Checkout() {
 
       // If Mollie checkout URL is available, redirect to it
       if ((result as any).mollieCheckoutUrl) {
-        toast.success("Commande créée ! Redirection vers la page de paiement...");
+        toast.success("Commande cr\u00e9\u00e9e ! Redirection vers la page de paiement...");
         window.open((result as any).mollieCheckoutUrl, "_blank");
         setLocation(`/order-confirmation/${result.orderId}`);
       } else {
-        toast.success("Commande créée avec succès !");
+        toast.success("Commande cr\u00e9\u00e9e avec succ\u00e8s !");
         setLocation(`/order-confirmation/${result.orderId}`);
       }
     } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la création de la commande");
+      toast.error(error.message || "Erreur lors de la cr\u00e9ation de la commande");
     }
   };
 
@@ -179,7 +192,7 @@ export default function Checkout() {
     return price.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
-  return (
+  const mainContent = (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -611,14 +624,14 @@ export default function Checkout() {
                   </div>
                 </div>
 
-                {/* Submit Button */}
+                {/* Submit Button - Opens confirmation modal */}
                 <Button
                   className="w-full"
                   size="lg"
-                  onClick={handleSubmitOrder}
+                  onClick={handleRequestConfirmation}
                   disabled={createOrderMutation.isPending || cartItems.length === 0 || !deliveryRequestedDate || expired}
                 >
-                  {createOrderMutation.isPending ? "Traitement..." : `Valider et payer ${formatPrice(depositAmount)} €`}
+                  {createOrderMutation.isPending ? "Traitement..." : `V\u00e9rifier et confirmer la commande`}
                 </Button>
                 {!deliveryRequestedDate && (
                   <p className="text-xs text-center text-amber-600 dark:text-amber-400">
@@ -634,5 +647,175 @@ export default function Checkout() {
         </div>
       </div>
     </div>
+  );
+
+  // ========================================
+  // CONFIRMATION MODAL (Double s\u00e9curit\u00e9)
+  // ========================================
+  const confirmationModal = (
+    <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+      <DialogContent className="max-w-lg max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-lg">
+            <ShieldCheck className="w-5 h-5 text-primary" />
+            Confirmation de commande
+          </DialogTitle>
+          <DialogDescription>
+            V\u00e9rifiez attentivement le r\u00e9capitulatif avant de valider votre commande.
+          </DialogDescription>
+        </DialogHeader>
+
+        <ScrollArea className="max-h-[55vh] pr-4">
+          <div className="space-y-4">
+            {/* Articles */}
+            <div>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-1.5">
+                <Package className="w-4 h-4 text-primary" />
+                Articles ({cartItems.length})
+              </h4>
+              <div className="space-y-2">
+                {cartItems.map((item: any, idx: number) => (
+                  <div key={idx} className="flex justify-between items-center p-2 rounded-md bg-muted/50 text-sm">
+                    <div className="flex-1">
+                      <span className="font-medium">{item.product?.name || "Produit"}</span>
+                      <span className="text-muted-foreground ml-1">x{item.quantity}</span>
+                      {item.isPreorder && (
+                        <span className="ml-2 text-xs text-orange-600 dark:text-orange-400">(Pr\u00e9-commande)</span>
+                      )}
+                    </div>
+                    <span className="font-medium">
+                      {formatPrice(Number(item.product?.pricePartnerHT || item.product?.pricePublicHT || 0) * item.quantity)} \u20ac
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Adresse de livraison */}
+            <div>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-primary" />
+                Adresse de livraison
+              </h4>
+              <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md space-y-0.5">
+                <p className="font-medium text-foreground">{deliveryAddress.contactName}</p>
+                <p>{deliveryAddress.street}</p>
+                <p>{deliveryAddress.postalCode} {deliveryAddress.city}</p>
+                <p>{deliveryAddress.country === "BE" ? "Belgique" : deliveryAddress.country === "FR" ? "France" : deliveryAddress.country}</p>
+                <p className="flex items-center gap-1 pt-1">
+                  <Phone className="w-3 h-3" /> {deliveryAddress.contactPhone}
+                </p>
+              </div>
+            </div>
+
+            {/* Date de livraison */}
+            <div>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-1.5">
+                <Calendar className="w-4 h-4 text-primary" />
+                Date de livraison souhait\u00e9e
+              </h4>
+              <p className="text-sm bg-muted/50 p-3 rounded-md">
+                {deliveryRequestedDate
+                  ? new Date(deliveryRequestedDate + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })
+                  : "Non s\u00e9lectionn\u00e9e"}
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* R\u00e9capitulatif financier */}
+            <div>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-1.5">
+                <CreditCard className="w-4 h-4 text-primary" />
+                R\u00e9capitulatif financier
+              </h4>
+              <div className="space-y-1.5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Sous-total HT</span>
+                  <span>{formatPrice(subtotalHT)} \u20ac</span>
+                </div>
+                {discountPercent > 0 && (
+                  <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                    <span>Remise partenaire ({discountPercent.toFixed(1)}%)</span>
+                    <span>-{formatPrice(discountAmount)} \u20ac</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Livraison HT</span>
+                  <span>{formatPrice(dynamicShippingHT ?? shippingHT)} \u20ac</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{vatLabel} ({vatRate}%)</span>
+                  <span>{formatPrice(vatAmount)} \u20ac</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-bold text-base">
+                  <span>Total TTC</span>
+                  <span className="text-primary">{formatPrice(totalTTC)} \u20ac</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Montant \u00e0 payer maintenant */}
+            <div className="p-4 rounded-lg bg-primary/10 border border-primary/30">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-semibold text-sm">
+                    {hasSpaItems ? "Acompte \u00e0 r\u00e9gler maintenant" : "Montant \u00e0 r\u00e9gler"}
+                  </p>
+                  {hasSpaItems && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {spaUnitCount} spa{spaUnitCount > 1 ? "s" : ""} x 300 \u20ac
+                    </p>
+                  )}
+                </div>
+                <span className="text-xl font-bold text-primary">{formatPrice(depositAmount)} \u20ac</span>
+              </div>
+              {hasSpaItems && balanceAmount > 0 && (
+                <div className="mt-2 pt-2 border-t border-primary/20 flex justify-between text-sm text-muted-foreground">
+                  <span>Solde restant (\u00e0 r\u00e9gler \u00e0 la livraison)</span>
+                  <span>{formatPrice(balanceAmount)} \u20ac</span>
+                </div>
+              )}
+            </div>
+
+            {/* Mode de paiement */}
+            <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                <Building2 className="w-4 h-4 flex-shrink-0" />
+                Paiement par virement SEPA via Mollie
+              </p>
+            </div>
+          </div>
+        </ScrollArea>
+
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowConfirmation(false)}
+            className="w-full sm:w-auto"
+          >
+            Modifier ma commande
+          </Button>
+          <Button
+            onClick={handleSubmitOrder}
+            disabled={createOrderMutation.isPending}
+            className="w-full sm:w-auto gap-2"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            {createOrderMutation.isPending ? "Traitement..." : `Confirmer et payer ${formatPrice(depositAmount)} \u20ac`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
+  return (
+    <>
+      {confirmationModal}
+      {mainContent}
+    </>
   );
 }

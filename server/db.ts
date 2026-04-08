@@ -2096,6 +2096,122 @@ export async function updateOrderStatus(orderId: number, status: string, note?: 
 
 
 // ============================================
+// ORDER CANCELLATION
+// ============================================
+
+export async function cancelOrder(orderId: number, userId: number, reason?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Get the order
+  const order = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  if (order.length === 0) throw new Error("Commande introuvable");
+
+  const currentOrder = order[0];
+
+  // Only allow cancellation for PAYMENT_PENDING or PAYMENT_FAILED statuses
+  if (currentOrder.status !== "PAYMENT_PENDING" && currentOrder.status !== "PAYMENT_FAILED") {
+    throw new Error("Seules les commandes en cours de paiement ou en erreur de paiement peuvent être annulées");
+  }
+
+  // Get order items to restore stock
+  const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+
+  // Restore stock for each item
+  for (const item of items) {
+    const isPreorder = item.stockSource === "TRANSIT";
+
+    if (item.variantId) {
+      if (!isPreorder) {
+        // In-stock item: re-increment stockQuantity
+        await db
+          .update(productVariants)
+          .set({
+            stockQuantity: sql`${productVariants.stockQuantity} + ${item.quantity}`,
+          })
+          .where(eq(productVariants.id, item.variantId));
+        console.log(`[CancelOrder] Restored ${item.quantity} units to variant ${item.variantId} stockQuantity`);
+      } else {
+        // Transit/preorder item: decrement stockReserved
+        await db
+          .update(productVariants)
+          .set({
+            stockReserved: sql`GREATEST(0, ${productVariants.stockReserved} - ${item.quantity})`,
+          })
+          .where(eq(productVariants.id, item.variantId));
+        console.log(`[CancelOrder] Released ${item.quantity} reserved units from variant ${item.variantId}`);
+      }
+    } else if (item.productId) {
+      if (!isPreorder) {
+        await db
+          .update(products)
+          .set({
+            stockQuantity: sql`${products.stockQuantity} + ${item.quantity}`,
+          })
+          .where(eq(products.id, item.productId));
+        console.log(`[CancelOrder] Restored ${item.quantity} units to product ${item.productId} stockQuantity`);
+      } else {
+        await db
+          .update(products)
+          .set({
+            stockReserved: sql`GREATEST(0, ${products.stockReserved} - ${item.quantity})`,
+          })
+          .where(eq(products.id, item.productId));
+        console.log(`[CancelOrder] Released ${item.quantity} reserved units from product ${item.productId}`);
+      }
+    }
+
+    // Restore incoming stock if it was a preorder linked to an arrival
+    if (isPreorder && item.stockSourceArrivalWeek) {
+      // Find the incoming stock entry and restore quantity
+      const incomingEntries = await db
+        .select()
+        .from(incomingStock)
+        .where(
+          and(
+            item.variantId ? eq(incomingStock.variantId, item.variantId) : eq(incomingStock.productId, item.productId!),
+            eq(incomingStock.arrivalWeek, item.stockSourceArrivalWeek)
+          )
+        )
+        .limit(1);
+      if (incomingEntries.length > 0) {
+        await db
+          .update(incomingStock)
+          .set({
+            quantity: sql`${incomingStock.quantity} + ${item.quantity}`,
+          })
+          .where(eq(incomingStock.id, incomingEntries[0].id));
+        console.log(`[CancelOrder] Restored ${item.quantity} units to incoming stock ${incomingEntries[0].id}`);
+      }
+    }
+  }
+
+  // Update order status to CANCELLED
+  await db
+    .update(orders)
+    .set({
+      status: "CANCELLED" as any,
+      internalNotes: reason
+        ? `${currentOrder.internalNotes || ""}\n[Annulation] ${new Date().toISOString()} - ${reason}`
+        : `${currentOrder.internalNotes || ""}\n[Annulation] ${new Date().toISOString()} - Annulée par l'utilisateur`,
+      updatedAt: new Date(),
+    })
+    .where(eq(orders.id, orderId));
+
+  // Update partner stats
+  await db
+    .update(partners)
+    .set({
+      totalOrders: sql`GREATEST(0, ${partners.totalOrders} - 1)`,
+    })
+    .where(eq(partners.id, currentOrder.partnerId));
+
+  console.log(`[CancelOrder] Order ${orderId} (${currentOrder.orderNumber}) cancelled by user ${userId}. Stock restored for ${items.length} items.`);
+
+  return { success: true, orderNumber: currentOrder.orderNumber };
+}
+
+// ============================================
 // NOTIFICATION FUNCTIONS
 // ============================================
 

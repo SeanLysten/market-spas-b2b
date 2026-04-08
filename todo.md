@@ -3374,3 +3374,17 @@
 - [x] FIX: Supprimer le triple nesting de TooltipProvider (App.tsx + DashboardLayout + tooltip.tsx)
 - [x] FIX: Ajouter scrollbar-gutter: stable sur html
 - [x] 1093 tests passent toujours
+
+## Annulation de commande et double sécurité paiement (08/04/2026)
+- [x] Endpoint API orders.cancel (protectedProcedure, PAYMENT_PENDING ou PAYMENT_FAILED)
+- [x] Remise en stock automatique (stockQuantity pour stock, stockReserved pour précommandes)
+- [x] Statut "Annulée" visible côté utilisateur et admin
+- [x] Bouton d'annulation dans OrderTracking (uniquement si statut = PAYMENT_PENDING/PAYMENT_FAILED)
+- [x] Modal de confirmation avec raison optionnelle
+- [x] Notification aux admins lors de l'annulation
+- [x] Récapitulatif complet de la commande avant validation du paiement (double sécurité)
+- [x] Modal avec articles, prix, adresse, date livraison, montant acompte
+- [x] Bouton "Modifier ma commande" pour revenir en arrière
+- [x] Bouton "Confirmer et payer" pour valider définitivement
+- [x] Confirmation explicite de l'utilisateur avant redirection vers le paiement
+- [x] Tests unitaires pour l'annulation et la remise en stock (8 tests passent)

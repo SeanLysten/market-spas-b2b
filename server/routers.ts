@@ -1219,6 +1219,37 @@ export const appRouter = router({
         return order;
       }),
 
+    // Cancel an order (only PAYMENT_PENDING or PAYMENT_FAILED)
+    cancel: protectedProcedure
+      .input(z.object({
+        orderId: z.number(),
+        reason: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Verify the user owns this order
+        const order = await db.getOrderById(input.orderId);
+        if (!order) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Commande introuvable" });
+        }
+
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        if (!isAdmin && order.partnerId !== ctx.user.partnerId) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Vous n'avez pas acc\u00e8s \u00e0 cette commande" });
+        }
+
+        const result = await db.cancelOrder(input.orderId, ctx.user.id, input.reason);
+
+        // Send notification to admins
+        try {
+          const { notifyOrderStatusChange } = await import("./alerts");
+          await notifyOrderStatusChange(input.orderId, order.status, "CANCELLED");
+        } catch (e) {
+          console.error("[Orders] Failed to send cancellation notification:", e);
+        }
+
+        return result;
+      }),
+
     updateStatus: adminProcedure
       .input(z.object({
         orderId: z.number(),
