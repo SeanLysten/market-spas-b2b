@@ -3397,3 +3397,16 @@
 - [x] Séquences Unicode échappées (\u00e9, \u00e8, etc.) affichées au lieu des caractères accentués
 - [x] 133 remplacements dans 8 fichiers (Cart, Checkout, OrderTracking, AdminProducts, db.ts, routers.ts, mobile-api.ts, mobile-auth.ts)
 - [x] 0 séquences Unicode restantes dans le code source
+
+## Bug - Paiements Mollie non visibles dans le dashboard (08/04/2026)
+- [ ] Les paiements ne s'affichent pas dans le dashboard Mollie test
+- [ ] Vérifier la clé API Mollie test utilisée
+- [ ] Vérifier la création du paiement via l'API Mollie
+- [ ] Vérifier le webhook Mollie
+- [ ] Permettre de tester les paiements facilement
+
+## Config Mollie - Mode test et simulation (08/04/2026)
+- [x] Inverser priorité clés API : MOLLIE_API_KEY_TEST d'abord
+- [x] Ajouter endpoint admin POST /api/admin/simulate-payment (TEST MODE ONLY)
+- [x] Bouton "Simuler paiement" dans AdminOrders pour commandes PAYMENT_PENDING
+- [x] Garder SEPA comme méthode de paiement

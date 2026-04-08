@@ -340,6 +340,107 @@ async function startServer() {
   // Mollie Webhook - payment status updates
   app.post("/api/webhooks/mollie", handleMollieWebhook);
 
+  // Admin: Simulate Mollie payment received (TEST MODE ONLY)
+  app.post("/api/admin/simulate-payment", express.json(), async (req, res) => {
+    try {
+      const { isMollieTestMode } = await import("../mollie");
+      if (!isMollieTestMode()) {
+        return res.status(403).json({ error: "Simulation only available in test mode" });
+      }
+
+      // Verify admin auth via JWT
+      const authHeader = req.headers.authorization;
+      const cookieToken = req.cookies?.token;
+      const token = authHeader?.replace('Bearer ', '') || cookieToken;
+      if (!token) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const jwt = await import("jsonwebtoken");
+      let decoded: any;
+      try {
+        decoded = jwt.default.verify(token, process.env.JWT_SECRET || 'dev-secret');
+      } catch {
+        return res.status(401).json({ error: "Invalid token" });
+      }
+
+      if (decoded.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const { orderId } = req.body;
+      if (!orderId) {
+        return res.status(400).json({ error: "orderId is required" });
+      }
+
+      const { getDb } = await import("../db");
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+
+      const { orders, molliePayments, orderStatusHistory } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      // Get the order
+      const [order] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      if (order.status !== 'PAYMENT_PENDING') {
+        return res.status(400).json({ error: `Order status is '${order.status}', expected 'PAYMENT_PENDING'` });
+      }
+
+      // Update order status to DEPOSIT_PAID
+      await db.update(orders).set({
+        status: 'DEPOSIT_PAID',
+        depositPaid: true,
+        mollieStatus: 'paid',
+      }).where(eq(orders.id, orderId));
+
+      // Update mollie_payments table if exists
+      if (order.molliePaymentId) {
+        await db.update(molliePayments).set({
+          mollieStatus: 'paid',
+          paidAt: new Date(),
+        }).where(eq(molliePayments.molliePaymentId, order.molliePaymentId));
+      }
+
+      // Add status history
+      await db.insert(orderStatusHistory).values({
+        orderId,
+        oldStatus: order.status,
+        newStatus: 'DEPOSIT_PAID',
+        note: `[TEST] Paiement simulé par admin (${decoded.email})`,
+      });
+
+      // Send notification
+      try {
+        const { notifyPaymentReceived } = await import("../notification-service");
+        await notifyPaymentReceived(orderId, order.orderNumber, "deposit");
+      } catch (e) {
+        console.log("[Simulate] Notification skipped:", (e as any).message);
+      }
+
+      console.log(`[Simulate Payment] Admin ${decoded.email} simulated payment for order ${order.orderNumber} (ID: ${orderId})`);
+
+      return res.json({
+        success: true,
+        message: `Paiement simulé avec succès pour la commande ${order.orderNumber}`,
+        order: {
+          id: orderId,
+          orderNumber: order.orderNumber,
+          oldStatus: order.status,
+          newStatus: 'DEPOSIT_PAID',
+        },
+      });
+    } catch (error: any) {
+      console.error("[Simulate Payment] Error:", error.message);
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
   // Webhooks Make (routes HTTP standard)
   app.use("/api/webhooks", webhooksRouter);
   // Inbound leads (formulaire Shopify + emails entrants)
