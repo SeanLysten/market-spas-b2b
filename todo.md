@@ -3347,3 +3347,14 @@
 - [x] Remplacer transition-all par transition-[transform] dans ThemeToggle.tsx
 - [x] Supprimer les transition-all redondants dans Dashboard.tsx
 - [x] Vérifier que 0 éléments ont transition-all avec durée non nulle (était 28 avant fix)
+
+## Bug fix - Sidebar toggle et hover (08/04/2026)
+- [x] Le bouton toggle sidebar ne ferme pas la sidebar sur bureau
+- [x] Clignotement/saut des boutons au hover du curseur
+- [x] Clignotement/saut des produits au hover du curseur
+- [x] Réécriture complète du DashboardLayout sans dépendance au composant Sidebar shadcn
+- [x] Système de sidebar custom avec state React simple + localStorage pour persistance
+- [x] Styles inline pour width transitions (bypass des sélecteurs CSS group-data non fonctionnels)
+- [x] Tooltips sur les icônes en mode collapsed
+- [x] Mobile: Sheet drawer pour la sidebar mobile
+- [x] 1093 tests passent toujours
