@@ -1768,10 +1768,21 @@ export const teamInvitations = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     email: varchar("email", { length: 255 }).notNull(),
     partnerId: int("partnerId").notNull(),
-    role: teamRoleEnum.notNull(),
+    role: mysqlEnum("role", [
+      "OWNER",
+      "SALES_REP",
+      "ORDER_MANAGER",
+      "ACCOUNTANT",
+      "FULL_MANAGER",
+    ]).notNull(),
     permissions: text("permissions"), // JSON string for custom permissions
     invitedBy: int("invitedBy").notNull(),
-    status: invitationStatusEnum.default("PENDING").notNull(),
+    status: mysqlEnum("status", [
+      "PENDING",
+      "ACCEPTED",
+      "EXPIRED",
+      "CANCELLED",
+    ]).default("PENDING").notNull(),
     token: varchar("token", { length: 255 }).notNull(),
     expiresAt: timestamp("expiresAt").notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),

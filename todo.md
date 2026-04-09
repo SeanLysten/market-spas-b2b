@@ -3437,3 +3437,6 @@
 - [x] Enrichir la liste AdminPartners avec indicateurs (nombre de membres, dernière activité)
 - [x] Réorganiser le menu sidebar : déplacer "Équipe interne" sous "Paramètres"
 - [x] Écrire les tests vitest pour les nouvelles routes
+
+## Bug - Colonnes team_invitations mapping incorrect (09/04/2026)
+- [x] Corriger le mapping des colonnes team_role et invitation_status dans team_invitations (Drizzle génère team_role au lieu de role, invitation_status au lieu de status)
