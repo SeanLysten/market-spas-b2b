@@ -2914,3 +2914,37 @@ export const molliePayments = mysqlTable(
 );
 export type MolliePayment = typeof molliePayments.$inferSelect;
 export type InsertMolliePayment = typeof molliePayments.$inferInsert;
+
+// ============================================
+// MOLLIE WEBHOOK LOGS (Traçabilité des webhooks Mollie)
+// ============================================
+export const mollieWebhookLogs = mysqlTable(
+  "mollie_webhook_logs",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    molliePaymentId: varchar("molliePaymentId", { length: 100 }),
+    mollieStatus: varchar("mollieStatus", { length: 50 }),
+    eventType: varchar("eventType", { length: 50 }).notNull(), // "payment.status_change", "unknown", "error", etc.
+    orderId: int("orderId"),
+    orderNumber: varchar("orderNumber", { length: 50 }),
+    savTicketId: int("savTicketId"),
+    httpStatusCode: int("httpStatusCode").notNull(), // HTTP response code returned
+    processingTimeMs: int("processingTimeMs"), // Duration of webhook processing
+    rawPayload: text("rawPayload"), // Raw request body JSON
+    mollieResponsePayload: text("mollieResponsePayload"), // Full Mollie payment object fetched
+    previousOrderStatus: varchar("previousOrderStatus", { length: 50 }),
+    newOrderStatus: varchar("newOrderStatus", { length: 50 }),
+    errorMessage: text("errorMessage"),
+    ipAddress: varchar("ipAddress", { length: 45 }),
+    success: boolean("success").notNull().default(true),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    paymentIdIdx: index("mwl_paymentId_idx").on(table.molliePaymentId),
+    orderIdIdx: index("mwl_orderId_idx").on(table.orderId),
+    createdAtIdx: index("mwl_createdAt_idx").on(table.createdAt),
+    successIdx: index("mwl_success_idx").on(table.success),
+  })
+);
+export type MollieWebhookLog = typeof mollieWebhookLogs.$inferSelect;
+export type InsertMollieWebhookLog = typeof mollieWebhookLogs.$inferInsert;

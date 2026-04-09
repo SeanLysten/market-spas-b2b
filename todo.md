@@ -3420,3 +3420,11 @@
 - [x] Remettre Mollie en mode live (clé live prioritaire au lieu de clé test)
 - [x] Supprimer le bouton "Simuler paiement" dans AdminOrders
 - [x] Supprimer l'endpoint POST /api/admin/simulate-payment
+
+## Système de logs webhooks Mollie (09/04/2026)
+- [x] Créer la table mollie_webhook_logs en DB (paymentId, eventType, mollieStatus, orderId, orderNumber, rawPayload, httpStatus, processingTimeMs, errorMessage, createdAt)
+- [x] Migrer la base de données
+- [x] Intégrer le logging dans le handler webhook Mollie (enregistrer chaque appel avec payload, statut, durée, erreurs)
+- [x] Créer les routes tRPC admin pour lister/consulter les logs (pagination, filtres)
+- [x] Créer l'interface admin pour consulter les logs webhooks Mollie (tableau, filtres, détail payload)
+- [x] Écrire les tests vitest pour le système de logs

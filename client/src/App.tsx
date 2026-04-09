@@ -28,6 +28,7 @@ import AdminCalendar from "@/pages/admin/AdminCalendar";
 import AdminTechnicalResources from "@/pages/admin/TechnicalResources";
 import AdminSupplierIntegration from "@/pages/admin/AdminSupplierIntegration";
 import AdminShippingZones from "@/pages/admin/AdminShippingZones";
+import AdminWebhookLogs from "@/pages/admin/AdminWebhookLogs";
 
 import Dashboard from "./pages/Dashboard";
 import Catalog from "./pages/Catalog";
@@ -176,6 +177,7 @@ function Router() {
       <Route path="/admin/calendar" component={AdminCalendar} />
       <Route path="/admin/supplier-integration" component={AdminSupplierIntegration} />
       <Route path="/admin/shipping-zones" component={AdminShippingZones} />
+      <Route path="/admin/webhook-logs" component={AdminWebhookLogs} />
 
       <Route path="/admin/technical-resources" component={AdminTechnicalResources} />
 

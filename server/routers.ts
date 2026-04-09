@@ -2086,6 +2086,114 @@ export const appRouter = router({
       // Webhook validation is handled via POST /api/webhooks/mollie
     }),
 
+    // Mollie Webhook Logs
+    webhookLogs: router({
+      list: adminProcedure
+        .input(z.object({
+          page: z.number().optional().default(1),
+          limit: z.number().optional().default(50),
+          success: z.boolean().optional(),
+          eventType: z.string().optional(),
+          orderNumber: z.string().optional(),
+          molliePaymentId: z.string().optional(),
+          dateFrom: z.string().optional(),
+          dateTo: z.string().optional(),
+        }).optional())
+        .query(async ({ input }) => {
+          const { getDb } = await import("./db");
+          const database = await getDb();
+          if (!database) return { logs: [], total: 0 };
+
+          const { mollieWebhookLogs } = await import("../drizzle/schema");
+          const { eq, desc, and, like, gte, lte, sql } = await import("drizzle-orm");
+
+          const page = input?.page || 1;
+          const limit = input?.limit || 50;
+          const offset = (page - 1) * limit;
+
+          // Build conditions
+          const conditions: any[] = [];
+          if (input?.success !== undefined) {
+            conditions.push(eq(mollieWebhookLogs.success, input.success));
+          }
+          if (input?.eventType) {
+            conditions.push(like(mollieWebhookLogs.eventType, `%${input.eventType}%`));
+          }
+          if (input?.orderNumber) {
+            conditions.push(like(mollieWebhookLogs.orderNumber, `%${input.orderNumber}%`));
+          }
+          if (input?.molliePaymentId) {
+            conditions.push(like(mollieWebhookLogs.molliePaymentId, `%${input.molliePaymentId}%`));
+          }
+          if (input?.dateFrom) {
+            conditions.push(gte(mollieWebhookLogs.createdAt, new Date(input.dateFrom)));
+          }
+          if (input?.dateTo) {
+            conditions.push(lte(mollieWebhookLogs.createdAt, new Date(input.dateTo)));
+          }
+
+          const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+          const [logs, countResult] = await Promise.all([
+            database
+              .select()
+              .from(mollieWebhookLogs)
+              .where(whereClause)
+              .orderBy(desc(mollieWebhookLogs.createdAt))
+              .limit(limit)
+              .offset(offset),
+            database
+              .select({ count: sql<number>`count(*)` })
+              .from(mollieWebhookLogs)
+              .where(whereClause),
+          ]);
+
+          return { logs, total: Number(countResult[0]?.count || 0) };
+        }),
+
+      getById: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .query(async ({ input }) => {
+          const { getDb } = await import("./db");
+          const database = await getDb();
+          if (!database) return null;
+
+          const { mollieWebhookLogs } = await import("../drizzle/schema");
+          const { eq } = await import("drizzle-orm");
+
+          const rows = await database
+            .select()
+            .from(mollieWebhookLogs)
+            .where(eq(mollieWebhookLogs.id, input.id))
+            .limit(1);
+          return rows[0] || null;
+        }),
+
+      stats: adminProcedure.query(async () => {
+        const { getDb } = await import("./db");
+        const database = await getDb();
+        if (!database) return { total: 0, success: 0, errors: 0, avgProcessingTime: 0 };
+
+        const { mollieWebhookLogs } = await import("../drizzle/schema");
+        const { sql } = await import("drizzle-orm");
+
+        const result = await database.select({
+          total: sql<number>`count(*)`,
+          success: sql<number>`SUM(CASE WHEN success = true THEN 1 ELSE 0 END)`,
+          errors: sql<number>`SUM(CASE WHEN success = false THEN 1 ELSE 0 END)`,
+          avgProcessingTime: sql<number>`AVG(processingTimeMs)`,
+        }).from(mollieWebhookLogs);
+
+        const row = result[0];
+        return {
+          total: Number(row?.total || 0),
+          success: Number(row?.success || 0),
+          errors: Number(row?.errors || 0),
+          avgProcessingTime: Math.round(Number(row?.avgProcessingTime || 0)),
+        };
+      }),
+    }),
+
     partners: router({
       list: adminProcedure
         .input(

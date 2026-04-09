@@ -31,6 +31,7 @@ import {
   CalendarDays,
   ArrowRightLeft,
   Truck as TruckIcon,
+  Activity,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
@@ -80,6 +81,7 @@ const ROUTE_MODULE_MAP: Record<string, string> = {
   '/admin/users': 'users',
   '/admin/supplier-integration': 'settings',
   '/admin/settings': 'settings',
+  '/admin/webhook-logs': 'settings',
 };
 
 function hasModuleAccess(user: any, module: string): boolean {
@@ -187,6 +189,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       items: [
         { name: "Paramètres généraux", href: "/admin/settings", icon: Settings },
         ...(user?.role === 'SUPER_ADMIN' ? [{ name: "Intégration Fournisseur", href: "/admin/supplier-integration", icon: ArrowRightLeft }] : []),
+        { name: "Logs Webhooks", href: "/admin/webhook-logs", icon: Activity },
       ],
     },
   ];
