@@ -3447,3 +3447,6 @@
 - [x] Créer webhook réception fournisseur quand le solde restant est payé (balance_paid → mise à jour commande)
 - [x] Mettre à jour l'interface utilisateur pour afficher le statut "solde payé"
 - [x] Écrire les tests vitest
+
+## Amélioration JSON sortant API fournisseur (09/04/2026)
+- [x] Ajouter dans la section payment du JSON : totalCommandeTTC, montantAcomptePaye, montantResteAPayer (solde calculé)

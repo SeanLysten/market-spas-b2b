@@ -247,10 +247,27 @@ async function buildDepositNotification(orderId: number): Promise<SupplierDeposi
       },
     },
     payment: {
-      depositAmount: order.depositAmount || "0",
-      depositMethod: order.paymentMethod || null,
-      depositPaidAt: order.depositPaidAt ? order.depositPaidAt.toISOString() : now,
+      // Montant total de la commande TTC
+      totalCommandeTTC: order.totalTTC || "0",
+      // Montant total de la commande HT
+      totalCommandeHT: order.totalHT || "0",
+      // Montant de l'acompte payé
+      montantAcomptePaye: order.depositAmount || "0",
+      // Pourcentage de l'acompte
+      pourcentageAcompte: order.depositPercent || null,
+      // Méthode de paiement de l'acompte
+      methodeAcompte: order.paymentMethod || null,
+      // Date de paiement de l'acompte
+      dateAcomptePaye: order.depositPaidAt ? order.depositPaidAt.toISOString() : now,
+      // Montant restant à payer (solde = total TTC - acompte)
+      montantResteAPayer: (() => {
+        const totalTTC = parseFloat(String(order.totalTTC || "0"));
+        const deposit = parseFloat(String(order.depositAmount || "0"));
+        return (totalTTC - deposit).toFixed(2);
+      })(),
+      // Montant du solde enregistré en base
       balanceAmount: order.balanceAmount || "0",
+      // Le solde reste à payer par le client au fournisseur
       balanceDue: true,
     },
   };
