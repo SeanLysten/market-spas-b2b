@@ -79,7 +79,7 @@ export default function DashboardLayout({
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
+        <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full animate-fade-in-up">
           <div className="flex flex-col items-center gap-6">
             <h1 className="text-2xl text-display font-semibold tracking-tight text-center">
               Sign in to continue
@@ -94,7 +94,7 @@ export default function DashboardLayout({
               window.location.href = getLoginUrl();
             }}
             size="lg"
-            className="w-full shadow-lg hover:shadow-xl transition-shadow"
+            className="w-full shadow-lg hover:shadow-xl transition-all duration-200 btn-hover"
           >
             Sign in
           </Button>
@@ -129,7 +129,7 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
           open={mobileOpen}
           onOpenChange={setMobileOpen}
         />
-        <main className="flex-1 p-4">{children}</main>
+        <main className="flex-1 p-4 page-enter">{children}</main>
       </div>
     );
   }
@@ -138,7 +138,7 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-svh w-full bg-background">
       <DesktopSidebar collapsed={collapsed} onToggle={toggleSidebar} />
       <main
-        className="flex-1 p-4 transition-[margin-left] duration-200 ease-linear"
+        className="flex-1 p-4 page-enter transition-[margin-left] duration-200 ease-linear"
         style={{
           marginLeft: collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH,
         }}
@@ -164,32 +164,32 @@ const DesktopSidebar = React.memo(function DesktopSidebar({
 
   return (
     <aside
-      className="fixed inset-y-0 left-0 z-10 flex flex-col border-r bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-linear overflow-hidden"
+      className="fixed inset-y-0 left-0 z-10 flex flex-col border-r bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-linear overflow-hidden custom-scrollbar"
       style={{ width: sidebarWidth }}
     >
       {/* Header */}
       <div className="flex h-16 items-center shrink-0 px-3">
         <button
           onClick={onToggle}
-          className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
+          className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0 hover:scale-105 active:scale-95"
           aria-label="Toggle navigation"
         >
           {collapsed ? (
-            <PanelLeft className="h-4 w-4 text-muted-foreground" />
+            <PanelLeft className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
           ) : (
-            <PanelLeftClose className="h-4 w-4 text-muted-foreground" />
+            <PanelLeftClose className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
           )}
         </button>
         {!collapsed && (
-          <span className="ml-3 font-semibold tracking-tight truncate whitespace-nowrap">
+          <span className="ml-3 font-semibold tracking-tight truncate whitespace-nowrap animate-fade-in" style={{ animationDuration: '150ms' }}>
             Navigation
           </span>
         )}
       </div>
 
       {/* Menu */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-1">
-        <ul className="flex flex-col gap-1">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-1 custom-scrollbar">
+        <ul className="flex flex-col gap-0.5">
           {menuItems.map((item) => {
             const isActive = location === item.path;
             return (
@@ -212,7 +212,7 @@ const DesktopSidebar = React.memo(function DesktopSidebar({
         <div className="flex items-center gap-2 px-1">
           <ThemeToggle />
           {!collapsed && (
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
+            <span className="text-xs text-muted-foreground whitespace-nowrap animate-fade-in" style={{ animationDuration: '150ms' }}>
               Thème
             </span>
           )}
@@ -220,17 +220,17 @@ const DesktopSidebar = React.memo(function DesktopSidebar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className={`flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-accent/50 transition-colors w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              className={`group flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-accent/50 transition-all duration-200 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 collapsed ? "justify-center" : ""
               }`}
             >
-              <Avatar className="h-9 w-9 border shrink-0">
-                <AvatarFallback className="text-xs font-medium">
+              <Avatar className="h-9 w-9 border shrink-0 ring-2 ring-transparent group-hover:ring-primary/20 transition-all duration-200">
+                <AvatarFallback className="text-xs font-medium bg-primary/10 text-primary">
                   {user?.name?.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               {!collapsed && (
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 animate-fade-in" style={{ animationDuration: '150ms' }}>
                   <p className="text-sm font-medium truncate leading-none">
                     {user?.name || "-"}
                   </p>
@@ -241,17 +241,17 @@ const DesktopSidebar = React.memo(function DesktopSidebar({
               )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-48 animate-scale-in" style={{ animationDuration: '150ms' }}>
             <DropdownMenuItem
               onClick={() => setLocation("/profile")}
-              className="cursor-pointer"
+              className="cursor-pointer transition-colors duration-150"
             >
               <Settings className="mr-2 h-4 w-4" />
               <span>Paramètres</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={logout}
-              className="cursor-pointer text-destructive focus:text-destructive"
+              className="cursor-pointer text-destructive focus:text-destructive transition-colors duration-150"
             >
               <LogOut className="mr-2 h-4 w-4" />
               <span>Déconnexion</span>
@@ -280,7 +280,7 @@ function SidebarNavButton({
   const button = (
     <button
       onClick={onClick}
-      className={`flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-ring outline-none ${
+      className={`relative flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-ring outline-none group ${
         isActive
           ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
           : ""
@@ -291,8 +291,20 @@ function SidebarNavButton({
         padding: collapsed ? "0.5rem" : undefined,
       }}
     >
+      {/* Active indicator bar */}
+      {isActive && (
+        <span
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full bg-primary"
+          style={{
+            height: '60%',
+            animation: 'slideIndicator 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both',
+          }}
+        />
+      )}
       <Icon
-        className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : ""}`}
+        className={`h-4 w-4 shrink-0 transition-all duration-200 ${
+          isActive ? "text-primary" : "group-hover:text-primary/70"
+        }`}
       />
       {!collapsed && (
         <span className="truncate whitespace-nowrap">{label}</span>
@@ -329,13 +341,13 @@ const MobileHeader = React.memo(function MobileHeader({
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 rounded-lg"
+          className="h-9 w-9 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
           onClick={onOpenMenu}
         >
           <PanelLeft className="h-4 w-4" />
           <span className="sr-only">Toggle Sidebar</span>
         </Button>
-        <span className="tracking-tight text-foreground">
+        <span className="font-medium text-sm">
           {activeMenuItem?.label ?? "Menu"}
         </span>
       </div>
@@ -379,22 +391,28 @@ function MobileSidebar({
           </div>
 
           {/* Menu */}
-          <nav className="flex-1 overflow-y-auto px-2 py-2">
-            <ul className="flex flex-col gap-1">
-              {menuItems.map((item) => {
+          <nav className="flex-1 overflow-y-auto px-2 py-2 custom-scrollbar">
+            <ul className="flex flex-col gap-0.5">
+              {menuItems.map((item, index) => {
                 const isActive = location === item.path;
                 return (
-                  <li key={item.path}>
+                  <li key={item.path} className="animate-fade-in-up" style={{ animationDelay: `${index * 30}ms` }}>
                     <button
                       onClick={() => navigate(item.path)}
-                      className={`flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm h-10 transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                      className={`relative flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm h-10 transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
                         isActive
                           ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
                           : ""
                       }`}
                     >
+                      {isActive && (
+                        <span
+                          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full bg-primary"
+                          style={{ height: '60%' }}
+                        />
+                      )}
                       <item.icon
-                        className={`h-4 w-4 shrink-0 ${
+                        className={`h-4 w-4 shrink-0 transition-colors duration-200 ${
                           isActive ? "text-primary" : ""
                         }`}
                       />
@@ -414,9 +432,9 @@ function MobileSidebar({
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-accent/50 transition-colors w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  <Avatar className="h-9 w-9 border shrink-0">
-                    <AvatarFallback className="text-xs font-medium">
+                <button className="group flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-accent/50 transition-all duration-200 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <Avatar className="h-9 w-9 border shrink-0 ring-2 ring-transparent group-hover:ring-primary/20 transition-all duration-200">
+                    <AvatarFallback className="text-xs font-medium bg-primary/10 text-primary">
                       {user?.name?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -433,14 +451,14 @@ function MobileSidebar({
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem
                   onClick={() => navigate("/profile")}
-                  className="cursor-pointer"
+                  className="cursor-pointer transition-colors duration-150"
                 >
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Paramètres</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={logout}
-                  className="cursor-pointer text-destructive focus:text-destructive"
+                  className="cursor-pointer text-destructive focus:text-destructive transition-colors duration-150"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Déconnexion</span>

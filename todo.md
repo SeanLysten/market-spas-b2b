@@ -3472,3 +3472,11 @@
 
 ## Bug - Carte territoire 403 Access Blocked (09/04/2026)
 - [x] Corriger l'erreur 403 sur les tuiles OpenStreetMap → remplacé par CartoDB Voyager (pas de restriction Referer)
+
+## Refonte Design Frontend (09/04/2026)
+- [x] Phase A : Fondations animations (keyframes, classes utilitaires, prefers-reduced-motion)
+- [x] Phase B : Sidebar animations (indicateur actif animé, hover smooth, collapse fluide)
+- [x] Phase C : Cards micro-interactions (hover lift, stagger fadeInUp, KPI compteurs animés)
+- [x] Phase D : Headers et layout (taille titres, barres d'actions, profondeur)
+- [x] Phase E : Formulaires (focus ring animé, labels, tabs sliding indicator)
+- [x] Phase F : Touches finales (shimmer skeletons, dialogs scale, scrollbar, page transitions)

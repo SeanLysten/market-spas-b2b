@@ -193,7 +193,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
-          <Toaster />
+          <Toaster position="top-right" toastOptions={{ className: "!rounded-xl !shadow-lg !border" }} />
           <Router />
         </TooltipProvider>
       </ThemeProvider>

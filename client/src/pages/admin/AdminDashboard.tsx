@@ -47,6 +47,44 @@ import MiniCalendar from "@/components/MiniCalendar";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { adminDashboardTour } from "@/config/onboarding-tours";
+import { useEffect, useRef, useState } from "react";
+
+// Animated counter hook for KPI values
+function useAnimatedCounter(target: number, duration = 800) {
+  const [value, setValue] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    if (!target || hasAnimated.current) return;
+    hasAnimated.current = true;
+    const start = performance.now();
+    const animate = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(eased * target));
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [target, duration]);
+
+  return value;
+}
+
+// Stagger wrapper for card grids
+function StaggerGrid({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={className}>
+      {Array.isArray(children) ? children.map((child, i) => (
+        <div key={i} className="animate-fade-in-up" style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}>
+          {child}
+        </div>
+      )) : children}
+    </div>
+  );
+}
 
 // Helper to check admin module access
 function hasModule(
@@ -103,8 +141,8 @@ function MarketingDashboardSection() {
           <Target className="w-5 h-5 text-blue-600" />
           Leads & Prospection
         </h2>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
+        <StaggerGrid className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="card-hover group">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Leads</CardTitle>
             </CardHeader>
@@ -113,7 +151,7 @@ function MarketingDashboardSection() {
               <p className="text-xs text-muted-foreground mt-1">{leadStats?.new || 0} nouveaux non assignés</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="card-hover group">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">En cours</CardTitle>
             </CardHeader>
@@ -122,7 +160,7 @@ function MarketingDashboardSection() {
               <p className="text-xs text-muted-foreground mt-1">{leadStats?.contacted || 0} contactés</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="card-hover group">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Taux de conversion</CardTitle>
             </CardHeader>
@@ -131,7 +169,7 @@ function MarketingDashboardSection() {
               <p className="text-xs text-muted-foreground mt-1">{leadStats?.converted || 0} convertis</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="card-hover group">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Taux de contact</CardTitle>
             </CardHeader>
@@ -140,7 +178,7 @@ function MarketingDashboardSection() {
               <p className="text-xs text-muted-foreground mt-1">{leadStats?.lost || 0} perdus</p>
             </CardContent>
           </Card>
-        </div>
+        </StaggerGrid>
       </div>
 
       {/* GA4 Traffic */}
@@ -149,8 +187,8 @@ function MarketingDashboardSection() {
           <Globe className="w-5 h-5 text-orange-600" />
           Trafic du site (Google Analytics - 30 jours)
         </h2>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
+        <StaggerGrid className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="card-hover group">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Sessions</CardTitle>
               <Eye className="w-4 h-4 text-muted-foreground" />
@@ -200,7 +238,7 @@ function MarketingDashboardSection() {
               )}
             </CardContent>
           </Card>
-        </div>
+        </StaggerGrid>
       </div>
 
       {/* Meta Ads & Google Ads side by side */}
@@ -342,8 +380,8 @@ function StockDashboardSection() {
           <Package className="w-5 h-5 text-orange-600" />
           Vue d'ensemble du stock
         </h2>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
+        <StaggerGrid className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="card-hover group">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Produits actifs</CardTitle>
               <Package className="w-4 h-4 text-orange-600" />
@@ -354,10 +392,8 @@ function StockDashboardSection() {
             </CardContent>
           </Card>
 
-        </div>
+        </StaggerGrid>
       </div>
-
-
 
       {/* Stock Quick Actions */}
       <div>
@@ -433,8 +469,8 @@ function SavDashboardSection() {
           <HeadphonesIcon className="w-5 h-5 text-red-600" />
           Service Après-Vente (8 dernières semaines)
         </h2>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
+        <StaggerGrid className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="card-hover group">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total tickets</CardTitle>
               <HeadphonesIcon className="w-4 h-4 text-red-600" />
@@ -474,7 +510,7 @@ function SavDashboardSection() {
               <p className="text-xs text-muted-foreground mt-1">Traités avec succès</p>
             </CardContent>
           </Card>
-        </div>
+        </StaggerGrid>
       </div>
 
       {/* Warranty breakdown */}
@@ -630,8 +666,8 @@ function OrdersDashboardSection() {
           <ShoppingBag className="w-5 h-5 text-emerald-600" />
           Commandes & Chiffre d'affaires
         </h2>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
+        <StaggerGrid className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="card-hover group">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Commandes totales</CardTitle>
               <ShoppingBag className="w-4 h-4 text-emerald-600" />
@@ -671,12 +707,12 @@ function OrdersDashboardSection() {
               <p className="text-xs text-muted-foreground mt-1">Partenaires approuvés</p>
             </CardContent>
           </Card>
-        </div>
+        </StaggerGrid>
       </div>
 
       {/* Charts */}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-        <Card>
+        <Card className="animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
           <CardHeader>
             <CardTitle>Évolution des ventes</CardTitle>
             <CardDescription>CA et commandes sur 6 mois</CardDescription>
@@ -695,7 +731,7 @@ function OrdersDashboardSection() {
         </Card>
 
         {/* Top Partners */}
-        <Card>
+        <Card className="animate-fade-in-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
           <CardHeader>
             <CardTitle>Top partenaires</CardTitle>
             <CardDescription>Par volume de commandes</CardDescription>
@@ -885,14 +921,14 @@ function FullAdminDashboardSection() {
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4" data-tour="admin-kpi-cards">
+        <StaggerGrid className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4" data-tour="admin-kpi-cards">
           {statsCards.map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.title} className="card-hover">
+              <Card key={stat.title} className="card-hover group">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-                  <div className={`p-2 rounded-lg ${stat.bgColor}`}><Icon className={`w-4 h-4 ${stat.color}`} /></div>
+                  <div className={`p-2 rounded-lg ${stat.bgColor} transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}><Icon className={`w-4 h-4 ${stat.color}`} /></div>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl text-display font-bold">{stat.value}</div>
@@ -901,7 +937,7 @@ function FullAdminDashboardSection() {
               </Card>
             );
           })}
-        </div>
+        </StaggerGrid>
       )}
 
       {/* Orders + Calendar */}
@@ -1082,7 +1118,7 @@ export default function AdminDashboard() {
       />
       <div className="space-y-8">
         {/* Header */}
-        <div className="space-y-4" data-tour="admin-dashboard-header">
+        <div className="space-y-4 animate-fade-in-up" data-tour="admin-dashboard-header">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Dashboard Administration</h1>
             <p className="text-muted-foreground mt-1 text-sm md:text-base">
@@ -1094,17 +1130,17 @@ export default function AdminDashboard() {
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <Link href="/dashboard" className="flex-1 sm:flex-none">
-              <Button variant="outline" className="gap-2 w-full sm:w-auto">
+              <Button variant="outline" className="gap-2 w-full sm:w-auto btn-hover">
                 <Activity className="w-4 h-4" />
                 Dashboard Utilisateur
               </Button>
             </Link>
             {canReports && (
               <Link href="/admin/reports" className="flex-1 sm:flex-none">
-                <Button variant="outline" className="gap-2 w-full sm:w-auto">
-                  <BarChart3 className="w-4 h-4" />
-                  Rapports
-                </Button>
+              <Button variant="outline" className="gap-2 w-full sm:w-auto btn-hover">
+                <BarChart3 className="w-4 h-4" />
+                Rapports
+              </Button>
               </Link>
             )}
           </div>

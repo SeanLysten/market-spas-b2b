@@ -203,6 +203,64 @@ h4 {
   }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(56, 152, 130, 0.2); }
+  50% { box-shadow: 0 0 0 6px rgba(56, 152, 130, 0); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIndicator {
+  from { opacity: 0; transform: scaleY(0); }
+  to { opacity: 1; transform: scaleY(1); }
+}
+
 @keyframes blobFloat {
   0%, 100% {
     transform: translate(0, 0) scale(1);
@@ -215,12 +273,270 @@ h4 {
   }
 }
 
+/* ═══ ANIMATION UTILITY CLASSES ═══ */
 .animate-reveal-up {
   animation: revealUp 0.5s var(--ease-out) both;
 }
 
 .animate-blob-float {
   animation: blobFloat 20s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp var(--dur-enter) var(--ease-out) both;
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--dur-slow) var(--ease-out) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--dur-slow) var(--ease-out) both;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight var(--dur-slow) var(--ease-out) both;
+}
+
+/* Stagger delays for cards/lists */
+.stagger-1 { animation-delay: 0ms; }
+.stagger-2 { animation-delay: 50ms; }
+.stagger-3 { animation-delay: 100ms; }
+.stagger-4 { animation-delay: 150ms; }
+.stagger-5 { animation-delay: 200ms; }
+.stagger-6 { animation-delay: 250ms; }
+.stagger-7 { animation-delay: 300ms; }
+.stagger-8 { animation-delay: 350ms; }
+.stagger-9 { animation-delay: 400ms; }
+.stagger-10 { animation-delay: 450ms; }
+.stagger-11 { animation-delay: 500ms; }
+.stagger-12 { animation-delay: 550ms; }
+
+/* ═══ CARD HOVER SYSTEM ═══ */
+.card-hover {
+  transition: transform var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out);
+  will-change: transform;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sh-lg);
+}
+
+.card-hover:active {
+  transform: translateY(0);
+  transition-duration: var(--dur-fast);
+}
+
+/* ═══ BUTTON HOVER SYSTEM ═══ */
+.btn-hover {
+  transition: all var(--dur-base) var(--ease-out);
+  will-change: transform;
+}
+
+.btn-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--sh-md);
+}
+
+.btn-hover:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: var(--dur-fast);
+}
+
+/* ═══ SHIMMER SKELETON ═══ */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--n-100) 25%,
+    var(--n-75) 50%,
+    var(--n-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: var(--r-sm);
+}
+
+[data-theme="dark"] .skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--n-100) 25%,
+    var(--n-150) 50%,
+    var(--n-100) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* ═══ FOCUS RING SYSTEM ═══ */
+.focus-ring {
+  transition: border-color var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out);
+}
+
+.focus-ring:focus-within {
+  border-color: var(--p-400);
+  box-shadow: 0 0 0 3px rgba(56, 152, 130, 0.12);
+}
+
+/* ═══ FORM GROUP — label color change on focus ═══ */
+.form-group:focus-within > [data-slot="label"],
+.form-group:focus-within > label {
+  color: var(--p-500);
+}
+
+[data-theme="dark"] .form-group:focus-within > [data-slot="label"],
+[data-theme="dark"] .form-group:focus-within > label {
+  color: var(--p-400);
+}
+
+/* ═══ SIDEBAR ACTIVE INDICATOR ═══ */
+.sidebar-indicator {
+  position: relative;
+}
+
+.sidebar-indicator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 var(--r-full) var(--r-full) 0;
+  background: var(--p-500);
+  transition: transform var(--dur-slow) var(--ease-spring);
+}
+
+.sidebar-indicator.active::before {
+  transform: translateY(-50%) scaleY(1);
+}
+
+/* ═══ CUSTOM SCROLLBAR ═══ */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--n-200);
+  border-radius: var(--r-full);
+  transition: background var(--dur-base);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--n-300);
+}
+
+[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--n-300);
+}
+
+[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--n-400);
+}
+
+/* ═══ REDUCED MOTION ═══ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .card-hover:hover,
+  .btn-hover:hover {
+    transform: none;
+  }
+
+  .page-enter {
+    animation: none;
+  }
+
+  .skeleton-shimmer,
+  .skeleton-text,
+  .skeleton-title,
+  .skeleton-avatar,
+  .skeleton-card {
+    animation: none;
+    background: var(--n-100);
+  }
+
+  .animate-fade-in-up,
+  .animate-fade-in,
+  .animate-scale-in,
+  .animate-slide-in-right,
+  .animate-reveal-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ═══ PAGE HEADER SYSTEM ═══ */
+.page-header {
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--n-100);
+  animation: fadeInUp var(--dur-enter) var(--ease-out) both;
+}
+
+.page-header h1 {
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.page-header .page-subtitle {
+  font-size: 0.875rem;
+  color: var(--n-500);
+  margin-top: 0.25rem;
+}
+
+.page-header .page-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-theme="dark"] .page-header {
+  border-bottom-color: var(--n-150);
+}
+
+/* ═══ SECTION DIVIDER ═══ */
+.section-divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--n-150), transparent);
+  margin: 1.5rem 0;
+}
+
+[data-theme="dark"] .section-divider {
+  background: linear-gradient(to right, transparent, var(--n-200), transparent);
+}
+
+/* ═══ ELEVATED CARD (subtle depth) ═══ */
+.card-elevated {
+  box-shadow: var(--sh-sm);
+  border-color: transparent;
+  transition: box-shadow var(--dur-base) var(--ease-out);
+}
+
+.card-elevated:hover {
+  box-shadow: var(--sh-md);
+}
+
+/* ═══ STAT NUMBER ANIMATION ═══ */
+.stat-number {
+  animation: countUp var(--dur-enter) var(--ease-out) both;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ═══ HERO BLOBS ═══ */
@@ -946,4 +1262,106 @@ html.theme-transitioning * {
   background: #0f0e0d;
   border-color: var(--n-100);
   color: #c8c4bf;
+}
+
+
+/* ═══════════════════════════════════════════════
+   GLOBAL SCROLLBAR — Phase F
+   ═══════════════════════════════════════════════ */
+
+/* Apply thin scrollbar globally */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--n-200) transparent;
+}
+
+[data-theme="dark"] * {
+  scrollbar-color: var(--n-300) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--n-200);
+  border-radius: var(--r-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--n-300);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--n-300);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--n-400);
+}
+
+/* ═══════════════════════════════════════════════
+   PAGE TRANSITION — Phase F
+   ═══════════════════════════════════════════════ */
+
+.page-enter {
+  animation: fadeInUp var(--dur-enter) var(--ease-out) both;
+}
+
+/* ═══════════════════════════════════════════════
+   SKELETON SHIMMER VARIANTS — Phase F
+   ═══════════════════════════════════════════════ */
+
+.skeleton-text {
+  height: 0.875rem;
+  border-radius: var(--r-sm);
+}
+
+.skeleton-title {
+  height: 1.25rem;
+  width: 60%;
+  border-radius: var(--r-sm);
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-full);
+}
+
+.skeleton-card {
+  height: 200px;
+  border-radius: var(--r-lg);
+}
+
+.skeleton-text,
+.skeleton-title,
+.skeleton-avatar,
+.skeleton-card {
+  background: linear-gradient(
+    90deg,
+    var(--n-100) 25%,
+    var(--n-75) 50%,
+    var(--n-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+[data-theme="dark"] .skeleton-text,
+[data-theme="dark"] .skeleton-title,
+[data-theme="dark"] .skeleton-avatar,
+[data-theme="dark"] .skeleton-card {
+  background: linear-gradient(
+    90deg,
+    var(--n-100) 25%,
+    var(--n-150) 50%,
+    var(--n-100) 75%
+  );
+  background-size: 200% 100%;
 }

@@ -242,23 +242,17 @@
     @apply bg-gray-100 text-gray-600 border border-gray-200;
   }
   
-  /* Loading skeleton */
-  @keyframes shimmer {
-    0% { background-position: -1000px 0; }
-    100% { background-position: 1000px 0; }
-  }
-  
+  /* Loading skeleton — uses shimmer from design-system.css */
   .skeleton {
     @apply bg-muted rounded-md;
-    animation: shimmer 2s infinite linear;
     background: linear-gradient(
-      to right,
-      oklch(0.95 0.01 264) 0%,
-      oklch(0.97 0.005 264) 20%,
-      oklch(0.95 0.01 264) 40%,
-      oklch(0.95 0.01 264) 100%
+      90deg,
+      var(--n-100, oklch(0.95 0.01 264)) 25%,
+      var(--n-75, oklch(0.97 0.005 264)) 50%,
+      var(--n-100, oklch(0.95 0.01 264)) 75%
     );
-    background-size: 1000px 100%;
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
   }
 }
 /* ═══ UTILITY: Hide scrollbar ═══ */

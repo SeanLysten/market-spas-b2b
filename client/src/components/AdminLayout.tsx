@@ -46,7 +46,7 @@ interface NavItem {
   name: string;
   href: string;
   icon: any;
-  module?: string; // admin permission module key
+  module?: string;
 }
 
 interface NavGroup {
@@ -61,7 +61,6 @@ function isGroup(entry: NavEntry): entry is NavGroup {
   return 'items' in entry;
 }
 
-// Map admin routes to permission modules
 const ROUTE_MODULE_MAP: Record<string, string> = {
   '/admin': 'dashboard',
   '/admin/products': 'products',
@@ -85,16 +84,13 @@ const ROUTE_MODULE_MAP: Record<string, string> = {
 };
 
 function hasModuleAccess(user: any, module: string): boolean {
-  // Super admin has access to everything
   if (user?.role === 'SUPER_ADMIN') return true;
-  // Admin without permissions set = full access (backward compat)
   if (user?.role === 'ADMIN' && !user?.adminPermissions) return true;
-  // Check parsed permissions
   try {
     const perms = typeof user?.adminPermissions === 'string' 
       ? JSON.parse(user.adminPermissions) 
       : user?.adminPermissions;
-    if (!perms?.modules) return true; // no modules defined = full access
+    if (!perms?.modules) return true;
     return perms.modules[module]?.view === true;
   } catch {
     return true;
@@ -124,7 +120,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>(getInitialExpanded);
   const logoutMutation = trpc.auth.logout.useMutation();
 
-  // Build navigation filtered by user permissions
   const allNavigation: NavEntry[] = [
     {
       name: "Dashboard",
@@ -194,7 +189,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     },
   ];
 
-  // Filter navigation based on admin permissions
   const navigation = allNavigation.reduce<NavEntry[]>((acc, entry) => {
     if (isGroup(entry)) {
       const filteredItems = entry.items.filter((item) => {
@@ -217,13 +211,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     try {
       await logoutMutation.mutateAsync();
     } catch {
-      // Ignore errors (already logged out)
+      // Ignore errors
     } finally {
       window.location.href = "/login";
     }
   };
 
-  // Auto-expand the group that contains the active page
   useEffect(() => {
     const newExpanded = { ...expanded };
     let changed = false;
@@ -250,7 +243,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     saveExpanded(newExpanded);
   };
 
-  // Attendre que l'authentification soit chargée avant de vérifier les permissions
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -262,17 +254,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  // Vérifier que l'utilisateur est admin (seulement après le chargement)
   if (!user || (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN")) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-4 animate-fade-in-up">
           <h1 className="text-2xl text-display font-bold">Accès refusé</h1>
           <p className="text-muted-foreground">
             Vous n'avez pas les permissions nécessaires pour accéder à cette page.
           </p>
           <Link href="/dashboard">
-            <Button>Retour au dashboard</Button>
+            <Button className="btn-hover">Retour au dashboard</Button>
           </Link>
         </div>
       </div>
@@ -288,16 +279,26 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     return (
       <Link key={item.name} href={item.href}>
         <div
-          className={`flex items-center gap-3 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+          className={`relative flex items-center gap-3 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer group ${
             indent ? 'ml-2 px-3 py-1.5' : 'px-3 py-2'
           } ${
             isActive
-              ? "bg-primary text-primary-foreground"
+              ? "bg-primary text-primary-foreground shadow-sm"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
           }`}
           onClick={() => setSidebarOpen(false)}
         >
-          <Icon className={`${indent ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0`} />
+          {/* Active indicator bar */}
+          {isActive && !indent && (
+            <span
+              className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full bg-primary-foreground/60"
+              style={{
+                height: '60%',
+                animation: 'slideIndicator 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both',
+              }}
+            />
+          )}
+          <Icon className={`${indent ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0 transition-transform duration-200 ${!isActive ? 'group-hover:scale-110' : ''}`} />
           <span className="truncate">{item.name}</span>
         </div>
       </Link>
@@ -315,24 +316,26 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div key={group.label} className="space-y-0.5">
         <button
           onClick={() => toggleGroup(group.label)}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer group ${
             hasActive && !isOpen
               ? "bg-primary/10 text-primary"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
           }`}
         >
-          <Icon className="w-5 h-5 flex-shrink-0" />
+          <Icon className="w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
           <span className="truncate flex-1 text-left">{group.label}</span>
           <ChevronDown
-            className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${
+            className={`w-4 h-4 flex-shrink-0 transition-transform duration-300 ease-out ${
               isOpen ? 'rotate-180' : ''
             }`}
           />
         </button>
         <div
-          className={`overflow-hidden transition-all duration-200 ease-in-out ${
-            isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-          }`}
+          className="overflow-hidden transition-all duration-300 ease-out"
+          style={{
+            maxHeight: isOpen ? `${group.items.length * 44}px` : '0px',
+            opacity: isOpen ? 1 : 0,
+          }}
         >
           <div className="ml-4 pl-3 border-l-2 border-border/40 space-y-0.5 py-0.5">
             {group.items.map((item) => renderNavItem(item, true))}
@@ -347,14 +350,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden animate-fade-in"
+          style={{ animationDuration: '150ms' }}
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-card border-r transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-card border-r transform transition-transform duration-300 ease-out lg:translate-x-0 custom-scrollbar ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -374,7 +378,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="lg:hidden"
+                className="lg:hidden transition-all duration-200 hover:scale-105 active:scale-95"
                 onClick={() => setSidebarOpen(false)}
               >
                 <X className="w-4 h-4" />
@@ -383,7 +387,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+          <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto custom-scrollbar">
             {navigation.map((entry) => {
               if (isGroup(entry)) {
                 return renderNavGroup(entry);
@@ -394,9 +398,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
           {/* User section */}
           <div className="p-4 border-t">
-            <div className="flex items-center gap-3 mb-3">
-              <Avatar>
-                <AvatarFallback className="bg-primary text-primary-foreground">
+            <div className="flex items-center gap-3 mb-3 group">
+              <Avatar className="ring-2 ring-transparent group-hover:ring-primary/20 transition-all duration-200">
+                <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
                   {user.name?.charAt(0) || user.email?.charAt(0) || "A"}
                 </AvatarFallback>
               </Avatar>
@@ -414,7 +418,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 gap-2"
+                className="flex-1 gap-2 transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
                 onClick={handleLogout}
               >
                 <LogOut className="w-4 h-4" />
@@ -433,6 +437,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <Button
               variant="ghost"
               size="sm"
+              className="transition-all duration-200 hover:scale-105 active:scale-95"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu className="w-5 h-5" />
@@ -445,7 +450,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </header>
 
         {/* Page content */}
-        <main className="p-6 lg:p-8">{children}</main>
+        <main className="p-6 lg:p-8 page-enter">{children}</main>
       </div>
     </div>
   );
