@@ -438,7 +438,7 @@ export default function OrderSummary() {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <MapPin className="w-5 h-5" />
-                  Livraison
+                  Adresse de livraison
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -475,6 +475,39 @@ export default function OrderSummary() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Billing Address */}
+            {(order as any).partner && (() => {
+              const p = (order as any).partner;
+              const isSame = p?.billingAddressSame;
+              const street = isSame ? p?.addressStreet : p?.billingStreet;
+              const street2 = isSame ? p?.addressStreet2 : p?.billingStreet2;
+              const city = isSame ? p?.addressCity : p?.billingCity;
+              const postal = isSame ? p?.addressPostalCode : p?.billingPostalCode;
+              const country = isSame ? p?.addressCountry : p?.billingCountry;
+              return (street || city) ? (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <FileText className="w-5 h-5" />
+                      Adresse de facturation
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-1">
+                    <p className="font-medium text-sm">{p.companyName}</p>
+                    <div className="text-sm text-muted-foreground space-y-0.5">
+                      {street && <p>{street}</p>}
+                      {street2 && <p>{street2}</p>}
+                      {(postal || city) && <p>{postal} {city}</p>}
+                      {country && <p>{country}</p>}
+                      {p.vatNumber && (
+                        <p className="pt-1">TVA: {p.vatNumber}</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : null;
+            })()}
           </div>
 
           {/* Notes */}

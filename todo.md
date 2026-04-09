@@ -3450,3 +3450,10 @@
 
 ## Amélioration JSON sortant API fournisseur (09/04/2026)
 - [x] Ajouter dans la section payment du JSON : totalCommandeTTC, montantAcomptePaye, montantResteAPayer (solde calculé)
+
+## Bug - Adresses livraison/facturation manquantes dans commandes (09/04/2026)
+- [x] Investiguer pourquoi l'adresse de livraison n'apparaît pas (commande 202604-0008) → données présentes en DB, problème d'affichage uniquement
+- [x] Afficher l'adresse de livraison dans le détail commande admin (AdminOrders)
+- [x] Afficher l'adresse de facturation dans le détail commande admin (AdminOrders)
+- [x] Afficher les adresses dans le détail commande utilisateur (OrderSummary)
+- [x] Vérifier que le checkout sauvegarde bien les deux adresses en DB → OK, createOrder sauvegarde bien tous les champs delivery

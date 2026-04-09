@@ -473,6 +473,20 @@ export async function getAllOrders(filters?: {
         primaryContactEmail: partners.primaryContactEmail,
         primaryContactPhone: partners.primaryContactPhone,
         level: partners.level,
+        vatNumber: partners.vatNumber,
+        // Billing address
+        billingAddressSame: partners.billingAddressSame,
+        billingStreet: partners.billingStreet,
+        billingStreet2: partners.billingStreet2,
+        billingCity: partners.billingCity,
+        billingPostalCode: partners.billingPostalCode,
+        billingCountry: partners.billingCountry,
+        // Main address (fallback if billing same)
+        addressStreet: partners.addressStreet,
+        addressStreet2: partners.addressStreet2,
+        addressCity: partners.addressCity,
+        addressPostalCode: partners.addressPostalCode,
+        addressCountry: partners.addressCountry,
       })
       .from(partners)
       .where(inArray(partners.id, partnerIds as number[]));
@@ -2126,9 +2140,36 @@ export async function getOrderWithItems(orderId: number) {
       || null,
   }));
 
+  // Enrich with partner billing data
+  let partnerData = null;
+  if (order[0].partnerId) {
+    const partnerRows = await db
+      .select({
+        id: partners.id,
+        companyName: partners.companyName,
+        vatNumber: partners.vatNumber,
+        billingAddressSame: partners.billingAddressSame,
+        billingStreet: partners.billingStreet,
+        billingStreet2: partners.billingStreet2,
+        billingCity: partners.billingCity,
+        billingPostalCode: partners.billingPostalCode,
+        billingCountry: partners.billingCountry,
+        addressStreet: partners.addressStreet,
+        addressStreet2: partners.addressStreet2,
+        addressCity: partners.addressCity,
+        addressPostalCode: partners.addressPostalCode,
+        addressCountry: partners.addressCountry,
+      })
+      .from(partners)
+      .where(eq(partners.id, order[0].partnerId))
+      .limit(1);
+    partnerData = partnerRows.length > 0 ? partnerRows[0] : null;
+  }
+
   return {
     ...order[0],
     items: enrichedItems,
+    partner: partnerData,
   };
 }
 
