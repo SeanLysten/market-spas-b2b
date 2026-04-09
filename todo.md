@@ -3522,3 +3522,8 @@
 
 ## Bug Fix — stockQuantity undefined
 - [x] Corriger l'erreur stockQuantity undefined sur /admin/products (mutation produit) — ajouté stockQuantity: editingProduct?.stockQuantity ?? 0
+
+## Bug Fix — Variantes produit inaccessibles
+- [x] Rendre l'ajout de variantes accessible depuis la page produit (bouton "Ajouter" dans ExpandedVariantsRow + formulaire inline)
+- [x] Permettre l'ajout de variantes depuis le formulaire de modification produit (+ suppression de variantes)
+- [x] Auto-créer les 3 couleurs de base (Sterling Silver, Odyssée, Midnight Opal) pour les catégories SPAS et SWIM_SPAS uniquement

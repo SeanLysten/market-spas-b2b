@@ -1947,7 +1947,31 @@ export const appRouter = router({
           })
         )
         .mutation(async ({ input }) => {
-          return await db.createProduct(input);
+          const product = await db.createProduct(input);
+          
+          // Auto-create 3 default color variants for SPAS and SWIM_SPAS
+          if (input.category === 'SPAS' || input.category === 'SWIM_SPAS') {
+            const defaultColors = [
+              { name: 'Sterling Silver', color: 'Sterling Silver' },
+              { name: 'Odyssée', color: 'Odyssée' },
+              { name: 'Midnight Opal', color: 'Midnight Opal' },
+            ];
+            for (const colorDef of defaultColors) {
+              const variantSku = `VAR-${colorDef.name.toUpperCase().replace(/[^A-Z0-9]/g, '-').replace(/-+/g, '-')}-${Date.now().toString(36).slice(-4)}`;
+              try {
+                await db.createProductVariant({
+                  productId: product.id,
+                  sku: variantSku,
+                  name: colorDef.name,
+                  options: [{ optionName: 'Couleur', optionValue: colorDef.color }],
+                });
+              } catch (e) {
+                console.error(`[Products] Failed to create default variant ${colorDef.name}:`, e);
+              }
+            }
+          }
+          
+          return product;
         }),
 
       update: adminProcedure

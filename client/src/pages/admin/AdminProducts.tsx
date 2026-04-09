@@ -628,6 +628,7 @@ function SortableProductRow({ product, expandedProductId, onToggleExpand, onEdit
 const ADMIN_COLOR_MAP: Record<string, string> = {
   "sterling marble": "#E8E4E0",
   "odyssey": "#B0B0B0",
+  "odyssée": "#B0B0B0",
   "midnight opal": "#1a1a2e",
   "blanc": "#ffffff",
   "white": "#ffffff",
@@ -647,10 +648,57 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
   const { data: variantsData, refetch } = trpc.admin.products.getVariants.useQuery({ productId });
   const variants = useSafeQuery(variantsData);
   const updateMutation = trpc.admin.products.updateVariant.useMutation();
+  const createMutation = trpc.admin.products.createVariant.useMutation();
+  const deleteMutation = trpc.admin.products.deleteVariant.useMutation();
   const [uploadingVariantId, setUploadingVariantId] = useState<number | null>(null);
   const [editingCodeVariantId, setEditingCodeVariantId] = useState<number | null>(null);
   const [editCodeField, setEditCodeField] = useState<'supplierProductCode' | 'ean13' | null>(null);
   const [editCodeValue, setEditCodeValue] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newVariantName, setNewVariantName] = useState("");
+  const [newVariantColor, setNewVariantColor] = useState("");
+  const [newVariantSupplierCode, setNewVariantSupplierCode] = useState("");
+  const [newVariantEan13, setNewVariantEan13] = useState("");
+
+  const handleAddVariant = async () => {
+    if (!newVariantName.trim()) {
+      toast.error("Le nom de la variante est requis");
+      return;
+    }
+    try {
+      const autoSku = `VAR-${newVariantName.toUpperCase().replace(/[^A-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}-${Date.now().toString(36).slice(-4)}`;
+      const options = [];
+      if (newVariantColor.trim()) options.push({ optionName: 'Couleur', optionValue: newVariantColor.trim() });
+      await createMutation.mutateAsync({
+        productId,
+        sku: autoSku,
+        name: newVariantName.trim(),
+        supplierProductCode: newVariantSupplierCode || undefined,
+        ean13: newVariantEan13 || undefined,
+        options,
+      });
+      toast.success("Variante créée");
+      setShowAddForm(false);
+      setNewVariantName("");
+      setNewVariantColor("");
+      setNewVariantSupplierCode("");
+      setNewVariantEan13("");
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de la création");
+    }
+  };
+
+  const handleDeleteVariant = async (variantId: number, variantName: string) => {
+    if (!confirm(`Supprimer la variante "${variantName}" ?`)) return;
+    try {
+      await deleteMutation.mutateAsync({ id: variantId });
+      toast.success("Variante supprimée");
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de la suppression");
+    }
+  };
 
   const handleStartEditCode = (variant: any, field: 'supplierProductCode' | 'ean13') => {
     setEditingCodeVariantId(variant.id);
@@ -723,8 +771,29 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
 
   if (!variants || variants.length === 0) {
     return (
-      <div className="px-6 py-4 text-sm text-muted-foreground italic">
-        Aucune variante pour ce produit.
+      <div className="px-6 py-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm text-muted-foreground italic">Aucune variante pour ce produit.</p>
+          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setShowAddForm(true); }}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            Ajouter une variante
+          </Button>
+        </div>
+        {showAddForm && (
+          <div className="border rounded-lg p-3 bg-muted/20 space-y-3" onClick={(e) => e.stopPropagation()}>
+            <p className="text-xs font-semibold text-muted-foreground uppercase">Nouvelle variante</p>
+            <div className="grid grid-cols-2 gap-2">
+              <Input placeholder="Nom *" value={newVariantName} onChange={(e) => setNewVariantName(e.target.value)} className="h-8 text-sm" />
+              <Input placeholder="Couleur" value={newVariantColor} onChange={(e) => setNewVariantColor(e.target.value)} className="h-8 text-sm" />
+              <Input placeholder="Code produit fournisseur" value={newVariantSupplierCode} onChange={(e) => setNewVariantSupplierCode(e.target.value)} className="h-8 text-sm font-mono" />
+              <Input placeholder="EAN13" value={newVariantEan13} onChange={(e) => setNewVariantEan13(e.target.value)} className="h-8 text-sm font-mono" />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button size="sm" variant="outline" onClick={() => { setShowAddForm(false); setNewVariantName(''); setNewVariantColor(''); }}>Annuler</Button>
+              <Button size="sm" onClick={handleAddVariant} disabled={createMutation.isPending}>Créer</Button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -732,8 +801,27 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
   return (
     <div className="px-6 py-3">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Variantes</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Variantes ({variants.length})</p>
+        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={(e) => { e.stopPropagation(); setShowAddForm(!showAddForm); }}>
+          <Plus className="mr-1 h-3 w-3" />
+          Ajouter
+        </Button>
       </div>
+      {showAddForm && (
+        <div className="border rounded-lg p-3 bg-muted/20 space-y-3 mb-3" onClick={(e) => e.stopPropagation()}>
+          <p className="text-xs font-semibold text-muted-foreground uppercase">Nouvelle variante</p>
+          <div className="grid grid-cols-2 gap-2">
+            <Input placeholder="Nom *" value={newVariantName} onChange={(e) => setNewVariantName(e.target.value)} className="h-8 text-sm" />
+            <Input placeholder="Couleur" value={newVariantColor} onChange={(e) => setNewVariantColor(e.target.value)} className="h-8 text-sm" />
+            <Input placeholder="Code produit fournisseur" value={newVariantSupplierCode} onChange={(e) => setNewVariantSupplierCode(e.target.value)} className="h-8 text-sm font-mono" />
+            <Input placeholder="EAN13" value={newVariantEan13} onChange={(e) => setNewVariantEan13(e.target.value)} className="h-8 text-sm font-mono" />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button size="sm" variant="outline" onClick={() => { setShowAddForm(false); setNewVariantName(''); setNewVariantColor(''); }}>Annuler</Button>
+            <Button size="sm" onClick={handleAddVariant} disabled={createMutation.isPending}>Créer</Button>
+          </div>
+        </div>
+      )}
       <div className="rounded-lg border border-border/50 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
@@ -745,6 +833,7 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
               <th className="text-left px-4 py-2 font-medium text-muted-foreground">EAN13</th>
               <th className="text-center px-4 py-2 font-medium text-muted-foreground">Stock</th>
               <th className="text-center px-4 py-2 font-medium text-muted-foreground">Transit</th>
+              <th className="text-center px-4 py-2 font-medium text-muted-foreground w-10"></th>
             </tr>
           </thead>
           <tbody>
@@ -897,6 +986,17 @@ function ExpandedVariantsRow({ productId }: { productId: number }) {
                   }`}>
                     {variant.inTransitQuantity || 0}
                   </span>
+                </td>
+                <td className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => handleDeleteVariant(variant.id, variant.color || variant.name)}
+                    title="Supprimer cette variante"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </td>
               </tr>
             ))}
