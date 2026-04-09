@@ -54,13 +54,17 @@ export default function Profile() {
     companyName: "",
     tradeName: "",
     vatNumber: "",
+    website: "",
     addressStreet: "",
+    addressStreet2: "",
     addressCity: "",
     addressPostalCode: "",
     addressCountry: "BE",
     primaryContactName: "",
     primaryContactEmail: "",
     primaryContactPhone: "",
+    accountingEmail: "",
+    orderEmail: "",
   });
 
   // Get partner info if user is linked to a partner
@@ -98,13 +102,17 @@ export default function Profile() {
         companyName: partner.companyName || "",
         tradeName: partner.tradeName || "",
         vatNumber: partner.vatNumber || "",
+        website: (partner as any).website || "",
         addressStreet: partner.addressStreet || "",
+        addressStreet2: (partner as any).addressStreet2 || "",
         addressCity: partner.addressCity || "",
         addressPostalCode: partner.addressPostalCode || "",
         addressCountry: partner.addressCountry || "BE",
         primaryContactName: partner.primaryContactName || "",
         primaryContactEmail: partner.primaryContactEmail || "",
         primaryContactPhone: partner.primaryContactPhone || "",
+        accountingEmail: (partner as any).accountingEmail || "",
+        orderEmail: (partner as any).orderEmail || "",
       });
     }
   }, [partner]);
@@ -305,19 +313,22 @@ export default function Profile() {
                             variant="outline"
                             onClick={() => {
                               setIsEditingCompany(false);
-                              // Reset form
                               if (partner) {
                                 setCompanyData({
                                   companyName: partner.companyName || "",
                                   tradeName: partner.tradeName || "",
                                   vatNumber: partner.vatNumber || "",
+                                  website: (partner as any).website || "",
                                   addressStreet: partner.addressStreet || "",
+                                  addressStreet2: (partner as any).addressStreet2 || "",
                                   addressCity: partner.addressCity || "",
                                   addressPostalCode: partner.addressPostalCode || "",
                                   addressCountry: partner.addressCountry || "BE",
                                   primaryContactName: partner.primaryContactName || "",
                                   primaryContactEmail: partner.primaryContactEmail || "",
                                   primaryContactPhone: partner.primaryContactPhone || "",
+                                  accountingEmail: (partner as any).accountingEmail || "",
+                                  orderEmail: (partner as any).orderEmail || "",
                                 });
                               }
                             }}
@@ -339,24 +350,23 @@ export default function Profile() {
                         </Button>
                       )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-4 md:p-6">
+                    {/* Entreprise */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:p-6">
                       <div className="space-y-2">
                         <Label>Nom de l'entreprise</Label>
-                        <Input
-                          value={companyData.companyName}
-                          onChange={(e) => setCompanyData({ ...companyData, companyName: e.target.value })}
-                          disabled={!isEditingCompany}
-                          className={!isEditingCompany ? "bg-muted" : ""}
-                        />
+                        <Input value={companyData.companyName} onChange={(e) => setCompanyData({ ...companyData, companyName: e.target.value })} disabled={!isEditingCompany} className={!isEditingCompany ? "bg-muted" : ""} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Nom commercial</Label>
+                        <Input value={companyData.tradeName} onChange={(e) => setCompanyData({ ...companyData, tradeName: e.target.value })} disabled={!isEditingCompany} className={!isEditingCompany ? "bg-muted" : ""} />
                       </div>
                       <div className="space-y-2">
                         <Label>Numéro de TVA</Label>
-                        <Input
-                          value={companyData.vatNumber}
-                          onChange={(e) => setCompanyData({ ...companyData, vatNumber: e.target.value })}
-                          disabled={!isEditingCompany}
-                          className={!isEditingCompany ? "bg-muted" : ""}
-                        />
+                        <Input value={companyData.vatNumber} onChange={(e) => setCompanyData({ ...companyData, vatNumber: e.target.value })} disabled={!isEditingCompany} className={!isEditingCompany ? "bg-muted" : ""} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Site web</Label>
+                        <Input value={companyData.website} onChange={(e) => setCompanyData({ ...companyData, website: e.target.value })} disabled={!isEditingCompany} className={!isEditingCompany ? "bg-muted" : ""} placeholder="https://www.exemple.com" />
                       </div>
                       <div className="space-y-2">
                         <Label>Remise partenaire</Label>
@@ -368,68 +378,75 @@ export default function Profile() {
                       </div>
                       <div className="space-y-2">
                         <Label>Statut</Label>
-                        <span
-                          className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                            partner.status === "APPROVED"
-                              ? "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400"
-                              : partner.status === "PENDING"
-                              ? "bg-amber-500/15 dark:bg-amber-500/25 text-amber-700 dark:text-amber-400"
-                              : "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive"
-                          }`}
-                        >
-                          {partner.status === "APPROVED"
-                            ? "Approuvé"
-                            : partner.status === "PENDING"
-                            ? "En attente"
-                            : "Suspendu"}
+                        <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${partner.status === "APPROVED" ? "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400" : partner.status === "PENDING" ? "bg-amber-500/15 dark:bg-amber-500/25 text-amber-700 dark:text-amber-400" : "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive"}`}>
+                          {partner.status === "APPROVED" ? "Approuvé" : partner.status === "PENDING" ? "En attente" : "Suspendu"}
                         </span>
                       </div>
                     </div>
 
                     <Separator />
 
+                    {/* Adresse */}
                     <div className="space-y-4">
                       <h4 className="font-medium flex items-center gap-2">
                         <MapPin className="w-4 h-4" />
                         Adresse
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Rue</Label>
-                        <Input
-                          value={companyData.addressStreet}
-                          onChange={(e) => setCompanyData({ ...companyData, addressStreet: e.target.value })}
-                          disabled={!isEditingCompany}
-                          className={!isEditingCompany ? "bg-muted" : ""}
-                        />
+                        <div className="space-y-2">
+                          <Label>Rue</Label>
+                          <Input value={companyData.addressStreet} onChange={(e) => setCompanyData({ ...companyData, addressStreet: e.target.value })} disabled={!isEditingCompany} className={!isEditingCompany ? "bg-muted" : ""} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Complément d'adresse</Label>
+                          <Input value={companyData.addressStreet2} onChange={(e) => setCompanyData({ ...companyData, addressStreet2: e.target.value })} disabled={!isEditingCompany} className={!isEditingCompany ? "bg-muted" : ""} placeholder="Bâtiment, étage..." />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Code postal</Label>
+                          <Input value={companyData.addressPostalCode} onChange={(e) => setCompanyData({ ...companyData, addressPostalCode: e.target.value })} disabled={!isEditingCompany} className={!isEditingCompany ? "bg-muted" : ""} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Ville</Label>
+                          <Input value={companyData.addressCity} onChange={(e) => setCompanyData({ ...companyData, addressCity: e.target.value })} disabled={!isEditingCompany} className={!isEditingCompany ? "bg-muted" : ""} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Pays</Label>
+                          <Input value={companyData.addressCountry} onChange={(e) => setCompanyData({ ...companyData, addressCountry: e.target.value })} disabled={!isEditingCompany} className={!isEditingCompany ? "bg-muted" : ""} />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label>Ville</Label>
-                        <Input
-                          value={companyData.addressCity}
-                          onChange={(e) => setCompanyData({ ...companyData, addressCity: e.target.value })}
-                          disabled={!isEditingCompany}
-                          className={!isEditingCompany ? "bg-muted" : ""}
-                        />
+                    </div>
+
+                    <Separator />
+
+                    {/* Contacts */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        Contacts
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label>Contact principal</Label>
+                          <Input value={companyData.primaryContactName} onChange={(e) => setCompanyData({ ...companyData, primaryContactName: e.target.value })} disabled={!isEditingCompany} className={!isEditingCompany ? "bg-muted" : ""} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Email principal</Label>
+                          <Input type="email" value={companyData.primaryContactEmail} onChange={(e) => setCompanyData({ ...companyData, primaryContactEmail: e.target.value })} disabled={!isEditingCompany} className={!isEditingCompany ? "bg-muted" : ""} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Téléphone</Label>
+                          <Input value={companyData.primaryContactPhone} onChange={(e) => setCompanyData({ ...companyData, primaryContactPhone: e.target.value })} disabled={!isEditingCompany} className={!isEditingCompany ? "bg-muted" : ""} />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label>Code postal</Label>
-                        <Input
-                          value={companyData.addressPostalCode}
-                          onChange={(e) => setCompanyData({ ...companyData, addressPostalCode: e.target.value })}
-                          disabled={!isEditingCompany}
-                          className={!isEditingCompany ? "bg-muted" : ""}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Pays</Label>
-                        <Input
-                          value={companyData.addressCountry}
-                          onChange={(e) => setCompanyData({ ...companyData, addressCountry: e.target.value })}
-                          disabled={!isEditingCompany}
-                          className={!isEditingCompany ? "bg-muted" : ""}
-                        />
-                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Email comptabilité</Label>
+                          <Input type="email" value={companyData.accountingEmail} onChange={(e) => setCompanyData({ ...companyData, accountingEmail: e.target.value })} disabled={!isEditingCompany} className={!isEditingCompany ? "bg-muted" : ""} placeholder="compta@example.com" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Email commandes</Label>
+                          <Input type="email" value={companyData.orderEmail} onChange={(e) => setCompanyData({ ...companyData, orderEmail: e.target.value })} disabled={!isEditingCompany} className={!isEditingCompany ? "bg-muted" : ""} placeholder="commandes@example.com" />
+                        </div>
                       </div>
                     </div>
 

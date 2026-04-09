@@ -843,12 +843,57 @@ export const appRouter = router({
         z.object({
           id: z.number(),
           data: z.object({
+            // Company info
             companyName: z.string().optional(),
+            tradeName: z.string().nullable().optional(),
+            legalForm: z.string().nullable().optional(),
+            vatNumber: z.string().optional(),
+            registrationNumber: z.string().nullable().optional(),
+            website: z.string().nullable().optional(),
+            // Primary address
+            addressStreet: z.string().optional(),
+            addressStreet2: z.string().nullable().optional(),
+            addressCity: z.string().optional(),
+            addressPostalCode: z.string().optional(),
+            addressCountry: z.string().optional(),
+            addressRegion: z.string().nullable().optional(),
+            // Billing address
+            billingAddressSame: z.boolean().optional(),
+            billingStreet: z.string().nullable().optional(),
+            billingStreet2: z.string().nullable().optional(),
+            billingCity: z.string().nullable().optional(),
+            billingPostalCode: z.string().nullable().optional(),
+            billingCountry: z.string().nullable().optional(),
+            // Delivery address
+            deliveryStreet: z.string().nullable().optional(),
+            deliveryStreet2: z.string().nullable().optional(),
+            deliveryCity: z.string().nullable().optional(),
+            deliveryPostalCode: z.string().nullable().optional(),
+            deliveryCountry: z.string().nullable().optional(),
+            deliveryInstructions: z.string().nullable().optional(),
+            // Contacts
+            primaryContactName: z.string().optional(),
+            primaryContactEmail: z.string().email().optional(),
+            primaryContactPhone: z.string().optional(),
+            accountingEmail: z.string().email().nullable().optional(),
+            orderEmail: z.string().email().nullable().optional(),
+            // Commercial conditions
             level: z.enum(["BRONZE", "SILVER", "GOLD", "PLATINUM", "VIP"]).optional(),
             status: z.enum(["PENDING", "APPROVED", "SUSPENDED", "TERMINATED"]).optional(),
             discountPercent: z.string().optional(),
-            internalNotes: z.string().optional(),
+            paymentTermsDays: z.number().optional(),
+            creditLimit: z.string().optional(),
+            // Sales
+            salesRepId: z.number().nullable().optional(),
+            territory: z.string().nullable().optional(),
+            // External IDs
             supplierClientCode: z.string().nullable().optional(),
+            // Preferences
+            preferredLanguage: z.string().optional(),
+            preferredCurrency: z.string().optional(),
+            newsletterOptIn: z.boolean().optional(),
+            // Notes
+            internalNotes: z.string().nullable().optional(),
           }),
         })
       )

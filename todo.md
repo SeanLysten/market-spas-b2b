@@ -3494,3 +3494,17 @@
 - [x] Implémenter les endpoints manquants (mobile-api-user.ts + mobile-api-admin.ts)
 - [x] Restructurer le fichier pour cohérence (3 modules séparés)
 - [x] Tests vitest des nouveaux endpoints (97 tests + 1244 existants OK)
+
+## Refonte Gestion Partenaires + Emails (09/04/2026)
+- [x] Ajouter champ code_client au schéma DB (table partners) — déjà en place (supplierClientCode)
+- [x] Ajouter code_client dans l'API admin (CRUD partenaires) — enrichi admin.partners.update
+- [x] Ajouter code_client dans l'UI admin (formulaire modification partenaire) — PartnerForm enrichi
+- [x] Refonte flux invitation : admin envoie email → partenaire crée son compte → validation admin
+- [x] Le contact principal = email d'invitation, peut créer les membres de son équipe
+- [x] Permettre au partenaire de modifier ses propres informations (profil) — Profile.tsx enrichi
+- [x] Permettre à l'admin de modifier les informations du partenaire — AdminPartners.tsx enrichi
+- [x] Intégrer code_client dans les commandes (affichage + export API fournisseur) — déjà en place
+- [x] Intégrer code_client dans l'API export fournisseur (/api/supplier/orders/export) — déjà en place
+- [x] Redesign complet de TOUS les templates d'emails (12 templates) — design system unifié Market Spas
+- [x] Coherence guard : audit de cohérence global — 1244 tests passés, 0 erreurs
+- [x] Tests vitest pour les nouvelles fonctionnalités — 81 fichiers, 1244 tests passés

@@ -1,299 +1,199 @@
-import { ENV } from "./_core/env";
+// ============================================
+// MARKET SPAS — UNIFIED EMAIL SYSTEM
+// Premium B2B email templates with consistent branding
+// All templates: table-based for Outlook/Gmail/Apple Mail compatibility
+// ============================================
 
-// Shared constants
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM_EMAIL = process.env.EMAIL_FROM || 'Market Spas <noreply@marketspas.com>';
 const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logo-market-spa_177731cb.png";
 
-// Email templates
-const templates = {
-  orderConfirmation: {
-    subject: "Confirmation de commande #{{orderNumber}}",
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-          .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
-          .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
-          .order-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
-          .item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
-          .total { font-size: 18px; font-weight: bold; color: #1e40af; }
-          .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>Market Spas</h1>
-            <p>Votre commande a été confirmée</p>
-          </div>
-          <div class="content">
-            <h2>Bonjour {{customerName}},</h2>
-            <p>Nous avons bien reçu votre commande <strong>#{{orderNumber}}</strong> et nous vous en remercions.</p>
-            
-            <div class="order-details">
-              <h3>Détails de la commande</h3>
-              {{orderItems}}
-              <div class="item total">
-                <span>Total TTC</span>
-                <span>{{totalTTC}} €</span>
-              </div>
-            </div>
-            
-            <p>Vous pouvez suivre l'état de votre commande depuis votre espace client.</p>
-            <a href="{{portalUrl}}/orders" class="btn">Voir ma commande</a>
-          </div>
-          <div class="footer">
-            <p>Market Spas - Votre partenaire wellness</p>
-            <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `,
-  },
-  
-  orderStatusUpdate: {
-    subject: "Mise à jour de votre commande #{{orderNumber}}",
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-          .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
-          .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
-          .status-badge { display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; }
-          .status-confirmed { background: #dcfce7; color: #166534; }
-          .status-processing { background: #fef3c7; color: #92400e; }
-          .status-shipped { background: #dbeafe; color: #1e40af; }
-          .status-delivered { background: #d1fae5; color: #065f46; }
-          .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>Market Spas</h1>
-            <p>Mise à jour de commande</p>
-          </div>
-          <div class="content">
-            <h2>Bonjour {{customerName}},</h2>
-            <p>Le statut de votre commande <strong>#{{orderNumber}}</strong> a été mis à jour.</p>
-            
-            <p style="text-align: center; margin: 30px 0;">
-              <span class="status-badge status-{{statusClass}}">{{statusLabel}}</span>
-            </p>
-            
-            <p>{{statusMessage}}</p>
-            
-            <a href="{{portalUrl}}/orders" class="btn">Suivre ma commande</a>
-          </div>
-          <div class="footer">
-            <p>Market Spas - Votre partenaire wellness</p>
-            <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `,
-  },
-  
-  lowStockAlert: {
-    subject: "⚠️ Alerte stock bas - {{productName}}",
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-          .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
-          .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
-          .alert-box { background: #fef2f2; border: 1px solid #fecaca; padding: 20px; border-radius: 8px; margin: 20px 0; }
-          .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>⚠️ Alerte Stock</h1>
-          </div>
-          <div class="content">
-            <h2>Attention : Stock bas détecté</h2>
-            
-            <div class="alert-box">
-              <p><strong>Produit :</strong> {{productName}}</p>
-              <p><strong>SKU :</strong> {{productSku}}</p>
-              <p><strong>Stock actuel :</strong> {{currentStock}} unités</p>
-              <p><strong>Seuil d'alerte :</strong> {{threshold}} unités</p>
-            </div>
-            
-            <p>Nous vous recommandons de réapprovisionner ce produit rapidement.</p>
-            
-            <a href="{{portalUrl}}/admin/products" class="btn">Gérer le stock</a>
-          </div>
-          <div class="footer">
-            <p>Market Spas - Système de gestion</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `,
-  },
-  
-  newPartnerRegistration: {
-    subject: "🎉 Nouveau partenaire inscrit - {{companyName}}",
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-          .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
-          .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
-          .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0; }
-          .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🎉 Nouveau Partenaire</h1>
-          </div>
-          <div class="content">
-            <h2>Une nouvelle demande de partenariat</h2>
-            
-            <div class="info-box">
-              <p><strong>Entreprise :</strong> {{companyName}}</p>
-              <p><strong>Contact :</strong> {{contactName}}</p>
-              <p><strong>Email :</strong> {{email}}</p>
-              <p><strong>Téléphone :</strong> {{phone}}</p>
-              <p><strong>TVA :</strong> {{vatNumber}}</p>
-              <p><strong>Date d'inscription :</strong> {{registrationDate}}</p>
-            </div>
-            
-            <p>Veuillez examiner cette demande et valider le compte partenaire si approprié.</p>
-            
-            <a href="{{portalUrl}}/admin/partners" class="btn">Gérer les partenaires</a>
-          </div>
-          <div class="footer">
-            <p>Market Spas - Système de gestion</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `,
-  },
-  
-  welcomePartner: {
-    subject: "Bienvenue chez Market Spas, {{companyName}} !",
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-          .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
-          .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
-          .feature { display: flex; align-items: center; margin: 15px 0; padding: 15px; background: white; border-radius: 8px; }
-          .feature-icon { font-size: 24px; margin-right: 15px; }
-          .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>Bienvenue !</h1>
-            <p>Votre compte partenaire a été activé</p>
-          </div>
-          <div class="content">
-            <h2>Bonjour {{contactName}},</h2>
-            <p>Nous sommes ravis de vous accueillir parmi nos partenaires ! Votre compte a été validé et vous pouvez désormais accéder à tous nos services.</p>
-            
-            <div class="feature">
-              <span class="feature-icon">📦</span>
-              <div>
-                <strong>Catalogue complet</strong>
-                <p style="margin: 0; color: #64748b;">Accédez à tous nos produits avec prix partenaire</p>
-              </div>
-            </div>
-            
-            <div class="feature">
-              <span class="feature-icon">💰</span>
-              <div>
-                <strong>Prix préférentiels</strong>
-                <p style="margin: 0; color: #64748b;">Bénéficiez de remises exclusives partenaires</p>
-              </div>
-            </div>
-            
-            <div class="feature">
-              <span class="feature-icon">📚</span>
-              <div>
-                <strong>Ressources marketing</strong>
-                <p style="margin: 0; color: #64748b;">Téléchargez catalogues, vidéos et supports de vente</p>
-              </div>
-            </div>
-            
-            <a href="{{portalUrl}}" class="btn">Accéder au portail</a>
-          </div>
-          <div class="footer">
-            <p>Market Spas - Votre partenaire wellness</p>
-            <p>Une question ? Contactez-nous à support@marketspas.be</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `,
-  },
+// Environment helpers
+const ENV = {
+  siteUrl: process.env.SITE_URL || process.env.VITE_SITE_URL || 'https://marketspas.pro',
 };
 
-// Status labels and messages
-const statusConfig: Record<string, { label: string; message: string; class: string }> = {
-  PENDING: {
-    label: "En attente",
-    message: "Votre commande est en attente de validation.",
-    class: "processing",
-  },
-  CONFIRMED: {
-    label: "Confirmée",
-    message: "Votre commande a été confirmée et sera traitée prochainement.",
-    class: "confirmed",
-  },
-  PROCESSING: {
-    label: "En préparation",
-    message: "Votre commande est en cours de préparation dans nos entrepôts.",
-    class: "processing",
-  },
-  SHIPPED: {
-    label: "Expédiée",
-    message: "Votre commande a été expédiée et est en route vers vous.",
-    class: "shipped",
-  },
-  DELIVERED: {
-    label: "Livrée",
-    message: "Votre commande a été livrée. Merci pour votre confiance !",
-    class: "delivered",
-  },
-  CANCELLED: {
-    label: "Annulée",
-    message: "Votre commande a été annulée.",
-    class: "processing",
-  },
+// ============================================
+// DESIGN SYSTEM CONSTANTS
+// ============================================
+const DS = {
+  // Brand colors
+  primary: '#3d9b85',
+  primaryLight: '#5ab89f',
+  primaryDark: '#2d7a68',
+  primaryGradient: 'linear-gradient(135deg, #5ab89f 0%, #3d9b85 100%)',
+  // Semantic colors
+  success: '#059669',
+  successLight: '#d1fae5',
+  successDark: '#065f46',
+  warning: '#d97706',
+  warningLight: '#fef3c7',
+  warningDark: '#92400e',
+  danger: '#dc2626',
+  dangerLight: '#fee2e2',
+  dangerDark: '#991b1b',
+  info: '#2563eb',
+  infoLight: '#dbeafe',
+  infoDark: '#1e40af',
+  // Neutrals
+  text: '#1e293b',
+  textSecondary: '#64748b',
+  textMuted: '#94a3b8',
+  border: '#e2e8f0',
+  bgPage: '#f5f5f5',
+  bgCard: '#ffffff',
+  bgSubtle: '#f8fafc',
+  bgFooter: '#1e293b',
+  // Typography
+  fontStack: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+};
+
+// ============================================
+// SHARED LAYOUT COMPONENTS
+// ============================================
+
+function emailWrapper(content: string): string {
+  return `<!DOCTYPE html>
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Market Spas</title>
+  <!--[if mso]><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]-->
+</head>
+<body style="margin: 0; padding: 0; font-family: ${DS.fontStack}; background-color: ${DS.bgPage}; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+  <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 16px;">
+        ${content}
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+function emailHeader(opts: { subtitle?: string; accentColor?: string; accentGradient?: string }): string {
+  const gradient = opts.accentGradient || DS.primaryGradient;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width: 640px; max-width: 100%; border-collapse: collapse;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 36px 40px 28px; text-align: center; background: ${gradient}; border-radius: 12px 12px 0 0;">
+              <img src="${LOGO_URL}" alt="Market Spas" width="52" height="52" style="display: block; margin: 0 auto 14px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.25);" />
+              <h1 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">Market Spas</h1>
+              ${opts.subtitle ? `<p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 400;">${opts.subtitle}</p>` : ''}
+            </td>
+          </tr>`;
+}
+
+function emailFooter(extraText?: string): string {
+  return `<!-- Footer -->
+          <tr>
+            <td style="padding: 28px 40px; background-color: ${DS.bgSubtle}; border-radius: 0 0 12px 12px; border-top: 1px solid ${DS.border};">
+              ${extraText ? `<p style="margin: 0 0 12px; color: ${DS.textSecondary}; font-size: 13px; line-height: 1.6; text-align: center;">${extraText}</p>` : ''}
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
+                <tr>
+                  <td align="center">
+                    <p style="margin: 0; color: ${DS.textMuted}; font-size: 11px; line-height: 1.6;">
+                      &copy; ${new Date().getFullYear()} Market Spas &mdash; Votre partenaire wellness<br>
+                      Cet email a \u00e9t\u00e9 envoy\u00e9 automatiquement, merci de ne pas y r\u00e9pondre.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>`;
+}
+
+function ctaButton(text: string, url: string, opts?: { color?: string; gradient?: string }): string {
+  const gradient = opts?.gradient || DS.primaryGradient;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
+    <tr>
+      <td align="center" style="padding: 8px 0;">
+        <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${url}" style="height:52px;v-text-anchor:middle;width:260px;" arcsize="12%" fillcolor="${opts?.color || DS.primary}"><center style="color:#ffffff;font-family:${DS.fontStack};font-size:16px;font-weight:600;">${text}</center></v:roundrect><![endif]-->
+        <!--[if !mso]><!-->
+        <a href="${url}" style="display: inline-block; padding: 14px 36px; background: ${gradient}; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 600; font-family: ${DS.fontStack}; letter-spacing: -0.2px; mso-hide: all;">
+          ${text}
+        </a>
+        <!--<![endif]-->
+      </td>
+    </tr>
+  </table>`;
+}
+
+function alertBox(text: string, type: 'success' | 'warning' | 'danger' | 'info'): string {
+  const colors = {
+    success: { bg: DS.successLight, border: DS.success, text: DS.successDark },
+    warning: { bg: DS.warningLight, border: DS.warning, text: DS.warningDark },
+    danger: { bg: DS.dangerLight, border: DS.danger, text: DS.dangerDark },
+    info: { bg: DS.infoLight, border: DS.info, text: DS.infoDark },
+  };
+  const c = colors[type];
+  return `<td style="padding: 0 40px 24px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
+      <tr>
+        <td style="padding: 16px 20px; background-color: ${c.bg}; border-left: 4px solid ${c.border}; border-radius: 0 6px 6px 0;">
+          <p style="margin: 0; color: ${c.text}; font-size: 14px; line-height: 1.6; font-weight: 500;">${text}</p>
+        </td>
+      </tr>
+    </table>
+  </td>`;
+}
+
+function infoRow(label: string, value: string, opts?: { bold?: boolean; color?: string }): string {
+  return `<tr>
+    <td style="padding: 7px 0; color: ${DS.textSecondary}; font-size: 13px; width: 45%;">${label}</td>
+    <td style="padding: 7px 0; color: ${opts?.color || DS.text}; font-size: 13px; text-align: right; font-weight: ${opts?.bold ? '700' : '400'};">${value}</td>
+  </tr>`;
+}
+
+function sectionTitle(icon: string, title: string): string {
+  return `<tr>
+    <td style="padding: 28px 40px 16px;">
+      <p style="margin: 0; color: ${DS.text}; font-size: 15px; font-weight: 700; letter-spacing: -0.2px;">
+        ${icon}&nbsp;&nbsp;${title}
+      </p>
+      <hr style="border: none; border-top: 1px solid ${DS.border}; margin: 10px 0 0;">
+    </td>
+  </tr>`;
+}
+
+// ============================================
+// UTILITY HELPERS
+// ============================================
+
+function formatPrice(price: number | string): string {
+  const num = typeof price === 'string' ? parseFloat(price) : price;
+  if (isNaN(num)) return '0,00';
+  return num.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatDateShort(date: Date): string {
+  return date.toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+const countryNames: Record<string, string> = {
+  BE: 'Belgique', FR: 'France', NL: 'Pays-Bas', DE: 'Allemagne', LU: 'Luxembourg',
+  CH: 'Suisse', AT: 'Autriche', ES: 'Espagne', IT: 'Italie', GB: 'Royaume-Uni',
 };
 
 // Helper function to replace template variables
@@ -307,12 +207,59 @@ function renderTemplate(template: string, variables: Record<string, string>): st
 
 
 // ============================================
-// RESEND EMAIL SERVICE
+// STATUS CONFIGURATION
 // ============================================
-import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = process.env.EMAIL_FROM || 'Market Spas <noreply@marketspas.com>';
+const statusConfig: Record<string, { label: string; message: string; class: string }> = {
+  PENDING: { label: "En attente", message: "Votre commande est en attente de validation.", class: "processing" },
+  CONFIRMED: { label: "Confirm\u00e9e", message: "Votre commande a \u00e9t\u00e9 confirm\u00e9e et sera trait\u00e9e prochainement.", class: "confirmed" },
+  PROCESSING: { label: "En pr\u00e9paration", message: "Votre commande est en cours de pr\u00e9paration dans nos entrep\u00f4ts.", class: "processing" },
+  SHIPPED: { label: "Exp\u00e9di\u00e9e", message: "Votre commande a \u00e9t\u00e9 exp\u00e9di\u00e9e et est en route vers vous.", class: "shipped" },
+  DELIVERED: { label: "Livr\u00e9e", message: "Votre commande a \u00e9t\u00e9 livr\u00e9e. Merci pour votre confiance !", class: "delivered" },
+  CANCELLED: { label: "Annul\u00e9e", message: "Votre commande a \u00e9t\u00e9 annul\u00e9e.", class: "processing" },
+};
+
+// Inline templates (used by renderTemplate)
+const templates = {
+  orderConfirmation: {
+    subject: "Confirmation de commande #{{orderNumber}}",
+    html: `PLACEHOLDER_REPLACED_BY_FUNCTION`,
+  },
+  orderStatusUpdate: {
+    subject: "Mise \u00e0 jour de votre commande #{{orderNumber}}",
+    html: `PLACEHOLDER_REPLACED_BY_FUNCTION`,
+  },
+  lowStockAlert: {
+    subject: "Alerte stock bas - {{productName}}",
+    html: `PLACEHOLDER_REPLACED_BY_FUNCTION`,
+  },
+  newPartnerRegistration: {
+    subject: "Nouveau partenaire inscrit - {{companyName}}",
+    html: `PLACEHOLDER_REPLACED_BY_FUNCTION`,
+  },
+  welcomePartner: {
+    subject: "Bienvenue chez Market Spas, {{companyName}} !",
+    html: `PLACEHOLDER_REPLACED_BY_FUNCTION`,
+  },
+};
+
+// Order status config for status change emails
+const orderStatusConfig: Record<string, { label: string; emoji: string; color: string; bgColor: string; message: string }> = {
+  PENDING_APPROVAL: { label: "En attente d'approbation", emoji: "\u23f3", color: "#92400e", bgColor: "#fef3c7", message: "Votre commande est en cours de validation par notre \u00e9quipe." },
+  PENDING_DEPOSIT: { label: "Acompte requis", emoji: "\ud83d\udcb3", color: "#1e40af", bgColor: "#dbeafe", message: "Un acompte est requis pour confirmer votre commande. Veuillez proc\u00e9der au paiement." },
+  DEPOSIT_PAID: { label: "Acompte pay\u00e9", emoji: "\u2705", color: "#166534", bgColor: "#dcfce7", message: "Votre acompte a \u00e9t\u00e9 re\u00e7u. Votre commande va \u00eatre mise en production." },
+  IN_PRODUCTION: { label: "En production", emoji: "\ud83c\udfed", color: "#7c3aed", bgColor: "#ede9fe", message: "Votre commande est actuellement en cours de fabrication." },
+  READY_TO_SHIP: { label: "Pr\u00eat \u00e0 exp\u00e9dier", emoji: "\ud83d\udce6", color: "#0369a1", bgColor: "#e0f2fe", message: "Votre commande est pr\u00eate et sera exp\u00e9di\u00e9e tr\u00e8s prochainement." },
+  SHIPPED: { label: "Exp\u00e9di\u00e9", emoji: "\ud83d\ude9a", color: "#0891b2", bgColor: "#cffafe", message: "Votre commande a \u00e9t\u00e9 exp\u00e9di\u00e9e ! Elle est en route vers l'adresse de livraison." },
+  DELIVERED: { label: "Livr\u00e9", emoji: "\ud83c\udf89", color: "#059669", bgColor: "#d1fae5", message: "Votre commande a \u00e9t\u00e9 livr\u00e9e avec succ\u00e8s. Merci pour votre confiance !" },
+  COMPLETED: { label: "Termin\u00e9", emoji: "\u2728", color: "#065f46", bgColor: "#d1fae5", message: "Votre commande est compl\u00e8te. Merci pour votre fid\u00e9lit\u00e9 !" },
+  CANCELLED: { label: "Annul\u00e9", emoji: "\u274c", color: "#dc2626", bgColor: "#fee2e2", message: "Votre commande a \u00e9t\u00e9 annul\u00e9e. Contactez-nous pour plus d'informations." },
+};
+
+
+// ============================================
+// 1. INVITATION EMAIL
+// ============================================
 
 interface SendInvitationEmailParams {
   to: string;
@@ -330,128 +277,96 @@ export async function sendInvitationEmail({
   expiresAt,
 }: SendInvitationEmailParams) {
   const fullName = [firstName, lastName].filter(Boolean).join(' ') || 'Partenaire';
-  const expirationDate = new Date(expiresAt).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const expirationDate = formatDate(new Date(expiresAt));
 
-  const htmlContent = `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invitation Market Spas</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
-  <table role="presentation" style="width: 100%; border-collapse: collapse;">
-    <tr>
-      <td align="center" style="padding: 40px 0;">
-        <table role="presentation" style="width: 600px; max-width: 100%; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-          <!-- Header -->
+  const body = `
+          <!-- Greeting -->
           <tr>
-            <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px 8px 0 0;">
-              <img src="${LOGO_URL}" alt="Market Spas" width="60" height="60" style="display: block; margin: 0 auto 12px; border-radius: 12px;" />
-              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">Market Spas</h1>
-              <p style="margin: 10px 0 0; color: #ffffff; font-size: 16px; opacity: 0.9;">Portail Partenaires B2B</p>
+            <td style="padding: 32px 40px 16px;">
+              <h2 style="margin: 0 0 16px; color: ${DS.text}; font-size: 20px; font-weight: 700; letter-spacing: -0.3px;">Bienvenue ${fullName}\u00a0!</h2>
+              <p style="margin: 0; color: ${DS.textSecondary}; font-size: 15px; line-height: 1.7;">
+                Vous avez \u00e9t\u00e9 invit\u00e9(e) \u00e0 rejoindre le portail partenaires <strong style="color: ${DS.text};">Market Spas</strong>.
+                Notre plateforme vous permet de g\u00e9rer vos commandes, consulter le catalogue produits et acc\u00e9der \u00e0 toutes vos ressources en un seul endroit.
+              </p>
             </td>
           </tr>
-          
-          <!-- Content -->
+
+          <!-- Info box -->
           <tr>
-            <td style="padding: 40px;">
-              <h2 style="margin: 0 0 20px; color: #1a1a1a; font-size: 24px; font-weight: 600;">Bienvenue ${fullName} !</h2>
-              
-              <p style="margin: 0 0 20px; color: #4a5568; font-size: 16px; line-height: 1.6;">
-                Vous avez été invité(e) à rejoindre le portail partenaires <strong>Market Spas</strong>. 
-                Notre plateforme vous permet de gérer vos commandes, consulter le catalogue produits et accéder à toutes vos ressources en un seul endroit.
-              </p>
-              
-              <div style="margin: 30px 0; padding: 20px; background-color: #f7fafc; border-left: 4px solid #667eea; border-radius: 4px;">
-                <p style="margin: 0; color: #2d3748; font-size: 14px; line-height: 1.6;">
-                  <strong>📧 Email :</strong> ${to}<br>
-                  <strong>⏰ Expire le :</strong> ${expirationDate}
-                </p>
-              </div>
-              
-              <p style="margin: 0 0 30px; color: #4a5568; font-size: 16px; line-height: 1.6;">
-                Cliquez sur le bouton ci-dessous pour créer votre compte et définir votre mot de passe :
-              </p>
-              
-              <!-- CTA Button -->
-              <table role="presentation" style="width: 100%;">
+            <td style="padding: 0 40px 24px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; background-color: ${DS.bgSubtle}; border-radius: 8px; border: 1px solid ${DS.border};">
                 <tr>
-                  <td align="center">
-                    <a href="${invitationUrl}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);">
-                      Créer mon compte
-                    </a>
+                  <td style="padding: 18px 22px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
+                      ${infoRow('Email', to)}
+                      ${infoRow('Expire le', expirationDate)}
+                    </table>
                   </td>
                 </tr>
               </table>
-              
-              <p style="margin: 30px 0 0; color: #718096; font-size: 14px; line-height: 1.6;">
-                Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :
-              </p>
-              <p style="margin: 10px 0 0; word-break: break-all;">
-                <a href="${invitationUrl}" style="color: #667eea; text-decoration: underline; font-size: 14px;">${invitationUrl}</a>
-              </p>
             </td>
           </tr>
-          
-          <!-- Footer -->
+
+          <!-- Instruction -->
           <tr>
-            <td style="padding: 30px 40px; background-color: #f7fafc; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">
-              <p style="margin: 0 0 10px; color: #718096; font-size: 14px; line-height: 1.6;">
-                <strong>⚠️ Important :</strong> Cette invitation est personnelle et expire dans 7 jours. 
-                Pour des raisons de sécurité, elle ne peut être utilisée que par ${to}.
-              </p>
-              <p style="margin: 20px 0 0; color: #a0aec0; font-size: 12px; text-align: center;">
-                © ${new Date().getFullYear()} Market Spas. Tous droits réservés.<br>
-                Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+            <td style="padding: 0 40px 24px;">
+              <p style="margin: 0; color: ${DS.textSecondary}; font-size: 15px; line-height: 1.7;">
+                Cliquez sur le bouton ci-dessous pour cr\u00e9er votre compte et renseigner les informations de votre entreprise\u00a0:
               </p>
             </td>
           </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `;
+
+          <!-- CTA -->
+          <tr>
+            <td style="padding: 0 40px 28px;">
+              ${ctaButton('Cr\u00e9er mon compte', invitationUrl)}
+            </td>
+          </tr>
+
+          <!-- Fallback link -->
+          <tr>
+            <td style="padding: 0 40px 8px;">
+              <p style="margin: 0; color: ${DS.textMuted}; font-size: 12px; line-height: 1.6;">
+                Si le bouton ne fonctionne pas, copiez et collez ce lien\u00a0:<br>
+                <a href="${invitationUrl}" style="color: ${DS.primary}; text-decoration: underline; word-break: break-all; font-size: 12px;">${invitationUrl}</a>
+              </p>
+            </td>
+          </tr>`;
+
+  const htmlContent = emailWrapper(
+    emailHeader({ subtitle: 'Portail Partenaires B2B' }) +
+    body +
+    emailFooter('Cette invitation est personnelle et expire dans 7 jours. Pour des raisons de s\u00e9curit\u00e9, elle ne peut \u00eatre utilis\u00e9e que par ' + to + '.')
+  );
 
   const textContent = `
 Bienvenue ${fullName} !
 
-Vous avez été invité(e) à rejoindre le portail partenaires Market Spas.
+Vous avez \u00e9t\u00e9 invit\u00e9(e) \u00e0 rejoindre le portail partenaires Market Spas.
 
 Email : ${to}
 Expire le : ${expirationDate}
 
-Pour créer votre compte, cliquez sur ce lien :
+Pour cr\u00e9er votre compte, cliquez sur ce lien :
 ${invitationUrl}
 
 Cette invitation est personnelle et expire dans 7 jours.
 
-© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
+\u00a9 ${new Date().getFullYear()} Market Spas. Tous droits r\u00e9serv\u00e9s.
   `.trim();
 
   try {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: [to],
-      subject: `Invitation à rejoindre Market Spas - Portail Partenaires`,
+      subject: `Invitation \u00e0 rejoindre Market Spas \u2014 Portail Partenaires`,
       html: htmlContent,
       text: textContent,
     });
-
     if (error) {
       console.error('[Email] Error sending invitation:', error);
       throw new Error(`Failed to send invitation email: ${error.message}`);
     }
-
     console.log('[Email] Invitation sent successfully:', data);
     return { success: true, messageId: data?.id };
   } catch (error) {
@@ -462,7 +377,7 @@ Cette invitation est personnelle et expire dans 7 jours.
 
 
 // ============================================
-// NEW ORDER NOTIFICATION FOR ADMINS
+// 2. NEW ORDER NOTIFICATION FOR ADMINS
 // ============================================
 
 interface OrderItem {
@@ -497,184 +412,99 @@ export async function sendNewOrderNotificationToAdmins(
   params: NewOrderNotificationParams
 ): Promise<{ success: boolean; results: Array<{ email: string; success: boolean; messageId?: string; error?: string }> }> {
   const {
-    orderNumber,
-    partnerName,
-    partnerEmail,
-    items,
-    totalHT,
-    shippingCostHT,
-    depositAmount,
-    remainingBalance,
-    deliveryStreet,
-    deliveryCity,
-    deliveryPostalCode,
-    deliveryCountry,
-    deliveryContactName,
-    deliveryContactPhone,
-    createdAt,
-    portalUrl,
+    orderNumber, partnerName, partnerEmail, items, totalHT, shippingCostHT,
+    depositAmount, remainingBalance, deliveryStreet, deliveryCity,
+    deliveryPostalCode, deliveryCountry, deliveryContactName, deliveryContactPhone,
+    createdAt, portalUrl,
   } = params;
 
-  const countryNames: Record<string, string> = {
-    BE: 'Belgique', FR: 'France', NL: 'Pays-Bas', DE: 'Allemagne', LU: 'Luxembourg',
-  };
-
-  const formatPrice = (price: number | string): string => {
-    const num = typeof price === 'string' ? parseFloat(price) : price;
-    return num.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
-
-  const formattedDate = new Date(createdAt).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const formattedDate = formatDate(new Date(createdAt));
 
   const itemsHtml = items.map(item => `
     <tr>
-      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">
-        ${item.name}${item.color ? `<br><span style="color: #64748b; font-size: 12px;">Couleur : ${item.color}</span>` : ''}
+      <td style="padding: 10px 12px; border-bottom: 1px solid ${DS.border}; color: ${DS.text}; font-size: 13px;">
+        ${item.name}${item.color ? `<br><span style="color: ${DS.textMuted}; font-size: 11px;">Couleur : ${item.color}</span>` : ''}
       </td>
-      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center;">${item.quantity}</td>
-      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right;">${formatPrice(item.unitPriceHT)} €</td>
-      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600;">${formatPrice(item.totalHT)} €</td>
-    </tr>
-  `).join('');
+      <td style="padding: 10px 8px; border-bottom: 1px solid ${DS.border}; text-align: center; color: ${DS.text}; font-size: 13px;">${item.quantity}</td>
+      <td style="padding: 10px 8px; border-bottom: 1px solid ${DS.border}; text-align: right; color: ${DS.text}; font-size: 13px;">${formatPrice(item.unitPriceHT)}\u00a0\u20ac</td>
+      <td style="padding: 10px 12px; border-bottom: 1px solid ${DS.border}; text-align: right; color: ${DS.text}; font-size: 13px; font-weight: 600;">${formatPrice(item.totalHT)}\u00a0\u20ac</td>
+    </tr>`).join('');
 
-  const htmlContent = `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nouvelle commande - Market Spas</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
-  <table role="presentation" style="width: 100%; border-collapse: collapse;">
-    <tr>
-      <td align="center" style="padding: 40px 0;">
-        <table role="presentation" style="width: 650px; max-width: 100%; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-          <!-- Header -->
+  const fullAddress = [deliveryStreet, `${deliveryPostalCode} ${deliveryCity}`, countryNames[deliveryCountry] || deliveryCountry].filter(Boolean).join(', ');
+
+  const body = `
+          <!-- Banner -->
           <tr>
-            <td style="padding: 30px 40px; text-align: center; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px 8px 0 0;">
-              <img src="${LOGO_URL}" alt="Market Spas" width="50" height="50" style="display: block; margin: 0 auto 10px; border-radius: 10px;" />
-              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">🛒 Nouvelle Commande</h1>
-              <p style="margin: 10px 0 0; color: #ffffff; font-size: 18px; opacity: 0.95;">#${orderNumber}</p>
-            </td>
-          </tr>
-          
-          <!-- Alert Banner -->
-          <tr>
-            <td style="padding: 20px 40px; background-color: #ecfdf5; border-bottom: 1px solid #d1fae5;">
-              <table role="presentation" style="width: 100%;">
+            <td style="padding: 20px 40px; background-color: ${DS.successLight}; border-bottom: 1px solid #a7f3d0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
                 <tr>
-                  <td style="width: 40px; vertical-align: top;">
-                    <span style="font-size: 24px;">📬</span>
+                  <td style="width: 36px; vertical-align: top; padding-top: 2px;">
+                    <span style="font-size: 20px;">\ud83d\udce8</span>
                   </td>
                   <td>
-                    <p style="margin: 0; color: #065f46; font-size: 14px; font-weight: 600;">
-                      Une nouvelle commande a été passée sur le portail B2B
-                    </p>
-                    <p style="margin: 5px 0 0; color: #047857; font-size: 13px;">
-                      ${formattedDate}
-                    </p>
+                    <p style="margin: 0; color: ${DS.successDark}; font-size: 14px; font-weight: 600;">Nouvelle commande sur le portail B2B</p>
+                    <p style="margin: 4px 0 0; color: ${DS.success}; font-size: 12px;">${formattedDate}</p>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
-          
-          <!-- Partner Info -->
+
+          ${sectionTitle('\ud83d\udc64', 'Partenaire')}
           <tr>
-            <td style="padding: 30px 40px;">
-              <h2 style="margin: 0 0 20px; color: #1a1a1a; font-size: 18px; font-weight: 600; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
-                👤 Informations du partenaire
-              </h2>
-              <table role="presentation" style="width: 100%;">
-                <tr>
-                  <td style="padding: 8px 0; color: #64748b; font-size: 14px; width: 140px;">Entreprise :</td>
-                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px; font-weight: 600;">${partnerName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Email :</td>
-                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px;">
-                    <a href="mailto:${partnerEmail}" style="color: #2563eb; text-decoration: none;">${partnerEmail}</a>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Livraison :</td>
-                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px;">
-                    ${deliveryStreet ? `${deliveryStreet}<br>` : ''}${deliveryPostalCode} ${deliveryCity}${deliveryCountry ? `, ${countryNames[deliveryCountry] || deliveryCountry}` : ''}
-                  </td>
-                </tr>
-                ${deliveryContactName ? `<tr>
-                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Contact :</td>
-                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px;">${deliveryContactName}${deliveryContactPhone ? ` - ${deliveryContactPhone}` : ''}</td>
-                </tr>` : ''}
+            <td style="padding: 0 40px 20px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
+                ${infoRow('Entreprise', partnerName, { bold: true })}
+                ${infoRow('Email', `<a href="mailto:${partnerEmail}" style="color: ${DS.primary}; text-decoration: none;">${partnerEmail}</a>`)}
+                ${infoRow('Livraison', `${deliveryStreet ? deliveryStreet + '<br>' : ''}${deliveryPostalCode} ${deliveryCity}${deliveryCountry ? ', ' + (countryNames[deliveryCountry] || deliveryCountry) : ''}`)}
+                ${deliveryContactName ? infoRow('Contact', `${deliveryContactName}${deliveryContactPhone ? ' \u2014 ' + deliveryContactPhone : ''}`) : ''}
               </table>
             </td>
           </tr>
-          
-          <!-- Order Items -->
+
+          ${sectionTitle('\ud83d\udce6', 'D\u00e9tails de la commande')}
           <tr>
-            <td style="padding: 0 40px 30px;">
-              <h2 style="margin: 0 0 20px; color: #1a1a1a; font-size: 18px; font-weight: 600; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
-                📦 Détails de la commande
-              </h2>
-              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+            <td style="padding: 0 40px 20px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse;">
                 <thead>
-                  <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; text-align: left; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase;">Produit</th>
-                    <th style="padding: 12px; text-align: center; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase;">Qté</th>
-                    <th style="padding: 12px; text-align: right; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase;">Prix HT</th>
-                    <th style="padding: 12px; text-align: right; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase;">Total HT</th>
+                  <tr style="background-color: ${DS.bgSubtle};">
+                    <th style="padding: 10px 12px; text-align: left; color: ${DS.textMuted}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Produit</th>
+                    <th style="padding: 10px 8px; text-align: center; color: ${DS.textMuted}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Qt\u00e9</th>
+                    <th style="padding: 10px 8px; text-align: right; color: ${DS.textMuted}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Prix HT</th>
+                    <th style="padding: 10px 12px; text-align: right; color: ${DS.textMuted}; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total HT</th>
                   </tr>
                 </thead>
-                <tbody>
-                  ${itemsHtml}
-                </tbody>
+                <tbody>${itemsHtml}</tbody>
               </table>
-              
+
               <!-- Totals -->
-              <table role="presentation" style="width: 100%; margin-top: 20px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; margin-top: 16px;">
+                ${infoRow('Sous-total HT', formatPrice(totalHT) + '\u00a0\u20ac', { bold: true })}
+                ${parseFloat(String(shippingCostHT)) > 0 ? infoRow('Frais de livraison HT', formatPrice(shippingCostHT) + '\u00a0\u20ac') : ''}
                 <tr>
-                  <td style="text-align: right; padding: 8px 0;">
-                    <span style="color: #64748b; font-size: 14px;">Sous-total HT :</span>
-                    <span style="color: #1e293b; font-size: 14px; font-weight: 600; margin-left: 20px;">${formatPrice(totalHT)} €</span>
-                  </td>
+                  <td colspan="2" style="padding: 8px 0 0;"><hr style="border: none; border-top: 2px solid ${DS.border}; margin: 0;"></td>
                 </tr>
-                ${parseFloat(String(shippingCostHT)) > 0 ? `<tr>
-                  <td style="text-align: right; padding: 8px 0;">
-                    <span style="color: #64748b; font-size: 14px;">Frais de livraison HT :</span>
-                    <span style="color: #1e293b; font-size: 14px; font-weight: 600; margin-left: 20px;">${formatPrice(shippingCostHT)} €</span>
-                  </td>
-                </tr>` : ''}
                 <tr>
-                  <td style="text-align: right; padding: 12px 0; border-top: 2px solid #e2e8f0;">
-                    <span style="color: #1e293b; font-size: 18px; font-weight: 700;">Total HT :</span>
-                    <span style="color: #059669; font-size: 20px; font-weight: 700; margin-left: 20px;">${formatPrice(parseFloat(String(totalHT)) + parseFloat(String(shippingCostHT)))} €</span>
-                  </td>
+                  <td style="padding: 10px 0; color: ${DS.text}; font-size: 16px; font-weight: 700;">Total HT</td>
+                  <td style="padding: 10px 0; text-align: right; color: ${DS.success}; font-size: 18px; font-weight: 700;">${formatPrice(parseFloat(String(totalHT)) + parseFloat(String(shippingCostHT)))}\u00a0\u20ac</td>
                 </tr>
               </table>
-              
-              <!-- Acompte & Solde -->
-              <table role="presentation" style="width: 100%; margin-top: 15px; background-color: #f0fdf4; border-radius: 8px; padding: 15px;">
+
+              <!-- Deposit -->
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; margin-top: 12px; background-color: ${DS.successLight}; border-radius: 8px;">
                 <tr>
-                  <td style="padding: 10px 15px;">
-                    <table role="presentation" style="width: 100%;">
+                  <td style="padding: 14px 18px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
                       <tr>
-                        <td style="padding: 6px 0;">
-                          <span style="color: #065f46; font-size: 14px; font-weight: 600;">Acompte à régler :</span>
-                          <span style="color: #059669; font-size: 16px; font-weight: 700; float: right;">${formatPrice(depositAmount)} € HT</span>
-                        </td>
+                        <td style="padding: 4px 0; color: ${DS.successDark}; font-size: 13px; font-weight: 600;">Acompte \u00e0 r\u00e9gler</td>
+                        <td style="padding: 4px 0; text-align: right; color: ${DS.success}; font-size: 15px; font-weight: 700;">${formatPrice(depositAmount)}\u00a0\u20ac HT</td>
                       </tr>
                       <tr>
-                        <td style="padding: 6px 0; border-top: 1px solid #bbf7d0;">
-                          <span style="color: #64748b; font-size: 13px;">Solde restant à payer :</span>
-                          <span style="color: #1e293b; font-size: 14px; font-weight: 600; float: right;">${formatPrice(remainingBalance)} € HT</span>
-                        </td>
+                        <td colspan="2" style="padding: 4px 0 0;"><hr style="border: none; border-top: 1px solid #a7f3d0; margin: 0;"></td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 4px 0; color: ${DS.textSecondary}; font-size: 12px;">Solde restant</td>
+                        <td style="padding: 4px 0; text-align: right; color: ${DS.text}; font-size: 13px; font-weight: 600;">${formatPrice(remainingBalance)}\u00a0\u20ac HT</td>
                       </tr>
                     </table>
                   </td>
@@ -682,46 +512,23 @@ export async function sendNewOrderNotificationToAdmins(
               </table>
             </td>
           </tr>
-          
-          <!-- CTA Button -->
-          <tr>
-            <td style="padding: 0 40px 40px;">
-              <table role="presentation" style="width: 100%;">
-                <tr>
-                  <td align="center">
-                    <a href="${portalUrl}/admin/orders" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);">
-                      Voir la commande
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 25px 40px; background-color: #f8fafc; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">
-              <p style="margin: 0; color: #94a3b8; font-size: 12px; text-align: center;">
-                Cette notification a été envoyée automatiquement par le portail B2B Market Spas.<br>
-                © ${new Date().getFullYear()} Market Spas. Tous droits réservés.
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `;
 
-  const fullAddress = [deliveryStreet, `${deliveryPostalCode} ${deliveryCity}`, countryNames[deliveryCountry] || deliveryCountry].filter(Boolean).join(', ');
+          <!-- CTA -->
+          <tr>
+            <td style="padding: 8px 40px 32px;">
+              ${ctaButton('Voir la commande', portalUrl + '/admin/orders', { gradient: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#2563eb' })}
+            </td>
+          </tr>`;
+
+  const htmlContent = emailWrapper(
+    emailHeader({ subtitle: `Nouvelle commande #${orderNumber}`, accentGradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }) +
+    body +
+    emailFooter()
+  );
 
   const textContent = `
 NOUVELLE COMMANDE - #${orderNumber}
 =====================================
-
-Une nouvelle commande a été passée sur le portail B2B Market Spas.
 
 Date : ${formattedDate}
 
@@ -730,142 +537,65 @@ PARTENAIRE
 Entreprise : ${partnerName}
 Email : ${partnerEmail}
 Livraison : ${fullAddress}
-${deliveryContactName ? `Contact : ${deliveryContactName}${deliveryContactPhone ? ` - ${deliveryContactPhone}` : ''}` : ''}
+${deliveryContactName ? `Contact : ${deliveryContactName}${deliveryContactPhone ? ' - ' + deliveryContactPhone : ''}` : ''}
 
-PRODUITS
+ARTICLES
 --------
-${items.map(item => `- ${item.name}${item.color ? ` (${item.color})` : ''} x${item.quantity} : ${formatPrice(item.totalHT)} € HT`).join('\n')}
+${items.map(i => `- ${i.name} x${i.quantity} = ${formatPrice(i.totalHT)} \u20ac HT`).join('\n')}
 
-Sous-total HT : ${formatPrice(totalHT)} €
-${parseFloat(String(shippingCostHT)) > 0 ? `Frais de livraison HT : ${formatPrice(shippingCostHT)} €\n` : ''}Total HT : ${formatPrice(parseFloat(String(totalHT)) + parseFloat(String(shippingCostHT)))} €
-
-Acompte à régler : ${formatPrice(depositAmount)} € HT
-Solde restant : ${formatPrice(remainingBalance)} € HT
+Total HT : ${formatPrice(parseFloat(String(totalHT)) + parseFloat(String(shippingCostHT)))} \u20ac
+Acompte : ${formatPrice(depositAmount)} \u20ac HT
+Solde : ${formatPrice(remainingBalance)} \u20ac HT
 
 Voir la commande : ${portalUrl}/admin/orders
 
 ---
-Cette notification a été envoyée automatiquement par le portail B2B Market Spas.
+\u00a9 ${new Date().getFullYear()} Market Spas. Tous droits r\u00e9serv\u00e9s.
   `.trim();
 
   const results: Array<{ email: string; success: boolean; messageId?: string; error?: string }> = [];
+  let allSuccess = true;
 
   for (const adminEmail of adminEmails) {
     try {
       const { data, error } = await resend.emails.send({
         from: FROM_EMAIL,
         to: [adminEmail],
-        subject: `🛒 Nouvelle commande #${orderNumber} - ${partnerName}`,
+        subject: `Nouvelle commande #${orderNumber} \u2014 ${partnerName}`,
         html: htmlContent,
         text: textContent,
       });
-
       if (error) {
         console.error(`[Email] Error sending new order notification to ${adminEmail}:`, error);
         results.push({ email: adminEmail, success: false, error: error.message });
+        allSuccess = false;
       } else {
         console.log(`[Email] New order notification sent to ${adminEmail}:`, data?.id);
         results.push({ email: adminEmail, success: true, messageId: data?.id });
       }
     } catch (error) {
-      console.error(`[Email] Exception sending new order notification to ${adminEmail}:`, error);
-      results.push({ 
-        email: adminEmail, 
-        success: false, 
-        error: error instanceof Error ? error.message : String(error) 
-      });
+      console.error(`[Email] Exception sending to ${adminEmail}:`, error);
+      results.push({ email: adminEmail, success: false, error: error instanceof Error ? error.message : String(error) });
+      allSuccess = false;
     }
   }
 
-  const allSuccess = results.every(r => r.success);
   return { success: allSuccess, results };
 }
 
-// Helper function to get admin emails from database
+
+// ============================================
+// HELPER: GET ADMIN EMAILS
+// ============================================
+
 export async function getAdminEmails(): Promise<string[]> {
-  // This will be called from db.ts to avoid circular imports
-  // The actual implementation is in db.ts
   return [];
 }
 
 
 // ============================================
-// ORDER STATUS CHANGE NOTIFICATION FOR PARTNERS
+// 3. ORDER STATUS CHANGE NOTIFICATION
 // ============================================
-
-interface StatusConfig {
-  label: string;
-  emoji: string;
-  color: string;
-  bgColor: string;
-  message: string;
-}
-
-const orderStatusConfig: Record<string, StatusConfig> = {
-  PENDING_APPROVAL: {
-    label: "En attente d'approbation",
-    emoji: "⏳",
-    color: "#92400e",
-    bgColor: "#fef3c7",
-    message: "Votre commande est en cours de validation par notre équipe.",
-  },
-  PENDING_DEPOSIT: {
-    label: "Acompte requis",
-    emoji: "💳",
-    color: "#1e40af",
-    bgColor: "#dbeafe",
-    message: "Un acompte est requis pour confirmer votre commande. Veuillez procéder au paiement.",
-  },
-  DEPOSIT_PAID: {
-    label: "Acompte payé",
-    emoji: "✅",
-    color: "#166534",
-    bgColor: "#dcfce7",
-    message: "Votre acompte a été reçu. Votre commande va être mise en production.",
-  },
-  IN_PRODUCTION: {
-    label: "En production",
-    emoji: "🏭",
-    color: "#7c3aed",
-    bgColor: "#ede9fe",
-    message: "Votre commande est actuellement en cours de fabrication.",
-  },
-  READY_TO_SHIP: {
-    label: "Prêt à expédier",
-    emoji: "📦",
-    color: "#0369a1",
-    bgColor: "#e0f2fe",
-    message: "Votre commande est prête et sera expédiée très prochainement.",
-  },
-  SHIPPED: {
-    label: "Expédié",
-    emoji: "🚚",
-    color: "#0891b2",
-    bgColor: "#cffafe",
-    message: "Votre commande a été expédiée ! Elle est en route vers l'adresse de livraison.",
-  },
-  DELIVERED: {
-    label: "Livré",
-    emoji: "🎉",
-    color: "#059669",
-    bgColor: "#d1fae5",
-    message: "Votre commande a été livrée avec succès. Merci pour votre confiance !",
-  },
-  COMPLETED: {
-    label: "Terminé",
-    emoji: "✨",
-    color: "#065f46",
-    bgColor: "#d1fae5",
-    message: "Votre commande est complète. Merci pour votre fidélité !",
-  },
-  CANCELLED: {
-    label: "Annulé",
-    emoji: "❌",
-    color: "#dc2626",
-    bgColor: "#fee2e2",
-    message: "Votre commande a été annulée. Contactez-nous pour plus d'informations.",
-  },
-};
 
 interface OrderStatusChangeParams {
   orderNumber: string;
@@ -885,101 +615,50 @@ export async function sendOrderStatusChangeToPartner(
   partnerEmail: string,
   params: OrderStatusChangeParams
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  const {
-    orderNumber,
-    partnerName,
-    contactName,
-    oldStatus,
-    newStatus,
-    totalHT,
-    depositAmount,
-    remainingBalance,
-    portalUrl,
-    trackingNumber,
-    estimatedDelivery,
-  } = params;
+  const { orderNumber, partnerName, contactName, oldStatus, newStatus, totalHT, depositAmount, remainingBalance, portalUrl, trackingNumber, estimatedDelivery } = params;
 
-  const formatPrice = (price: number | string): string => {
-    const num = typeof price === 'string' ? parseFloat(price) : price;
-    return num.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
+  const statusInfo = orderStatusConfig[newStatus] || { label: newStatus, emoji: "\ud83d\udccb", color: DS.textSecondary, bgColor: DS.bgSubtle, message: "Le statut de votre commande a \u00e9t\u00e9 mis \u00e0 jour." };
+  const oldStatusInfo = orderStatusConfig[oldStatus] || { label: oldStatus, emoji: "\ud83d\udccb", color: DS.textSecondary, bgColor: DS.bgSubtle, message: "" };
 
-  const statusInfo = orderStatusConfig[newStatus] || {
-    label: newStatus,
-    emoji: "📋",
-    color: "#64748b",
-    bgColor: "#f1f5f9",
-    message: "Le statut de votre commande a été mis à jour.",
-  };
-
-  const oldStatusInfo = orderStatusConfig[oldStatus] || {
-    label: oldStatus,
-    emoji: "📋",
-    color: "#64748b",
-    bgColor: "#f1f5f9",
-    message: "",
-  };
-
-  // Additional info for shipped orders
   const trackingHtml = trackingNumber ? `
-    <tr>
-      <td style="padding: 15px 20px; background-color: #f0f9ff; border-radius: 8px; margin-top: 20px;">
-        <p style="margin: 0 0 10px; color: #0369a1; font-size: 14px; font-weight: 600;">
-          📍 Informations de suivi
-        </p>
-        <p style="margin: 0; color: #1e293b; font-size: 14px;">
-          <strong>N° de suivi :</strong> ${trackingNumber}
-        </p>
-        ${estimatedDelivery ? `<p style="margin: 5px 0 0; color: #1e293b; font-size: 14px;"><strong>Livraison estimée :</strong> ${estimatedDelivery}</p>` : ''}
-      </td>
-    </tr>
-  ` : '';
-
-  const htmlContent = `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mise à jour de commande - Market Spas</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
-  <table role="presentation" style="width: 100%; border-collapse: collapse;">
-    <tr>
-      <td align="center" style="padding: 40px 0;">
-        <table role="presentation" style="width: 600px; max-width: 100%; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-          <!-- Header -->
           <tr>
-            <td style="padding: 30px 40px; text-align: center; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-radius: 8px 8px 0 0;">
-              <img src="${LOGO_URL}" alt="Market Spas" width="50" height="50" style="display: block; margin: 0 auto 10px; border-radius: 10px;" />
-              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Market Spas</h1>
-              <p style="margin: 10px 0 0; color: #ffffff; font-size: 16px; opacity: 0.95;">Mise à jour de votre commande</p>
+            <td style="padding: 0 40px 24px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; background-color: #f0f9ff; border-radius: 8px;">
+                <tr>
+                  <td style="padding: 16px 20px;">
+                    <p style="margin: 0 0 8px; color: #0369a1; font-size: 13px; font-weight: 600;">\ud83d\udccd Informations de suivi</p>
+                    <p style="margin: 0; color: ${DS.text}; font-size: 13px;"><strong>N\u00b0 de suivi :</strong> ${trackingNumber}</p>
+                    ${estimatedDelivery ? `<p style="margin: 4px 0 0; color: ${DS.text}; font-size: 13px;"><strong>Livraison estim\u00e9e :</strong> ${estimatedDelivery}</p>` : ''}
+                  </td>
+                </tr>
+              </table>
             </td>
-          </tr>
-          
+          </tr>` : '';
+
+  const body = `
           <!-- Order Number -->
           <tr>
-            <td style="padding: 25px 40px 15px; text-align: center;">
-              <p style="margin: 0; color: #64748b; font-size: 14px;">Commande</p>
-              <p style="margin: 5px 0 0; color: #1e293b; font-size: 22px; font-weight: 700;">#${orderNumber}</p>
+            <td style="padding: 28px 40px 16px; text-align: center;">
+              <p style="margin: 0; color: ${DS.textMuted}; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Commande</p>
+              <p style="margin: 6px 0 0; color: ${DS.text}; font-size: 22px; font-weight: 700; letter-spacing: -0.5px;">#${orderNumber}</p>
             </td>
           </tr>
-          
+
           <!-- Status Change -->
           <tr>
-            <td style="padding: 0 40px 25px;">
-              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+            <td style="padding: 0 40px 24px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
                 <tr>
-                  <td style="width: 45%; text-align: center; padding: 15px;">
-                    <p style="margin: 0 0 8px; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Ancien statut</p>
-                    <span style="display: inline-block; padding: 8px 16px; background-color: #f1f5f9; color: #64748b; border-radius: 20px; font-size: 13px; text-decoration: line-through;">
+                  <td style="width: 44%; text-align: center; padding: 12px;">
+                    <p style="margin: 0 0 6px; color: ${DS.textMuted}; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Ancien statut</p>
+                    <span style="display: inline-block; padding: 7px 14px; background-color: #f1f5f9; color: ${DS.textSecondary}; border-radius: 16px; font-size: 12px; text-decoration: line-through;">
                       ${oldStatusInfo.emoji} ${oldStatusInfo.label}
                     </span>
                   </td>
-                  <td style="width: 10%; text-align: center; color: #94a3b8; font-size: 20px;">→</td>
-                  <td style="width: 45%; text-align: center; padding: 15px;">
-                    <p style="margin: 0 0 8px; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Nouveau statut</p>
-                    <span style="display: inline-block; padding: 10px 20px; background-color: ${statusInfo.bgColor}; color: ${statusInfo.color}; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                  <td style="width: 12%; text-align: center; color: ${DS.textMuted}; font-size: 18px;">\u2192</td>
+                  <td style="width: 44%; text-align: center; padding: 12px;">
+                    <p style="margin: 0 0 6px; color: ${DS.textMuted}; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Nouveau statut</p>
+                    <span style="display: inline-block; padding: 8px 16px; background-color: ${statusInfo.bgColor}; color: ${statusInfo.color}; border-radius: 16px; font-size: 13px; font-weight: 600;">
                       ${statusInfo.emoji} ${statusInfo.label}
                     </span>
                   </td>
@@ -987,145 +666,94 @@ export async function sendOrderStatusChangeToPartner(
               </table>
             </td>
           </tr>
-          
+
           <!-- Message -->
           <tr>
-            <td style="padding: 0 40px 25px;">
-              <div style="padding: 20px; background-color: ${statusInfo.bgColor}; border-left: 4px solid ${statusInfo.color}; border-radius: 4px;">
-                <p style="margin: 0; color: ${statusInfo.color}; font-size: 15px; line-height: 1.6;">
-                  ${statusInfo.message}
-                </p>
-              </div>
-            </td>
+            ${alertBox(statusInfo.message, newStatus === 'CANCELLED' ? 'danger' : 'info')}
           </tr>
-          
-          <!-- Tracking Info (if shipped) -->
+
           ${trackingHtml}
-          
-          <!-- Order Summary -->
+
+          <!-- Summary -->
           <tr>
-            <td style="padding: 25px 40px;">
-              <table role="presentation" style="width: 100%; background-color: #f8fafc; border-radius: 8px; padding: 20px;">
+            <td style="padding: 20px 40px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; background-color: ${DS.bgSubtle}; border-radius: 8px;">
                 <tr>
-                  <td>
-                    <p style="margin: 0 0 15px; color: #1e293b; font-size: 16px; font-weight: 600;">Récapitulatif</p>
-                    <table role="presentation" style="width: 100%;">
-                      <tr>
-                        <td style="padding: 5px 0; color: #64748b; font-size: 14px;">Entreprise :</td>
-                        <td style="padding: 5px 0; color: #1e293b; font-size: 14px; text-align: right;">${partnerName}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 5px 0; color: #64748b; font-size: 14px;">Total HT :</td>
-                        <td style="padding: 5px 0; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">${formatPrice(totalHT)} €</td>
-                      </tr>
-                      ${depositAmount ? `<tr>
-                        <td style="padding: 5px 0; color: #64748b; font-size: 14px;">Acompte payé :</td>
-                        <td style="padding: 5px 0; color: #059669; font-size: 14px; font-weight: 600; text-align: right;">${formatPrice(depositAmount)} €</td>
-                      </tr>` : ''}
-                      ${remainingBalance ? `<tr>
-                        <td style="padding: 5px 0; color: #64748b; font-size: 14px;">Solde restant :</td>
-                        <td style="padding: 5px 0; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">${formatPrice(remainingBalance)} €</td>
-                      </tr>` : ''}
+                  <td style="padding: 18px 22px;">
+                    <p style="margin: 0 0 12px; color: ${DS.text}; font-size: 14px; font-weight: 600;">R\u00e9capitulatif</p>
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
+                      ${infoRow('Entreprise', partnerName)}
+                      ${infoRow('Total HT', formatPrice(totalHT) + '\u00a0\u20ac', { bold: true })}
+                      ${depositAmount ? infoRow('Acompte pay\u00e9', formatPrice(depositAmount) + '\u00a0\u20ac', { color: DS.success }) : ''}
+                      ${remainingBalance ? infoRow('Solde restant', formatPrice(remainingBalance) + '\u00a0\u20ac', { bold: true }) : ''}
                     </table>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
-          
-          <!-- CTA Button -->
+
+          <!-- CTA -->
           <tr>
-            <td style="padding: 0 40px 40px;">
-              <table role="presentation" style="width: 100%;">
-                <tr>
-                  <td align="center">
-                    <a href="${portalUrl}/order/${orderNumber}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);">
-                      Suivre ma commande
-                    </a>
-                  </td>
-                </tr>
-              </table>
+            <td style="padding: 8px 40px 32px;">
+              ${ctaButton('Suivre ma commande', portalUrl + '/order/' + orderNumber)}
             </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 25px 40px; background-color: #f8fafc; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">
-              <p style="margin: 0 0 10px; color: #64748b; font-size: 13px; text-align: center;">
-                Une question ? Contactez notre équipe via le portail partenaires.
-              </p>
-              <p style="margin: 0; color: #94a3b8; font-size: 12px; text-align: center;">
-                © ${new Date().getFullYear()} Market Spas. Tous droits réservés.<br>
-                Cet email a été envoyé automatiquement, merci de ne pas y répondre.
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `;
+          </tr>`;
+
+  const htmlContent = emailWrapper(
+    emailHeader({ subtitle: 'Mise \u00e0 jour de votre commande' }) +
+    body +
+    emailFooter('Une question ? Contactez notre \u00e9quipe via le portail partenaires.')
+  );
 
   const textContent = `
-MISE À JOUR DE VOTRE COMMANDE
+MISE \u00c0 JOUR DE VOTRE COMMANDE
 =============================
 
 Bonjour ${contactName},
 
-Le statut de votre commande #${orderNumber} a été mis à jour.
+Le statut de votre commande #${orderNumber} a \u00e9t\u00e9 mis \u00e0 jour.
 
-CHANGEMENT DE STATUT
---------------------
-${oldStatusInfo.emoji} ${oldStatusInfo.label} → ${statusInfo.emoji} ${statusInfo.label}
+${oldStatusInfo.emoji} ${oldStatusInfo.label} \u2192 ${statusInfo.emoji} ${statusInfo.label}
 
 ${statusInfo.message}
-${trackingNumber ? `\nN° de suivi : ${trackingNumber}` : ''}
-${estimatedDelivery ? `Livraison estimée : ${estimatedDelivery}` : ''}
+${trackingNumber ? `N\u00b0 de suivi : ${trackingNumber}` : ''}
+${estimatedDelivery ? `Livraison estim\u00e9e : ${estimatedDelivery}` : ''}
 
-RÉCAPITULATIF
--------------
 Entreprise : ${partnerName}
-Total HT : ${formatPrice(totalHT)} €
-${depositAmount ? `Acompte payé : ${formatPrice(depositAmount)} €` : ''}
-${remainingBalance ? `Solde restant : ${formatPrice(remainingBalance)} €` : ''}
+Total HT : ${formatPrice(totalHT)} \u20ac
+${depositAmount ? `Acompte pay\u00e9 : ${formatPrice(depositAmount)} \u20ac` : ''}
+${remainingBalance ? `Solde restant : ${formatPrice(remainingBalance)} \u20ac` : ''}
 
 Suivre ma commande : ${portalUrl}/order/${orderNumber}
 
 ---
-© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
-Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+\u00a9 ${new Date().getFullYear()} Market Spas. Tous droits r\u00e9serv\u00e9s.
   `.trim();
 
   try {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: [partnerEmail],
-      subject: `${statusInfo.emoji} Commande #${orderNumber} - ${statusInfo.label}`,
+      subject: `${statusInfo.emoji} Commande #${orderNumber} \u2014 ${statusInfo.label}`,
       html: htmlContent,
       text: textContent,
     });
-
     if (error) {
       console.error(`[Email] Error sending order status change to ${partnerEmail}:`, error);
       return { success: false, error: error.message };
     }
-
     console.log(`[Email] Order status change notification sent to ${partnerEmail}:`, data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error(`[Email] Exception sending order status change to ${partnerEmail}:`, error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : String(error) 
-    };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
 
 // ============================================
-// DEPOSIT REMINDER EMAIL FOR PARTNERS
+// 4. DEPOSIT REMINDER EMAIL
 // ============================================
 
 interface DepositReminderParams {
@@ -1143,112 +771,48 @@ export async function sendDepositReminderEmail(
   partnerEmail: string,
   params: DepositReminderParams
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  const {
-    orderNumber,
-    partnerName,
-    contactName,
-    depositAmount,
-    totalHT,
-    orderDate,
-    portalUrl,
-    hoursOverdue,
-  } = params;
+  const { orderNumber, partnerName, contactName, depositAmount, totalHT, orderDate, portalUrl, hoursOverdue } = params;
 
-  const formatPrice = (price: number | string): string => {
-    const num = typeof price === 'string' ? parseFloat(price) : price;
-    return num.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
+  const isUrgent = hoursOverdue >= 72;
+  const urgencyColor = isUrgent ? DS.danger : DS.warning;
+  const urgencyGradient = isUrgent
+    ? 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'
+    : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+  const urgencyMessage = isUrgent
+    ? 'Votre commande risque d\u2019\u00eatre annul\u00e9e si le paiement n\u2019est pas effectu\u00e9 rapidement.'
+    : 'Nous vous rappelons qu\u2019un acompte est n\u00e9cessaire pour confirmer votre commande.';
 
-  const formatDate = (date: Date): string => {
-    return date.toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const urgencyLevel = hoursOverdue >= 72 ? 'high' : 'medium';
-  const urgencyColor = urgencyLevel === 'high' ? '#dc2626' : '#f59e0b';
-  const urgencyBgColor = urgencyLevel === 'high' ? '#fef2f2' : '#fffbeb';
-  const urgencyMessage = urgencyLevel === 'high' 
-    ? 'Votre commande risque d\'être annulée si le paiement n\'est pas effectué rapidement.'
-    : 'Nous vous rappelons qu\'un acompte est nécessaire pour confirmer votre commande.';
-
-  const htmlContent = `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rappel de paiement - Market Spas</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
-  <table role="presentation" style="width: 100%; border-collapse: collapse;">
-    <tr>
-      <td align="center" style="padding: 40px 0;">
-        <table role="presentation" style="width: 600px; max-width: 100%; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-          <!-- Header -->
-          <tr>
-            <td style="padding: 30px 40px; text-align: center; background: linear-gradient(135deg, ${urgencyColor} 0%, ${urgencyLevel === 'high' ? '#b91c1c' : '#d97706'} 100%); border-radius: 8px 8px 0 0;">
-              <img src="${LOGO_URL}" alt="Market Spas" width="50" height="50" style="display: block; margin: 0 auto 10px; border-radius: 10px;" />
-              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">💳 Rappel de paiement</h1>
-              <p style="margin: 10px 0 0; color: #ffffff; font-size: 16px; opacity: 0.95;">Acompte en attente</p>
-            </td>
-          </tr>
-          
+  const body = `
           <!-- Greeting -->
           <tr>
-            <td style="padding: 30px 40px 15px;">
-              <p style="margin: 0; color: #1e293b; font-size: 16px; line-height: 1.6;">
+            <td style="padding: 28px 40px 16px;">
+              <p style="margin: 0; color: ${DS.text}; font-size: 15px; line-height: 1.6;">
                 Bonjour <strong>${contactName}</strong>,
               </p>
             </td>
           </tr>
-          
-          <!-- Alert Box -->
+
+          <!-- Alert -->
           <tr>
-            <td style="padding: 0 40px 25px;">
-              <div style="padding: 20px; background-color: ${urgencyBgColor}; border-left: 4px solid ${urgencyColor}; border-radius: 4px;">
-                <p style="margin: 0; color: ${urgencyColor}; font-size: 15px; line-height: 1.6; font-weight: 500;">
-                  ⚠️ ${urgencyMessage}
-                </p>
-              </div>
-            </td>
+            ${alertBox(urgencyMessage, isUrgent ? 'danger' : 'warning')}
           </tr>
-          
+
           <!-- Order Details -->
           <tr>
-            <td style="padding: 0 40px 25px;">
-              <table role="presentation" style="width: 100%; background-color: #f8fafc; border-radius: 8px; padding: 20px;">
+            <td style="padding: 0 40px 24px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; background-color: ${DS.bgSubtle}; border-radius: 8px;">
                 <tr>
-                  <td>
-                    <p style="margin: 0 0 15px; color: #1e293b; font-size: 16px; font-weight: 600;">📦 Détails de la commande</p>
-                    <table role="presentation" style="width: 100%;">
+                  <td style="padding: 20px 22px;">
+                    <p style="margin: 0 0 14px; color: ${DS.text}; font-size: 14px; font-weight: 600;">D\u00e9tails de la commande</p>
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
+                      ${infoRow('N\u00b0 de commande', '#' + orderNumber, { bold: true })}
+                      ${infoRow('Date de commande', formatDateShort(orderDate))}
+                      ${infoRow('Entreprise', partnerName)}
+                      <tr><td colspan="2" style="padding: 8px 0;"><hr style="border: none; border-top: 1px solid ${DS.border}; margin: 0;"></td></tr>
+                      ${infoRow('Total HT', formatPrice(totalHT) + '\u00a0\u20ac')}
                       <tr>
-                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">N° de commande :</td>
-                        <td style="padding: 8px 0; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">#${orderNumber}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Date de commande :</td>
-                        <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${formatDate(orderDate)}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Entreprise :</td>
-                        <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${partnerName}</td>
-                      </tr>
-                      <tr>
-                        <td colspan="2" style="padding: 15px 0 8px;">
-                          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 0;">
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Total HT de la commande :</td>
-                        <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${formatPrice(totalHT)} €</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 0; color: ${urgencyColor}; font-size: 16px; font-weight: 600;">Acompte à régler :</td>
-                        <td style="padding: 8px 0; color: ${urgencyColor}; font-size: 18px; font-weight: 700; text-align: right;">${formatPrice(depositAmount)} €</td>
+                        <td style="padding: 7px 0; color: ${urgencyColor}; font-size: 14px; font-weight: 600;">Acompte \u00e0 r\u00e9gler</td>
+                        <td style="padding: 7px 0; text-align: right; color: ${urgencyColor}; font-size: 16px; font-weight: 700;">${formatPrice(depositAmount)}\u00a0\u20ac</td>
                       </tr>
                     </table>
                   </td>
@@ -1256,530 +820,483 @@ export async function sendDepositReminderEmail(
               </table>
             </td>
           </tr>
-          
-          <!-- CTA Button -->
+
+          <!-- CTA -->
           <tr>
             <td style="padding: 0 40px 20px;">
-              <table role="presentation" style="width: 100%;">
-                <tr>
-                  <td align="center">
-                    <a href="${portalUrl}/order/${orderNumber}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, ${urgencyColor} 0%, ${urgencyLevel === 'high' ? '#b91c1c' : '#d97706'} 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
-                      Payer mon acompte maintenant
-                    </a>
-                  </td>
-                </tr>
-              </table>
+              ${ctaButton('Payer mon acompte', portalUrl + '/order/' + orderNumber, { gradient: urgencyGradient, color: urgencyColor })}
             </td>
           </tr>
-          
-          <!-- Help Text -->
+
+          <!-- Help -->
           <tr>
-            <td style="padding: 0 40px 30px;">
-              <p style="margin: 0; color: #64748b; font-size: 14px; text-align: center; line-height: 1.6;">
-                Vous avez déjà effectué le paiement ? Ignorez ce message.<br>
-                Une question ? Contactez notre équipe via le portail partenaires.
+            <td style="padding: 0 40px 8px;">
+              <p style="margin: 0; color: ${DS.textMuted}; font-size: 12px; text-align: center; line-height: 1.6;">
+                Vous avez d\u00e9j\u00e0 effectu\u00e9 le paiement ? Ignorez ce message.<br>
+                Une question ? Contactez notre \u00e9quipe via le portail partenaires.
               </p>
             </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 25px 40px; background-color: #f8fafc; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">
-              <p style="margin: 0; color: #94a3b8; font-size: 12px; text-align: center;">
-                © ${new Date().getFullYear()} Market Spas. Tous droits réservés.<br>
-                Cet email a été envoyé automatiquement, merci de ne pas y répondre.
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `;
+          </tr>`;
+
+  const subjectEmoji = isUrgent ? '\ud83d\udea8' : '\ud83d\udcb3';
+  const subjectText = isUrgent ? 'URGENT' : 'Rappel';
+
+  const htmlContent = emailWrapper(
+    emailHeader({ subtitle: 'Acompte en attente', accentGradient: urgencyGradient }) +
+    body +
+    emailFooter()
+  );
 
   const textContent = `
-RAPPEL DE PAIEMENT - ACOMPTE EN ATTENTE
-=======================================
+RAPPEL DE PAIEMENT \u2014 ACOMPTE EN ATTENTE
 
 Bonjour ${contactName},
 
 ${urgencyMessage}
 
-DÉTAILS DE LA COMMANDE
-----------------------
-N° de commande : #${orderNumber}
-Date de commande : ${formatDate(orderDate)}
+N\u00b0 de commande : #${orderNumber}
+Date : ${formatDateShort(orderDate)}
 Entreprise : ${partnerName}
+Total HT : ${formatPrice(totalHT)} \u20ac
+Acompte \u00e0 r\u00e9gler : ${formatPrice(depositAmount)} \u20ac
 
-Total HT de la commande : ${formatPrice(totalHT)} €
-ACOMPTE À RÉGLER : ${formatPrice(depositAmount)} €
-
-Payer mon acompte : ${portalUrl}/order/${orderNumber}
+Payer : ${portalUrl}/order/${orderNumber}
 
 ---
-Vous avez déjà effectué le paiement ? Ignorez ce message.
-Une question ? Contactez notre équipe via le portail partenaires.
-
-© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
-Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+\u00a9 ${new Date().getFullYear()} Market Spas. Tous droits r\u00e9serv\u00e9s.
   `.trim();
-
-  const subjectEmoji = urgencyLevel === 'high' ? '🚨' : '💳';
-  const subjectText = urgencyLevel === 'high' ? 'URGENT' : 'Rappel';
 
   try {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: [partnerEmail],
-      subject: `${subjectEmoji} ${subjectText} : Acompte en attente - Commande #${orderNumber}`,
+      subject: `${subjectEmoji} ${subjectText} : Acompte en attente \u2014 Commande #${orderNumber}`,
       html: htmlContent,
       text: textContent,
     });
-
     if (error) {
       console.error(`[Email] Error sending deposit reminder to ${partnerEmail}:`, error);
       return { success: false, error: error.message };
     }
-
     console.log(`[Email] Deposit reminder sent to ${partnerEmail}:`, data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error(`[Email] Exception sending deposit reminder to ${partnerEmail}:`, error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : String(error) 
-    };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
-/**
- * Send password reset email
- */
+
+// ============================================
+// 5. PASSWORD RESET EMAIL
+// ============================================
+
 export async function sendPasswordResetEmail(
   email: string,
   resetToken: string,
   resetUrl: string
 ) {
-  const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-    .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
-    .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
-    .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
-    .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>🔒 Market Spas</h1>
-      <p>Réinitialisation de mot de passe</p>
-    </div>
-    <div class="content">
-      <h2>Bonjour,</h2>
-      <p>Vous avez demandé à réinitialiser votre mot de passe pour accéder au portail B2B Market Spas.</p>
-      
-      <p>Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe :</p>
-      <a href="${resetUrl}" class="btn">Réinitialiser mon mot de passe</a>
-      
-      <div class="warning">
-        <p><strong>⚠️ Important :</strong></p>
-        <p>Ce lien est valable pendant 1 heure seulement.</p>
-        <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
-      </div>
-      
-      <p style="margin-top: 20px; font-size: 12px; color: #64748b;">
-        Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :<br>
-        <a href="${resetUrl}" style="color: #2563eb; word-break: break-all;">${resetUrl}</a>
-      </p>
-    </div>
-    <div class="footer">
-      <p>Market Spas - Votre partenaire wellness</p>
-      <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
+  const body = `
+          <!-- Greeting -->
+          <tr>
+            <td style="padding: 32px 40px 16px;">
+              <h2 style="margin: 0 0 16px; color: ${DS.text}; font-size: 20px; font-weight: 700;">Bonjour,</h2>
+              <p style="margin: 0; color: ${DS.textSecondary}; font-size: 15px; line-height: 1.7;">
+                Vous avez demand\u00e9 \u00e0 r\u00e9initialiser votre mot de passe pour acc\u00e9der au portail B2B Market Spas.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Instruction -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              <p style="margin: 0; color: ${DS.textSecondary}; font-size: 15px; line-height: 1.7;">
+                Cliquez sur le bouton ci-dessous pour cr\u00e9er un nouveau mot de passe\u00a0:
+              </p>
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              ${ctaButton('R\u00e9initialiser mon mot de passe', resetUrl)}
+            </td>
+          </tr>
+
+          <!-- Warning -->
+          <tr>
+            ${alertBox('<strong>Important :</strong> Ce lien est valable pendant 1 heure seulement. Si vous n\u2019avez pas demand\u00e9 cette r\u00e9initialisation, ignorez cet email.', 'warning')}
+          </tr>
+
+          <!-- Fallback link -->
+          <tr>
+            <td style="padding: 0 40px 8px;">
+              <p style="margin: 0; color: ${DS.textMuted}; font-size: 12px; line-height: 1.6;">
+                Si le bouton ne fonctionne pas, copiez et collez ce lien\u00a0:<br>
+                <a href="${resetUrl}" style="color: ${DS.primary}; text-decoration: underline; word-break: break-all; font-size: 12px;">${resetUrl}</a>
+              </p>
+            </td>
+          </tr>`;
+
+  const htmlContent = emailWrapper(
+    emailHeader({ subtitle: 'R\u00e9initialisation de mot de passe', accentGradient: 'linear-gradient(135deg, #64748b 0%, #475569 100%)' }) +
+    body +
+    emailFooter()
+  );
 
   const textContent = `
-RÉINITIALISATION DE MOT DE PASSE
-Market Spas - Portail B2B
+R\u00c9INITIALISATION DE MOT DE PASSE
+Market Spas \u2014 Portail B2B
 
 Bonjour,
 
-Vous avez demandé à réinitialiser votre mot de passe pour accéder au portail B2B Market Spas.
+Vous avez demand\u00e9 \u00e0 r\u00e9initialiser votre mot de passe.
 
-Cliquez sur ce lien pour créer un nouveau mot de passe :
-${resetUrl}
+Cliquez sur ce lien : ${resetUrl}
 
-⚠️ IMPORTANT :
-- Ce lien est valable pendant 1 heure seulement
-- Si vous n'avez pas demandé cette réinitialisation, ignorez cet email
+Ce lien est valable pendant 1 heure.
+Si vous n'avez pas demand\u00e9 cette r\u00e9initialisation, ignorez cet email.
 
 ---
-© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
-Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+\u00a9 ${new Date().getFullYear()} Market Spas. Tous droits r\u00e9serv\u00e9s.
   `.trim();
 
   try {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: [email],
-      subject: "🔒 Réinitialisation de votre mot de passe - Market Spas",
+      subject: `R\u00e9initialisation de votre mot de passe \u2014 Market Spas`,
       html: htmlContent,
       text: textContent,
     });
-
     if (error) {
       console.error(`[Email] Error sending password reset to ${email}:`, error);
       return { success: false, error: error.message };
     }
-
     console.log(`[Email] Password reset sent to ${email}:`, data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error(`[Email] Exception sending password reset to ${email}:`, error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : String(error) 
-    };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
-/**
- * Send payment confirmation email (Mollie SEPA)
- */
+
+// ============================================
+// 6. PAYMENT CONFIRMATION EMAIL
+// ============================================
+
 export async function sendPaymentConfirmationEmail(
   email: string,
   orderNumber: string,
   amount: number,
   paymentMethod: string
 ) {
-  const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-    .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
-    .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
-    .success-box { background: #d1fae5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 4px; }
-    .payment-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
-    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
-    .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>✅ Paiement confirmé</h1>
-      <p>Market Spas</p>
-    </div>
-    <div class="content">
-      <div class="success-box">
-        <p style="margin: 0;"><strong>✅ Votre paiement a été traité avec succès !</strong></p>
-      </div>
-      
-      <h2>Bonjour,</h2>
-      <p>Nous avons bien reçu votre paiement pour la commande <strong>#${orderNumber}</strong>.</p>
-      
-      <div class="payment-details">
-        <h3>Détails du paiement</h3>
-        <div class="detail-row">
-          <span>N° de commande</span>
-          <span><strong>#${orderNumber}</strong></span>
-        </div>
-        <div class="detail-row">
-          <span>Montant payé</span>
-          <span><strong>${formatPrice(amount)} €</strong></span>
-        </div>
-        <div class="detail-row">
-          <span>Méthode de paiement</span>
-          <span>${paymentMethod}</span>
-        </div>
-        <div class="detail-row">
-          <span>Date</span>
-          <span>${formatDate(new Date())}</span>
-        </div>
-      </div>
-      
-      <p>Votre commande est maintenant en cours de traitement. Vous recevrez une notification lorsqu'elle sera expédiée.</p>
-      <a href="${ENV.siteUrl}/orders/${orderNumber}" class="btn">Voir ma commande</a>
-    </div>
-    <div class="footer">
-      <p>Market Spas - Votre partenaire wellness</p>
-      <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
+  const body = `
+          <!-- Success Banner -->
+          <tr>
+            ${alertBox('<strong>Votre paiement a \u00e9t\u00e9 trait\u00e9 avec succ\u00e8s !</strong>', 'success')}
+          </tr>
+
+          <!-- Greeting -->
+          <tr>
+            <td style="padding: 0 40px 20px;">
+              <h2 style="margin: 0 0 12px; color: ${DS.text}; font-size: 20px; font-weight: 700;">Bonjour,</h2>
+              <p style="margin: 0; color: ${DS.textSecondary}; font-size: 15px; line-height: 1.7;">
+                Nous avons bien re\u00e7u votre paiement pour la commande <strong style="color: ${DS.text};">#${orderNumber}</strong>.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Payment Details -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; background-color: ${DS.bgSubtle}; border-radius: 8px; border: 1px solid ${DS.border};">
+                <tr>
+                  <td style="padding: 20px 22px;">
+                    <p style="margin: 0 0 14px; color: ${DS.text}; font-size: 14px; font-weight: 600;">D\u00e9tails du paiement</p>
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
+                      ${infoRow('N\u00b0 de commande', '#' + orderNumber, { bold: true })}
+                      ${infoRow('Montant pay\u00e9', formatPrice(amount) + '\u00a0\u20ac', { bold: true, color: DS.success })}
+                      ${infoRow('M\u00e9thode', paymentMethod)}
+                      ${infoRow('Date', formatDate(new Date()))}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Next steps -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              <p style="margin: 0; color: ${DS.textSecondary}; font-size: 14px; line-height: 1.7;">
+                Votre commande est maintenant en cours de traitement. Vous recevrez une notification lorsqu\u2019elle sera exp\u00e9di\u00e9e.
+              </p>
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td style="padding: 0 40px 32px;">
+              ${ctaButton('Voir ma commande', ENV.siteUrl + '/orders/' + orderNumber)}
+            </td>
+          </tr>`;
+
+  const htmlContent = emailWrapper(
+    emailHeader({ subtitle: 'Paiement confirm\u00e9', accentGradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }) +
+    body +
+    emailFooter()
+  );
 
   const textContent = `
-✅ PAIEMENT CONFIRMÉ
-Market Spas - Portail B2B
+PAIEMENT CONFIRM\u00c9
+Market Spas \u2014 Portail B2B
 
 Bonjour,
 
-Nous avons bien reçu votre paiement pour la commande #${orderNumber}.
+Nous avons bien re\u00e7u votre paiement pour la commande #${orderNumber}.
 
-DÉTAILS DU PAIEMENT
--------------------
-N° de commande : #${orderNumber}
-Montant payé : ${formatPrice(amount)} €
-Méthode de paiement : ${paymentMethod}
+N\u00b0 de commande : #${orderNumber}
+Montant pay\u00e9 : ${formatPrice(amount)} \u20ac
+M\u00e9thode : ${paymentMethod}
 Date : ${formatDate(new Date())}
-
-Votre commande est maintenant en cours de traitement. Vous recevrez une notification lorsqu'elle sera expédiée.
 
 Voir ma commande : ${ENV.siteUrl}/orders/${orderNumber}
 
 ---
-© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
-Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+\u00a9 ${new Date().getFullYear()} Market Spas. Tous droits r\u00e9serv\u00e9s.
   `.trim();
 
   try {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: [email],
-      subject: `✅ Paiement confirmé - Commande #${orderNumber}`,
+      subject: `Paiement confirm\u00e9 \u2014 Commande #${orderNumber}`,
       html: htmlContent,
       text: textContent,
     });
-
     if (error) {
       console.error(`[Email] Error sending payment confirmation to ${email}:`, error);
       return { success: false, error: error.message };
     }
-
     console.log(`[Email] Payment confirmation sent to ${email}:`, data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error(`[Email] Exception sending payment confirmation to ${email}:`, error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : String(error) 
-    };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
-/**
- * Send payment failure email (Mollie SEPA)
- */
+
+// ============================================
+// 7. PAYMENT FAILURE EMAIL
+// ============================================
+
 export async function sendPaymentFailureEmail(
   email: string,
   orderNumber: string,
   amount: number,
   reason: string
 ) {
-  const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-    .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
-    .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
-    .error-box { background: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; border-radius: 4px; }
-    .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>❌ Échec du paiement</h1>
-      <p>Market Spas</p>
-    </div>
-    <div class="content">
-      <div class="error-box">
-        <p style="margin: 0;"><strong>❌ Votre paiement n'a pas pu être traité</strong></p>
-      </div>
-      
-      <h2>Bonjour,</h2>
-      <p>Malheureusement, nous n'avons pas pu traiter votre paiement pour la commande <strong>#${orderNumber}</strong>.</p>
-      
-      <p><strong>Raison :</strong> ${reason}</p>
-      
-      <p><strong>Montant :</strong> ${formatPrice(amount)} €</p>
-      
-      <p>Nous vous invitons à réessayer avec une autre méthode de paiement ou à contacter votre banque si le problème persiste.</p>
-      
-      <a href="${ENV.siteUrl}/orders/${orderNumber}" class="btn">Réessayer le paiement</a>
-    </div>
-    <div class="footer">
-      <p>Market Spas - Votre partenaire wellness</p>
-      <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
+  const body = `
+          <!-- Error Banner -->
+          <tr>
+            ${alertBox('<strong>Votre paiement n\u2019a pas pu \u00eatre trait\u00e9</strong>', 'danger')}
+          </tr>
+
+          <!-- Greeting -->
+          <tr>
+            <td style="padding: 0 40px 20px;">
+              <h2 style="margin: 0 0 12px; color: ${DS.text}; font-size: 20px; font-weight: 700;">Bonjour,</h2>
+              <p style="margin: 0; color: ${DS.textSecondary}; font-size: 15px; line-height: 1.7;">
+                Malheureusement, nous n\u2019avons pas pu traiter votre paiement pour la commande <strong style="color: ${DS.text};">#${orderNumber}</strong>.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Details -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; background-color: ${DS.bgSubtle}; border-radius: 8px; border: 1px solid ${DS.border};">
+                <tr>
+                  <td style="padding: 20px 22px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
+                      ${infoRow('Raison', reason, { color: DS.danger })}
+                      ${infoRow('Montant', formatPrice(amount) + '\u00a0\u20ac')}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Help -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              <p style="margin: 0; color: ${DS.textSecondary}; font-size: 14px; line-height: 1.7;">
+                Nous vous invitons \u00e0 r\u00e9essayer avec une autre m\u00e9thode de paiement ou \u00e0 contacter votre banque si le probl\u00e8me persiste.
+              </p>
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td style="padding: 0 40px 32px;">
+              ${ctaButton('R\u00e9essayer le paiement', ENV.siteUrl + '/orders/' + orderNumber, { gradient: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#2563eb' })}
+            </td>
+          </tr>`;
+
+  const htmlContent = emailWrapper(
+    emailHeader({ subtitle: '\u00c9chec du paiement', accentGradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }) +
+    body +
+    emailFooter()
+  );
 
   const textContent = `
-❌ ÉCHEC DU PAIEMENT
-Market Spas - Portail B2B
+\u00c9CHEC DU PAIEMENT
+Market Spas \u2014 Portail B2B
 
 Bonjour,
 
-Malheureusement, nous n'avons pas pu traiter votre paiement pour la commande #${orderNumber}.
+Nous n'avons pas pu traiter votre paiement pour la commande #${orderNumber}.
 
 Raison : ${reason}
-Montant : ${formatPrice(amount)} €
+Montant : ${formatPrice(amount)} \u20ac
 
-Nous vous invitons à réessayer avec une autre méthode de paiement ou à contacter votre banque si le problème persiste.
-
-Réessayer le paiement : ${ENV.siteUrl}/orders/${orderNumber}
+R\u00e9essayer : ${ENV.siteUrl}/orders/${orderNumber}
 
 ---
-© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
-Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+\u00a9 ${new Date().getFullYear()} Market Spas. Tous droits r\u00e9serv\u00e9s.
   `.trim();
 
   try {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: [email],
-      subject: `❌ Échec du paiement - Commande #${orderNumber}`,
+      subject: `\u00c9chec du paiement \u2014 Commande #${orderNumber}`,
       html: htmlContent,
       text: textContent,
     });
-
     if (error) {
       console.error(`[Email] Error sending payment failure to ${email}:`, error);
       return { success: false, error: error.message };
     }
-
     console.log(`[Email] Payment failure sent to ${email}:`, data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error(`[Email] Exception sending payment failure to ${email}:`, error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : String(error) 
-    };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
-/**
- * Send refund confirmation email
- */
+
+// ============================================
+// 8. REFUND CONFIRMATION EMAIL
+// ============================================
+
 export async function sendRefundConfirmationEmail(
   email: string,
   orderNumber: string,
   amount: number
 ) {
-  const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-    .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
-    .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
-    .info-box { background: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px; }
-    .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>💰 Remboursement effectué</h1>
-      <p>Market Spas</p>
-    </div>
-    <div class="content">
-      <div class="info-box">
-        <p style="margin: 0;"><strong>💰 Votre remboursement a été traité</strong></p>
-      </div>
-      
-      <h2>Bonjour,</h2>
-      <p>Nous avons procédé au remboursement de votre commande <strong>#${orderNumber}</strong>.</p>
-      
-      <p><strong>Montant remboursé :</strong> ${formatPrice(amount)} €</p>
-      
-      <p>Le montant sera crédité sur votre compte bancaire sous 5 à 10 jours ouvrés, selon votre banque.</p>
-      
-      <p>Si vous avez des questions concernant ce remboursement, n'hésitez pas à nous contacter via le portail partenaires.</p>
-      
-      <a href="${ENV.siteUrl}/orders/${orderNumber}" class="btn">Voir ma commande</a>
-    </div>
-    <div class="footer">
-      <p>Market Spas - Votre partenaire wellness</p>
-      <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
+  const body = `
+          <!-- Info Banner -->
+          <tr>
+            ${alertBox('<strong>Votre remboursement a \u00e9t\u00e9 trait\u00e9</strong>', 'info')}
+          </tr>
+
+          <!-- Greeting -->
+          <tr>
+            <td style="padding: 0 40px 20px;">
+              <h2 style="margin: 0 0 12px; color: ${DS.text}; font-size: 20px; font-weight: 700;">Bonjour,</h2>
+              <p style="margin: 0; color: ${DS.textSecondary}; font-size: 15px; line-height: 1.7;">
+                Nous avons proc\u00e9d\u00e9 au remboursement de votre commande <strong style="color: ${DS.text};">#${orderNumber}</strong>.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Details -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; background-color: ${DS.bgSubtle}; border-radius: 8px; border: 1px solid ${DS.border};">
+                <tr>
+                  <td style="padding: 20px 22px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
+                      ${infoRow('Montant rembours\u00e9', formatPrice(amount) + '\u00a0\u20ac', { bold: true, color: DS.info })}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Info -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              <p style="margin: 0; color: ${DS.textSecondary}; font-size: 14px; line-height: 1.7;">
+                Le montant sera cr\u00e9dit\u00e9 sur votre compte bancaire sous 5 \u00e0 10 jours ouvr\u00e9s, selon votre banque.
+                Si vous avez des questions, n\u2019h\u00e9sitez pas \u00e0 nous contacter via le portail partenaires.
+              </p>
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td style="padding: 0 40px 32px;">
+              ${ctaButton('Voir ma commande', ENV.siteUrl + '/orders/' + orderNumber)}
+            </td>
+          </tr>`;
+
+  const htmlContent = emailWrapper(
+    emailHeader({ subtitle: 'Remboursement effectu\u00e9', accentGradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }) +
+    body +
+    emailFooter()
+  );
 
   const textContent = `
-💰 REMBOURSEMENT EFFECTUÉ
-Market Spas - Portail B2B
+REMBOURSEMENT EFFECTU\u00c9
+Market Spas \u2014 Portail B2B
 
 Bonjour,
 
-Nous avons procédé au remboursement de votre commande #${orderNumber}.
+Nous avons proc\u00e9d\u00e9 au remboursement de votre commande #${orderNumber}.
 
-Montant remboursé : ${formatPrice(amount)} €
+Montant rembours\u00e9 : ${formatPrice(amount)} \u20ac
 
-Le montant sera crédité sur votre compte bancaire sous 5 à 10 jours ouvrés, selon votre banque.
-
-Si vous avez des questions concernant ce remboursement, n'hésitez pas à nous contacter via le portail partenaires.
+Le montant sera cr\u00e9dit\u00e9 sous 5 \u00e0 10 jours ouvr\u00e9s.
 
 Voir ma commande : ${ENV.siteUrl}/orders/${orderNumber}
 
 ---
-© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
-Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+\u00a9 ${new Date().getFullYear()} Market Spas. Tous droits r\u00e9serv\u00e9s.
   `.trim();
 
   try {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: [email],
-      subject: `💰 Remboursement effectué - Commande #${orderNumber}`,
+      subject: `Remboursement effectu\u00e9 \u2014 Commande #${orderNumber}`,
       html: htmlContent,
       text: textContent,
     });
-
     if (error) {
       console.error(`[Email] Error sending refund confirmation to ${email}:`, error);
       return { success: false, error: error.message };
     }
-
     console.log(`[Email] Refund confirmation sent to ${email}:`, data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error(`[Email] Exception sending refund confirmation to ${email}:`, error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : String(error) 
-    };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
 
-/**
- * Send newsletter to multiple recipients
- */
+// ============================================
+// 9. NEWSLETTER EMAIL
+// ============================================
+
 export async function sendNewsletterEmail(
   recipients: string[],
   subject: string,
@@ -1788,42 +1305,34 @@ export async function sendNewsletterEmail(
 ): Promise<{ success: boolean; results: Array<{ email: string; success: boolean; messageId?: string; error?: string }> }> {
   const results: Array<{ email: string; success: boolean; messageId?: string; error?: string }> = [];
 
-  // Send emails in batches of 10 to avoid rate limits
   const batchSize = 10;
   for (let i = 0; i < recipients.length; i += batchSize) {
     const batch = recipients.slice(i, i + batchSize);
-    
+
     const batchPromises = batch.map(async (email) => {
       try {
         const { data, error } = await resend.emails.send({
           from: FROM_EMAIL,
           to: [email],
-          subject: subject,
+          subject,
           html: htmlContent,
           text: textContent || '',
         });
-
         if (error) {
           console.error(`[Email] Error sending newsletter to ${email}:`, error);
           return { email, success: false, error: error.message };
         }
-
         console.log(`[Email] Newsletter sent to ${email}:`, data?.id);
         return { email, success: true, messageId: data?.id };
       } catch (error) {
         console.error(`[Email] Exception sending newsletter to ${email}:`, error);
-        return { 
-          email, 
-          success: false, 
-          error: error instanceof Error ? error.message : String(error) 
-        };
+        return { email, success: false, error: error instanceof Error ? error.message : String(error) };
       }
     });
 
     const batchResults = await Promise.all(batchPromises);
     results.push(...batchResults);
 
-    // Wait 1 second between batches to respect rate limits
     if (i + batchSize < recipients.length) {
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
@@ -1832,103 +1341,57 @@ export async function sendNewsletterEmail(
   const successCount = results.filter(r => r.success).length;
   console.log(`[Email] Newsletter sent: ${successCount}/${recipients.length} successful`);
 
-  return {
-    success: successCount > 0,
-    results,
-  };
+  return { success: successCount > 0, results };
 }
 
-/**
- * Create newsletter HTML template
- */
+
+// ============================================
+// 10. NEWSLETTER TEMPLATE BUILDER
+// ============================================
+
 export function createNewsletterTemplate(
   title: string,
   content: string,
   ctaText?: string,
   ctaUrl?: string
 ): string {
-  return `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} - Market Spas</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
-  <table role="presentation" style="width: 100%; border-collapse: collapse;">
-    <tr>
-      <td align="center" style="padding: 40px 20px;">
-        <table role="presentation" style="width: 650px; max-width: 100%; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-          <!-- Header -->
+  const ctaHtml = ctaText && ctaUrl ? `
+          <!-- CTA -->
           <tr>
-            <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #5ab89f 0%, #3d9b85 100%); border-radius: 8px 8px 0 0;">
-              <img src="${LOGO_URL}" alt="Market Spas" width="60" height="60" style="display: block; margin: 0 auto 12px; border-radius: 12px;" />
-              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">Market Spas</h1>
-              <p style="margin: 10px 0 0; color: #ffffff; font-size: 16px; opacity: 0.95;">Portail Partenaires B2B</p>
+            <td style="padding: 0 40px 32px;">
+              ${ctaButton(ctaText, ctaUrl)}
             </td>
-          </tr>
-          
+          </tr>` : '';
+
+  return emailWrapper(
+    emailHeader({ subtitle: 'Portail Partenaires B2B' }) + `
           <!-- Title -->
           <tr>
-            <td style="padding: 40px 40px 20px;">
-              <h2 style="margin: 0; color: #1a1a1a; font-size: 24px; font-weight: 600; line-height: 1.3;">
+            <td style="padding: 32px 40px 16px;">
+              <h2 style="margin: 0; color: ${DS.text}; font-size: 22px; font-weight: 700; line-height: 1.3; letter-spacing: -0.3px;">
                 ${title}
               </h2>
             </td>
           </tr>
-          
+
           <!-- Content -->
           <tr>
-            <td style="padding: 0 40px 40px;">
-              <div style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+            <td style="padding: 0 40px 28px;">
+              <div style="color: ${DS.textSecondary}; font-size: 15px; line-height: 1.7;">
                 ${content}
               </div>
             </td>
           </tr>
-          
-          ${ctaText && ctaUrl ? `
-          <!-- CTA Button -->
-          <tr>
-            <td style="padding: 0 40px 40px;">
-              <table role="presentation" style="width: 100%;">
-                <tr>
-                  <td align="center">
-                    <a href="${ctaUrl}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #5ab89f 0%, #3d9b85 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(90, 184, 159, 0.3);">
-                      ${ctaText}
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          ` : ''}
-          
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 30px 40px; background-color: #f7fafc; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">
-              <p style="margin: 0 0 10px; color: #718096; font-size: 14px; line-height: 1.6; text-align: center;">
-                Vous recevez cet email car vous êtes partenaire Market Spas.
-              </p>
-              <p style="margin: 20px 0 0; color: #a0aec0; font-size: 12px; text-align: center;">
-                © ${new Date().getFullYear()} Market Spas. Tous droits réservés.<br>
-                <a href="{{unsubscribeUrl}}" style="color: #a0aec0; text-decoration: underline;">Se désabonner</a>
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `.trim();
+          ${ctaHtml}` +
+    emailFooter('Vous recevez cet email car vous \u00eates partenaire Market Spas.<br><a href="{{unsubscribeUrl}}" style="color: ' + DS.textMuted + '; text-decoration: underline;">Se d\u00e9sabonner</a>')
+  );
 }
 
 
-/**
- * Send order refused email when payment was not received within the deadline
- */
+// ============================================
+// 11. ORDER REFUSED EMAIL
+// ============================================
+
 export async function sendOrderRefusedEmail(
   email: string,
   orderNumber: string,
@@ -1936,150 +1399,121 @@ export async function sendOrderRefusedEmail(
   totalAmount: number,
   partnerName?: string
 ) {
-  const formatPrice = (price: number | string): string => {
-    const num = typeof price === "string" ? parseFloat(price) : price;
-    return new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
-  };
+  const greeting = partnerName ? `Bonjour ${partnerName},` : 'Bonjour,';
 
-  const greeting = partnerName ? `Bonjour ${partnerName},` : "Bonjour,";
-
-  const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-    .header h1 { margin: 0 0 8px 0; font-size: 24px; }
-    .header p { margin: 0; opacity: 0.9; font-size: 14px; }
-    .content { background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }
-    .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
-    .alert-box { background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 0 6px 6px 0; }
-    .alert-box p { margin: 0; color: #991b1b; }
-    .info-box { background: #ffffff; border: 1px solid #e2e8f0; padding: 20px; margin: 20px 0; border-radius: 8px; }
-    .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
-    .info-label { color: #64748b; font-size: 14px; }
-    .info-value { color: #1e293b; font-weight: 600; font-size: 14px; }
-    .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; font-weight: 600; }
-    .btn:hover { background: #1d4ed8; }
-    .note { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 20px 0; border-radius: 0 6px 6px 0; font-size: 13px; color: #92400e; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Commande refusée</h1>
-      <p>Market Spas - Portail B2B</p>
-    </div>
-    <div class="content">
-      <div class="alert-box">
-        <p><strong>Votre commande #${orderNumber} a été annulée</strong> car le paiement de l'acompte n'a pas été reçu dans le délai imparti de 3 jours.</p>
-      </div>
-      
-      <h2 style="color: #1e293b; margin-top: 24px;">${greeting}</h2>
-      
-      <p>Nous vous informons que votre commande <strong>#${orderNumber}</strong> a été automatiquement refusée car nous n'avons pas reçu le virement bancaire correspondant à l'acompte dans les 3 jours suivant la validation de la commande.</p>
-      
-      <div class="info-box">
-        <table style="width: 100%; border-collapse: collapse;">
+  const body = `
+          <!-- Alert -->
           <tr>
-            <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Commande</td>
-            <td style="padding: 8px 0; text-align: right; color: #1e293b; font-weight: 600;">#${orderNumber}</td>
+            ${alertBox(`Votre commande <strong>#${orderNumber}</strong> a \u00e9t\u00e9 annul\u00e9e car le paiement de l\u2019acompte n\u2019a pas \u00e9t\u00e9 re\u00e7u dans le d\u00e9lai imparti de 3 jours.`, 'danger')}
           </tr>
-          <tr style="border-top: 1px solid #f1f5f9;">
-            <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Acompte attendu</td>
-            <td style="padding: 8px 0; text-align: right; color: #dc2626; font-weight: 600;">${formatPrice(depositAmount)} €</td>
+
+          <!-- Greeting -->
+          <tr>
+            <td style="padding: 0 40px 20px;">
+              <h2 style="margin: 0 0 12px; color: ${DS.text}; font-size: 20px; font-weight: 700;">${greeting}</h2>
+              <p style="margin: 0; color: ${DS.textSecondary}; font-size: 14px; line-height: 1.7;">
+                Nous vous informons que votre commande <strong style="color: ${DS.text};">#${orderNumber}</strong> a \u00e9t\u00e9 automatiquement refus\u00e9e car nous n\u2019avons pas re\u00e7u le virement bancaire correspondant \u00e0 l\u2019acompte dans les 3 jours suivant la validation.
+              </p>
+            </td>
           </tr>
-          <tr style="border-top: 1px solid #f1f5f9;">
-            <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Montant total de la commande</td>
-            <td style="padding: 8px 0; text-align: right; color: #1e293b; font-weight: 600;">${formatPrice(totalAmount)} €</td>
+
+          <!-- Details -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; background-color: ${DS.bgSubtle}; border-radius: 8px; border: 1px solid ${DS.border};">
+                <tr>
+                  <td style="padding: 20px 22px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
+                      ${infoRow('Commande', '#' + orderNumber, { bold: true })}
+                      ${infoRow('Acompte attendu', formatPrice(depositAmount) + '\u00a0\u20ac', { color: DS.danger, bold: true })}
+                      ${infoRow('Montant total', formatPrice(totalAmount) + '\u00a0\u20ac')}
+                      ${infoRow('Statut', 'Refus\u00e9e', { color: DS.danger, bold: true })}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
           </tr>
-          <tr style="border-top: 1px solid #f1f5f9;">
-            <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Statut</td>
-            <td style="padding: 8px 0; text-align: right; color: #dc2626; font-weight: 600;">Refusée</td>
+
+          <!-- Consequences -->
+          <tr>
+            <td style="padding: 0 40px 20px;">
+              <p style="margin: 0 0 8px; color: ${DS.text}; font-size: 14px; font-weight: 600;">Cons\u00e9quences :</p>
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr><td style="padding: 3px 0; color: ${DS.textSecondary}; font-size: 13px;">\u2022 Les produits r\u00e9serv\u00e9s ont \u00e9t\u00e9 remis en stock</td></tr>
+                <tr><td style="padding: 3px 0; color: ${DS.textSecondary}; font-size: 13px;">\u2022 La commande est d\u00e9finitivement annul\u00e9e</td></tr>
+                <tr><td style="padding: 3px 0; color: ${DS.textSecondary}; font-size: 13px;">\u2022 Aucun montant n\u2019a \u00e9t\u00e9 d\u00e9bit\u00e9</td></tr>
+              </table>
+            </td>
           </tr>
-        </table>
-      </div>
 
-      <p><strong>Conséquences :</strong></p>
-      <ul style="color: #475569; padding-left: 20px;">
-        <li>Les produits réservés ont été remis en stock</li>
-        <li>La commande est définitivement annulée</li>
-        <li>Aucun montant n'a été débité</li>
-      </ul>
+          <!-- Note -->
+          <tr>
+            ${alertBox('<strong>Vous souhaitez repasser commande ?</strong> Les produits sont de nouveau disponibles dans le catalogue. N\u2019h\u00e9sitez pas \u00e0 repasser commande et \u00e0 effectuer le virement dans les 3 jours.', 'warning')}
+          </tr>
 
-      <div class="note">
-        <strong>Vous souhaitez repasser commande ?</strong> Les produits sont de nouveau disponibles dans le catalogue. N'hésitez pas à repasser commande et à effectuer le virement dans les 3 jours suivant la validation.
-      </div>
+          <!-- CTA -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              ${ctaButton('Voir le catalogue', ENV.siteUrl + '/catalog')}
+            </td>
+          </tr>
 
-      <div style="text-align: center;">
-        <a href="${ENV.siteUrl}/catalog" class="btn">Voir le catalogue</a>
-      </div>
+          <!-- Help -->
+          <tr>
+            <td style="padding: 0 40px 8px;">
+              <p style="margin: 0; color: ${DS.textMuted}; font-size: 12px; line-height: 1.6;">
+                Si vous avez effectu\u00e9 un virement qui n\u2019a pas encore \u00e9t\u00e9 trait\u00e9, veuillez nous contacter directement pour r\u00e9gulariser la situation.
+              </p>
+            </td>
+          </tr>`;
 
-      <p style="margin-top: 24px; color: #64748b; font-size: 13px;">Si vous avez effectué un virement qui n'a pas encore été traité, veuillez nous contacter directement pour régulariser la situation.</p>
-    </div>
-    <div class="footer">
-      <p>Market Spas - Votre partenaire wellness</p>
-      <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-      <p>&copy; ${new Date().getFullYear()} Market Spas. Tous droits réservés.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
+  const htmlContent = emailWrapper(
+    emailHeader({ subtitle: 'Commande refus\u00e9e', accentGradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }) +
+    body +
+    emailFooter()
+  );
 
   const textContent = `
-COMMANDE REFUSÉE
-Market Spas - Portail B2B
+COMMANDE REFUS\u00c9E
+Market Spas \u2014 Portail B2B
 
 ${greeting}
 
-Votre commande #${orderNumber} a été automatiquement refusée car le paiement de l'acompte n'a pas été reçu dans le délai imparti de 3 jours.
+Votre commande #${orderNumber} a \u00e9t\u00e9 automatiquement refus\u00e9e car le paiement de l'acompte n'a pas \u00e9t\u00e9 re\u00e7u dans le d\u00e9lai imparti de 3 jours.
 
-DÉTAILS :
-- Commande : #${orderNumber}
-- Acompte attendu : ${formatPrice(depositAmount)} €
-- Montant total : ${formatPrice(totalAmount)} €
-- Statut : Refusée
+Commande : #${orderNumber}
+Acompte attendu : ${formatPrice(depositAmount)} \u20ac
+Montant total : ${formatPrice(totalAmount)} \u20ac
+Statut : Refus\u00e9e
 
-CONSÉQUENCES :
-- Les produits réservés ont été remis en stock
-- La commande est définitivement annulée
-- Aucun montant n'a été débité
+Cons\u00e9quences :
+- Les produits r\u00e9serv\u00e9s ont \u00e9t\u00e9 remis en stock
+- La commande est d\u00e9finitivement annul\u00e9e
+- Aucun montant n'a \u00e9t\u00e9 d\u00e9bit\u00e9
 
-Vous souhaitez repasser commande ? Les produits sont de nouveau disponibles dans le catalogue.
 Voir le catalogue : ${ENV.siteUrl}/catalog
 
-Si vous avez effectué un virement qui n'a pas encore été traité, veuillez nous contacter directement.
-
 ---
-© ${new Date().getFullYear()} Market Spas. Tous droits réservés.
-Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+\u00a9 ${new Date().getFullYear()} Market Spas. Tous droits r\u00e9serv\u00e9s.
   `.trim();
 
   try {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: [email],
-      subject: `Commande #${orderNumber} refusée - Paiement non reçu`,
+      subject: `Commande #${orderNumber} refus\u00e9e \u2014 Paiement non re\u00e7u`,
       html: htmlContent,
       text: textContent,
     });
-
     if (error) {
       console.error(`[Email] Error sending order refused to ${email}:`, error);
       return { success: false, error: error.message };
     }
-
     console.log(`[Email] Order refused email sent to ${email}:`, data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error(`[Email] Exception sending order refused to ${email}:`, error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }

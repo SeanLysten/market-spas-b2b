@@ -92,18 +92,28 @@ export default function AdminPartners() {
   const [productDiscountPartnerId, setProductDiscountPartnerId] = useState<number | null>(null);
   const [productDiscountPartnerName, setProductDiscountPartnerName] = useState<string>("");
 
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     companyName: "",
     tradeName: "",
     vatNumber: "",
     addressStreet: "",
+    addressStreet2: "",
     addressCity: "",
     addressPostalCode: "",
     addressCountry: "BE",
     primaryContactName: "",
     primaryContactEmail: "",
     primaryContactPhone: "",
+    accountingEmail: "",
+    orderEmail: "",
+    website: "",
+    supplierClientCode: "",
     discountPercent: "0",
+    paymentTermsDays: "30",
+    creditLimit: "0",
     status: "PENDING",
     internalNotes: "",
   });
@@ -112,6 +122,18 @@ export default function AdminPartners() {
     search: searchQuery || undefined,
     status: statusFilter !== "all" ? statusFilter : undefined,
 
+  });
+
+  const inviteMutation = trpc.admin.users.invite.useMutation({
+    onSuccess: (data) => {
+      toast.success("Invitation envoyée avec succès ! Le partenaire recevra un email pour créer son compte.");
+      setInviteDialogOpen(false);
+      setInviteEmail("");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erreur lors de l'envoi de l'invitation");
+    },
   });
 
   const createPartnerMutation = trpc.admin.partners.create.useMutation({
@@ -164,16 +186,31 @@ export default function AdminPartners() {
       tradeName: "",
       vatNumber: "",
       addressStreet: "",
+      addressStreet2: "",
       addressCity: "",
       addressPostalCode: "",
       addressCountry: "BE",
       primaryContactName: "",
       primaryContactEmail: "",
       primaryContactPhone: "",
+      accountingEmail: "",
+      orderEmail: "",
+      website: "",
+      supplierClientCode: "",
       discountPercent: "0",
+      paymentTermsDays: "30",
+      creditLimit: "0",
       status: "PENDING",
       internalNotes: "",
     });
+  };
+
+  const handleInvitePartner = () => {
+    if (!inviteEmail) {
+      toast.error("Veuillez saisir une adresse email");
+      return;
+    }
+    inviteMutation.mutate({ email: inviteEmail });
   };
 
   const handleCreatePartner = () => {
@@ -206,13 +243,20 @@ export default function AdminPartners() {
       tradeName: partner.tradeName || "",
       vatNumber: partner.vatNumber || "",
       addressStreet: partner.addressStreet || "",
+      addressStreet2: partner.addressStreet2 || "",
       addressCity: partner.addressCity || "",
       addressPostalCode: partner.addressPostalCode || "",
       addressCountry: partner.addressCountry || "BE",
       primaryContactName: partner.primaryContactName || "",
       primaryContactEmail: partner.primaryContactEmail || "",
       primaryContactPhone: partner.primaryContactPhone || "",
+      accountingEmail: partner.accountingEmail || "",
+      orderEmail: partner.orderEmail || "",
+      website: partner.website || "",
+      supplierClientCode: partner.supplierClientCode || "",
       discountPercent: partner.discountPercent?.toString() || "0",
+      paymentTermsDays: partner.paymentTermsDays?.toString() || "30",
+      creditLimit: partner.creditLimit?.toString() || "0",
       status: partner.status || "PENDING",
       internalNotes: partner.internalNotes || "",
     });
@@ -224,19 +268,28 @@ export default function AdminPartners() {
 
     updatePartnerMutation.mutate({
       id: selectedPartner.id,
-      companyName: formData.companyName,
-      tradeName: formData.tradeName || undefined,
-      vatNumber: formData.vatNumber,
-      addressStreet: formData.addressStreet,
-      addressCity: formData.addressCity,
-      addressPostalCode: formData.addressPostalCode,
-      addressCountry: formData.addressCountry,
-      primaryContactName: formData.primaryContactName,
-      primaryContactEmail: formData.primaryContactEmail,
-      primaryContactPhone: formData.primaryContactPhone,
-      discountPercent: parseFloat(formData.discountPercent),
-      status: formData.status as any,
-      internalNotes: formData.internalNotes || undefined,
+      data: {
+        companyName: formData.companyName,
+        tradeName: formData.tradeName || null,
+        vatNumber: formData.vatNumber,
+        website: formData.website || null,
+        addressStreet: formData.addressStreet,
+        addressStreet2: formData.addressStreet2 || null,
+        addressCity: formData.addressCity,
+        addressPostalCode: formData.addressPostalCode,
+        addressCountry: formData.addressCountry,
+        primaryContactName: formData.primaryContactName,
+        primaryContactEmail: formData.primaryContactEmail,
+        primaryContactPhone: formData.primaryContactPhone,
+        accountingEmail: formData.accountingEmail || null,
+        orderEmail: formData.orderEmail || null,
+        supplierClientCode: formData.supplierClientCode || null,
+        discountPercent: formData.discountPercent,
+        paymentTermsDays: parseInt(formData.paymentTermsDays) || 30,
+        creditLimit: formData.creditLimit,
+        status: formData.status as any,
+        internalNotes: formData.internalNotes || null,
+      },
     });
   };
 
@@ -262,83 +315,61 @@ export default function AdminPartners() {
 
   const PartnerForm = () => (
     <div className="grid gap-4 py-4">
+      {/* === Entreprise === */}
+      <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Entreprise</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="companyName">Nom de l'entreprise *</Label>
-          <Input
-            id="companyName"
-            value={formData.companyName}
-            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-            placeholder="Market Spas SPRL"
-          />
+          <Input id="companyName" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} placeholder="Market Spas SPRL" />
         </div>
         <div className="space-y-2">
           <Label htmlFor="tradeName">Nom commercial</Label>
-          <Input
-            id="tradeName"
-            value={formData.tradeName}
-            onChange={(e) => setFormData({ ...formData, tradeName: e.target.value })}
-            placeholder="Market Spas"
-          />
+          <Input id="tradeName" value={formData.tradeName} onChange={(e) => setFormData({ ...formData, tradeName: e.target.value })} placeholder="Market Spas" />
         </div>
       </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="vatNumber">Numéro de TVA *</Label>
-        <Input
-          id="vatNumber"
-          value={formData.vatNumber}
-          onChange={(e) => setFormData({ ...formData, vatNumber: e.target.value })}
-          placeholder="BE0123456789"
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="vatNumber">Numéro de TVA *</Label>
+          <Input id="vatNumber" value={formData.vatNumber} onChange={(e) => setFormData({ ...formData, vatNumber: e.target.value })} placeholder="BE0123456789" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="website">Site web</Label>
+          <Input id="website" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} placeholder="https://www.exemple.com" />
+        </div>
       </div>
 
       <Separator />
 
+      {/* === Adresse === */}
+      <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Adresse</p>
       <div className="space-y-2">
-        <Label htmlFor="addressStreet">Adresse</Label>
-        <Input
-          id="addressStreet"
-          value={formData.addressStreet}
-          onChange={(e) => setFormData({ ...formData, addressStreet: e.target.value })}
-          placeholder="Rue de l'Industrie 123"
-        />
+        <Label htmlFor="addressStreet">Rue</Label>
+        <Input id="addressStreet" value={formData.addressStreet} onChange={(e) => setFormData({ ...formData, addressStreet: e.target.value })} placeholder="Rue de l'Industrie 123" />
       </div>
-
+      <div className="space-y-2">
+        <Label htmlFor="addressStreet2">Complément d'adresse</Label>
+        <Input id="addressStreet2" value={formData.addressStreet2} onChange={(e) => setFormData({ ...formData, addressStreet2: e.target.value })} placeholder="Bâtiment B, étage 3" />
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor="addressPostalCode">Code postal</Label>
-          <Input
-            id="addressPostalCode"
-            value={formData.addressPostalCode}
-            onChange={(e) => setFormData({ ...formData, addressPostalCode: e.target.value })}
-            placeholder="1000"
-          />
+          <Input id="addressPostalCode" value={formData.addressPostalCode} onChange={(e) => setFormData({ ...formData, addressPostalCode: e.target.value })} placeholder="1000" />
         </div>
         <div className="space-y-2">
           <Label htmlFor="addressCity">Ville</Label>
-          <Input
-            id="addressCity"
-            value={formData.addressCity}
-            onChange={(e) => setFormData({ ...formData, addressCity: e.target.value })}
-            placeholder="Bruxelles"
-          />
+          <Input id="addressCity" value={formData.addressCity} onChange={(e) => setFormData({ ...formData, addressCity: e.target.value })} placeholder="Bruxelles" />
         </div>
         <div className="space-y-2">
           <Label htmlFor="addressCountry">Pays</Label>
-          <Select
-            value={formData.addressCountry}
-            onValueChange={(value) => setFormData({ ...formData, addressCountry: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
+          <Select value={formData.addressCountry} onValueChange={(value) => setFormData({ ...formData, addressCountry: value })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="BE">Belgique</SelectItem>
               <SelectItem value="FR">France</SelectItem>
               <SelectItem value="LU">Luxembourg</SelectItem>
               <SelectItem value="NL">Pays-Bas</SelectItem>
               <SelectItem value="DE">Allemagne</SelectItem>
+              <SelectItem value="CH">Suisse</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -346,64 +377,47 @@ export default function AdminPartners() {
 
       <Separator />
 
+      {/* === Contacts === */}
+      <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Contacts</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="primaryContactName">Nom du contact *</Label>
-          <Input
-            id="primaryContactName"
-            value={formData.primaryContactName}
-            onChange={(e) => setFormData({ ...formData, primaryContactName: e.target.value })}
-            placeholder="Jean Dupont"
-          />
+          <Label htmlFor="primaryContactName">Contact principal *</Label>
+          <Input id="primaryContactName" value={formData.primaryContactName} onChange={(e) => setFormData({ ...formData, primaryContactName: e.target.value })} placeholder="Jean Dupont" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="primaryContactEmail">Email *</Label>
-          <Input
-            id="primaryContactEmail"
-            type="email"
-            value={formData.primaryContactEmail}
-            onChange={(e) => setFormData({ ...formData, primaryContactEmail: e.target.value })}
-            placeholder="contact@example.com"
-          />
+          <Label htmlFor="primaryContactEmail">Email principal *</Label>
+          <Input id="primaryContactEmail" type="email" value={formData.primaryContactEmail} onChange={(e) => setFormData({ ...formData, primaryContactEmail: e.target.value })} placeholder="contact@example.com" />
         </div>
         <div className="space-y-2">
           <Label htmlFor="primaryContactPhone">Téléphone *</Label>
-          <Input
-            id="primaryContactPhone"
-            value={formData.primaryContactPhone}
-            onChange={(e) => setFormData({ ...formData, primaryContactPhone: e.target.value })}
-            placeholder="+32 2 123 45 67"
-          />
+          <Input id="primaryContactPhone" value={formData.primaryContactPhone} onChange={(e) => setFormData({ ...formData, primaryContactPhone: e.target.value })} placeholder="+32 2 123 45 67" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="accountingEmail">Email comptabilité</Label>
+          <Input id="accountingEmail" type="email" value={formData.accountingEmail} onChange={(e) => setFormData({ ...formData, accountingEmail: e.target.value })} placeholder="compta@example.com" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="orderEmail">Email commandes</Label>
+          <Input id="orderEmail" type="email" value={formData.orderEmail} onChange={(e) => setFormData({ ...formData, orderEmail: e.target.value })} placeholder="commandes@example.com" />
         </div>
       </div>
 
       <Separator />
 
+      {/* === Conditions commerciales === */}
+      <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Conditions commerciales</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="discountPercent">Remise globale par défaut (%)</Label>
-          <Input
-            id="discountPercent"
-            type="number"
-            min="0"
-            max="50"
-            step="0.5"
-            value={formData.discountPercent}
-            onChange={(e) => setFormData({ ...formData, discountPercent: e.target.value })}
-          />
-          <p className="text-xs text-muted-foreground">
-            Appliquée sur tous les produits sauf ceux avec une remise spécifique
-          </p>
+          <Label htmlFor="supplierClientCode">Code client fournisseur</Label>
+          <Input id="supplierClientCode" value={formData.supplierClientCode} onChange={(e) => setFormData({ ...formData, supplierClientCode: e.target.value })} placeholder="CLI-001" className="font-mono" />
+          <p className="text-xs text-muted-foreground">Code interne utilisé pour l'API fournisseur</p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="status">Statut</Label>
-          <Select
-            value={formData.status}
-            onValueChange={(value) => setFormData({ ...formData, status: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
+          <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="PENDING">En attente</SelectItem>
               <SelectItem value="APPROVED">Approuvé</SelectItem>
@@ -413,16 +427,28 @@ export default function AdminPartners() {
           </Select>
         </div>
       </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="discountPercent">Remise globale (%)</Label>
+          <Input id="discountPercent" type="number" min="0" max="50" step="0.5" value={formData.discountPercent} onChange={(e) => setFormData({ ...formData, discountPercent: e.target.value })} />
+          <p className="text-xs text-muted-foreground">Appliquée sauf remise spécifique</p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="paymentTermsDays">Délai de paiement (jours)</Label>
+          <Input id="paymentTermsDays" type="number" min="0" max="120" value={formData.paymentTermsDays} onChange={(e) => setFormData({ ...formData, paymentTermsDays: e.target.value })} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="creditLimit">Limite de crédit (€)</Label>
+          <Input id="creditLimit" type="number" min="0" step="100" value={formData.creditLimit} onChange={(e) => setFormData({ ...formData, creditLimit: e.target.value })} />
+        </div>
+      </div>
 
+      <Separator />
+
+      {/* === Notes === */}
       <div className="space-y-2">
         <Label htmlFor="internalNotes">Notes internes</Label>
-        <Textarea
-          id="internalNotes"
-          value={formData.internalNotes}
-          onChange={(e) => setFormData({ ...formData, internalNotes: e.target.value })}
-          placeholder="Notes visibles uniquement par les administrateurs..."
-          rows={3}
-        />
+        <Textarea id="internalNotes" value={formData.internalNotes} onChange={(e) => setFormData({ ...formData, internalNotes: e.target.value })} placeholder="Notes visibles uniquement par les administrateurs..." rows={3} />
       </div>
     </div>
   );
@@ -447,27 +473,48 @@ export default function AdminPartners() {
               Gérez vos partenaires revendeurs et leurs conditions commerciales
             </p>
           </div>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Nouveau partenaire
+                <Mail className="w-4 h-4" />
+                Inviter un partenaire
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-md w-[95vw] sm:w-full">
               <DialogHeader>
-                <DialogTitle>Créer un nouveau partenaire</DialogTitle>
+                <DialogTitle>Inviter un nouveau partenaire</DialogTitle>
                 <DialogDescription>
-                  Ajoutez un nouveau partenaire revendeur à votre réseau
+                  Saisissez l'adresse email du contact principal. Il recevra un lien pour créer son compte et renseigner les informations de son entreprise.
                 </DialogDescription>
               </DialogHeader>
-              <PartnerForm />
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="inviteEmail">Adresse email du contact principal *</Label>
+                  <Input
+                    id="inviteEmail"
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="contact@entreprise.com"
+                    onKeyDown={(e) => e.key === 'Enter' && handleInvitePartner()}
+                  />
+                </div>
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                  <p className="text-sm text-blue-800 dark:text-blue-300">
+                    <strong>Flux d'inscription :</strong> Le partenaire recevra un email d'invitation avec un lien sécurisé. Il pourra alors créer son compte, renseigner ses coordonnées d'entreprise et définir son mot de passe. Son compte apparaîtra en statut "En attente" jusqu'à votre validation.
+                  </p>
+                </div>
+              </div>
               <DialogFooter className="flex-col sm:flex-row gap-2">
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
                   Annuler
                 </Button>
-                <Button onClick={handleCreatePartner} disabled={createPartnerMutation.isPending}>
-                  {createPartnerMutation.isPending ? "Création..." : "Créer le partenaire"}
+                <Button onClick={handleInvitePartner} disabled={inviteMutation.isPending} className="gap-2">
+                  {inviteMutation.isPending ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Envoi...</>
+                  ) : (
+                    <><Mail className="w-4 h-4" /> Envoyer l'invitation</>
+                  )}
                 </Button>
               </DialogFooter>
             </DialogContent>
