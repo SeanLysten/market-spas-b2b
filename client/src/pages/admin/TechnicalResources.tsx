@@ -82,10 +82,12 @@ export default function AdminTechnicalResources() {
     productCategory: "",
   });
 
-  const { data: folders = [], refetch: refetchFolders } = trpc.admin.techFolders.list.useQuery();
-  const { data: resources = [], refetch: refetchResources } = trpc.admin.technicalResources.list.useQuery(
+  const { data: folders = [], isLoading: foldersLoading, refetch: refetchFolders } = trpc.admin.techFolders.list.useQuery();
+  const { data: resources = [], isLoading: resourcesLoading, refetch: refetchResources } = trpc.admin.technicalResources.list.useQuery(
     currentFolderId !== null ? { folderId: currentFolderId } : {}
   );
+
+  const isLoading = foldersLoading || resourcesLoading;
 
   const createFolderMutation = trpc.admin.techFolders.create.useMutation();
   const updateFolderMutation = trpc.admin.techFolders.update.useMutation();

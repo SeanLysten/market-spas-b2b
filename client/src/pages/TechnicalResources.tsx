@@ -58,11 +58,13 @@ export default function TechnicalResources() {
   const tabParam = urlParams.get("tab");
   const [activeTab, setActiveTab] = useState(tabParam === "forum" ? "forum" : "resources");
 
-  const { data: folders = [] } = trpc.admin.techFolders.list.useQuery();
-  const { data: resources = [] } = trpc.admin.technicalResources.list.useQuery(
+  const { data: folders = [], isLoading: foldersLoading } = trpc.admin.techFolders.list.useQuery();
+  const { data: resources = [], isLoading: resourcesLoading } = trpc.admin.technicalResources.list.useQuery(
     currentFolderId !== null ? { folderId: currentFolderId } : {}
   );
-  const { data: forumTopics = [] } = trpc.admin.forum.listTopics.useQuery({});
+  const { data: forumTopics = [], isLoading: forumLoading } = trpc.admin.forum.listTopics.useQuery({});
+
+  const isLoading = foldersLoading || resourcesLoading || forumLoading;
 
   // Favorites
   const { data: favoriteIds = [], refetch: refetchFavorites } = trpc.resourceFavorites.list.useQuery();
@@ -130,6 +132,25 @@ export default function TechnicalResources() {
     };
     return labels[category] || category;
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <div className="container mx-auto py-6 px-4 space-y-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-muted rounded w-64" />
+            <div className="h-4 bg-muted rounded w-48" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-6">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="h-24 bg-muted rounded" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // If viewing a PDF, show the PDF viewer overlay
   if (viewingPdf) {

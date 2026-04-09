@@ -376,8 +376,10 @@ export default function AdminResources() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: folders = [], refetch: refetchFolders } = trpc.mediaFolders.list.useQuery();
-  const { data: allResources = [], refetch: refetchResources } = trpc.resources.list.useQuery({ limit: 1000 });
+  const { data: folders = [], isLoading: foldersLoading, refetch: refetchFolders } = trpc.mediaFolders.list.useQuery();
+  const { data: allResources = [], isLoading: resourcesLoading, refetch: refetchResources } = trpc.resources.list.useQuery({ limit: 1000 });
+
+  const isLoading = foldersLoading || resourcesLoading;
 
   const createFolder = trpc.mediaFolders.create.useMutation({
     onSuccess: () => { refetchFolders(); toast.success("Dossier créé"); },

@@ -83,7 +83,6 @@ export function CSVImportDialog() {
     // Add all valid rows to cart
     validRows.forEach((row) => {
       // TODO: Call addToCart mutation for each row
-      console.log("Adding to cart:", row);
     });
 
     alert(`${validRows.length} produits ajoutés au panier !`);

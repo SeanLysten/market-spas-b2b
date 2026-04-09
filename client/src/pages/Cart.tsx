@@ -13,10 +13,27 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Cart() {
   const { user } = useAuth();
-  const { data: cart, refetch } = trpc.cart.get.useQuery(undefined, { refetchInterval: 30000 });
+  const { data: cart, isLoading, refetch } = trpc.cart.get.useQuery(undefined, { refetchInterval: 30000 });
   const updateQuantityMutation = trpc.cart.updateQuantity.useMutation();
   const removeItemMutation = trpc.cart.removeItem.useMutation();
   const clearCartMutation = trpc.cart.clear.useMutation();
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-muted rounded w-48" />
+          <div className="h-4 bg-muted rounded w-32" />
+          <div className="space-y-3 mt-6">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-24 bg-muted rounded" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Countdown timer for cart reservation
   const [timeLeft, setTimeLeft] = useState<number | null>(null);

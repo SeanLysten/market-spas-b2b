@@ -29,23 +29,25 @@ export default function AdminReports() {
   const [isExporting, setIsExporting] = useState(false);
 
   // Fetch data based on report type
-  const { data: ordersData } = trpc.orders.list.useQuery(
+  const { data: ordersData, isLoading: ordersLoading } = trpc.orders.list.useQuery(
     { limit: 1000 },
     { enabled: reportType === "orders" || reportType === "sales" }
   );
   const ordersDataSafe = useSafeQuery(ordersData);
 
-  const { data: productsData } = trpc.products.list.useQuery(
+  const { data: productsData, isLoading: productsLoading } = trpc.products.list.useQuery(
     { limit: 1000 },
     { enabled: reportType === "products" }
   );
   const productsDataSafe = useSafeQuery(productsData);
 
-  const { data: partnersData } = trpc.admin.partners.list.useQuery(
+  const { data: partnersData, isLoading: partnersLoading } = trpc.admin.partners.list.useQuery(
     {},
     { enabled: reportType === "partners" }
   );
   const partnersDataSafe = useSafeQuery(partnersData);
+
+  const isDataLoading = (reportType === "orders" || reportType === "sales") ? ordersLoading : reportType === "products" ? productsLoading : partnersLoading;
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return "";
