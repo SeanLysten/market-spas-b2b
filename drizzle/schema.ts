@@ -15,6 +15,14 @@ import {
 // ============================================
 // ENUMS
 // ============================================
+// IMPORTANT: Drizzle MySQL Enum Naming Convention
+// When using mysqlEnum("enum_name", [...]) as a shared enum, Drizzle uses
+// the enum name as the column name in generated SQL. This can cause mismatches
+// if the actual DB column has a different name (e.g., "role" vs "team_role").
+// SOLUTION: Use inline mysqlEnum with the actual column name, NOT a shared enum.
+// Example: mysqlEnum("role", ["owner", "commercial"]) instead of teamRoleEnum
+// See teamMembers and teamInvitations tables for the correct pattern.
+// ============================================
 
 export const userRoleEnum = mysqlEnum("user_role", [
   "SUPER_ADMIN",

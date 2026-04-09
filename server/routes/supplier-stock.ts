@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getDb } from "../db";
 import { products, productVariants, orders, partners, users, orderItems, payments, supplierApiLogs, partnerContacts } from "../../drizzle/schema";
 import { eq, or, sql, inArray, and, desc } from "drizzle-orm";
+import { z } from "zod";
 
 const router = Router();
 
@@ -634,14 +635,18 @@ router.get("/api/supplier/orders/export", async (req, res) => {
 // Requires X-API-Key header for authentication
 // ============================================
 
-interface BalancePaidPayload {
-  orderNumber?: string;
-  orderId?: number;
-  balancePaidAt?: string;
-  balanceAmount?: string | number;
-  supplierReference?: string;
-  notes?: string;
-}
+const balancePaidSchema = z.object({
+  orderNumber: z.string().optional(),
+  orderId: z.number().optional(),
+  balancePaidAt: z.string().optional(),
+  balanceAmount: z.union([z.string(), z.number()]).optional(),
+  supplierReference: z.string().optional(),
+  notes: z.string().optional(),
+}).refine(data => data.orderNumber || data.orderId, {
+  message: "orderNumber ou orderId est requis",
+});
+
+type BalancePaidPayload = z.infer<typeof balancePaidSchema>;
 
 router.post("/api/supplier/orders/balance-paid", async (req, res) => {
   // Authenticate
@@ -655,10 +660,9 @@ router.post("/api/supplier/orders/balance-paid", async (req, res) => {
   }
 
   try {
-    const payload = req.body as BalancePaidPayload;
-
-    // Validate: we need at least orderNumber or orderId
-    if (!payload || (!payload.orderNumber && !payload.orderId)) {
+    // Validate payload with Zod
+    const parseResult = balancePaidSchema.safeParse(req.body);
+    if (!parseResult.success) {
       // Log failed attempt
       try {
         await db.insert(supplierApiLogs).values({
@@ -681,8 +685,11 @@ router.post("/api/supplier/orders/balance-paid", async (req, res) => {
       return res.status(400).json({
         success: false,
         error: "Format invalide. Attendu: { orderNumber: string } ou { orderId: number }",
+        details: parseResult.error.issues,
       });
     }
+
+    const payload = parseResult.data;
 
     // Find the order
     let orderRows: any[] = [];

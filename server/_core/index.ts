@@ -357,6 +357,12 @@ async function startServer() {
   // Download ZIP - multiple resources
   app.get("/api/resources/download-zip", async (req, res) => {
     try {
+      // Auth check - only authenticated users can download resources
+      const { sdk: authSdk } = await import("./sdk");
+      const user = await authSdk.authenticateRequest(req);
+      if (!user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
       const idsParam = req.query.ids as string;
       if (!idsParam) {
         return res.status(400).json({ error: "Missing ids parameter" });

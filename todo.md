@@ -3461,3 +3461,11 @@
 ## Bug - Adresse de livraison manquante sur OrderTracking (09/04/2026)
 - [x] Afficher l'adresse de livraison sur la page OrderTracking (suivi de commande utilisateur) → les champs utilisaient shipping* au lieu de delivery*
 - [x] Afficher l'adresse de facturation sur la page OrderTracking
+
+## Coherence Guard - Corrections (09/04/2026)
+- [x] CRITICAL #1 : Ajouter auth sur /api/resources/download-zip
+- [x] CRITICAL #2 : Ajouter statuts manquants dans OrderTracking (DRAFT, PARTIALLY_SHIPPED, REFUNDED, APPROVED)
+- [x] HIGH #3 : Ajouter validation Zod sur webhook balance-paid
+- [x] MEDIUM #1 : Extraire logo URL en constante partagée
+- [x] MEDIUM #4 : Ajouter statuts manquants dans AdminOrders
+- [x] MEDIUM #3 : Documenter le pattern enums Drizzle

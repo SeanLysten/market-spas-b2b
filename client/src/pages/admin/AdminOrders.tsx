@@ -40,20 +40,24 @@ import { OnboardingTour } from "@/components/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { adminOrdersTour } from "@/config/onboarding-tours";
 
-type OrderStatus = "PENDING_APPROVAL" | "PENDING_DEPOSIT" | "PAYMENT_PENDING" | "DEPOSIT_PAID" | "PAYMENT_FAILED" | "IN_PRODUCTION" | "READY_TO_SHIP" | "SHIPPED" | "DELIVERED" | "COMPLETED" | "CANCELLED" | "REFUSED";
+type OrderStatus = "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "PENDING_DEPOSIT" | "PAYMENT_PENDING" | "DEPOSIT_PAID" | "PAYMENT_FAILED" | "IN_PRODUCTION" | "READY_TO_SHIP" | "PARTIALLY_SHIPPED" | "SHIPPED" | "DELIVERED" | "COMPLETED" | "CANCELLED" | "REFUNDED" | "REFUSED";
 
 const ORDER_STATUSES: { value: OrderStatus; label: string; color: string; icon: any }[] = [
+  { value: "DRAFT", label: "Brouillon", color: "bg-muted dark:bg-muted/50 text-gray-800 dark:text-gray-300", icon: Clock },
   { value: "PENDING_APPROVAL", label: "En attente d'approbation", color: "bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400", icon: Clock },
+  { value: "APPROVED", label: "Approuvée", color: "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400", icon: CheckCircle2 },
   { value: "PENDING_DEPOSIT", label: "Acompte requis", color: "bg-orange-500/15 dark:bg-orange-500/25 text-orange-800 dark:text-orange-400", icon: Euro },
   { value: "PAYMENT_PENDING", label: "Paiement en cours", color: "bg-amber-500/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-400", icon: Clock },
   { value: "DEPOSIT_PAID", label: "Acompte payé", color: "bg-info/15 dark:bg-info-light text-info dark:text-info-dark", icon: CheckCircle2 },
   { value: "PAYMENT_FAILED", label: "Paiement échoué", color: "bg-destructive/15 dark:bg-destructive/25 text-destructive", icon: XCircle },
   { value: "IN_PRODUCTION", label: "En production", color: "bg-purple-500/15 dark:bg-purple-500/25 text-purple-800 dark:text-purple-400", icon: Package },
   { value: "READY_TO_SHIP", label: "Prêt à expédier", color: "bg-indigo-500/15 dark:bg-indigo-500/25 text-indigo-800", icon: Package },
+  { value: "PARTIALLY_SHIPPED", label: "Expédition partielle", color: "bg-cyan-500/15 dark:bg-cyan-500/25 text-cyan-700 dark:text-cyan-400", icon: Truck },
   { value: "SHIPPED", label: "Expédié", color: "bg-cyan-500/15 dark:bg-cyan-500/25 text-cyan-800", icon: Truck },
   { value: "DELIVERED", label: "Livré", color: "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400", icon: CheckCircle2 },
   { value: "COMPLETED", label: "Terminé", color: "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400", icon: CheckCircle2 },
   { value: "CANCELLED", label: "Annulé", color: "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive", icon: XCircle },
+  { value: "REFUNDED", label: "Remboursé", color: "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive", icon: XCircle },
   { value: "REFUSED", label: "Refusé", color: "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive", icon: XCircle },
 ];
 

@@ -35,22 +35,25 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-type OrderStatus = "PENDING_APPROVAL" | "PENDING_DEPOSIT" | "PAYMENT_PENDING" | "DEPOSIT_PAID" | "PAYMENT_FAILED" | "IN_PRODUCTION" | "READY_TO_SHIP" | "SHIPPED" | "DELIVERED" | "COMPLETED" | "CANCELLED" | "REFUSED";
+type OrderStatus = "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "PENDING_DEPOSIT" | "PAYMENT_PENDING" | "DEPOSIT_PAID" | "PAYMENT_FAILED" | "IN_PRODUCTION" | "READY_TO_SHIP" | "PARTIALLY_SHIPPED" | "SHIPPED" | "DELIVERED" | "COMPLETED" | "CANCELLED" | "REFUNDED" | "REFUSED";
 
 const STATUS_STEPS: { status: OrderStatus; label: string; description: string; icon: any }[] = [
+  { status: "DRAFT", label: "Brouillon", description: "Commande en cours de création", icon: Clock },
   { status: "PENDING_APPROVAL", label: "En attente", description: "Commande en cours de validation", icon: Clock },
+  { status: "APPROVED", label: "Approuvée", description: "Commande validée par l'administration", icon: CheckCircle2 },
   { status: "PENDING_DEPOSIT", label: "Acompte requis", description: "En attente du paiement de l'acompte", icon: Euro },
   { status: "PAYMENT_PENDING", label: "Paiement en cours", description: "Virement SEPA en cours de traitement", icon: Clock },
   { status: "DEPOSIT_PAID", label: "Acompte payé", description: "Acompte reçu, commande confirmée", icon: CheckCircle2 },
   { status: "IN_PRODUCTION", label: "En production", description: "Votre commande est en cours de préparation", icon: Package },
   { status: "READY_TO_SHIP", label: "Prêt à expédier", description: "Commande prête pour l'expédition", icon: Package },
+  { status: "PARTIALLY_SHIPPED", label: "Expédition partielle", description: "Une partie de votre commande a été expédiée", icon: Truck },
   { status: "SHIPPED", label: "Expédié", description: "Votre commande est en route", icon: Truck },
   { status: "DELIVERED", label: "Livré", description: "Commande livrée", icon: CheckCircle2 },
   { status: "COMPLETED", label: "Terminé", description: "Commande terminée", icon: CheckCircle2 },
 ];
 
 const getStatusIndex = (status: string): number => {
-  if (status === "CANCELLED" || status === "REFUSED") return -1;
+  if (status === "CANCELLED" || status === "REFUSED" || status === "REFUNDED") return -1;
   const index = STATUS_STEPS.findIndex(s => s.status === status);
   return index >= 0 ? index : 0;
 };
@@ -74,6 +77,7 @@ const getStatusColor = (status: string): string => {
       return "bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400 border-green-300";
     case "CANCELLED":
     case "REFUSED":
+    case "REFUNDED":
       return "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive border-red-300";
     default:
       return "bg-muted dark:bg-muted/50 text-gray-800 border-gray-300";
