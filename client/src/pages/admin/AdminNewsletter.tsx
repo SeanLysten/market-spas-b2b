@@ -13,8 +13,11 @@ import {
   Type, Image as ImageIcon, MousePointerClick, Minus, LayoutTemplate, Eye,
   Edit, ArrowUp, ArrowDown, Palette, Copy, Sparkles, Bold, Italic, Underline,
   AlignLeft, AlignCenter, AlignRight, ChevronDown, ChevronUp, Upload,
-  Clock, Calendar, X, Ban, List, Monitor, Smartphone, Maximize2
+  Clock, Calendar, X, Ban, List, Monitor, Smartphone, Maximize2,
+  Tag, UserPlus, FileSpreadsheet, Check, MoreHorizontal, Search, Building2
 } from 'lucide-react';
+import { Checkbox } from '../../components/ui/checkbox';
+import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -74,7 +77,7 @@ interface NewsletterBlock {
   style: BlockStyle;
 }
 
-type TabView = 'editor' | 'preview' | 'scheduled';
+type TabView = 'editor' | 'preview' | 'scheduled' | 'lists';
 
 // ─── Block Templates ─────────────────────────────────────────────────────────
 
@@ -238,21 +241,33 @@ function blockToHtml(block: NewsletterBlock): string {
   }
 }
 
+const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/logo-market-spa_177731cb.png";
+
 function blocksToFullHtml(blocks: NewsletterBlock[]): string {
   const bodyHtml = blocks.map(blockToHtml).join('');
-  return `<div style="max-width:600px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-    <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);padding:32px 24px;text-align:center;border-radius:12px 12px 0 0;">
-      <h2 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">Market Spas</h2>
-      <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Portail Partenaires B2B</p>
-    </div>
-    <div style="background:#ffffff;padding:8px 0;">
-      ${bodyHtml}
-    </div>
-    <div style="background:#f1f5f9;padding:24px;text-align:center;border-radius:0 0 12px 12px;">
-      <p style="margin:0;font-size:12px;color:#94a3b8;">Vous recevez cet email car vous êtes partenaire Market Spas.</p>
-      <p style="margin:8px 0 0;font-size:12px;color:#94a3b8;">&copy; ${new Date().getFullYear()} Market Spas. Tous droits réservés.</p>
-    </div>
-  </div>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:640px;max-width:100%;border-collapse:collapse;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+    <!-- Header -->
+    <tr>
+      <td style="padding:36px 40px 28px;text-align:center;background:linear-gradient(135deg,#5ab89f 0%,#3d9b85 100%);border-radius:12px 12px 0 0;">
+        <img src="${LOGO_URL}" alt="Market Spas" width="52" height="52" style="display:block;margin:0 auto 14px;border-radius:10px;border:2px solid rgba(255,255,255,0.25);" />
+        <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.3px;">Market Spas</h1>
+        <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:14px;font-weight:400;">Portail Partenaires B2B</p>
+      </td>
+    </tr>
+    <!-- Body -->
+    <tr>
+      <td style="background:#ffffff;padding:8px 0;">
+        ${bodyHtml}
+      </td>
+    </tr>
+    <!-- Footer -->
+    <tr>
+      <td style="padding:28px 40px;background-color:#f8fafc;border-radius:0 0 12px 12px;border-top:1px solid #e2e8f0;text-align:center;">
+        <p style="margin:0 0 12px;color:#64748b;font-size:13px;line-height:1.6;">Vous recevez cet email car vous \u00eates partenaire Market Spas.</p>
+        <p style="margin:0;color:#94a3b8;font-size:11px;line-height:1.6;">&copy; ${new Date().getFullYear()} Market Spas &mdash; Votre partenaire wellness<br>Cet email a \u00e9t\u00e9 envoy\u00e9 automatiquement, merci de ne pas y r\u00e9pondre.</p>
+      </td>
+    </tr>
+  </table>`;
 }
 
 // ─── Style Toolbar Component ────────────────────────────────────────────────
@@ -590,12 +605,421 @@ function ScheduledNewslettersList() {
     </div>
   );
 }
+// ─── Mailing List Selector (inline in newsletter settings) ────────────────
 
-// ─── Main Component ──────────────────────────────────────────────────────────
+function MailingListSelector({ selectedIds, onChange }: { selectedIds: number[]; onChange: (ids: number[]) => void }) {
+  const listsQuery = trpc.admin.mailingLists.list.useQuery();
+  const lists = listsQuery.data || [];
+
+  const toggleList = (id: number) => {
+    onChange(selectedIds.includes(id) ? selectedIds.filter(i => i !== id) : [...selectedIds, id]);
+  };
+
+  if (listsQuery.isLoading) return <div className="text-xs text-muted-foreground py-2">Chargement des listes...</div>;
+  if (lists.length === 0) return (
+    <div className="text-xs text-muted-foreground py-2 flex items-center gap-2">
+      <AlertCircle className="h-3.5 w-3.5" />
+      Aucune liste créée. <button className="text-primary underline" onClick={() => {}}>Créer une liste</button>
+    </div>
+  );
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs flex items-center gap-1"><Tag className="h-3 w-3" /> Sélectionner les listes</Label>
+      <div className="flex flex-wrap gap-2">
+        {lists.map((list: any) => (
+          <button
+            key={list.id}
+            onClick={() => toggleList(list.id)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+              selectedIds.includes(list.id)
+                ? 'bg-primary/10 border-primary/30 text-primary'
+                : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            {selectedIds.includes(list.id) && <Check className="h-3 w-3" />}
+            <span style={{ backgroundColor: list.color }} className="w-2 h-2 rounded-full inline-block" />
+            {list.name}
+            <span className="text-[10px] opacity-60">({list.contactCount})</span>
+          </button>
+        ))}
+      </div>
+      {selectedIds.length > 0 && (
+        <p className="text-[11px] text-muted-foreground">
+          {selectedIds.length} liste(s) sélectionnée(s) — {lists.filter((l: any) => selectedIds.includes(l.id)).reduce((sum: number, l: any) => sum + (l.contactCount || 0), 0)} contacts
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── Mailing Lists Manager (full tab) ─────────────────────────────────
+
+function MailingListsManager() {
+  const utils = trpc.useUtils();
+  const listsQuery = trpc.admin.mailingLists.list.useQuery();
+  const lists = listsQuery.data || [];
+  const [selectedListId, setSelectedListId] = useState<number | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newListName, setNewListName] = useState('');
+  const [newListDescription, setNewListDescription] = useState('');
+  const [newListColor, setNewListColor] = useState('#3d9b85');
+  const [editingList, setEditingList] = useState<any>(null);
+  // Contact form
+  const [newContactEmail, setNewContactEmail] = useState('');
+  const [newContactName, setNewContactName] = useState('');
+  const [newContactCompany, setNewContactCompany] = useState('');
+  const [bulkEmails, setBulkEmails] = useState('');
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [searchContact, setSearchContact] = useState('');
+
+  const contactsQuery = trpc.admin.mailingLists.getContacts.useQuery(
+    { listId: selectedListId! },
+    { enabled: !!selectedListId }
+  );
+  const contacts = contactsQuery.data || [];
+  const filteredContacts = searchContact
+    ? contacts.filter((c: any) => c.email.toLowerCase().includes(searchContact.toLowerCase()) || (c.name || '').toLowerCase().includes(searchContact.toLowerCase()))
+    : contacts;
+
+  const createListMutation = trpc.admin.mailingLists.create.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setShowCreateDialog(false);
+      setNewListName('');
+      setNewListDescription('');
+      setNewListColor('#3d9b85');
+      utils.admin.mailingLists.list.invalidate();
+    },
+    onError: (err) => toast.error('Erreur', { description: err.message }),
+  });
+
+  const updateListMutation = trpc.admin.mailingLists.update.useMutation({
+    onSuccess: () => {
+      toast.success('Liste mise à jour');
+      setEditingList(null);
+      utils.admin.mailingLists.list.invalidate();
+    },
+    onError: (err) => toast.error('Erreur', { description: err.message }),
+  });
+
+  const deleteListMutation = trpc.admin.mailingLists.delete.useMutation({
+    onSuccess: () => {
+      toast.success('Liste supprimée');
+      if (selectedListId) setSelectedListId(null);
+      utils.admin.mailingLists.list.invalidate();
+    },
+    onError: (err) => toast.error('Erreur', { description: err.message }),
+  });
+
+  const addContactMutation = trpc.admin.mailingLists.addContact.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setNewContactEmail('');
+      setNewContactName('');
+      setNewContactCompany('');
+      utils.admin.mailingLists.getContacts.invalidate({ listId: selectedListId! });
+      utils.admin.mailingLists.list.invalidate();
+    },
+    onError: (err) => toast.error('Erreur', { description: err.message }),
+  });
+
+  const addBulkMutation = trpc.admin.mailingLists.addContactsBulk.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setBulkEmails('');
+      setShowBulkImport(false);
+      utils.admin.mailingLists.getContacts.invalidate({ listId: selectedListId! });
+      utils.admin.mailingLists.list.invalidate();
+    },
+    onError: (err) => toast.error('Erreur', { description: err.message }),
+  });
+
+  const removeContactMutation = trpc.admin.mailingLists.removeContact.useMutation({
+    onSuccess: () => {
+      toast.success('Contact supprimé');
+      utils.admin.mailingLists.getContacts.invalidate({ listId: selectedListId! });
+      utils.admin.mailingLists.list.invalidate();
+    },
+    onError: (err) => toast.error('Erreur', { description: err.message }),
+  });
+
+  const handleAddContact = () => {
+    if (!selectedListId || !newContactEmail) return;
+    addContactMutation.mutate({ listId: selectedListId, email: newContactEmail, name: newContactName || undefined, company: newContactCompany || undefined });
+  };
+
+  const handleBulkImport = () => {
+    if (!selectedListId || !bulkEmails.trim()) return;
+    const lines = bulkEmails.split('\n').filter(l => l.trim());
+    const contacts = lines.map(line => {
+      const parts = line.split(/[,;\t]/).map(p => p.trim());
+      return { email: parts[0], name: parts[1] || undefined, company: parts[2] || undefined };
+    }).filter(c => c.email && c.email.includes('@'));
+    if (contacts.length === 0) { toast.error('Aucun email valide trouvé'); return; }
+    addBulkMutation.mutate({ listId: selectedListId, contacts });
+  };
+
+  const selectedList = lists.find((l: any) => l.id === selectedListId);
+
+  const LIST_COLORS = ['#3d9b85', '#2563eb', '#dc2626', '#d97706', '#7c3aed', '#059669', '#ec4899', '#6366f1', '#0891b2', '#84cc16'];
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Left: Lists */}
+      <div className="space-y-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2"><Tag className="h-4 w-4" /> Mes listes</CardTitle>
+              <Button size="sm" variant="outline" className="h-8" onClick={() => setShowCreateDialog(true)}>
+                <Plus className="h-3.5 w-3.5 mr-1" /> Nouvelle
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-1 pb-3">
+            {lists.length === 0 ? (
+              <div className="text-center py-8">
+                <Tag className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+                <p className="text-sm text-muted-foreground">Aucune liste créée</p>
+                <p className="text-xs text-muted-foreground mt-1">Créez votre première liste pour commencer</p>
+              </div>
+            ) : (
+              lists.map((list: any) => (
+                <button
+                  key={list.id}
+                  onClick={() => setSelectedListId(list.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all ${
+                    selectedListId === list.id
+                      ? 'bg-primary/10 border border-primary/20'
+                      : 'hover:bg-muted/50 border border-transparent'
+                  }`}
+                >
+                  <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: list.color || '#3d9b85' }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{list.name}</p>
+                    {list.description && <p className="text-[11px] text-muted-foreground truncate">{list.description}</p>}
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] h-5">{list.contactCount}</Badge>
+                </button>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Create Dialog */}
+        {showCreateDialog && (
+          <Card className="border-primary/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Nouvelle liste</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 pb-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nom *</Label>
+                <Input placeholder="Ex: Prospects Belgique" value={newListName} onChange={e => setNewListName(e.target.value)} className="text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Description</Label>
+                <Input placeholder="Description optionnelle" value={newListDescription} onChange={e => setNewListDescription(e.target.value)} className="text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Couleur</Label>
+                <div className="flex gap-1.5">
+                  {LIST_COLORS.map(c => (
+                    <button key={c} onClick={() => setNewListColor(c)} className={`w-6 h-6 rounded-full transition-all ${newListColor === c ? 'ring-2 ring-offset-2 ring-primary scale-110' : 'hover:scale-110'}`} style={{ backgroundColor: c }} />
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <Button size="sm" className="flex-1" onClick={() => createListMutation.mutate({ name: newListName, description: newListDescription, color: newListColor })} disabled={!newListName || createListMutation.isPending}>
+                  {createListMutation.isPending ? 'Création...' : 'Créer'}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setShowCreateDialog(false)}>Annuler</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Edit Dialog */}
+        {editingList && (
+          <Card className="border-amber-200 dark:border-amber-800">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Modifier la liste</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 pb-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nom</Label>
+                <Input value={editingList.name} onChange={e => setEditingList({ ...editingList, name: e.target.value })} className="text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Description</Label>
+                <Input value={editingList.description || ''} onChange={e => setEditingList({ ...editingList, description: e.target.value })} className="text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Couleur</Label>
+                <div className="flex gap-1.5">
+                  {LIST_COLORS.map(c => (
+                    <button key={c} onClick={() => setEditingList({ ...editingList, color: c })} className={`w-6 h-6 rounded-full transition-all ${editingList.color === c ? 'ring-2 ring-offset-2 ring-primary scale-110' : 'hover:scale-110'}`} style={{ backgroundColor: c }} />
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <Button size="sm" className="flex-1" onClick={() => updateListMutation.mutate({ id: editingList.id, name: editingList.name, description: editingList.description, color: editingList.color })} disabled={updateListMutation.isPending}>
+                  {updateListMutation.isPending ? 'Mise à jour...' : 'Enregistrer'}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setEditingList(null)}>Annuler</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Right: Contacts */}
+      <div className="lg:col-span-2">
+        {!selectedListId ? (
+          <Card>
+            <CardContent className="py-16 text-center">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+              <p className="text-muted-foreground font-medium">Sélectionnez une liste</p>
+              <p className="text-sm text-muted-foreground mt-1">Choisissez une liste à gauche pour gérer ses contacts</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {/* List Header */}
+            <Card>
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="w-4 h-4 rounded-full" style={{ backgroundColor: selectedList?.color || '#3d9b85' }} />
+                    <div>
+                      <h3 className="font-semibold text-sm">{selectedList?.name}</h3>
+                      {selectedList?.description && <p className="text-xs text-muted-foreground">{selectedList.description}</p>}
+                    </div>
+                    <Badge variant="secondary" className="text-xs">{contacts.length} contacts</Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" className="h-8" onClick={() => setEditingList(selectedList)}>
+                      <Edit className="h-3.5 w-3.5 mr-1" /> Modifier
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-8 text-destructive hover:text-destructive" onClick={() => {
+                      if (confirm(`Supprimer la liste "${selectedList?.name}" et tous ses contacts ?`)) {
+                        deleteListMutation.mutate({ id: selectedListId });
+                      }
+                    }}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Add Contact */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm flex items-center gap-2"><UserPlus className="h-4 w-4" /> Ajouter un contact</CardTitle>
+                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setShowBulkImport(!showBulkImport)}>
+                    <FileSpreadsheet className="h-3.5 w-3.5 mr-1" /> {showBulkImport ? 'Formulaire' : 'Import en masse'}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="pb-4">
+                {showBulkImport ? (
+                  <div className="space-y-3">
+                    <Textarea
+                      placeholder="Un contact par ligne : email, nom, entreprise\nex: jean@example.com, Jean Dupont, Spa Zen\nex: marie@example.com, Marie Martin"
+                      value={bulkEmails}
+                      onChange={e => setBulkEmails(e.target.value)}
+                      rows={6}
+                      className="text-sm font-mono"
+                    />
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] text-muted-foreground">Format : email, nom (optionnel), entreprise (optionnel). Séparateur : virgule, point-virgule ou tabulation.</p>
+                      <Button size="sm" onClick={handleBulkImport} disabled={!bulkEmails.trim() || addBulkMutation.isPending}>
+                        {addBulkMutation.isPending ? 'Import...' : 'Importer'}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input placeholder="Email *" type="email" value={newContactEmail} onChange={e => setNewContactEmail(e.target.value)} className="text-sm flex-1" />
+                    <Input placeholder="Nom" value={newContactName} onChange={e => setNewContactName(e.target.value)} className="text-sm w-32 hidden sm:block" />
+                    <Input placeholder="Entreprise" value={newContactCompany} onChange={e => setNewContactCompany(e.target.value)} className="text-sm w-32 hidden sm:block" />
+                    <Button size="sm" onClick={handleAddContact} disabled={!newContactEmail || addContactMutation.isPending}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Contacts List */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm">Contacts ({contacts.length})</CardTitle>
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input placeholder="Rechercher..." value={searchContact} onChange={e => setSearchContact(e.target.value)} className="text-sm h-8 pl-8 w-48" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pb-3">
+                {contactsQuery.isLoading ? (
+                  <div className="text-center py-8 text-sm text-muted-foreground">Chargement...</div>
+                ) : filteredContacts.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Mail className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                    <p className="text-sm text-muted-foreground">{searchContact ? 'Aucun résultat' : 'Aucun contact dans cette liste'}</p>
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {filteredContacts.map((contact: any) => (
+                      <div key={contact.id} className="flex items-center justify-between py-2.5 px-1 group">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs font-semibold text-primary">{(contact.name || contact.email)[0].toUpperCase()}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{contact.name || contact.email}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-[11px] text-muted-foreground truncate">{contact.email}</p>
+                              {contact.company && (
+                                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                  <Building2 className="h-2.5 w-2.5" /> {contact.company}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                          onClick={() => removeContactMutation.mutate({ id: contact.id })}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Component ──────────────────────────────────────────────────────────────────────
 
 export default function AdminNewsletter() {
   const [subject, setSubject] = useState('');
-  const [recipients, setRecipients] = useState<'ALL' | 'PARTNERS_ONLY' | 'ADMINS_ONLY'>('ALL');
+  const [recipients, setRecipients] = useState<'ALL' | 'PARTNERS_ONLY' | 'ADMINS_ONLY' | 'MAILING_LIST'>('ALL');
+  const [selectedMailingListIds, setSelectedMailingListIds] = useState<number[]>([]);
   const [blocks, setBlocks] = useState<NewsletterBlock[]>([]);
   const [sending, setSending] = useState(false);
   const [view, setView] = useState<TabView>('editor');
@@ -701,6 +1125,7 @@ export default function AdminNewsletter() {
       ctaText: firstCta?.data.text || undefined,
       ctaUrl: firstCta?.data.url || undefined,
       recipients, isRawHtml: true,
+      ...(recipients === 'MAILING_LIST' ? { mailingListIds: selectedMailingListIds } : {}),
     });
   };
 
@@ -714,6 +1139,7 @@ export default function AdminNewsletter() {
     const htmlContent = blocksToFullHtml(blocks);
     scheduleMutation.mutate({
       subject, title, content: htmlContent, recipients,
+      ...(recipients === 'MAILING_LIST' ? { mailingListIds: selectedMailingListIds } : {}),
       scheduledAt: scheduledAt.toISOString(),
     });
   };
@@ -747,6 +1173,9 @@ export default function AdminNewsletter() {
             <Button variant={view === 'scheduled' ? 'default' : 'outline'} size="sm" onClick={() => setView('scheduled')}>
               <List className="h-4 w-4 mr-1" /> Programmées
             </Button>
+            <Button variant={view === 'lists' ? 'default' : 'outline'} size="sm" onClick={() => setView('lists')}>
+              <Users className="h-4 w-4 mr-1" /> Listes
+            </Button>
           </div>
         </div>
 
@@ -765,7 +1194,9 @@ export default function AdminNewsletter() {
           </Alert>
         )}
 
-        {view === 'scheduled' ? (
+        {view === 'lists' ? (
+          <MailingListsManager />
+        ) : view === 'scheduled' ? (
           <ScheduledNewslettersList />
         ) : (
           <>
@@ -785,6 +1216,7 @@ export default function AdminNewsletter() {
                         <SelectItem value="ALL">Tous les utilisateurs actifs</SelectItem>
                         <SelectItem value="PARTNERS_ONLY">Partenaires uniquement</SelectItem>
                         <SelectItem value="ADMINS_ONLY">Administrateurs uniquement</SelectItem>
+                        <SelectItem value="MAILING_LIST">Liste personnalisée</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -797,6 +1229,11 @@ export default function AdminNewsletter() {
                       </SelectContent>
                     </Select>
                   </div>
+                  {recipients === 'MAILING_LIST' && (
+                    <div className="col-span-1 sm:col-span-3">
+                      <MailingListSelector selectedIds={selectedMailingListIds} onChange={setSelectedMailingListIds} />
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

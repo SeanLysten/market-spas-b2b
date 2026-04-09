@@ -3508,3 +3508,14 @@
 - [x] Redesign complet de TOUS les templates d'emails (12 templates) — design system unifié Market Spas
 - [x] Coherence guard : audit de cohérence global — 1244 tests passés, 0 erreurs
 - [x] Tests vitest pour les nouvelles fonctionnalités — 81 fichiers, 1244 tests passés
+
+## Module Newsletter Admin — Améliorations
+- [x] Aperçu newsletter avec le même design premium teal + logo Market Spas
+- [x] Créer table DB pour les listes d'emails personnalisées (mailing_lists + mailing_list_contacts)
+- [x] Routes tRPC CRUD pour les listes d'emails (list, create, update, delete, getContacts, addContact, addContactsBulk, removeContact, removeContactsBulk)
+- [x] Nouvel onglet "Listes" dans l'admin newsletter avec gestion complète
+- [x] Pouvoir créer plusieurs listes avec noms, descriptions et couleurs différentes
+- [x] Pouvoir ajouter/supprimer des emails + import en masse (CSV/copier-coller)
+- [x] Pouvoir sélectionner une ou plusieurs listes comme destinataire (envoi + programmation)
+- [x] Coherence guard : schedule route alignée, color dot fixé, mailingListIds passés partout
+- [x] Tests vitest — 81 fichiers, 1244 tests passés

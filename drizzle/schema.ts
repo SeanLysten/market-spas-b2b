@@ -2973,3 +2973,44 @@ export const mollieWebhookLogs = mysqlTable(
 );
 export type MollieWebhookLog = typeof mollieWebhookLogs.$inferSelect;
 export type InsertMollieWebhookLog = typeof mollieWebhookLogs.$inferInsert;
+
+
+// ============================================
+// MAILING LISTS (listes d'emails personnalisées)
+// ============================================
+export const mailingLists = mysqlTable(
+  "mailing_lists",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: varchar("description", { length: 1000 }),
+    color: varchar("color", { length: 7 }).default("#3d9b85"),
+    createdById: int("createdById").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    nameIdx: index("ml_name_idx").on(table.name),
+  })
+);
+export type MailingList = typeof mailingLists.$inferSelect;
+export type InsertMailingList = typeof mailingLists.$inferInsert;
+
+export const mailingListContacts = mysqlTable(
+  "mailing_list_contacts",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    listId: int("listId").notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    name: varchar("name", { length: 255 }),
+    company: varchar("company", { length: 255 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    listIdIdx: index("mlc_listId_idx").on(table.listId),
+    emailIdx: index("mlc_email_idx").on(table.email),
+    uniqueListEmail: index("mlc_unique_list_email").on(table.listId, table.email),
+  })
+);
+export type MailingListContact = typeof mailingListContacts.$inferSelect;
+export type InsertMailingListContact = typeof mailingListContacts.$inferInsert;

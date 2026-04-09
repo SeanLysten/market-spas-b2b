@@ -3283,13 +3283,25 @@ export const appRouter = router({
             content: z.string().min(1, "Le contenu est requis"),
             ctaText: z.string().optional(),
             ctaUrl: z.string().url().optional(),
-            recipients: z.enum(['ALL', 'PARTNERS_ONLY', 'ADMINS_ONLY']).default('ALL'),
+            recipients: z.enum(['ALL', 'PARTNERS_ONLY', 'ADMINS_ONLY', 'MAILING_LIST']).default('ALL'),
+            mailingListIds: z.array(z.number()).optional(),
             isRawHtml: z.boolean().optional().default(false),
           })
         )
         .mutation(async ({ input }) => {
           let recipientEmails: string[] = [];
-          if (input.recipients === 'ALL') {
+          if (input.recipients === 'MAILING_LIST' && input.mailingListIds && input.mailingListIds.length > 0) {
+            const { mailingListContacts } = await import("../drizzle/schema");
+            const drizzleDb = await db.getDb();
+            if (!drizzleDb) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB non disponible' });
+            for (const listId of input.mailingListIds) {
+              const contacts = await drizzleDb.select().from(mailingListContacts)
+                .where(eq(mailingListContacts.listId, listId));
+              recipientEmails.push(...contacts.map(c => c.email));
+            }
+            // Deduplicate
+            recipientEmails = [...new Set(recipientEmails)];
+          } else if (input.recipients === 'ALL') {
             const allUsers = await db.getAllUsers();
             recipientEmails = allUsers.filter(u => u.isActive && u.email).map(u => u.email);
           } else if (input.recipients === 'PARTNERS_ONLY') {
@@ -3327,7 +3339,8 @@ export const appRouter = router({
             subject: z.string().min(1, "Le sujet est requis"),
             title: z.string().min(1, "Le titre est requis"),
             content: z.string().min(1, "Le contenu est requis"),
-            recipients: z.enum(['ALL', 'PARTNERS_ONLY', 'ADMINS_ONLY']).default('ALL'),
+            recipients: z.enum(['ALL', 'PARTNERS_ONLY', 'ADMINS_ONLY', 'MAILING_LIST']).default('ALL'),
+            mailingListIds: z.array(z.number()).optional(),
             scheduledAt: z.string().min(1, "La date de programmation est requise"),
           })
         )
@@ -3387,6 +3400,163 @@ export const appRouter = router({
           const fileKey = `newsletter-images/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
           const { url } = await storagePut(fileKey, buffer, input.fileType);
           return { success: true, url };
+        }),
+    }),
+
+    // ─── Mailing Lists (listes d'emails personnalisées) ──────
+    mailingLists: router({
+      list: adminProcedure
+        .query(async () => {
+          const { mailingLists, mailingListContacts } = await import("../drizzle/schema");
+          const drizzleDb = await db.getDb();
+          if (!drizzleDb) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB non disponible' });
+          const result = await drizzleDb.select().from(mailingLists).orderBy(mailingLists.name);
+          const counts = await drizzleDb
+            .select({ listId: mailingListContacts.listId, count: sql<number>`count(*)` })
+            .from(mailingListContacts)
+            .groupBy(mailingListContacts.listId);
+          const countMap = new Map(counts.map(c => [c.listId, c.count]));
+          return result.map(l => ({ ...l, contactCount: countMap.get(l.id) || 0 }));
+        }),
+
+      create: adminProcedure
+        .input(z.object({
+          name: z.string().min(1, "Le nom est requis"),
+          description: z.string().optional(),
+          color: z.string().optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const { mailingLists } = await import("../drizzle/schema");
+          const drizzleDb = await db.getDb();
+          if (!drizzleDb) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB non disponible' });
+          const [result] = await drizzleDb.insert(mailingLists).values({
+            name: input.name,
+            description: input.description || null,
+            color: input.color || '#3d9b85',
+            createdById: ctx.user.id,
+          });
+          return { success: true, id: result.insertId, message: `Liste "${input.name}" créée` };
+        }),
+
+      update: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          name: z.string().min(1).optional(),
+          description: z.string().optional(),
+          color: z.string().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          const { mailingLists } = await import("../drizzle/schema");
+          const drizzleDb = await db.getDb();
+          if (!drizzleDb) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB non disponible' });
+          const { id, ...data } = input;
+          const updateData: any = {};
+          if (data.name !== undefined) updateData.name = data.name;
+          if (data.description !== undefined) updateData.description = data.description;
+          if (data.color !== undefined) updateData.color = data.color;
+          await drizzleDb.update(mailingLists).set(updateData).where(eq(mailingLists.id, id));
+          return { success: true, message: 'Liste mise à jour' };
+        }),
+
+      delete: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          const { mailingLists, mailingListContacts } = await import("../drizzle/schema");
+          const drizzleDb = await db.getDb();
+          if (!drizzleDb) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB non disponible' });
+          await drizzleDb.delete(mailingListContacts).where(eq(mailingListContacts.listId, input.id));
+          await drizzleDb.delete(mailingLists).where(eq(mailingLists.id, input.id));
+          return { success: true, message: 'Liste supprimée' };
+        }),
+
+      getContacts: adminProcedure
+        .input(z.object({ listId: z.number() }))
+        .query(async ({ input }) => {
+          const { mailingListContacts } = await import("../drizzle/schema");
+          const drizzleDb = await db.getDb();
+          if (!drizzleDb) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB non disponible' });
+          return drizzleDb.select().from(mailingListContacts)
+            .where(eq(mailingListContacts.listId, input.listId))
+            .orderBy(mailingListContacts.email);
+        }),
+
+      addContact: adminProcedure
+        .input(z.object({
+          listId: z.number(),
+          email: z.string().email("Email invalide"),
+          name: z.string().optional(),
+          company: z.string().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          const { mailingListContacts } = await import("../drizzle/schema");
+          const drizzleDb = await db.getDb();
+          if (!drizzleDb) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB non disponible' });
+          const existing = await drizzleDb.select().from(mailingListContacts)
+            .where(sql`${mailingListContacts.listId} = ${input.listId} AND ${mailingListContacts.email} = ${input.email}`)
+            .limit(1);
+          if (existing.length > 0) {
+            throw new TRPCError({ code: 'CONFLICT', message: 'Cet email existe déjà dans cette liste' });
+          }
+          const [result] = await drizzleDb.insert(mailingListContacts).values({
+            listId: input.listId,
+            email: input.email,
+            name: input.name || null,
+            company: input.company || null,
+          });
+          return { success: true, id: result.insertId, message: `Contact ${input.email} ajouté` };
+        }),
+
+      addContactsBulk: adminProcedure
+        .input(z.object({
+          listId: z.number(),
+          contacts: z.array(z.object({
+            email: z.string().email(),
+            name: z.string().optional(),
+            company: z.string().optional(),
+          })).min(1),
+        }))
+        .mutation(async ({ input }) => {
+          const { mailingListContacts } = await import("../drizzle/schema");
+          const drizzleDb = await db.getDb();
+          if (!drizzleDb) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB non disponible' });
+          let added = 0;
+          let skipped = 0;
+          for (const contact of input.contacts) {
+            const existing = await drizzleDb.select().from(mailingListContacts)
+              .where(sql`${mailingListContacts.listId} = ${input.listId} AND ${mailingListContacts.email} = ${contact.email}`)
+              .limit(1);
+            if (existing.length > 0) { skipped++; continue; }
+            await drizzleDb.insert(mailingListContacts).values({
+              listId: input.listId,
+              email: contact.email,
+              name: contact.name || null,
+              company: contact.company || null,
+            });
+            added++;
+          }
+          return { success: true, added, skipped, message: `${added} contacts ajoutés, ${skipped} doublons ignorés` };
+        }),
+
+      removeContact: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          const { mailingListContacts } = await import("../drizzle/schema");
+          const drizzleDb = await db.getDb();
+          if (!drizzleDb) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB non disponible' });
+          await drizzleDb.delete(mailingListContacts).where(eq(mailingListContacts.id, input.id));
+          return { success: true, message: 'Contact supprimé' };
+        }),
+
+      removeContactsBulk: adminProcedure
+        .input(z.object({ ids: z.array(z.number()).min(1) }))
+        .mutation(async ({ input }) => {
+          const { mailingListContacts } = await import("../drizzle/schema");
+          const drizzleDb = await db.getDb();
+          if (!drizzleDb) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB non disponible' });
+          for (const id of input.ids) {
+            await drizzleDb.delete(mailingListContacts).where(eq(mailingListContacts.id, id));
+          }
+          return { success: true, message: `${input.ids.length} contacts supprimés` };
         }),
     }),
   }),
