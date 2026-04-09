@@ -128,6 +128,7 @@ export default function AdminProducts() {
         sku: autoSku,
         name: productForm.name,
         description: productForm.description || undefined,
+        category: productForm.category,
         priceHT: parseFloat(productForm.priceHT),
         vatRate: parseFloat(productForm.vatRate),
         stockQuantity: editingProduct?.stockQuantity ?? 0,

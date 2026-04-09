@@ -3527,3 +3527,6 @@
 - [x] Rendre l'ajout de variantes accessible depuis la page produit (bouton "Ajouter" dans ExpandedVariantsRow + formulaire inline)
 - [x] Permettre l'ajout de variantes depuis le formulaire de modification produit (+ suppression de variantes)
 - [x] Auto-créer les 3 couleurs de base (Sterling Silver, Odyssée, Midnight Opal) pour les catégories SPAS et SWIM_SPAS uniquement
+
+## Bug Fix — Filtre catalogue Spa de nage
+- [x] Les produits catégorisés "Spa de nage" n'apparaissent pas quand on filtre par cette catégorie dans le catalogue — le champ category n'était pas inclus dans l'objet data envoyé à la mutation create/update
