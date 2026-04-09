@@ -24,6 +24,8 @@ import { orderPdfRouter } from "../routes/order-pdf";
 import { validateEnv } from "./env";
 import { mobileAuthRouter } from "../routes/mobile-auth";
 import { mobileApiRouter } from "../routes/mobile-api";
+import { mobileApiUserRouter } from "../routes/mobile-api-user";
+import { mobileApiAdminRouter } from "../routes/mobile-api-admin";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -348,6 +350,10 @@ async function startServer() {
   app.use(mobileAuthRouter);
   // Mobile optimized API endpoints (v1)
   app.use(mobileApiRouter);
+  // Mobile API - User endpoints (profile, cart, favorites, returns, forum, etc.)
+  app.use(mobileApiUserRouter);
+  // Mobile API - Admin endpoints (users, products CRUD, events, SAV, settings, etc.)
+  app.use(mobileApiAdminRouter);
   // Resource upload - multipart/form-data for large files (videos, etc.)
   app.use(uploadResourceRouter);
   // Supplier stock integration API

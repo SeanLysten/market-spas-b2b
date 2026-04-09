@@ -3480,3 +3480,17 @@
 - [x] Phase D : Headers et layout (taille titres, barres d'actions, profondeur)
 - [x] Phase E : Formulaires (focus ring animé, labels, tabs sliding indicator)
 - [x] Phase F : Touches finales (shimmer skeletons, dialogs scale, scrollbar, page transitions)
+
+## Configuration API Fournisseur (09/04/2026)
+- [x] Configurer SUPPLIER_API_URL pointant vers notre propre API (annulé — non nécessaire, Valentin tire les données via GET /api/supplier/orders/export)
+- [x] Modifier l'appel sortant de POST vers GET (annulé — pas de push sortant nécessaire)
+- [x] Tests de la notification fournisseur (annulé — flux déjà opérationnel)
+
+## Audit & Complétion Endpoints Mobiles (09/04/2026)
+- [x] Auditer les endpoints mobiles existants vs backend web
+- [x] Identifier les écarts (brainstorming + gap analysis)
+- [x] Rédiger le plan structuré des modifications (writing-plans)
+- [x] Analyser les impacts et dépendances (impact-guard)
+- [x] Implémenter les endpoints manquants (mobile-api-user.ts + mobile-api-admin.ts)
+- [x] Restructurer le fichier pour cohérence (3 modules séparés)
+- [x] Tests vitest des nouveaux endpoints (97 tests + 1244 existants OK)
