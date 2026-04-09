@@ -130,6 +130,7 @@ export default function AdminProducts() {
         description: productForm.description || undefined,
         priceHT: parseFloat(productForm.priceHT),
         vatRate: parseFloat(productForm.vatRate),
+        stockQuantity: editingProduct?.stockQuantity ?? 0,
         weight: productForm.weight ? parseFloat(productForm.weight) : undefined,
         imageUrl: productForm.imageUrl || undefined,
         supplierProductCode: productForm.supplierProductCode || undefined,

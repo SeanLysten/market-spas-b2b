@@ -3519,3 +3519,6 @@
 - [x] Pouvoir sélectionner une ou plusieurs listes comme destinataire (envoi + programmation)
 - [x] Coherence guard : schedule route alignée, color dot fixé, mailingListIds passés partout
 - [x] Tests vitest — 81 fichiers, 1244 tests passés
+
+## Bug Fix — stockQuantity undefined
+- [x] Corriger l'erreur stockQuantity undefined sur /admin/products (mutation produit) — ajouté stockQuantity: editingProduct?.stockQuantity ?? 0
