@@ -4,8 +4,8 @@ import { createMollieClient, PaymentMethod } from "@mollie/api-client";
  * Get the Mollie client using the appropriate API key (live or test)
  */
 export function getMollieClient() {
-  // Use test key first for development/testing, live key for production
-  const apiKey = process.env.MOLLIE_API_KEY_TEST || process.env.MOLLIE_API_KEY_LIVE;
+  // Use live key for production, test key as fallback for development
+  const apiKey = process.env.MOLLIE_API_KEY_LIVE || process.env.MOLLIE_API_KEY_TEST;
   if (!apiKey) {
     throw new Error("No Mollie API key configured. Set MOLLIE_API_KEY_TEST or MOLLIE_API_KEY_LIVE.");
   }
@@ -17,7 +17,7 @@ export function getMollieClient() {
  * Check if we're in test mode
  */
 export function isMollieTestMode(): boolean {
-  const apiKey = process.env.MOLLIE_API_KEY_TEST || process.env.MOLLIE_API_KEY_LIVE;
+  const apiKey = process.env.MOLLIE_API_KEY_LIVE || process.env.MOLLIE_API_KEY_TEST;
   return !apiKey || apiKey.startsWith('test_');
 }
 

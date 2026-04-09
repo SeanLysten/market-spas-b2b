@@ -3415,3 +3415,8 @@
 - [x] Erreur "Authentication required" : endpoint utilisait jsonwebtoken + cookie 'token' au lieu du SDK auth (cookie 'app_session_id' + jose)
 - [x] Corrigé : utilise sdk.authenticateRequest() comme les autres endpoints
 - [x] Corrigé : vérification rôle 'ADMIN'/'SUPER_ADMIN' au lieu de 'admin'
+
+## Passage Mollie en mode live (09/04/2026)
+- [x] Remettre Mollie en mode live (clé live prioritaire au lieu de clé test)
+- [x] Supprimer le bouton "Simuler paiement" dans AdminOrders
+- [x] Supprimer l'endpoint POST /api/admin/simulate-payment

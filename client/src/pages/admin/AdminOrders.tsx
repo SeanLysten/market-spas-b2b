@@ -33,8 +33,7 @@ import {
   ArrowUp,
   ArrowDown,
   X,
-  SlidersHorizontal,
-  CreditCard
+  SlidersHorizontal
 } from "lucide-react";
 import { toast } from "sonner";
 import { OnboardingTour } from "@/components/OnboardingTour";
@@ -257,31 +256,7 @@ export default function AdminOrders() {
     });
   };
 
-  // Simulate payment received (TEST MODE ONLY)
-  const [simulatingPayment, setSimulatingPayment] = useState(false);
-  const handleSimulatePayment = async (order: any) => {
-    if (simulatingPayment) return;
-    setSimulatingPayment(true);
-    try {
-      const res = await fetch('/api/admin/simulate-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      body: JSON.stringify({ orderId: order.id }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(`Paiement simulé pour ${order.orderNumber} - Statut: Acompte payé`);
-        refetch();
-      } else {
-        toast.error(data.error || 'Erreur lors de la simulation');
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Erreur réseau');
-    } finally {
-      setSimulatingPayment(false);
-    }
-  };
+
 
   // Stats
   const stats = {
@@ -563,18 +538,7 @@ export default function AdminOrders() {
                             <RefreshCw className="w-4 h-4" />
                             Statut
                           </Button>
-                          {order.status === 'PAYMENT_PENDING' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleSimulatePayment(order)}
-                              disabled={simulatingPayment}
-                              className="gap-1 border-green-500 text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20"
-                            >
-                              <CreditCard className="w-4 h-4" />
-                              {simulatingPayment ? 'Simulation...' : 'Simuler paiement'}
-                            </Button>
-                          )}
+
                         </div>
                       </div>
                     </div>
