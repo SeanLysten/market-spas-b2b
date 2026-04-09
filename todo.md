@@ -3440,3 +3440,10 @@
 
 ## Bug - Colonnes team_invitations mapping incorrect (09/04/2026)
 - [x] Corriger le mapping des colonnes team_role et invitation_status dans team_invitations (Drizzle génère team_role au lieu de role, invitation_status au lieu de status)
+
+## API Fournisseur - Flux paiements (09/04/2026)
+- [x] Analyser le système API fournisseur existant et le flux commandes/paiements
+- [x] Envoyer notification au fournisseur quand l'acompte est validé (DEPOSIT_PAID → API push)
+- [x] Créer webhook réception fournisseur quand le solde restant est payé (balance_paid → mise à jour commande)
+- [x] Mettre à jour l'interface utilisateur pour afficher le statut "solde payé"
+- [x] Écrire les tests vitest

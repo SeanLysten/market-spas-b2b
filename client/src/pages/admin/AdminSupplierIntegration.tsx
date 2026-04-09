@@ -747,6 +747,81 @@ export default function AdminSupplierIntegration() {
 
                 <hr />
 
+                {/* Balance Paid Webhook Endpoint */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-green-600 text-white">POST</Badge>
+                    <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                      {baseUrl}/api/supplier/orders/balance-paid
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${baseUrl}/api/supplier/orders/balance-paid`);
+                        toast.success("URL copiée");
+                      }}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Webhook appelé par le fournisseur pour notifier que le solde restant d'une commande a été payé par le client. Met à jour automatiquement le statut de la commande en "Terminé".
+                  </p>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Corps de la requête (JSON)</Label>
+                    <pre className="mt-1 p-3 rounded-md bg-muted text-xs font-mono overflow-auto">{`{
+  "orderNumber": "ORD-2026-001",
+  "balancePaidAt": "2026-04-09T10:00:00.000Z",
+  "balanceAmount": "8750.00",
+  "supplierReference": "INV-2026-1234",
+  "notes": "Paiement reçu par virement"
+}`}</pre>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Réponse succès</Label>
+                    <pre className="mt-1 p-3 rounded-md bg-muted text-xs font-mono overflow-auto">{`{
+  "success": true,
+  "message": "Solde marqué comme payé pour la commande ORD-2026-001.",
+  "order": {
+    "id": 1,
+    "number": "ORD-2026-001",
+    "previousStatus": "DEPOSIT_PAID",
+    "newStatus": "COMPLETED",
+    "balancePaid": true,
+    "balancePaidAt": "2026-04-09T10:00:00.000Z"
+  }
+}`}</pre>
+                  </div>
+                  <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-md">
+                    <p className="text-xs text-amber-800 dark:text-amber-400">
+                      <strong>Important :</strong> L'acompte doit être payé avant de pouvoir marquer le solde comme payé. Si l'acompte n'est pas encore validé, l'API retournera une erreur 409.
+                    </p>
+                  </div>
+                </div>
+
+                <hr />
+
+                {/* Deposit Paid Notification (outbound) */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-purple-600 text-white">SORTANT</Badge>
+                    <span className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                      Notification automatique → Fournisseur
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Lorsqu'un acompte est validé (paiement Mollie confirmé), le système envoie automatiquement une notification au fournisseur avec les détails complets de la commande, les articles, et les informations client. Cette notification est envoyée vers <code className="bg-muted px-1 rounded">SUPPLIER_API_URL/orders/deposit-paid</code> si configuré.
+                  </p>
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-md">
+                    <p className="text-xs text-blue-800 dark:text-blue-400">
+                      <strong>Configuration :</strong> Définissez la variable d'environnement <code>SUPPLIER_API_URL</code> pour activer l'envoi automatique. Sans cette variable, les notifications sont logées localement mais non envoyées.
+                    </p>
+                  </div>
+                </div>
+
+                <hr />
+
                 {/* Matching Logic */}
                 <div className="space-y-3">
                   <h3 className="font-semibold">Logique de matching</h3>

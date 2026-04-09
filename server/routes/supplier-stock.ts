@@ -626,4 +626,286 @@ router.get("/api/supplier/orders/export", async (req, res) => {
   }
 });
 
+// ============================================
+// Supplier Balance Paid Webhook
+// POST /api/supplier/orders/balance-paid
+// Receives notification from supplier when the remaining balance has been paid by the client
+// Updates order status and marks balancePaid = true
+// Requires X-API-Key header for authentication
+// ============================================
+
+interface BalancePaidPayload {
+  orderNumber?: string;
+  orderId?: number;
+  balancePaidAt?: string;
+  balanceAmount?: string | number;
+  supplierReference?: string;
+  notes?: string;
+}
+
+router.post("/api/supplier/orders/balance-paid", async (req, res) => {
+  // Authenticate
+  if (!validateApiKey(req, res)) return;
+
+  const startTime = Date.now();
+  const db = await getDb();
+
+  if (!db) {
+    return res.status(500).json({ success: false, error: "Base de données non disponible" });
+  }
+
+  try {
+    const payload = req.body as BalancePaidPayload;
+
+    // Validate: we need at least orderNumber or orderId
+    if (!payload || (!payload.orderNumber && !payload.orderId)) {
+      // Log failed attempt
+      try {
+        await db.insert(supplierApiLogs).values({
+          importKey: "balance_paid_error",
+          rawPayload: JSON.stringify(req.body || {}),
+          totalItems: 0,
+          matchedItems: 0,
+          unmatchedItems: 0,
+          errorItems: 1,
+          resultsJson: null,
+          ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+          userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+          success: false,
+          errorMessage: "Format invalide: orderNumber ou orderId requis",
+        });
+      } catch (logErr) {
+        console.error("[SupplierBalancePaid] Failed to log error:", logErr);
+      }
+
+      return res.status(400).json({
+        success: false,
+        error: "Format invalide. Attendu: { orderNumber: string } ou { orderId: number }",
+      });
+    }
+
+    // Find the order
+    let orderRows: any[] = [];
+    if (payload.orderId) {
+      orderRows = await db.select().from(orders).where(eq(orders.id, payload.orderId)).limit(1);
+    }
+    if (orderRows.length === 0 && payload.orderNumber) {
+      orderRows = await db.select().from(orders).where(eq(orders.orderNumber, payload.orderNumber)).limit(1);
+    }
+
+    if (orderRows.length === 0) {
+      const identifier = payload.orderNumber || `ID:${payload.orderId}`;
+      console.error(`[SupplierBalancePaid] Order not found: ${identifier}`);
+
+      try {
+        await db.insert(supplierApiLogs).values({
+          importKey: `balance_paid_${identifier}`,
+          rawPayload: JSON.stringify(payload),
+          totalItems: 0,
+          matchedItems: 0,
+          unmatchedItems: 0,
+          errorItems: 1,
+          resultsJson: JSON.stringify({ error: "Order not found" }),
+          ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+          userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+          success: false,
+          errorMessage: `Commande non trouvée: ${identifier}`,
+        });
+      } catch (logErr) {
+        console.error("[SupplierBalancePaid] Failed to log error:", logErr);
+      }
+
+      return res.status(404).json({
+        success: false,
+        error: `Commande non trouvée: ${payload.orderNumber || payload.orderId}`,
+      });
+    }
+
+    const order = orderRows[0];
+
+    // Check if deposit was paid first (balance can only be paid after deposit)
+    if (!order.depositPaid) {
+      console.warn(`[SupplierBalancePaid] Order ${order.orderNumber}: Deposit not yet paid, cannot mark balance as paid`);
+
+      try {
+        await db.insert(supplierApiLogs).values({
+          importKey: `balance_paid_${order.orderNumber}`,
+          rawPayload: JSON.stringify(payload),
+          totalItems: 0,
+          matchedItems: 0,
+          unmatchedItems: 0,
+          errorItems: 1,
+          resultsJson: JSON.stringify({ error: "Deposit not yet paid" }),
+          ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+          userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+          success: false,
+          errorMessage: "L'acompte n'a pas encore été payé",
+        });
+      } catch (logErr) {
+        console.error("[SupplierBalancePaid] Failed to log error:", logErr);
+      }
+
+      return res.status(409).json({
+        success: false,
+        error: "L'acompte n'a pas encore été payé pour cette commande. Le solde ne peut être marqué comme payé qu'après réception de l'acompte.",
+      });
+    }
+
+    // Check if balance is already paid
+    if (order.balancePaid) {
+      console.log(`[SupplierBalancePaid] Order ${order.orderNumber}: Balance already marked as paid`);
+
+      try {
+        await db.insert(supplierApiLogs).values({
+          importKey: `balance_paid_${order.orderNumber}`,
+          rawPayload: JSON.stringify(payload),
+          totalItems: 0,
+          matchedItems: 1,
+          unmatchedItems: 0,
+          errorItems: 0,
+          resultsJson: JSON.stringify({ status: "already_paid" }),
+          ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+          userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+          success: true,
+          errorMessage: null,
+        });
+      } catch (logErr) {
+        console.error("[SupplierBalancePaid] Failed to log:", logErr);
+      }
+
+      return res.json({
+        success: true,
+        message: "Le solde est déjà marqué comme payé pour cette commande.",
+        order: {
+          id: order.id,
+          number: order.orderNumber,
+          balancePaid: true,
+          balancePaidAt: order.balancePaidAt,
+        },
+      });
+    }
+
+    // Update the order: mark balance as paid and update status
+    const balancePaidAt = payload.balancePaidAt ? new Date(payload.balancePaidAt) : new Date();
+    const previousStatus = order.status;
+
+    // Determine new status: if deposit paid + balance paid → COMPLETED (fully paid)
+    const newStatus = "COMPLETED";
+
+    await db
+      .update(orders)
+      .set({
+        balancePaid: true,
+        balancePaidAt,
+        status: newStatus,
+      })
+      .where(eq(orders.id, order.id));
+
+    // Record status history
+    const { orderStatusHistory } = await import("../../drizzle/schema");
+    await db.insert(orderStatusHistory).values({
+      orderId: order.id,
+      oldStatus: previousStatus,
+      newStatus,
+      note: `Solde payé via API fournisseur${payload.supplierReference ? ` (Réf: ${payload.supplierReference})` : ""}${payload.notes ? ` — ${payload.notes}` : ""}`,
+    });
+
+    // Record balance payment in payments table
+    try {
+      await db.insert(payments).values({
+        partnerId: order.partnerId,
+        orderId: order.id,
+        amount: payload.balanceAmount ? String(payload.balanceAmount) : order.balanceAmount,
+        method: "supplier_direct",
+        status: "COMPLETED",
+        paidAt: balancePaidAt,
+        notes: `Solde payé via fournisseur${payload.supplierReference ? ` (Réf: ${payload.supplierReference})` : ""}`,
+      });
+    } catch (payErr) {
+      console.error(`[SupplierBalancePaid] Failed to record payment for order ${order.orderNumber}:`, payErr);
+    }
+
+    const processingTime = Date.now() - startTime;
+
+    // Send notification to partner users
+    try {
+      const { notifyBalancePaid } = await import("../notification-service").catch(() => ({ notifyBalancePaid: null }));
+      if (notifyBalancePaid) {
+        await notifyBalancePaid(order.id, order.orderNumber);
+      }
+    } catch (notifErr) {
+      console.log("[SupplierBalancePaid] Notification skipped:", (notifErr as any).message);
+    }
+
+    console.log(`[SupplierBalancePaid] Order ${order.orderNumber}: Balance paid, status updated ${previousStatus} -> ${newStatus} (${processingTime}ms)`);
+
+    // Log success
+    try {
+      await db.insert(supplierApiLogs).values({
+        importKey: `balance_paid_${order.orderNumber}`,
+        rawPayload: JSON.stringify(payload),
+        totalItems: 1,
+        matchedItems: 1,
+        unmatchedItems: 0,
+        errorItems: 0,
+        resultsJson: JSON.stringify({
+          event: "balance_paid",
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          previousStatus,
+          newStatus,
+          balancePaidAt: balancePaidAt.toISOString(),
+          processingTimeMs: processingTime,
+        }),
+        ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+        userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+        success: true,
+        errorMessage: null,
+      });
+    } catch (logErr) {
+      console.error("[SupplierBalancePaid] Failed to log success:", logErr);
+    }
+
+    return res.json({
+      success: true,
+      message: `Solde marqué comme payé pour la commande ${order.orderNumber}. Statut mis à jour: ${newStatus}.`,
+      order: {
+        id: order.id,
+        number: order.orderNumber,
+        previousStatus,
+        newStatus,
+        balancePaid: true,
+        balancePaidAt: balancePaidAt.toISOString(),
+        balanceAmount: order.balanceAmount,
+      },
+    });
+  } catch (error: any) {
+    console.error("[SupplierBalancePaid] Error:", error.message, error.stack);
+
+    // Log the error
+    try {
+      await db.insert(supplierApiLogs).values({
+        importKey: "balance_paid_error",
+        rawPayload: JSON.stringify(req.body || {}),
+        totalItems: 0,
+        matchedItems: 0,
+        unmatchedItems: 0,
+        errorItems: 1,
+        resultsJson: null,
+        ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+        userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+        success: false,
+        errorMessage: error.message?.slice(0, 500) || "Erreur interne",
+      });
+    } catch (logErr) {
+      console.error("[SupplierBalancePaid] Failed to log error:", logErr);
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: error.message || "Erreur interne du serveur",
+    });
+  }
+});
+
 export const supplierStockRouter = router;

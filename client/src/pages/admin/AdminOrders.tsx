@@ -721,13 +721,29 @@ export default function AdminOrders() {
                   </div>
                   {Number(selectedOrder.depositAmount || 0) > 0 && (
                     <>
-                      <div className="flex justify-between text-emerald-700 bg-emerald-50 p-2 rounded">
-                        <span className="font-medium">Acompte</span>
-                        <span className="font-semibold">{formatPrice(selectedOrder.depositAmount)} HT</span>
+                      <div className={`flex justify-between items-center p-2 rounded ${(selectedOrder as any).depositPaid ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400'}`}>
+                        <div>
+                          <span className="font-medium">Acompte</span>
+                          {(selectedOrder as any).depositPaidAt && (
+                            <p className="text-xs opacity-75">Payé le {new Date((selectedOrder as any).depositPaidAt).toLocaleDateString('fr-FR')}</p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <span className="font-semibold">{formatPrice(selectedOrder.depositAmount)} HT</span>
+                          <p className="text-xs font-medium">{(selectedOrder as any).depositPaid ? '✅ Payé' : '⏳ En attente'}</p>
+                        </div>
                       </div>
-                      <div className="flex justify-between text-amber-700 bg-amber-50 p-2 rounded">
-                        <span className="font-medium">Solde restant</span>
-                        <span className="font-semibold">{formatPrice(Number(selectedOrder.totalHT || 0) + Number(selectedOrder.shippingHT || selectedOrder.shippingCost || 0) - Number(selectedOrder.depositAmount || 0))} HT</span>
+                      <div className={`flex justify-between items-center p-2 rounded ${(selectedOrder as any).balancePaid ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400'}`}>
+                        <div>
+                          <span className="font-medium">Solde restant</span>
+                          {(selectedOrder as any).balancePaidAt && (
+                            <p className="text-xs opacity-75">Payé le {new Date((selectedOrder as any).balancePaidAt).toLocaleDateString('fr-FR')}</p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <span className="font-semibold">{formatPrice(Number(selectedOrder.totalHT || 0) + Number(selectedOrder.shippingHT || selectedOrder.shippingCost || 0) - Number(selectedOrder.depositAmount || 0))} HT</span>
+                          <p className="text-xs font-medium">{(selectedOrder as any).balancePaid ? '✅ Payé' : '⏳ À régler via fournisseur'}</p>
+                        </div>
                       </div>
                     </>
                   )}
