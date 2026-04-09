@@ -434,25 +434,62 @@ export default function OrderTracking() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <p className="font-medium">{(order as any).shippingContactName || "N/A"}</p>
+                <p className="font-medium">{(order as any).deliveryContactName || "N/A"}</p>
                 <p className="text-xs md:text-sm text-muted-foreground">
-                  {(order as any).shippingStreet || "Adresse non renseignée"}
-                  {(order as any).shippingStreet2 && <br />}
-                  {(order as any).shippingStreet2}
+                  {(order as any).deliveryStreet || "Adresse non renseignée"}
+                  {(order as any).deliveryStreet2 && <br />}
+                  {(order as any).deliveryStreet2}
                 </p>
                 <p className="text-xs md:text-sm text-muted-foreground">
-                  {(order as any).shippingPostalCode} {(order as any).shippingCity}
+                  {(order as any).deliveryPostalCode} {(order as any).deliveryCity}
                 </p>
-                <p className="text-xs md:text-sm text-muted-foreground">{(order as any).shippingCountry || "Belgique"}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">{(order as any).deliveryCountry || "Belgique"}</p>
                 
-                {(order as any).shippingContactPhone && (
+                {(order as any).deliveryContactPhone && (
                   <div className="flex items-center gap-2 pt-2 text-sm">
                     <Phone className="w-4 h-4 text-muted-foreground" />
-                    <span>{(order as any).shippingContactPhone}</span>
+                    <span>{(order as any).deliveryContactPhone}</span>
+                  </div>
+                )}
+                {(order as any).deliveryInstructions && (
+                  <div className="pt-2 border-t mt-2">
+                    <p className="text-xs text-muted-foreground font-medium mb-1">Instructions de livraison</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">{(order as any).deliveryInstructions}</p>
                   </div>
                 )}
               </CardContent>
             </Card>
+
+            {/* Billing Address */}
+            {(order as any).partner && (() => {
+              const p = (order as any).partner;
+              const isSame = p?.billingAddressSame;
+              const street = isSame ? p?.addressStreet : p?.billingStreet;
+              const street2 = isSame ? p?.addressStreet2 : p?.billingStreet2;
+              const city = isSame ? p?.addressCity : p?.billingCity;
+              const postal = isSame ? p?.addressPostalCode : p?.billingPostalCode;
+              const country = isSame ? p?.addressCountry : p?.billingCountry;
+              return (street || city) ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Adresse de facturation
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-1">
+                    <p className="font-medium">{p.companyName}</p>
+                    <div className="text-xs md:text-sm text-muted-foreground space-y-0.5">
+                      {street && <p>{street}</p>}
+                      {street2 && <p>{street2}</p>}
+                      {(postal || city) && <p>{postal} {city}</p>}
+                      {country && <p>{country}</p>}
+                      {p.vatNumber && <p className="pt-1">TVA: {p.vatNumber}</p>}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : null;
+            })()}
 
             {/* Cancel Order Card (visible only for PAYMENT_PENDING / PAYMENT_FAILED) */}
             {canCancel && (

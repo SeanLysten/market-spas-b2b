@@ -3457,3 +3457,7 @@
 - [x] Afficher l'adresse de facturation dans le détail commande admin (AdminOrders)
 - [x] Afficher les adresses dans le détail commande utilisateur (OrderSummary)
 - [x] Vérifier que le checkout sauvegarde bien les deux adresses en DB → OK, createOrder sauvegarde bien tous les champs delivery
+
+## Bug - Adresse de livraison manquante sur OrderTracking (09/04/2026)
+- [x] Afficher l'adresse de livraison sur la page OrderTracking (suivi de commande utilisateur) → les champs utilisaient shipping* au lieu de delivery*
+- [x] Afficher l'adresse de facturation sur la page OrderTracking
