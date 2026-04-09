@@ -3469,3 +3469,6 @@
 - [x] MEDIUM #1 : Extraire logo URL en constante partagée
 - [x] MEDIUM #4 : Ajouter statuts manquants dans AdminOrders
 - [x] MEDIUM #3 : Documenter le pattern enums Drizzle
+
+## Bug - Carte territoire 403 Access Blocked (09/04/2026)
+- [x] Corriger l'erreur 403 sur les tuiles OpenStreetMap → remplacé par CartoDB Voyager (pas de restriction Referer)
