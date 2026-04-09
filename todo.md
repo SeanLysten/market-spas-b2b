@@ -3428,3 +3428,12 @@
 - [x] Créer les routes tRPC admin pour lister/consulter les logs (pagination, filtres)
 - [x] Créer l'interface admin pour consulter les logs webhooks Mollie (tableau, filtres, détail payload)
 - [x] Écrire les tests vitest pour le système de logs
+
+## Refonte gestion Utilisateurs & Partenaires (09/04/2026)
+- [x] Routes tRPC team.list/invite/updatePermissions/remove existent déjà et supportent le mode admin (partnerId param)
+- [x] Refondre AdminPartnerDetail avec onglets (Vue d'ensemble, Membres, Contacts & Adresses, Commandes, Notes)
+- [x] Créer l'onglet Membres dans AdminPartnerDetail (liste, rôles, dernière connexion, actions)
+- [x] Transformer AdminUsers en page "Équipe interne" (admins uniquement)
+- [x] Enrichir la liste AdminPartners avec indicateurs (nombre de membres, dernière activité)
+- [x] Réorganiser le menu sidebar : déplacer "Équipe interne" sous "Paramètres"
+- [x] Écrire les tests vitest pour les nouvelles routes

@@ -123,7 +123,60 @@ export async function getAllPartners(filters?: {
   const db = await getDb();
   if (!db) return [];
 
-  let query = db.select().from(partners);
+  const { sql: sqlTag } = await import("drizzle-orm");
+  const memberCountSq = sqlTag<number>`(SELECT COUNT(*) FROM team_members WHERE team_members.partnerId = ${partners.id})`;
+
+  let query = db.select({
+    id: partners.id,
+    companyName: partners.companyName,
+    tradeName: partners.tradeName,
+    vatNumber: partners.vatNumber,
+    registrationNumber: partners.registrationNumber,
+    legalForm: partners.legalForm,
+    website: partners.website,
+    addressStreet: partners.addressStreet,
+    addressStreet2: partners.addressStreet2,
+    addressCity: partners.addressCity,
+    addressPostalCode: partners.addressPostalCode,
+    addressCountry: partners.addressCountry,
+    billingAddressSame: partners.billingAddressSame,
+    billingStreet: partners.billingStreet,
+    billingStreet2: partners.billingStreet2,
+    billingCity: partners.billingCity,
+    billingPostalCode: partners.billingPostalCode,
+    billingCountry: partners.billingCountry,
+    deliveryStreet: partners.deliveryStreet,
+    deliveryStreet2: partners.deliveryStreet2,
+    deliveryCity: partners.deliveryCity,
+    deliveryPostalCode: partners.deliveryPostalCode,
+    deliveryCountry: partners.deliveryCountry,
+    deliveryInstructions: partners.deliveryInstructions,
+    primaryContactName: partners.primaryContactName,
+    primaryContactEmail: partners.primaryContactEmail,
+    primaryContactPhone: partners.primaryContactPhone,
+    accountingEmail: partners.accountingEmail,
+    orderEmail: partners.orderEmail,
+    status: partners.status,
+    level: partners.level,
+    discountPercent: partners.discountPercent,
+    paymentTermsDays: partners.paymentTermsDays,
+    creditLimit: partners.creditLimit,
+    creditUsed: partners.creditUsed,
+    preferredLanguage: partners.preferredLanguage,
+    preferredCurrency: partners.preferredCurrency,
+    newsletterOptIn: partners.newsletterOptIn,
+    internalNotes: partners.internalNotes,
+    supplierClientCode: partners.supplierClientCode,
+    totalOrders: partners.totalOrders,
+    totalRevenue: partners.totalRevenue,
+    lastOrderAt: partners.lastOrderAt,
+    approvedAt: partners.approvedAt,
+    suspendedAt: partners.suspendedAt,
+    suspendedReason: partners.suspendedReason,
+    createdAt: partners.createdAt,
+    updatedAt: partners.updatedAt,
+    memberCount: memberCountSq.as("member_count"),
+  }).from(partners);
 
   const conditions = [];
   if (filters?.status) {
@@ -3546,7 +3599,7 @@ export async function getTeamMembers(partnerId: number) {
       id: teamMembers.id,
       userId: teamMembers.userId,
       partnerId: teamMembers.partnerId,
-      role: teamMembers.role,
+      teamRole: teamMembers.teamRole,
       permissions: teamMembers.permissions,
       addedBy: teamMembers.addedBy,
       createdAt: teamMembers.createdAt,
@@ -3556,6 +3609,10 @@ export async function getTeamMembers(partnerId: number) {
         email: users.email,
         name: users.name,
         avatar: users.avatar,
+        phone: users.phone,
+        lastLoginAt: users.lastLoginAt,
+        isActive: users.isActive,
+        role: users.role,
       },
     })
     .from(teamMembers)
@@ -3736,7 +3793,7 @@ export async function acceptTeamInvitation(token: string) {
   await db.insert(teamMembers).values({
     userId,
     partnerId: inv.partnerId,
-    role: inv.role,
+    teamRole: inv.role,
     permissions: inv.permissions,
     addedBy: inv.invitedBy,
   });
@@ -3779,7 +3836,7 @@ export async function updateTeamMemberPermissions(data: {
   await db
     .update(teamMembers)
     .set({
-      role: data.role as any,
+      teamRole: data.role as any,
       permissions: permissionsJson,
     })
     .where(and(eq(teamMembers.id, data.id), eq(teamMembers.partnerId, data.partnerId)));

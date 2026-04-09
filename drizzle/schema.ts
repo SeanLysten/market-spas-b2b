@@ -1792,7 +1792,13 @@ export const teamMembers = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     userId: int("userId").notNull(),
     partnerId: int("partnerId").notNull(),
-    role: teamRoleEnum.notNull(),
+    teamRole: mysqlEnum("role", [
+      "OWNER",
+      "SALES_REP",
+      "ORDER_MANAGER",
+      "ACCOUNTANT",
+      "FULL_MANAGER",
+    ]).notNull(),
     permissions: text("permissions"), // JSON string for granular permissions
     addedBy: int("addedBy").notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),

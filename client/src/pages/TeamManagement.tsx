@@ -389,19 +389,19 @@ function EditPermissionsDialog({
   onSave: (memberId: number, role: TeamRole, permissions: string) => void;
   isPending: boolean;
 }) {
-  const [role, setRole] = useState<TeamRole>(member?.role || "SALES_REP");
+  const [role, setRole] = useState<TeamRole>(member?.teamRole || "SALES_REP");
   const [permissions, setPermissions] = useState<Record<string, any>>(
-    member?.permissions ? (typeof member.permissions === "string" ? JSON.parse(member.permissions) : member.permissions) : getDefaultPermissions(member?.role || "SALES_REP")
+    member?.permissions ? (typeof member.permissions === "string" ? JSON.parse(member.permissions) : member.permissions) : getDefaultPermissions(member?.teamRole || "SALES_REP")
   );
 
   useEffect(() => {
     if (open && member) {
-      setRole(member.role || "SALES_REP");
+      setRole(member.teamRole || "SALES_REP");
       const perms = member.permissions
         ? typeof member.permissions === "string"
           ? JSON.parse(member.permissions)
           : member.permissions
-        : getDefaultPermissions(member.role || "SALES_REP");
+        : getDefaultPermissions(member.teamRole || "SALES_REP");
       setPermissions(perms);
     }
   }, [open, member]);
@@ -707,8 +707,8 @@ export default function TeamManagement() {
                 ) : members && members.length > 0 ? (
                   <div className="space-y-3">
                     {members.map((member: any) => {
-                      const roleLabel = ROLE_LABELS[member.role as TeamRole] || member.role;
-                      const roleColor = ROLE_COLORS[member.role as TeamRole] || "bg-muted text-foreground";
+                      const roleLabel = ROLE_LABELS[member.teamRole as TeamRole] || member.teamRole;
+                      const roleColor = ROLE_COLORS[member.teamRole as TeamRole] || "bg-muted text-foreground";
                       const perms = member.permissions
                         ? typeof member.permissions === "string"
                           ? JSON.parse(member.permissions)
@@ -752,7 +752,7 @@ export default function TeamManagement() {
                               </div>
                             </div>
                           </div>
-                          {isOwner && member.role !== "OWNER" && (
+                          {isOwner && member.teamRole !== "OWNER" && (
                             <div className="flex gap-2 flex-shrink-0">
                               <Button
                                 variant="outline"

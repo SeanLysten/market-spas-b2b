@@ -180,7 +180,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       items: [
         { name: "Agenda", href: "/admin/calendar", icon: CalendarDays },
         { name: "Newsletter", href: "/admin/newsletter", icon: Mail },
-        { name: "Utilisateurs", href: "/admin/users", icon: Users },
       ],
     },
     {
@@ -188,6 +187,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       icon: Settings,
       items: [
         { name: "Paramètres généraux", href: "/admin/settings", icon: Settings },
+        { name: "Équipe interne", href: "/admin/users", icon: Users, module: "users" },
         ...(user?.role === 'SUPER_ADMIN' ? [{ name: "Intégration Fournisseur", href: "/admin/supplier-integration", icon: ArrowRightLeft }] : []),
         { name: "Logs Webhooks", href: "/admin/webhook-logs", icon: Activity },
       ],

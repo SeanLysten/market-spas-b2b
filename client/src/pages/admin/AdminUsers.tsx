@@ -182,8 +182,6 @@ function RolePermissionsDialog({
     onOpenChange(false);
   };
 
-  const isAdmin = selectedRole === "ADMIN" || selectedRole === "SUPER_ADMIN";
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl w-[95vw] max-h-[85vh] overflow-y-auto">
@@ -198,95 +196,69 @@ function RolePermissionsDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Role selection */}
+          {/* Preset selection */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold">Type de compte</Label>
-            <Select value={isAdmin ? "admin" : "partner"} onValueChange={(v) => {
-              if (v === "partner") {
-                setSelectedRole("PARTNER");
-                setSelectedPreset("");
-              } else {
-                setSelectedRole("ADMIN");
-                setSelectedPreset("ADMIN_FULL");
-                setPermissions(getPresetPermissions("ADMIN_FULL"));
-              }
-            }}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="partner">Partenaire / Utilisateur</SelectItem>
-                <SelectItem value="admin">Administrateur</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label className="text-sm font-semibold">Profil de permissions</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {Object.entries(ADMIN_ROLE_PRESETS).map(([key, preset]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => handlePresetChange(key)}
+                  className={`text-left p-3 rounded-lg border-2 transition-all ${
+                    selectedPreset === key
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/30"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    {key === "SUPER_ADMIN" ? (
+                      <ShieldCheck className="w-4 h-4 text-destructive flex-shrink-0" />
+                    ) : (
+                      <Shield className="w-4 h-4 text-primary flex-shrink-0" />
+                    )}
+                    <span className="font-medium text-sm">{preset.label}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{preset.description}</p>
+                </button>
+              ))}
+            </div>
           </div>
 
-          {isAdmin && (
-            <>
-              <Separator />
-              {/* Preset selection */}
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold">Profil de permissions</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {Object.entries(ADMIN_ROLE_PRESETS).map(([key, preset]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => handlePresetChange(key)}
-                      className={`text-left p-3 rounded-lg border-2 transition-all ${
-                        selectedPreset === key
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/30"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        {key === "SUPER_ADMIN" ? (
-                          <ShieldCheck className="w-4 h-4 text-destructive flex-shrink-0" />
-                        ) : (
-                          <Shield className="w-4 h-4 text-primary flex-shrink-0" />
-                        )}
-                        <span className="font-medium text-sm">{preset.label}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">{preset.description}</p>
-                    </button>
-                  ))}
-                </div>
+          <Separator />
+
+          {/* Module permissions grid */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">Permissions par module</Label>
+              <div className="flex gap-8 text-xs text-muted-foreground">
+                <span>Voir</span>
+                <span>Modifier</span>
               </div>
-
-              <Separator />
-
-              {/* Module permissions grid */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold">Permissions par module</Label>
-                  <div className="flex gap-8 text-xs text-muted-foreground">
-                    <span>Voir</span>
-                    <span>Modifier</span>
+            </div>
+            <div className="space-y-1">
+              {Object.entries(ADMIN_MODULES).map(([key, label]) => {
+                const perm = permissions.modules[key] || { view: false, edit: false };
+                return (
+                  <div key={key} className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-muted/50">
+                    <span className="text-sm">{label}</span>
+                    <div className="flex gap-8">
+                      <Switch
+                        checked={perm.view}
+                        onCheckedChange={(v) => handleModuleToggle(key, "view", v)}
+                        disabled={selectedPreset === "SUPER_ADMIN"}
+                      />
+                      <Switch
+                        checked={perm.edit}
+                        onCheckedChange={(v) => handleModuleToggle(key, "edit", v)}
+                        disabled={selectedPreset === "SUPER_ADMIN"}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-1">
-                  {Object.entries(ADMIN_MODULES).map(([key, label]) => {
-                    const perm = permissions.modules[key] || { view: false, edit: false };
-                    return (
-                      <div key={key} className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-muted/50">
-                        <span className="text-sm">{label}</span>
-                        <div className="flex gap-8">
-                          <Switch
-                            checked={perm.view}
-                            onCheckedChange={(v) => handleModuleToggle(key, "view", v)}
-                            disabled={selectedPreset === "SUPER_ADMIN"}
-                          />
-                          <Switch
-                            checked={perm.edit}
-                            onCheckedChange={(v) => handleModuleToggle(key, "edit", v)}
-                            disabled={selectedPreset === "SUPER_ADMIN"}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </>
-          )}
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -309,13 +281,11 @@ function RolePermissionsDialog({
 
 export default function AdminUsers() {
   const [open, setOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("users");
+  const [activeTab, setActiveTab] = useState("admins");
   const [formData, setFormData] = useState({
     email: "",
     firstName: "",
     lastName: "",
-    role: "USER" as const,
-    partnerId: "",
   });
 
   const { data: meData } = trpc.auth.me.useQuery();
@@ -326,22 +296,15 @@ export default function AdminUsers() {
   
   const { data: invitationsData, isLoading: invitationsLoading, refetch: refetchInvitations } = trpc.admin.users.listInvitations.useQuery();
   const invitations = useSafeQuery(invitationsData);
-  
-  const { data: partnersData } = trpc.admin.partners.list.useQuery({});
-  const partnersList = useSafeQuery(partnersData);
 
   const inviteMutation = trpc.admin.users.invite.useMutation();
   const toggleActiveMutation = trpc.admin.users.toggleActive.useMutation();
   const updateRoleMutation = trpc.admin.users.updateRole.useMutation();
   const cancelInvitationMutation = trpc.admin.users.cancelInvitation.useMutation();
   const resendInvitationMutation = trpc.admin.users.resendInvitation.useMutation();
-  const linkPartnerMutation = trpc.admin.users.linkPartner.useMutation();
   
   const [permDialogOpen, setPermDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
-  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
-  const [linkingUser, setLinkingUser] = useState<any>(null);
-  const [selectedPartnerId, setSelectedPartnerId] = useState<string>("");
 
   // Auto-refresh invitations every 30 seconds
   useEffect(() => {
@@ -361,19 +324,12 @@ export default function AdminUsers() {
         email: formData.email,
         firstName: formData.firstName || undefined,
         lastName: formData.lastName || undefined,
-        partnerId: formData.partnerId && formData.partnerId !== 'none' ? parseInt(formData.partnerId) : undefined,
-        role: formData.role === 'ADMIN' ? 'ADMIN' : 'PARTNER',
+        role: 'ADMIN',
       });
 
       toast.success("Invitation envoyée avec succès");
       setOpen(false);
-      setFormData({
-        email: "",
-        firstName: "",
-        lastName: "",
-        role: "USER",
-        partnerId: "",
-      });
+      setFormData({ email: "", firstName: "", lastName: "" });
       refetch();
       refetchInvitations();
     } catch (error: any) {
@@ -387,7 +343,7 @@ export default function AdminUsers() {
         userId,
         isActive: !currentStatus,
       });
-      toast.success(currentStatus ? "Utilisateur désactivé" : "Utilisateur activé");
+      toast.success(currentStatus ? "Administrateur désactivé" : "Administrateur activé");
       refetch();
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la modification");
@@ -433,21 +389,14 @@ export default function AdminUsers() {
     const colors: Record<string, string> = {
       SUPER_ADMIN: "bg-destructive/15 dark:bg-destructive/25 text-destructive dark:text-destructive",
       ADMIN: "bg-orange-500/15 dark:bg-orange-500/25 text-orange-800 dark:text-orange-400",
-      PARTNER: "bg-info/15 dark:bg-info-light text-info dark:text-info-dark",
-      PARTNER_ADMIN: "bg-purple-500/15 dark:bg-purple-500/25 text-purple-800 dark:text-purple-400",
-      PARTNER_USER: "bg-blue-500/15 dark:bg-blue-500/25 text-blue-800 dark:text-blue-400",
-      USER: "bg-muted dark:bg-muted/50 text-gray-800",
     };
     const roleLabels: Record<string, string> = {
       SUPER_ADMIN: "Super Admin",
       ADMIN: preset && ADMIN_ROLE_PRESETS[preset] ? ADMIN_ROLE_PRESETS[preset].label : "Admin",
-      PARTNER: "Partenaire",
-      PARTNER_ADMIN: "Admin Partenaire",
-      PARTNER_USER: "Utilisateur",
     };
     return {
-      color: colors[role] || colors.USER,
-      label: roleLabels[role] || role?.replace("_", " ") || "USER",
+      color: colors[role] || "bg-muted dark:bg-muted/50 text-gray-800",
+      label: roleLabels[role] || role?.replace("_", " ") || "Admin",
     };
   };
 
@@ -479,9 +428,12 @@ export default function AdminUsers() {
     }
   };
 
-  // Separate admin and partner users
+  // Only admin users
   const adminUsers = useMemo(() => users?.filter((u: any) => u.role === "SUPER_ADMIN" || u.role === "ADMIN") || [], [users]);
-  const partnerUsers = useMemo(() => users?.filter((u: any) => u.role !== "SUPER_ADMIN" && u.role !== "ADMIN") || [], [users]);
+  
+  // Only admin invitations
+  const adminInvitations = useMemo(() => invitations?.filter((inv: any) => inv.role === 'ADMIN' || inv.role === 'SUPER_ADMIN') || [], [invitations]);
+  const pendingAdminInvitations = useMemo(() => adminInvitations.filter((inv: any) => inv.status === 'PENDING'), [adminInvitations]);
 
   return (
     <AdminLayout>
@@ -489,131 +441,116 @@ export default function AdminUsers() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-display">Gestion des utilisateurs</h1>
+            <h1 className="text-3xl font-bold text-display">Équipe interne</h1>
             <p className="text-muted-foreground mt-2">
-              Invitez de nouveaux utilisateurs et gérez les accès
+              Gérez les administrateurs et leurs permissions d'accès au dashboard
             </p>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Inviter un utilisateur
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md w-[95vw] sm:w-full">
-              <form onSubmit={handleSubmit}>
-                <DialogHeader>
-                  <DialogTitle>Inviter un nouvel utilisateur</DialogTitle>
-                  <DialogDescription>
-                    Un email d'invitation sera envoyé à l'adresse indiquée
-                  </DialogDescription>
-                </DialogHeader>
+          {isSuperAdmin && (
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Inviter un administrateur
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md w-[95vw] sm:w-full">
+                <form onSubmit={handleSubmit}>
+                  <DialogHeader>
+                    <DialogTitle>Inviter un administrateur</DialogTitle>
+                    <DialogDescription>
+                      Un email d'invitation sera envoyé. Le nouveau membre aura accès au dashboard admin.
+                    </DialogDescription>
+                  </DialogHeader>
 
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="utilisateur@example.com"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                      <Label htmlFor="firstName">Prénom</Label>
+                      <Label htmlFor="email">Email *</Label>
                       <Input
-                        id="firstName"
-                        value={formData.firstName}
-                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                        placeholder="Jean"
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="admin@marketspas.com"
+                        required
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Nom</Label>
-                      <Input
-                        id="lastName"
-                        value={formData.lastName}
-                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                        placeholder="Dupont"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">Prénom</Label>
+                        <Input
+                          id="firstName"
+                          value={formData.firstName}
+                          onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                          placeholder="Jean"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Nom</Label>
+                        <Input
+                          id="lastName"
+                          value={formData.lastName}
+                          onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                          placeholder="Dupont"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        <Shield className="w-4 h-4 inline mr-1" />
+                        Le nouveau membre sera invité en tant qu'administrateur. Vous pourrez configurer ses permissions détaillées après son inscription.
+                      </p>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Type de compte</Label>
-                    <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v as any })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USER">Partenaire</SelectItem>
-                        {isSuperAdmin && <SelectItem value="ADMIN">Administrateur</SelectItem>}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {formData.role === "USER" && (
-                    <div className="space-y-2">
-                      <Label>Associer à un partenaire</Label>
-                      <Select value={formData.partnerId} onValueChange={(v) => setFormData({ ...formData, partnerId: v })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un partenaire (optionnel)" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Aucun partenaire</SelectItem>
-                          {(partnersList || []).map((p: any) => (
-                            <SelectItem key={p.id} value={String(p.id)}>
-                              {p.companyName} ({p.vatNumber})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-muted-foreground">L'utilisateur sera automatiquement lié à cette fiche partenaire lors de son inscription</p>
-                    </div>
-                  )}
-                </div>
-
-                <DialogFooter className="flex-col sm:flex-row gap-2">
-                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                    Annuler
-                  </Button>
-                  <Button type="submit" disabled={inviteMutation.isPending}>
-                    {inviteMutation.isPending ? (
-                      <>
-                        <Mail className="w-4 h-4 mr-2 animate-pulse" />
-                        Envoi en cours...
-                      </>
-                    ) : (
-                      <>
-                        <Mail className="w-4 h-4 mr-2" />
-                        Envoyer l'invitation
-                      </>
-                    )}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+                  <DialogFooter className="flex-col sm:flex-row gap-2">
+                    <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                      Annuler
+                    </Button>
+                    <Button type="submit" disabled={inviteMutation.isPending}>
+                      {inviteMutation.isPending ? (
+                        <>
+                          <Mail className="w-4 h-4 mr-2 animate-pulse" />
+                          Envoi en cours...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="w-4 h-4 mr-2" />
+                          Envoyer l'invitation
+                        </>
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
+
+        {/* Info banner */}
+        <Card className="bg-blue-50/50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800">
+          <CardContent className="p-4">
+            <p className="text-sm text-blue-800 dark:text-blue-300">
+              <Shield className="w-4 h-4 inline mr-1.5" />
+              <strong>Équipe interne</strong> : cette page gère uniquement les administrateurs Market Spas. 
+              Les utilisateurs partenaires sont gérés directement depuis la <a href="/admin/partners" className="underline font-medium">fiche de chaque partenaire</a> (onglet Membres).
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="admins" className="gap-1">
               <Shield className="w-3.5 h-3.5" />
-              Admins ({adminUsers.length})
+              Administrateurs ({adminUsers.length})
             </TabsTrigger>
-            <TabsTrigger value="users">
-              Partenaires ({partnerUsers.length})
-            </TabsTrigger>
-            <TabsTrigger value="invitations">
-              Invitations ({invitations?.filter((inv: any) => inv.status === 'PENDING').length || 0})
+            <TabsTrigger value="invitations" className="gap-1">
+              <Mail className="w-3.5 h-3.5" />
+              Invitations ({pendingAdminInvitations.length})
             </TabsTrigger>
           </TabsList>
 
@@ -623,10 +560,10 @@ export default function AdminUsers() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="w-5 h-5" />
-                  Équipe administrative
+                  Administrateurs
                 </CardTitle>
                 <CardDescription>
-                  {adminUsers.length} administrateur(s) avec accès au dashboard
+                  {adminUsers.length} administrateur{adminUsers.length !== 1 ? "s" : ""} avec accès au dashboard
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -655,6 +592,9 @@ export default function AdminUsers() {
                               <Badge className={badge.color + ' text-[10px]'}>{badge.label}</Badge>
                               {user.isActive ? <Badge className="bg-emerald-500/15 text-emerald-800 text-[10px]">Actif</Badge> : <Badge className="bg-muted text-gray-800 text-[10px]">Inactif</Badge>}
                             </div>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              Dernière connexion : {user.lastSignedIn ? new Date(user.lastSignedIn).toLocaleDateString("fr-FR") : "Jamais"}
+                            </p>
                           </Card>
                         );
                       })}
@@ -664,9 +604,9 @@ export default function AdminUsers() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Utilisateur</TableHead>
+                            <TableHead>Administrateur</TableHead>
                             <TableHead>Email</TableHead>
-                            <TableHead>Rôle Admin</TableHead>
+                            <TableHead>Profil</TableHead>
                             <TableHead>Statut</TableHead>
                             <TableHead>Dernière connexion</TableHead>
                             {isSuperAdmin && <TableHead className="text-right">Actions</TableHead>}
@@ -739,163 +679,26 @@ export default function AdminUsers() {
             </Card>
           </TabsContent>
 
-          {/* Partner Users Tab */}
-          <TabsContent value="users">
-            <Card>
-              <CardHeader>
-                <CardTitle>Partenaires & Utilisateurs</CardTitle>
-                <CardDescription>
-                  {partnerUsers.length} utilisateur(s) partenaire(s)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <TableSkeleton rows={8} columns={7} />
-                ) : partnerUsers.length > 0 ? (
-                  <>
-                    {/* Mobile */}
-                    <div className="md:hidden space-y-3">
-                      {partnerUsers.map((user: any) => {
-                        const badge = getRoleBadge(user.role, user.adminRolePreset);
-                        return (
-                          <Card key={user.id} className="p-4">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <p className="font-semibold text-sm truncate">{user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || '—'}</p>
-                                <p className="text-xs text-muted-foreground truncate">{user.email || '—'}</p>
-                              </div>
-                              <div className="flex gap-1 flex-shrink-0">
-                                {isSuperAdmin && (
-                                  <Button variant="ghost" size="sm" onClick={() => { setEditingUser(user); setPermDialogOpen(true); }}>
-                                    <Edit className="w-3 h-3" />
-                                  </Button>
-                                )}
-                                <Button variant="ghost" size="sm" onClick={() => handleToggleActive(user.id, user.isActive || false)}>
-                                  {user.isActive ? <UserX className="w-3 h-3 text-orange-600" /> : <UserCheck className="w-3 h-3 text-emerald-600" />}
-                                </Button>
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap gap-1.5 mt-2">
-                              <Badge className={badge.color + ' text-[10px]'}>{badge.label}</Badge>
-                              {user.isActive ? <Badge className="bg-emerald-500/15 text-emerald-800 text-[10px]">Actif</Badge> : <Badge className="bg-muted text-gray-800 text-[10px]">Inactif</Badge>}
-                            </div>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                    {/* Desktop */}
-                    <div className="hidden md:block">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Utilisateur</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Rôle</TableHead>
-                            <TableHead>Partenaire</TableHead>
-                            <TableHead>Statut</TableHead>
-                            <TableHead>Dernière connexion</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {partnerUsers.map((user: any) => {
-                            const badge = getRoleBadge(user.role, user.adminRolePreset);
-                            return (
-                              <TableRow key={user.id}>
-                                <TableCell className="font-medium">
-                                  {user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim() || "—"}
-                                </TableCell>
-                                <TableCell>{user.email || "—"}</TableCell>
-                                <TableCell>
-                                  <Badge className={badge.color}>{badge.label}</Badge>
-                                </TableCell>
-                                <TableCell>
-                                {user.partnerCompanyName ? (
-                                  <div className="flex items-center gap-1">
-                                    <a href={`/admin/partners`} className="text-emerald-700 dark:text-emerald-400 hover:underline font-medium">
-                                      {user.partnerCompanyName}
-                                    </a>
-                                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" title="Changer le partenaire" onClick={() => { setLinkingUser(user); setSelectedPartnerId(String(user.partnerId || '')); setLinkDialogOpen(true); }}>
-                                      <Edit className="w-3 h-3 text-muted-foreground" />
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-emerald-700" onClick={() => { setLinkingUser(user); setSelectedPartnerId(''); setLinkDialogOpen(true); }}>
-                                    + Associer
-                                  </Button>
-                                )}
-                              </TableCell>
-                                <TableCell>
-                                  {user.isActive ? (
-                                    <Badge className="bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400">Actif</Badge>
-                                  ) : (
-                                    <Badge className="bg-muted dark:bg-muted/50 text-gray-800">Inactif</Badge>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  {user.lastSignedIn
-                                    ? new Date(user.lastSignedIn).toLocaleDateString("fr-FR")
-                                    : "Jamais"}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <div className="flex justify-end gap-2">
-                                    {isSuperAdmin && (
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => { setEditingUser(user); setPermDialogOpen(true); }}
-                                        title="Modifier le rôle"
-                                      >
-                                        <Edit className="w-4 h-4 text-info dark:text-info-dark" />
-                                      </Button>
-                                    )}
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleToggleActive(user.id, user.isActive || false)}
-                                      disabled={toggleActiveMutation.isPending}
-                                    >
-                                      {user.isActive ? (
-                                        <UserX className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                                      ) : (
-                                        <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                                      )}
-                                    </Button>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">Aucun utilisateur partenaire</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
           {/* Invitations Tab */}
           <TabsContent value="invitations">
             <Card>
               <CardHeader>
-                <CardTitle>Invitations en cours</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="w-5 h-5" />
+                  Invitations administrateurs
+                </CardTitle>
                 <CardDescription>
-                  {invitations?.length || 0} invitation(s) envoyée(s)
+                  {adminInvitations.length} invitation{adminInvitations.length !== 1 ? "s" : ""} envoyée{adminInvitations.length !== 1 ? "s" : ""}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {invitationsLoading ? (
                   <TableSkeleton rows={5} columns={6} />
-                ) : invitations && invitations.length > 0 ? (
+                ) : adminInvitations.length > 0 ? (
                   <>
                     {/* Mobile */}
                     <div className="md:hidden space-y-3">
-                      {invitations.map((invitation: any) => (
+                      {adminInvitations.map((invitation: any) => (
                         <Card key={invitation.id} className="p-4">
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
@@ -929,7 +732,6 @@ export default function AdminUsers() {
                           <TableRow>
                             <TableHead>Email</TableHead>
                             <TableHead>Nom</TableHead>
-                            <TableHead>Invité par</TableHead>
                             <TableHead>Date d'envoi</TableHead>
                             <TableHead>Expire le</TableHead>
                             <TableHead>Statut</TableHead>
@@ -937,16 +739,13 @@ export default function AdminUsers() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {invitations.map((invitation: any) => (
+                          {adminInvitations.map((invitation: any) => (
                             <TableRow key={invitation.id}>
                               <TableCell className="font-medium">{invitation.email}</TableCell>
                               <TableCell>
                                 {invitation.firstName || invitation.lastName
                                   ? `${invitation.firstName || ""} ${invitation.lastName || ""}`.trim()
                                   : "—"}
-                              </TableCell>
-                              <TableCell>
-                                {invitation.inviterName || invitation.inviterEmail || "—"}
                               </TableCell>
                               <TableCell>
                                 {new Date(invitation.createdAt).toLocaleDateString("fr-FR", {
@@ -1010,9 +809,11 @@ export default function AdminUsers() {
                   <div className="text-center py-12">
                     <Mail className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
                     <p className="text-muted-foreground">Aucune invitation envoyée</p>
-                    <p className="text-xs md:text-sm text-muted-foreground mt-2">
-                      Cliquez sur "Inviter un utilisateur" pour commencer
-                    </p>
+                    {isSuperAdmin && (
+                      <p className="text-xs md:text-sm text-muted-foreground mt-2">
+                        Cliquez sur "Inviter un administrateur" pour ajouter un membre à l'équipe
+                      </p>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -1024,8 +825,8 @@ export default function AdminUsers() {
         {editingUser && (
           <RolePermissionsDialog
             userId={editingUser.id}
-            userName={editingUser.name || editingUser.email || "Utilisateur"}
-            currentRole={editingUser.role || "PARTNER"}
+            userName={editingUser.name || editingUser.email || "Administrateur"}
+            currentRole={editingUser.role || "ADMIN"}
             currentPreset={editingUser.adminRolePreset}
             currentPermissions={editingUser.adminPermissions ? (typeof editingUser.adminPermissions === 'string' ? JSON.parse(editingUser.adminPermissions) : editingUser.adminPermissions) : null}
             open={permDialogOpen}
@@ -1036,56 +837,6 @@ export default function AdminUsers() {
             onSave={handleSavePermissions}
           />
         )}
-
-        {/* Link Partner Dialog */}
-        <Dialog open={linkDialogOpen} onOpenChange={(open) => { setLinkDialogOpen(open); if (!open) setLinkingUser(null); }}>
-          <DialogContent className="max-w-md w-[95vw] sm:w-full">
-            <DialogHeader>
-              <DialogTitle>Associer un partenaire</DialogTitle>
-              <DialogDescription>
-                {linkingUser ? `Associer ${linkingUser.name || linkingUser.email} à une fiche partenaire` : ''}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Partenaire</Label>
-                <Select value={selectedPartnerId} onValueChange={setSelectedPartnerId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un partenaire" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Aucun (dissocier)</SelectItem>
-                    {(partnersList || []).map((p: any) => (
-                      <SelectItem key={p.id} value={String(p.id)}>
-                        {p.companyName} ({p.vatNumber})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter className="flex-col sm:flex-row gap-2">
-              <Button variant="outline" onClick={() => setLinkDialogOpen(false)}>Annuler</Button>
-              <Button onClick={async () => {
-                if (!linkingUser) return;
-                try {
-                  await linkPartnerMutation.mutateAsync({
-                    userId: linkingUser.id,
-                    partnerId: selectedPartnerId && selectedPartnerId !== 'none' ? parseInt(selectedPartnerId) : null,
-                  });
-                  toast.success('Partenaire associé avec succès');
-                  setLinkDialogOpen(false);
-                  setLinkingUser(null);
-                  refetch();
-                } catch (error: any) {
-                  toast.error(error.message || 'Erreur lors de l\'association');
-                }
-              }} disabled={linkPartnerMutation.isPending}>
-                {linkPartnerMutation.isPending ? 'Association...' : 'Associer'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </AdminLayout>
   );

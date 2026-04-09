@@ -3514,8 +3514,8 @@ export const appRouter = router({
       if (user.role === "PARTNER_USER" && user.partnerId) {
         const member = await db.getTeamMember(user.id, user.partnerId);
         if (member) {
-          const perms = member.permissions ? JSON.parse(member.permissions as string) : getDefaultPermissions(member.role as any);
-          return { role: member.role, permissions: perms, isOwner: false };
+          const perms = member.permissions ? JSON.parse(member.permissions as string) : getDefaultPermissions(member.teamRole as any);
+          return { role: member.teamRole, permissions: perms, isOwner: false };
         }
       }
       // Admin users - full access

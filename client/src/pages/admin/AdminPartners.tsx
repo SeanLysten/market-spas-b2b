@@ -573,6 +573,7 @@ export default function AdminPartners() {
                       )}
                       <Badge variant="outline" className="text-[10px]">{partner.discountPercent || 0}% remise</Badge>
                       <Badge variant="outline" className="text-[10px]">{partner.orderCount || 0} cmd</Badge>
+                      <Badge variant="outline" className="text-[10px]"><Users className="w-3 h-3 mr-0.5" />{partner.memberCount ?? 0} mbr</Badge>
                     </div>
                     <div className="flex gap-1 mt-3">
                       <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => navigate(`/admin/partners/${partner.id}`)}>
@@ -591,6 +592,7 @@ export default function AdminPartners() {
                     <TableHead>Entreprise</TableHead>
                     <TableHead>Code Client</TableHead>
                     <TableHead>Contact</TableHead>
+                    <TableHead>Membres</TableHead>
                     <TableHead>Remise globale</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead>Commandes</TableHead>
@@ -616,10 +618,17 @@ export default function AdminPartners() {
                             <Mail className="w-3 h-3" />
                             {partner.primaryContactEmail}
                           </p>
-                          <a href="/admin/users" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
-                            Voir le compte utilisateur
-                          </a>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <a
+                          href={`/admin/partners/${partner.id}`}
+                          onClick={(e) => { e.preventDefault(); navigate(`/admin/partners/${partner.id}`); }}
+                          className="flex items-center gap-1.5 text-sm hover:underline"
+                        >
+                          <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="font-medium">{partner.memberCount ?? '—'}</span>
+                        </a>
                       </TableCell>
                       <TableCell>
                         <span className="font-medium text-emerald-600 dark:text-emerald-400">{partner.discountPercent || 0}%</span>
