@@ -2035,6 +2035,7 @@ export const afterSalesServices = mysqlTable(
     ticketNumber: varchar("ticketNumber", { length: 50 }).notNull().unique(),
     partnerId: int("partnerId").notNull(),
     productId: int("productId"),
+    spaModelId: int("spaModelId"),  // FK vers spa_models pour identification du modèle
     serialNumber: varchar("serialNumber", { length: 100 }).notNull(),
     issueType: savIssueTypeEnum.notNull(),
     description: text("description").notNull(),

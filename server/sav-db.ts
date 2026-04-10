@@ -29,6 +29,9 @@ export async function createSavTicket(data: {
   issueType: string;
   description: string;
   urgency?: string;
+  // Spa model identification
+  spaModelId?: number;
+  selectedPartIds?: number[];  // IDs des pièces sélectionnées depuis la BOM
   // New fields
   brand?: string;
   productLine?: string;
@@ -70,6 +73,7 @@ export async function createSavTicket(data: {
     ticketNumber,
     partnerId: data.partnerId,
     productId: data.productId,
+    spaModelId: data.spaModelId,
     serialNumber: data.serialNumber,
     issueType: data.issueType as any,
     description: data.description,
@@ -117,6 +121,22 @@ export async function createSavTicket(data: {
         description: m.description,
       }))
     );
+  }
+
+  // Link selected spare parts to the ticket
+  if (data.selectedPartIds && data.selectedPartIds.length > 0) {
+    const partsData = await db.select().from(spareParts).where(inArray(spareParts.id, data.selectedPartIds));
+    const partsValues = partsData.map(part => ({
+      serviceId,
+      sparePartId: part.id,
+      quantity: 1,
+      unitPrice: part.priceHT,
+      isCoveredByWarranty: false,
+      coveragePercentage: 0,
+    }));
+    if (partsValues.length > 0) {
+      await db.insert(savSpareParts).values(partsValues);
+    }
   }
 
   return { serviceId, ticketNumber };

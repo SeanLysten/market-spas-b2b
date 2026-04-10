@@ -1,0 +1,1 @@
+ALTER TABLE `after_sales_services` ADD `spaModelId` int;

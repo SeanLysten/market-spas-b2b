@@ -372,6 +372,13 @@
       "when": 1775807213653,
       "tag": "0052_new_electro",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "5",
+      "when": 1775824094218,
+      "tag": "0053_ordinary_sunspot",
+      "breakpoints": true
     }
   ]
 }

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertCircle, Clock, CheckCircle, XCircle, Package, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Shield, ShieldAlert, ShieldCheck, ShieldX, Truck, CreditCard, Info, ChevronRight, ChevronLeft, Upload, Wrench, Eye, BarChart3, Timer, CircleDot } from "lucide-react";
+import { Plus, Search, AlertCircle, Clock, CheckCircle, XCircle, Package, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Shield, ShieldAlert, ShieldCheck, ShieldX, Truck, CreditCard, Info, ChevronRight, ChevronLeft, Upload, Wrench, Eye, BarChart3, Timer, CircleDot, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -57,6 +57,8 @@ interface SavFormData {
   brand: string;
   productLine: string;
   modelName: string;
+  spaModelId: number | null;
+  selectedPartIds: number[];
   serialNumber: string;
   component: string;
   defectType: string;
@@ -82,6 +84,8 @@ const initialFormData: SavFormData = {
   brand: "",
   productLine: "",
   modelName: "",
+  spaModelId: null,
+  selectedPartIds: [],
   serialNumber: "",
   component: "",
   defectType: "",
@@ -282,6 +286,18 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
     { enabled: !!formData.brand }
   );
 
+  // Spa models for the selected brand
+  const { data: spaModelsList } = trpc.spaModels.listWithPartCount.useQuery(
+    { brand: formData.brand },
+    { enabled: !!formData.brand }
+  );
+
+  // Parts (BOM) for the selected spa model
+  const { data: modelParts } = trpc.spaModels.getParts.useQuery(
+    { spaModelId: formData.spaModelId! },
+    { enabled: !!formData.spaModelId }
+  );
+
   // Warranty preview
   const { data: warrantyAnalysis } = trpc.afterSales.analyzeWarranty.useQuery(
     {
@@ -349,6 +365,8 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
 
     createMutation.mutate({
       ...formData,
+      spaModelId: formData.spaModelId || undefined,
+      selectedPartIds: formData.selectedPartIds.length > 0 ? formData.selectedPartIds : undefined,
       media: mediaData.length > 0 ? mediaData : undefined,
       partnerId: selectedPartnerId || undefined,
     });
@@ -438,7 +456,7 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Marque *</Label>
-                <Select value={formData.brand} onValueChange={(v) => setFormData({ ...formData, brand: v, productLine: "", component: "", defectType: "" })}>
+                <Select value={formData.brand} onValueChange={(v) => setFormData({ ...formData, brand: v, productLine: "", modelName: "", spaModelId: null, selectedPartIds: [], component: "", defectType: "" })}>
                   <SelectTrigger><SelectValue placeholder="Sélectionnez la marque" /></SelectTrigger>
                   <SelectContent>
                     {BRANDS.map((b) => (
@@ -465,12 +483,59 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Modèle</Label>
-                <Input
-                  placeholder="Ex: MyLine Saturn, Wellis Pluto..."
-                  value={formData.modelName}
-                  onChange={(e) => setFormData({ ...formData, modelName: e.target.value })}
-                />
+                <Label>Modèle de spa {spaModelsList && spaModelsList.length > 0 ? "*" : ""}</Label>
+                {spaModelsList && spaModelsList.length > 0 ? (
+                  <Select
+                    value={formData.spaModelId?.toString() || ""}
+                    onValueChange={(v) => {
+                      const model = spaModelsList.find((m: any) => m.id.toString() === v);
+                      setFormData({
+                        ...formData,
+                        spaModelId: model ? model.id : null,
+                        modelName: model ? model.name : "",
+                        selectedPartIds: [],
+                      });
+                    }}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Sélectionnez le modèle" /></SelectTrigger>
+                    <SelectContent>
+                      {(() => {
+                        const grouped = new Map<string, any[]>();
+                        for (const m of spaModelsList) {
+                          const series = (m as any).series || "Autres";
+                          const list = grouped.get(series) || [];
+                          list.push(m);
+                          grouped.set(series, list);
+                        }
+                        return Array.from(grouped.entries()).map(([series, models]) => (
+                          <div key={series}>
+                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{series}</div>
+                            {models.map((m: any) => (
+                              <SelectItem key={m.id} value={m.id.toString()}>
+                                <span className="flex items-center gap-2">
+                                  {m.name}
+                                  <span className="text-xs text-muted-foreground">({m.partCount} pièces)</span>
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </div>
+                        ));
+                      })()}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    placeholder="Ex: MyLine Saturn, Wellis Pluto..."
+                    value={formData.modelName}
+                    onChange={(e) => setFormData({ ...formData, modelName: e.target.value })}
+                  />
+                )}
+                {formData.spaModelId && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Check className="h-3 w-3 text-emerald-500" />
+                    Modèle sélectionné — les pièces compatibles seront proposées à l'étape suivante
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Numéro de série *</Label>
@@ -540,6 +605,77 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
                 rows={4}
               />
             </div>
+
+            {/* Spare parts selection from BOM */}
+            {formData.spaModelId && modelParts && modelParts.length > 0 && (
+              <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Package className="h-4 w-4" />
+                    Pièces détachées du modèle
+                  </h4>
+                  <Badge variant="outline" className="text-xs">
+                    {formData.selectedPartIds.length} sélectionnée{formData.selectedPartIds.length !== 1 ? "s" : ""}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Sélectionnez les pièces que vous pensez nécessaires pour cette réparation. Cela accélérera le traitement de votre demande.
+                </p>
+                <div className="max-h-64 overflow-y-auto space-y-1">
+                  {(() => {
+                    // Group parts by category
+                    const grouped = new Map<string, any[]>();
+                    for (const part of modelParts) {
+                      const cat = (part as any).category || "Autres";
+                      const list = grouped.get(cat) || [];
+                      list.push(part);
+                      grouped.set(cat, list);
+                    }
+                    return Array.from(grouped.entries()).map(([category, parts]) => (
+                      <div key={category} className="mb-3">
+                        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1 px-1">{category}</div>
+                        {parts.map((part: any) => {
+                          const isSelected = formData.selectedPartIds.includes(part.id);
+                          return (
+                            <div
+                              key={part.id}
+                              className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors ${
+                                isSelected ? "bg-primary/10 border border-primary/20" : "hover:bg-muted/50"
+                              }`}
+                              onClick={() => {
+                                const newIds = isSelected
+                                  ? formData.selectedPartIds.filter((id) => id !== part.id)
+                                  : [...formData.selectedPartIds, part.id];
+                                setFormData({ ...formData, selectedPartIds: newIds });
+                              }}
+                            >
+                              <Checkbox checked={isSelected} className="pointer-events-none" />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium truncate">{part.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  Réf: {part.reference || "N/A"}
+                                  {part.priceHT != null && (
+                                    <span className="ml-2 font-medium">{Number(part.priceHT).toFixed(2)} € HT</span>
+                                  )}
+                                </div>
+                              </div>
+                              {isSelected && <Check className="h-4 w-4 text-primary flex-shrink-0" />}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+            )}
+
+            {formData.spaModelId && (!modelParts || modelParts.length === 0) && (
+              <div className="text-sm text-muted-foreground border rounded-lg p-3 bg-muted/20 flex items-center gap-2">
+                <Info className="h-4 w-4" />
+                Aucune pièce détachée n'est encore associée à ce modèle. Les pièces seront identifiées par l'équipe SAV.
+              </div>
+            )}
           </div>
         )}
 
@@ -749,6 +885,21 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
                     <strong>Client :</strong> {formData.customerName}
                     {formData.customerPhone && ` • ${formData.customerPhone}`}
                     {formData.customerEmail && ` • ${formData.customerEmail}`}
+                  </div>
+                )}
+                {formData.selectedPartIds.length > 0 && modelParts && (
+                  <div className="border-t pt-2">
+                    <strong>Pièces sélectionnées ({formData.selectedPartIds.length}) :</strong>
+                    <div className="mt-1 space-y-1">
+                      {modelParts.filter((p: any) => formData.selectedPartIds.includes(p.sparePartId || p.id)).map((p: any) => (
+                        <div key={p.sparePartId || p.id} className="text-xs text-muted-foreground flex items-center gap-2">
+                          <Package className="h-3 w-3 flex-shrink-0" />
+                          <span>{p.name}</span>
+                          <span className="text-muted-foreground">Réf: {p.reference || "N/A"}</span>
+                          {p.priceHT != null && <span className="font-medium">{Number(p.priceHT).toFixed(2)} € HT</span>}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
                 <div className="border-t pt-2">

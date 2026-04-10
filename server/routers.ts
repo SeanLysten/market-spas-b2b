@@ -3957,6 +3957,8 @@ export const appRouter = router({
     create: protectedProcedure
       .input(z.object({
         productId: z.number().optional(),
+        spaModelId: z.number().optional(),
+        selectedPartIds: z.array(z.number()).optional(),
         serialNumber: z.string().min(1),
         issueType: z.string(),
         description: z.string().min(10),
@@ -4037,6 +4039,8 @@ export const appRouter = router({
         const result = await savDb.createSavTicket({
           partnerId,
           productId: input.productId,
+          spaModelId: input.spaModelId,
+          selectedPartIds: input.selectedPartIds,
           serialNumber: input.serialNumber,
           issueType: input.issueType,
           description: input.description,

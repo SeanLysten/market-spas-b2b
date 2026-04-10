@@ -3585,3 +3585,13 @@
 - [x] FIX H1: Notification envoyée au partnerId au lieu du userId — corrigé (notifie tous les users du partenaire)
 - [x] FIX H2: Leads.tsx hook conditionnel → crash React #310 — corrigé avec enabled paramètre
 - [x] 1269 tests passent sur 82 fichiers
+
+## Refonte SAV et Pièces Détachées (2026-04-10)
+- [x] Recherche approfondie : meilleures pratiques SAV et pièces détachées dans logiciels B2B comparables
+- [x] Audit complet de l'existant : code SAV, pièces détachées, données test, schéma DB
+- [x] Rapport comparatif existant vs meilleures pratiques + plan d'implémentation
+- [x] Sélection modèle de spa dans demande SAV → pièces pré-identifiées
+- [x] Association modèles de spa ↔ pièces détachées (DB + API)
+- [x] Refonte UI formulaire SAV avec sélection modèle → pièces filtrées
+- [x] Nettoyage des données test SAV et pièces détachées
+- [x] Tests et vérification impact-guard
