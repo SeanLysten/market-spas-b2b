@@ -57,25 +57,33 @@ export default function ProductAddToCartDialog({
   onOpenChange,
   product,
 }: ProductAddToCartDialogProps) {
-  // Step 0: no variants (direct add), Step 1: color, Step 2: source
+  // ===== ALL HOOKS AT TOP LEVEL (no conditional hooks) =====
   const [step, setStep] = useState<0 | 1 | 2>(1);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSource, setSelectedSource] = useState<SourceOption | null>(null);
   const [quantity, setQuantity] = useState(1);
 
+  const utils = trpc.useUtils();
+
+  // Always call all queries (use `enabled` to control execution)
   const { data: variantsData } = trpc.products.getVariants.useQuery(
-    { productId: product?.id },
+    { productId: product?.id ?? 0 },
     { enabled: open && !!product?.id }
   );
   const variants = useSafeQuery(variantsData) || [];
 
   const { data: availabilityData } = trpc.cart.availableQuantity.useQuery(
-    { productId: product?.id, variantId: selectedSource?.variantId || undefined },
+    { productId: product?.id ?? 0, variantId: selectedSource?.variantId || undefined },
     { enabled: open && !!product?.id && !!selectedSource?.variantId }
   );
   const availability = useSafeQuery(availabilityData);
 
-  const utils = trpc.useUtils();
+  // Direct availability for products without variants — always called
+  const { data: directAvailabilityData } = trpc.cart.availableQuantity.useQuery(
+    { productId: product?.id ?? 0 },
+    { enabled: open && !!product?.id }
+  );
+  const directAvailability = useSafeQuery(directAvailabilityData);
 
   const addToCartMutation = trpc.cart.add.useMutation({
     onSuccess: (result: any) => {
@@ -88,43 +96,22 @@ export default function ProductAddToCartDialog({
       utils.cart.get.invalidate();
       utils.cart.availableQuantity.invalidate();
       onOpenChange(false);
-      resetForm();
     },
     onError: (error) => {
       toast.error(`Erreur: ${error.message}`);
     },
   });
 
-  const resetForm = () => {
-    setStep(hasNoVariants ? 0 : 1);
-    setSelectedColor(null);
-    setSelectedSource(null);
-    setQuantity(1);
-  };
-
-  useEffect(() => {
-    if (!open) resetForm();
-  }, [open]);
-
-  // Reset quantity when source changes
-  useEffect(() => {
-    setQuantity(1);
-  }, [selectedSource?.variantId, selectedSource?.type]);
-
-  const activeVariants = variants?.filter((v: any) => v.isActive !== false) || [];
+  // ===== DERIVED STATE =====
+  const activeVariants = useMemo(
+    () => variants?.filter((v: any) => v.isActive !== false) || [],
+    [variants]
+  );
   const hasNoVariants = activeVariants.length === 0;
-
-  // Auto-switch to step 0 (direct add) when product has no variants
-  useEffect(() => {
-    if (open && hasNoVariants && variantsData !== undefined) {
-      setStep(0);
-    }
-  }, [open, hasNoVariants, variantsData]);
 
   // Group variants by color
   const colorGroups = useMemo(() => {
     const groups: Record<string, { color: string; colorHex: string; variants: any[]; totalStock: number; totalTransit: number; totalReserved: number }> = {};
-    
     for (const v of activeVariants) {
       const colorName = v.color || v.name || "Standard";
       if (!groups[colorName]) {
@@ -150,39 +137,55 @@ export default function ProductAddToCartDialog({
     if (!selectedColor) return [];
     const group = colorGroups.find(g => g.color === selectedColor);
     if (!group) return [];
-
     const sources: SourceOption[] = [];
-
     for (const v of group.variants) {
       const stock = v.stockQuantity || 0;
       const transit = v.inTransitQuantity || 0;
       const arrival = formatArrival(v.estimatedArrival);
-
-      // Stock source
       if (stock > 0) {
-        sources.push({
-          type: "stock",
-          variantId: v.id,
-          quantity: stock,
-          arrivalWeek: null,
-          arrivalLabel: null,
-        });
+        sources.push({ type: "stock", variantId: v.id, quantity: stock, arrivalWeek: null, arrivalLabel: null });
       }
-
-      // Transit source (per arrival week)
       if (transit > 0) {
-        sources.push({
-          type: "transit",
-          variantId: v.id,
-          quantity: transit,
-          arrivalWeek: v.estimatedArrival,
-          arrivalLabel: arrival,
-        });
+        sources.push({ type: "transit", variantId: v.id, quantity: transit, arrivalWeek: v.estimatedArrival, arrivalLabel: arrival });
       }
     }
-
     return sources;
   }, [selectedColor, colorGroups]);
+
+  const maxQuantity = availability?.available ?? (selectedSource?.quantity || 0);
+  const reserved = availability?.reserved ?? 0;
+  const isOverLimit = quantity > maxQuantity;
+  const isReservation = selectedSource?.type === "transit";
+
+  const directMaxQuantity = directAvailability?.available ?? (product?.stockQuantity || 0);
+  const directIsOverLimit = hasNoVariants && quantity > directMaxQuantity;
+
+  const selectedGroup = colorGroups.find(g => g.color === selectedColor);
+  const selectedVariant = selectedSource ? activeVariants.find((v: any) => v.id === selectedSource.variantId) : null;
+  const displayImage = selectedVariant?.imageUrl || product?.imageUrl;
+
+  // ===== EFFECTS =====
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setStep(1);
+      setSelectedColor(null);
+      setSelectedSource(null);
+      setQuantity(1);
+    }
+  }, [open]);
+
+  // Auto-switch to step 0 when product has no variants (after data loads)
+  useEffect(() => {
+    if (open && hasNoVariants && variantsData !== undefined) {
+      setStep(0);
+    }
+  }, [open, hasNoVariants, variantsData]);
+
+  // Reset quantity when source changes
+  useEffect(() => {
+    setQuantity(1);
+  }, [selectedSource?.variantId, selectedSource?.type]);
 
   // Auto-select if only one source
   useEffect(() => {
@@ -191,6 +194,7 @@ export default function ProductAddToCartDialog({
     }
   }, [step, sourcesForColor, selectedSource]);
 
+  // ===== HANDLERS =====
   const handleSelectColor = (color: string) => {
     setSelectedColor(color);
     setSelectedSource(null);
@@ -233,24 +237,7 @@ export default function ProductAddToCartDialog({
     });
   };
 
-  const maxQuantity = availability?.available ?? (selectedSource?.quantity || 0);
-  const reserved = availability?.reserved ?? 0;
-  const isOverLimit = quantity > maxQuantity;
-  const isReservation = selectedSource?.type === "transit";
-
-  // For products without variants, query availability directly from product stock
-  const { data: directAvailabilityData } = trpc.cart.availableQuantity.useQuery(
-    { productId: product?.id },
-    { enabled: open && !!product?.id && hasNoVariants }
-  );
-  const directAvailability = useSafeQuery(directAvailabilityData);
-  const directMaxQuantity = directAvailability?.available ?? (product?.stockQuantity || 0);
-  const directIsOverLimit = hasNoVariants && quantity > directMaxQuantity;
-
-  const selectedGroup = colorGroups.find(g => g.color === selectedColor);
-  const selectedVariant = selectedSource ? activeVariants.find((v: any) => v.id === selectedSource.variantId) : null;
-  const displayImage = selectedVariant?.imageUrl || product.imageUrl;
-
+  // ===== RENDER =====
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -258,7 +245,7 @@ export default function ProductAddToCartDialog({
           <DialogTitle>
             {step === 0 ? "Ajouter au panier" : step === 1 ? "Choisir une couleur" : "Choisir la disponibilité"}
           </DialogTitle>
-          <DialogDescription>{product.name}</DialogDescription>
+          <DialogDescription>{product?.name}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 py-4">
@@ -267,7 +254,7 @@ export default function ProductAddToCartDialog({
             <>
               {/* Product Image */}
               <div className="relative w-full h-52 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
-                {product.imageUrl ? (
+                {product?.imageUrl ? (
                   <img
                     src={product.imageUrl}
                     alt={product.name}
@@ -337,13 +324,13 @@ export default function ProductAddToCartDialog({
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Prix unitaire HT</span>
                   <span className="font-medium">
-                    {parseFloat(String(product.pricePartnerHT || 0)).toFixed(2)} €
+                    {parseFloat(String(product?.pricePartnerHT || 0)).toFixed(2)} €
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-base font-semibold text-display mt-2">
                   <span>Total HT</span>
                   <span>
-                    {(parseFloat(String(product.pricePartnerHT || 0)) * quantity).toFixed(2)} €
+                    {(parseFloat(String(product?.pricePartnerHT || 0)) * quantity).toFixed(2)} €
                   </span>
                 </div>
               </div>
@@ -437,7 +424,7 @@ export default function ProductAddToCartDialog({
                 {displayImage ? (
                   <img
                     src={displayImage}
-                    alt={product.name}
+                    alt={product?.name}
                     className="w-full h-full object-contain transition-all duration-300 p-2"
                   />
                 ) : (
@@ -575,13 +562,13 @@ export default function ProductAddToCartDialog({
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Prix unitaire HT</span>
                       <span className="font-medium">
-                        {parseFloat(String(product.pricePartnerHT || 0)).toFixed(2)} €
+                        {parseFloat(String(product?.pricePartnerHT || 0)).toFixed(2)} €
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-base font-semibold text-display mt-2">
                       <span>Total HT</span>
                       <span>
-                        {(parseFloat(String(product.pricePartnerHT || 0)) * quantity).toFixed(2)} €
+                        {(parseFloat(String(product?.pricePartnerHT || 0)) * quantity).toFixed(2)} €
                       </span>
                     </div>
                   </div>

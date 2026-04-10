@@ -3540,3 +3540,6 @@
 ## Bug Fix — Produits sans variantes bloqués par dialogue couleur
 - [x] Les produits sans variantes/couleurs affichent un dialogue "Choisir une couleur" vide qui bloque l'ajout au panier
 - [x] Permettre l'ajout direct au panier quand un produit n'a pas de variantes — Step 0 (direct add) ajouté dans ProductAddToCartDialog
+
+## Bug Fix — React Error #310 (hooks conditionnels)
+- [x] Corriger l'erreur React #310 dans ProductAddToCartDialog — hooks appelés conditionnellement causent un crash — réécriture complète avec tous les hooks au top level
