@@ -898,17 +898,18 @@ router.put("/api/mobile/v1/notification-preferences", async (req: AuthenticatedR
 router.get("/api/mobile/v1/leads/stats", async (req: AuthenticatedRequest, res: Response) => {
   try {
     const partnerId = req.mobileUser!.partnerId;
+    // SECURITY: Si pas de partnerId, retourner des stats vides (pas de fuite de données)
+    if (!partnerId) {
+      return res.json({ stats: [], total: 0 });
+    }
     const { getDb } = await import("../db");
     const { leads } = await import("../../drizzle/schema");
-    const { eq, sql, and } = await import("drizzle-orm");
+    const { eq, sql } = await import("drizzle-orm");
     const db = await getDb();
-    const conditions: any[] = [];
-    if (partnerId) conditions.push(eq(leads.assignedPartnerId, partnerId));
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
     const stats = await db.select({
       status: leads.status,
       count: sql<number>`COUNT(*)`,
-    }).from(leads).where(whereClause).groupBy(leads.status);
+    }).from(leads).where(eq(leads.assignedPartnerId, partnerId)).groupBy(leads.status);
     const total = stats.reduce((sum, s) => sum + Number(s.count), 0);
     return res.json({ stats, total });
   } catch (err: any) {

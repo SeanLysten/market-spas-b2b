@@ -92,14 +92,15 @@ export default function Leads() {
   // Fetch leads from backend
   const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN";
   
-  const { data: leads, isLoading, refetch } = isAdmin 
-    ? trpc.admin.leads.list.useQuery({
-        status: statusFilter !== "all" ? statusFilter : undefined,
-      })
-    : trpc.leads.myLeads.useQuery({
-        status: statusFilter,
-        limit: 100,
-      });
+  const adminLeadsQuery = trpc.admin.leads.list.useQuery(
+    { status: statusFilter !== "all" ? statusFilter : undefined },
+    { enabled: isAdmin }
+  );
+  const partnerLeadsQuery = trpc.leads.myLeads.useQuery(
+    { status: statusFilter, limit: 100 },
+    { enabled: !isAdmin }
+  );
+  const { data: leads, isLoading, refetch } = isAdmin ? adminLeadsQuery : partnerLeadsQuery;
 
   const exportQuery = trpc.leads.export.useQuery(
     { status: statusFilter },

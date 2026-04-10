@@ -11,7 +11,7 @@
  */
 
 import { drizzle } from "drizzle-orm/mysql2";
-import { leads, leadStatusHistory, partnerPostalCodes, metaCampaigns, partners, notifications, partnerCandidates } from "../drizzle/schema";
+import { leads, leadStatusHistory, partnerPostalCodes, metaCampaigns, partners, notifications, partnerCandidates, users } from "../drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { notifyAdmins } from "./_core/websocket";
 import { findBestPartnerForPostalCode } from "./territories-db";
@@ -855,17 +855,26 @@ export async function distributeLeadToPartner(leadId: number): Promise<void> {
 
       console.log(`[LeadDistribution] Lead #${leadId} assigné à ${result.partnerName} (ID ${result.partnerId}) via territoire ${result.region}`);
 
-      // Notifier le partenaire
+      // Notifier tous les utilisateurs liés au partenaire
       try {
         const db2 = await getDb();
         if (db2) {
-          await db2.insert(notifications).values({
-            userId: result.partnerId,
-            type: "lead_assigned" as any,
-            title: "Nouveau lead assigné",
-            message: `Un nouveau lead client (CP: ${lead.postalCode}, ${lead.city || ''}) vous a été assigné automatiquement.`,
-            data: JSON.stringify({ leadId, postalCode: lead.postalCode, city: lead.city }),
-          });
+          // Récupérer les userIds des utilisateurs liés à ce partenaire
+          const partnerUsers = await db2.select({ id: users.id })
+            .from(users)
+            .where(eq(users.partnerId, result.partnerId));
+          
+          if (partnerUsers.length > 0) {
+            await db2.insert(notifications).values(
+              partnerUsers.map(u => ({
+                userId: u.id,
+                type: "lead_assigned" as any,
+                title: "Nouveau lead assigné",
+                message: `Un nouveau lead client (CP: ${lead.postalCode}, ${lead.city || ''}) vous a été assigné automatiquement.`,
+                data: JSON.stringify({ leadId, postalCode: lead.postalCode, city: lead.city }),
+              }))
+            );
+          }
         }
       } catch (notifErr) {
         console.error(`[LeadDistribution] Erreur notification partenaire:`, notifErr);

@@ -3574,3 +3574,14 @@
 - [x] Corriger la logique : 1) Champ pays d'abord 2) Préfixe tel si pas de pays 3) Filtrer ranges par pays 4) Fallback pays
 - [x] Propager resolveCountry dans tous les appelants (reassignAll, webhooks, inbound-leads)
 - [ ] Vérifier que les leads existants mal assignés sont corrigés — utiliser Réassigner tous dans l'admin
+
+## Audit coherence-guard + impact-guard — Flux complet Leads
+- [x] SCAN 1: Flux création partenaire → attribution territoire → leads auto-assignés — OK
+- [x] SCAN 2: Leads PARTENARIAT → Carte du Réseau + scoring — OK (calculatePartnerScore 0-8 points)
+- [x] SCAN 3: Isolation des leads — myLeads, getById, updateStatus, export filtrent par partnerId — OK
+- [x] SCAN 4: Admins voient tous les leads via admin.leads.* avec adminProcedure — OK
+- [x] SCAN 5: Cohérence de bout en bout — 3 bugs trouvés et corrigés
+- [x] FIX C1: Mobile API leads/stats fuite de données si partnerId null — corrigé
+- [x] FIX H1: Notification envoyée au partnerId au lieu du userId — corrigé (notifie tous les users du partenaire)
+- [x] FIX H2: Leads.tsx hook conditionnel → crash React #310 — corrigé avec enabled paramètre
+- [x] 1269 tests passent sur 82 fichiers

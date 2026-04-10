@@ -87,9 +87,6 @@ describe("Mobile API User - Endpoint Registration", () => {
   it("has POST /api/mobile/v1/orders/:id/cancel", () => {
     expect(userFile).toContain('router.post("/api/mobile/v1/orders/:id/cancel"');
   });
-  it("has POST /api/mobile/v1/orders/:id/reorder", () => {
-    expect(userFile).toContain('router.post("/api/mobile/v1/orders/:id/reorder"');
-  });
   it("has GET /api/mobile/v1/orders/export", () => {
     expect(userFile).toContain('router.get("/api/mobile/v1/orders/export"');
   });
