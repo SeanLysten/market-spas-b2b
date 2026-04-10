@@ -3618,3 +3618,11 @@
 - [x] Mettre à jour l'admin SAV pour afficher correctement les deux types de tickets
 - [x] Tests vitest pour les deux parcours (84 fichiers, 1293 tests passent)
 - [x] Vérification cohérence impact-guard + coherence-guard
+
+## Import des modèles et pièces détachées depuis Excel (2026-04-10)
+- [x] Analyser le fichier Excel (5 modèles, 175 pièces)
+- [x] Créer le script d'import pour les modèles Market Spas
+- [x] Créer le script d'import pour les pièces détachées par modèle
+- [x] Exécuter l'import : 5 modèles + 175 pièces avec nomenclature BOM
+- [x] Corriger le compteur de pièces (bug listSpaModelsWithPartCount - LEFT JOIN + GROUP BY)
+- [x] Vérifier l'affichage dans l'admin et le formulaire SAV (compteurs corrects : 30, 36, 36, 27, 46)

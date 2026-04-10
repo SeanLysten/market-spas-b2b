@@ -190,10 +190,12 @@ export async function listSpaModelsWithPartCount(brand?: string) {
       seats: spaModels.seats,
       dimensions: spaModels.dimensions,
       sortOrder: spaModels.sortOrder,
-      partCount: sql<number>`(SELECT COUNT(*) FROM spa_model_spare_parts WHERE spaModelId = ${spaModels.id})`,
+      partCount: sql<number>`COUNT(${spaModelSpareParts.id})`,
     })
     .from(spaModels)
+    .leftJoin(spaModelSpareParts, eq(spaModels.id, spaModelSpareParts.spaModelId))
     .where(and(...conditions))
+    .groupBy(spaModels.id, spaModels.name, spaModels.brand, spaModels.series, spaModels.imageUrl, spaModels.description, spaModels.seats, spaModels.dimensions, spaModels.sortOrder)
     .orderBy(asc(spaModels.brand), asc(spaModels.sortOrder), asc(spaModels.name));
 
   return rows;
