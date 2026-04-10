@@ -323,36 +323,7 @@ router.post("/api/mobile/v1/orders/:id/cancel", async (req: AuthenticatedRequest
   }
 });
 
-// POST /api/mobile/v1/orders/:id/reorder
-router.post("/api/mobile/v1/orders/:id/reorder", async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const orderId = parseInt(req.params.id);
-    const userId = parseInt(req.mobileUser!.sub);
-    const partnerId = req.mobileUser!.partnerId;
-    const { getDb } = await import("../db");
-    const { orders, orderItems } = await import("../../drizzle/schema");
-    const { eq, and } = await import("drizzle-orm");
-    const db = await getDb();
-    const conditions: any[] = [eq(orders.id, orderId)];
-    if (partnerId) conditions.push(eq(orders.partnerId, partnerId));
-    const [order] = await db.select().from(orders).where(and(...conditions)).limit(1);
-    if (!order) return res.status(404).json({ error: "NOT_FOUND", message: "Commande introuvable" });
-    const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
-    const { addToCart, clearCart } = await import("../db");
-    await clearCart(userId, true);
-    for (const item of items) {
-      try {
-        await addToCart(userId, item.productId, item.quantity, false, item.variantId || undefined);
-      } catch (e) {
-        // Skip items that can't be added (out of stock, etc.)
-      }
-    }
-    return res.json({ success: true, itemsAdded: items.length, message: "Articles ajoutés au panier" });
-  } catch (err: any) {
-    console.error("[Mobile API] Reorder error:", err);
-    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
-  }
-});
+
 
 // GET /api/mobile/v1/orders/export
 router.get("/api/mobile/v1/orders/export", async (req: AuthenticatedRequest, res: Response) => {

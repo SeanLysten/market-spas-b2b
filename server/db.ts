@@ -2465,31 +2465,7 @@ export async function getUserFavorites(userId: number) {
 }
 
 
-// ============================================
-// REORDER FROM PREVIOUS ORDER
-// ============================================
 
-export async function reorderFromOrder(userId: number, orderId: number) {
-  const db = await getDb();
-  if (!db) return { success: false, message: 'Database not available' };
-
-  // Get order items using Drizzle table reference
-  const items = await db
-    .select()
-    .from(orderItems)
-    .where(eq(orderItems.orderId, orderId));
-
-  if (items.length === 0) {
-    return { success: false, message: 'Order not found or empty' };
-  }
-
-  // Add each item to cart
-  for (const item of items) {
-    await addToCart(userId, item.productId, item.quantity, false, item.variantId || undefined);
-  }
-
-  return { success: true, itemsAdded: items.length };
-}
 
 // ============================================
 // QUICK SEARCH BY SKU

@@ -15,7 +15,6 @@ import {
   FileText,
   Download,
   Eye,
-  RefreshCw,
   Heart,
   Search,
   SlidersHorizontal,
@@ -77,18 +76,6 @@ export default function Orders() {
     { enabled: false }
   );
 
-  const reorderMutation = trpc.orders.reorder.useMutation({
-    onSuccess: () => {
-      alert("Les articles ont été ajoutés à votre panier !");
-    },
-    onError: (error) => {
-      alert("Erreur: " + error.message);
-    },
-  });
-
-  const handleReorder = (orderId: number) => {
-    reorderMutation.mutate({ orderId });
-  };
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -421,15 +408,7 @@ export default function Orders() {
                               <Eye className="w-4 h-4" />
                             </Button>
                           </Link>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            title="Recommander"
-                            onClick={() => handleReorder(order.id)}
-                            disabled={reorderMutation.isPending}
-                          >
-                            <RefreshCw className={`w-4 h-4 ${reorderMutation.isPending ? 'animate-spin' : ''}`} />
-                          </Button>
+
                           {order.status !== "DRAFT" && (
                             <Link href={`/order/${order.id}/summary`}>
                               <Button variant="ghost" size="sm" title="Récapitulatif">
@@ -525,14 +504,7 @@ export default function Orders() {
                           Détails
                         </Button>
                       </Link>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleReorder(order.id)}
-                        disabled={reorderMutation.isPending}
-                      >
-                        <RefreshCw className={`w-4 h-4 ${reorderMutation.isPending ? 'animate-spin' : ''}`} />
-                      </Button>
+
                       {order.status !== "DRAFT" && (
                         <Link href={`/order/${order.id}/summary`}>
                           <Button variant="outline" size="sm">

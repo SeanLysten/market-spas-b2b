@@ -1318,13 +1318,6 @@ export const appRouter = router({
         return result;
       }),
 
-    // Reorder from previous order
-    reorder: protectedProcedure
-      .input(z.object({ orderId: z.number() }))
-      .mutation(async ({ ctx, input }) => {
-        return await db.reorderFromOrder(ctx.user.id, input.orderId);
-      }),
-
     // Get today's orders (admin only)
     getToday: adminProcedure
       .query(async () => {

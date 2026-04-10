@@ -3552,3 +3552,10 @@
 
 ## Bug Fix — SQL Error: select from order_items (colonnes manquantes)
 - [x] Corriger la requête SQL order_items qui ne sélectionne aucune colonne sur la page /orders — remplacé sql`order_items` par la table Drizzle orderItems dans reorderFromOrder()
+
+## Suppression fonction Recommander (reorder) + audit coherence-guard
+- [x] Supprimer le bouton Recommander de la page commandes (icône rechargement)
+- [x] Supprimer l'endpoint orders.reorder du router tRPC
+- [x] Supprimer la fonction reorderFromOrder() de db.ts
+- [x] Supprimer les références dans la documentation API mobile
+- [x] Audit coherence-guard : vérifier qu'il ne reste aucune référence orpheline — seul admin.products.reorder (drag&drop) reste, c'est correct

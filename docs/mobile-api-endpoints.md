@@ -395,14 +395,6 @@ Annuler une commande. **Auth requise.**
 
 ---
 
-### POST `/api/mobile/v1/orders/:id/reorder`
-
-Re-commander à partir d'une commande existante. **Auth requise.**
-
-**Réponse :** `{ order: {...} }`
-
----
-
 ### GET `/api/mobile/v1/orders/export`
 
 Exporter les commandes (CSV). **Auth requise.**
