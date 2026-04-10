@@ -163,7 +163,7 @@ describe('parseEmailForLead', () => {
       'noreply@shopify.com'
     );
     expect(result.isLead).toBe(true);
-    expect(result.email).toBe('noreply@shopify.com'); // parseEmailForLead utilise fromEmail
+    expect(result.email).toBe('marie.dupont@gmail.com'); // parseEmailForLead extrait l'email du corps si trouvé
   });
 
   it('marque un email de partenariat comme LEAD_PARTENARIAT', () => {
@@ -195,5 +195,91 @@ describe('parseEmailForLead', () => {
     );
     expect(result.isLead).toBe(true);
     expect(result.phone).toBeTruthy();
+  });
+});
+
+// ─── Tests de cohérence architecture (coherence-guard 2026-04-10) ─────────────
+
+describe('Lead Routing — Cohérence architecture', () => {
+  it('lead-routing.ts exporte findBestPartnerForLead', async () => {
+    const module = await import('./lead-routing');
+    expect(typeof module.findBestPartnerForLead).toBe('function');
+  });
+
+  it('meta-leads.ts exporte distributeLeadToPartner', async () => {
+    const module = await import('./meta-leads');
+    expect(typeof module.distributeLeadToPartner).toBe('function');
+  });
+
+  it('meta-leads.ts exporte resolveCountry', async () => {
+    const module = await import('./meta-leads');
+    expect(typeof module.resolveCountry).toBe('function');
+  });
+
+  it('territories-db.ts exporte findBestPartnerForPostalCode', async () => {
+    const module = await import('./territories-db');
+    expect(typeof module.findBestPartnerForPostalCode).toBe('function');
+  });
+});
+
+describe('Lead Routing — resolveCountry', () => {
+  it('résout la France via préfixe téléphonique +33', async () => {
+    const { resolveCountry } = await import('./meta-leads');
+    expect(resolveCountry('', '+33 6 12 34 56 78')).toBe('France');
+  });
+
+  it('résout la Belgique via préfixe téléphonique +32', async () => {
+    const { resolveCountry } = await import('./meta-leads');
+    expect(resolveCountry('', '+32 4 123 45 67')).toBe('Belgium');
+  });
+
+  it('résout le Luxembourg via préfixe téléphonique +352', async () => {
+    const { resolveCountry } = await import('./meta-leads');
+    expect(resolveCountry('', '+352 621 123 456')).toBe('Luxembourg');
+  });
+
+  it('résout la France via le champ formulaire', async () => {
+    const { resolveCountry } = await import('./meta-leads');
+    expect(resolveCountry('FR', '')).toBe('France');
+    expect(resolveCountry('france', '')).toBe('France');
+  });
+
+  it('résout la Belgique via le champ formulaire', async () => {
+    const { resolveCountry } = await import('./meta-leads');
+    expect(resolveCountry('BE', '')).toBe('Belgium');
+    expect(resolveCountry('belgique', '')).toBe('Belgium');
+  });
+
+  it('retourne vide si aucune info disponible', async () => {
+    const { resolveCountry } = await import('./meta-leads');
+    expect(resolveCountry('', '')).toBe('');
+  });
+});
+
+describe('Lead Routing — Pas de fallback hardcodé', () => {
+  it('lead-routing.ts ne contient pas de fallback hardcodé vers Les Valentins (ID 60006)', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync('./server/lead-routing.ts', 'utf-8');
+    expect(content).not.toContain('60006');
+    expect(content).not.toContain('DEFAULT_FALLBACK_PARTNER_ID');
+  });
+
+  it('meta-leads.ts distributeLeadToPartner ne contient pas de fallback hardcodé', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync('./server/meta-leads.ts', 'utf-8');
+    expect(content).not.toContain('60006');
+    expect(content).not.toContain('DEFAULT_FALLBACK_PARTNER_ID');
+  });
+
+  it('lead-routing.ts utilise findBestPartnerForPostalCode de territories-db', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync('./server/lead-routing.ts', 'utf-8');
+    expect(content).toContain("import { findBestPartnerForPostalCode } from './territories-db'");
+  });
+
+  it('meta-leads.ts utilise findBestPartnerForPostalCode de territories-db', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync('./server/meta-leads.ts', 'utf-8');
+    expect(content).toContain("import { findBestPartnerForPostalCode } from \"./territories-db\"");
   });
 });

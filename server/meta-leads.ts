@@ -14,6 +14,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { leads, leadStatusHistory, partnerPostalCodes, metaCampaigns, partners, notifications, partnerCandidates } from "../drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { notifyAdmins } from "./_core/websocket";
+import { findBestPartnerForPostalCode } from "./territories-db";
 
 // Lazy DB connection
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -765,4 +766,121 @@ export async function getLeadsByPartner() {
     .groupBy(leads.assignedPartnerId, partners.companyName);
 
   return result;
+}
+
+
+// ============================================
+// DISTRIBUTION DES LEADS AUX PARTENAIRES
+// ============================================
+
+/**
+ * Distribue un lead au partenaire propriétaire du territoire correspondant.
+ * 
+ * SOURCE UNIQUE DE VÉRITÉ : territories-db.findBestPartnerForPostalCode
+ * qui utilise les tables partner_territories + regions + postal_code_ranges en DB
+ * (définies dans "Gestion des Territoires" de l'admin).
+ * 
+ * Logique :
+ * 1. Récupérer le lead en DB (postalCode, country, phone)
+ * 2. Résoudre le pays via resolveCountry (préfixe téléphonique > champ country)
+ * 3. Chercher le partenaire via findBestPartnerForPostalCode
+ * 4. Si trouvé → assigner le lead au partenaire (status = ASSIGNED)
+ * 5. Si non trouvé → laisser le lead en NEW (assignation manuelle par l'admin)
+ */
+export async function distributeLeadToPartner(leadId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.error(`[LeadDistribution] DB non disponible pour distribuer le lead #${leadId}`);
+    return;
+  }
+
+  try {
+    // 1. Récupérer les données du lead
+    const [lead] = await db
+      .select({
+        id: leads.id,
+        postalCode: leads.postalCode,
+        country: leads.country,
+        phone: leads.phone,
+        city: leads.city,
+        assignedPartnerId: leads.assignedPartnerId,
+        status: leads.status,
+      })
+      .from(leads)
+      .where(eq(leads.id, leadId))
+      .limit(1);
+
+    if (!lead) {
+      console.error(`[LeadDistribution] Lead #${leadId} non trouvé en DB`);
+      return;
+    }
+
+    // Si déjà assigné, ne pas réassigner
+    if (lead.assignedPartnerId) {
+      console.log(`[LeadDistribution] Lead #${leadId} déjà assigné au partenaire #${lead.assignedPartnerId}`);
+      return;
+    }
+
+    // 2. Résoudre le pays
+    const country = resolveCountry(lead.country || '', lead.phone || '');
+    console.log(`[LeadDistribution] Lead #${leadId}: CP=${lead.postalCode} Country=${country} Phone=${lead.phone}`);
+
+    // 3. Chercher le partenaire via territories-db (source unique de vérité)
+    if (!lead.postalCode) {
+      console.log(`[LeadDistribution] Lead #${leadId}: pas de code postal, assignation manuelle requise`);
+      return;
+    }
+
+    const result = await findBestPartnerForPostalCode(lead.postalCode, country);
+
+    if (result) {
+      // 4. Assigner le lead au partenaire
+      await db.update(leads)
+        .set({
+          assignedPartnerId: result.partnerId,
+          status: "ASSIGNED" as any,
+          assignmentReason: `territory_auto_${result.region}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(leads.id, leadId));
+
+      // Ajouter un historique de statut
+      await db.insert(leadStatusHistory).values({
+        leadId,
+        previousStatus: lead.status || "NEW",
+        newStatus: "ASSIGNED" as any,
+        notes: `Assigné automatiquement à ${result.partnerName} (territoire: ${result.region}, ${result.country})`,
+      });
+
+      console.log(`[LeadDistribution] Lead #${leadId} assigné à ${result.partnerName} (ID ${result.partnerId}) via territoire ${result.region}`);
+
+      // Notifier le partenaire
+      try {
+        const db2 = await getDb();
+        if (db2) {
+          await db2.insert(notifications).values({
+            userId: result.partnerId,
+            type: "lead_assigned" as any,
+            title: "Nouveau lead assigné",
+            message: `Un nouveau lead client (CP: ${lead.postalCode}, ${lead.city || ''}) vous a été assigné automatiquement.`,
+            data: JSON.stringify({ leadId, postalCode: lead.postalCode, city: lead.city }),
+          });
+        }
+      } catch (notifErr) {
+        console.error(`[LeadDistribution] Erreur notification partenaire:`, notifErr);
+      }
+    } else {
+      // 5. Aucun partenaire trouvé → laisser en NEW
+      console.log(`[LeadDistribution] Lead #${leadId}: aucun partenaire pour CP ${lead.postalCode} (${country}), assignation manuelle requise`);
+      
+      await db.update(leads)
+        .set({
+          assignmentReason: "no_territory_match",
+          updatedAt: new Date(),
+        })
+        .where(eq(leads.id, leadId));
+    }
+  } catch (err) {
+    console.error(`[LeadDistribution] Erreur distribution lead #${leadId}:`, err);
+  }
 }

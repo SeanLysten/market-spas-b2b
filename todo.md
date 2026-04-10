@@ -3559,3 +3559,12 @@
 - [x] Supprimer la fonction reorderFromOrder() de db.ts
 - [x] Supprimer les références dans la documentation API mobile
 - [x] Audit coherence-guard : vérifier qu'il ne reste aucune référence orpheline — seul admin.products.reorder (drag&drop) reste, c'est correct
+
+## Audit coherence-guard — Gestion des Leads
+- [x] Revoir et documenter le fonctionnement complet de la répartition des leads
+- [x] Audit coherence-guard : vérifier la cohérence de toute la gestion des leads (schema, DB, routes, frontend, Meta)
+- [x] Implémenter distributeLeadToPartner() manquante dans meta-leads.ts — implémentée avec findBestPartnerForPostalCode
+- [x] Unifier le routing leads : utiliser territories-db.findBestPartnerForPostalCode comme source unique de vérité
+- [x] Supprimer le fallback hardcodé "Les Valentins" (ID 60006) dans lead-routing.ts — retourne null si aucun match
+- [x] S'assurer que tous les leads VENTE sont distribués au partenaire propriétaire du territoire
+- [x] Corriger les incohérences entre les 2 systèmes de routing — lead-routing.ts délègue maintenant à territories-db.ts

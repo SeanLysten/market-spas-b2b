@@ -7,8 +7,15 @@
  *  - SAV              → service après-vente, panne, garantie           → ignoré
  *  - SPAM             → démarchage, pub, newsletter, facture           → ignoré
  *  - UNKNOWN          → inclassable                                    → ignoré
+ * 
+ * ROUTING UNIFIÉ (coherence-guard 2026-04-10) :
+ * Source unique de vérité = territories-db.findBestPartnerForPostalCode
+ * qui utilise les tables partner_territories + regions + postal_code_ranges en DB.
+ * Plus de mapping CP→région en code dur, plus de fallback hardcodé.
  */
 import mysql from 'mysql2/promise';
+import { findBestPartnerForPostalCode } from './territories-db';
+import { resolveCountry } from './meta-leads';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -285,21 +292,22 @@ export function parseEmailForLead(
 
   const text = body || '';
 
-  // Extraction du téléphone
-  const phoneMatch = text.match(/(?:\+?\d{1,4}[\s\-]?)?\(?\d{1,4}\)?[\s\-]?\d{2,4}[\s\-]?\d{2,4}[\s\-]?\d{0,4}/);
-  const phone = phoneMatch ? phoneMatch[0].trim() : undefined;
+  // Extraire les données structurées de l'email
+  const emailMatch = text.match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
+  const phoneMatch = text.match(/(?:\+?\d{1,3}[\s.-]?)?\(?\d{2,4}\)?[\s.-]?\d{2,4}[\s.-]?\d{2,4}(?:[\s.-]?\d{2,4})?/);
+  const postalCodeMatch = text.match(/\b\d{4,5}\b/);
 
-  // Extraction du code postal (5 chiffres FR ou 4 chiffres BE)
-  const cpMatch = text.match(/\b(\d{4,5})\b/);
-  const postalCode = cpMatch ? cpMatch[1] : undefined;
+  // Extraire le nom depuis l'adresse email ou le corps
+  let firstName = fromName?.split(' ')[0] || '';
+  let lastName = fromName?.split(' ').slice(1).join(' ') || '';
 
-  // Extraction du nom
-  let firstName: string | undefined;
-  let lastName: string | undefined;
-  if (fromName) {
-    const parts = fromName.trim().split(/\s+/);
-    firstName = parts[0];
-    lastName = parts.slice(1).join(' ') || undefined;
+  if (!firstName && fromEmail) {
+    const emailPrefix = fromEmail.split('@')[0];
+    const parts = emailPrefix.split(/[._-]/);
+    if (parts.length >= 2) {
+      firstName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+      lastName = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+    }
   }
 
   return {
@@ -308,138 +316,47 @@ export function parseEmailForLead(
     confidence,
     firstName,
     lastName,
-    email: fromEmail,
-    phone,
-    postalCode,
+    email: emailMatch?.[0] || fromEmail,
+    phone: phoneMatch?.[0],
+    postalCode: postalCodeMatch?.[0],
     city: undefined,
     country: undefined,
-    productInterest: productType === 'VENTE' ? 'Spa / Jacuzzi' : productType === 'PARTENARIAT' ? 'Partenariat' : undefined,
-    budget: undefined,
-    message: text.substring(0, 1000),
+    productInterest: productType === 'VENTE' ? extractProductInterest(text) : undefined,
+    budget: extractBudget(text),
+    message: text.substring(0, 2000),
     source: 'EMAIL',
     productType,
   };
 }
 
-// ─── Résolution du pays ──────────────────────────────────────────────────────
-
-/**
- * Résout le pays à partir du préfixe téléphonique.
- * Retourne le code pays ISO 2 lettres ou null.
- */
-export function resolveCountryFromPhone(phone: string): string | null {
-  if (!phone) return null;
-  const p = phone.replace(/\s/g, '');
-  if (p.startsWith('+33') || p.startsWith('0033')) return 'FR';
-  if (p.startsWith('+32') || p.startsWith('0032')) return 'BE';
-  if (p.startsWith('+352')) return 'LU';
-  if (p.startsWith('+49') || p.startsWith('0049')) return 'DE';
-  if (p.startsWith('+31') || p.startsWith('0031')) return 'NL';
-  if (p.startsWith('+34') || p.startsWith('0034')) return 'ES';
-  if (p.startsWith('+41') || p.startsWith('0041')) return 'CH';
-  if (p.startsWith('+39')) return 'IT';
-  if (p.startsWith('+44')) return 'GB';
-  if (p.startsWith('+351')) return 'PT';
-  return null;
+function extractProductInterest(text: string): string | undefined {
+  const lower = text.toLowerCase();
+  const interests: string[] = [];
+  if (lower.includes('swim spa') || lower.includes('spa de nage')) interests.push('Spa de nage');
+  if (lower.includes('jacuzzi') || (lower.includes('spa') && !lower.includes('spa de nage'))) interests.push('Spa/Jacuzzi');
+  if (lower.includes('sauna')) interests.push('Sauna');
+  return interests.length > 0 ? interests.join(', ') : undefined;
 }
 
-export function normalizeCountry(country?: string): string | null {
-  if (!country) return null;
-  const c = country.toLowerCase().trim();
-  if (c === 'france' || c === 'fr') return 'FR';
-  if (c === 'belgique' || c === 'belgie' || c === 'belgium' || c === 'be') return 'BE';
-  if (c === 'luxembourg' || c === 'lu') return 'LU';
-  if (c === 'espagne' || c === 'spain' || c === 'españa' || c === 'es') return 'ES';
-  if (c === 'allemagne' || c === 'germany' || c === 'deutschland' || c === 'de') return 'DE';
-  if (c === 'pays-bas' || c === 'netherlands' || c === 'nederland' || c === 'nl') return 'NL';
-  if (c === 'suisse' || c === 'switzerland' || c === 'schweiz' || c === 'ch') return 'CH';
-  if (c === 'italie' || c === 'italy' || c === 'italia' || c === 'it') return 'IT';
-  if (c === 'portugal' || c === 'pt') return 'PT';
-  if (c.length === 2) return c.toUpperCase();
-  return country.substring(0, 2).toUpperCase();
+function extractBudget(text: string): string | undefined {
+  const budgetMatch = text.match(/(\d[\d\s.,]*)\s*€|€\s*(\d[\d\s.,]*)/);
+  return budgetMatch ? (budgetMatch[1] || budgetMatch[2])?.replace(/\s/g, '') + '€' : undefined;
 }
 
-// ─── ID du partenaire fallback par défaut (Les Valentins) ────────────────────
-const DEFAULT_FALLBACK_PARTNER_ID = 60006; // Valentin (Les Valentins)
-
-// ─── Mapping code postal → code région ISO ──────────────────────────────────
+// ─── Attribution automatique des leads (UNIFIÉ) ──────────────────────────────
 
 /**
- * Convertit un code postal en code région ISO (ex: "17810" → "FR-17", "4340" → "BE-WLG").
- * Ce code est ensuite utilisé pour chercher dans la table partner_territories.
- */
-function postalCodeToRegionCode(postalCode: string, countryCode: string): string | null {
-  if (!postalCode || !countryCode) return null;
-
-  if (countryCode === 'FR') {
-    // France : les 2 premiers chiffres du CP = numéro de département
-    let dept = postalCode.substring(0, 2);
-    // Cas spéciaux : Corse (20xxx → 2A ou 2B)
-    if (dept === '20') {
-      const cp = parseInt(postalCode, 10);
-      dept = cp >= 20200 ? '2B' : '2A';
-    }
-    return `FR-${dept}`;
-  }
-
-  if (countryCode === 'BE') {
-    // Belgique : les 2 premiers chiffres du CP → province
-    const prefix = parseInt(postalCode.substring(0, 2), 10);
-    if (prefix >= 10 && prefix <= 12) return 'BE-BRU'; // Bruxelles
-    if (prefix >= 13 && prefix <= 14) return 'BE-WBR'; // Brabant wallon
-    if (prefix >= 15 && prefix <= 19) return 'BE-VBR'; // Brabant flamand
-    if (prefix >= 20 && prefix <= 29) return 'BE-VAN'; // Anvers
-    if (prefix >= 30 && prefix <= 34) return 'BE-VBR'; // Brabant flamand (Leuven)
-    if (prefix >= 35 && prefix <= 39) return 'BE-VLI'; // Limbourg
-    if (prefix >= 40 && prefix <= 49) return 'BE-WLG'; // Liège
-    if (prefix >= 50 && prefix <= 59) return 'BE-WNA'; // Namur
-    if (prefix >= 60 && prefix <= 65) return 'BE-WHT'; // Hainaut
-    if (prefix >= 66 && prefix <= 69) return 'BE-WLX'; // Luxembourg belge
-    if (prefix >= 70 && prefix <= 79) return 'BE-WHT'; // Hainaut
-    if (prefix >= 80 && prefix <= 84) return 'BE-VWV'; // Flandre occidentale
-    if (prefix >= 85 && prefix <= 89) return 'BE-VWV'; // Flandre occidentale
-    if (prefix >= 90 && prefix <= 99) return 'BE-VOV'; // Flandre orientale
-    return null;
-  }
-
-  if (countryCode === 'LU') {
-    return 'LU-L'; // Luxembourg n'a qu'une seule région
-  }
-
-  if (countryCode === 'DE') {
-    const prefix = postalCode.substring(0, 2);
-    return `DE-${prefix}`;
-  }
-
-  if (countryCode === 'NL') {
-    const prefix = postalCode.substring(0, 2);
-    return `NL-${prefix}`;
-  }
-
-  if (countryCode === 'ES') {
-    const prefix = postalCode.substring(0, 2);
-    return `ES-${prefix}`;
-  }
-
-  if (countryCode === 'CH') {
-    const prefix = postalCode.substring(0, 2);
-    return `CH-${prefix}`;
-  }
-
-  return null;
-}
-
-// ─── Attribution automatique des leads ──────────────────────────────────────
-
-/**
- * Trouve le meilleur partenaire pour un lead en utilisant la table partner_territories en BDD.
+ * Trouve le meilleur partenaire pour un lead.
  * 
- * Logique de résolution :
- * 1. Déterminer le pays : réponses formulaire → préfixe téléphonique → champ country
- * 2. Convertir le code postal en code région ISO (ex: "17810" → "FR-17")
- * 3. Chercher dans partner_territories quel partenaire couvre cette région
- * 4. Si aucun partenaire trouvé → chercher un partenaire qui couvre le pays entier
- * 5. Si toujours rien → fallback vers Les Valentins (ID 60006)
+ * SOURCE UNIQUE DE VÉRITÉ : territories-db.findBestPartnerForPostalCode
+ * qui utilise les tables partner_territories + regions + postal_code_ranges en DB
+ * (définies dans "Gestion des Territoires" de l'admin).
+ * 
+ * Logique :
+ * 1. Résoudre le pays via préfixe téléphonique > champ country
+ * 2. Déléguer à findBestPartnerForPostalCode (smart disambiguation)
+ * 3. Si aucun partenaire trouvé → retourner null (l'admin assignera manuellement)
+ *    PAS de fallback hardcodé.
  */
 export async function findBestPartnerForLead(params: {
   postalCode?: string;
@@ -447,92 +364,39 @@ export async function findBestPartnerForLead(params: {
   country?: string;
   phone?: string;
 }): Promise<{ partnerId: number | null; partnerName?: string; reason: string }> {
-  const dbUrl = process.env.DATABASE_URL;
-  if (!dbUrl) return { partnerId: DEFAULT_FALLBACK_PARTNER_ID, reason: 'database_unavailable_fallback' };
-
   const { postalCode, city, phone } = params;
   let { country } = params;
 
-  // ── 1. Résoudre le pays ─────────────────────────────────────────────────────
-  // Priorité : préfixe téléphonique > champ country (car Meta met souvent "Belgium" par défaut)
+  // ── 1. Résoudre le pays via préfixe téléphonique (plus fiable que Meta) ────
   if (phone) {
-    const cleanPhone = phone.replace(/\s/g, '');
-    const phoneCountry = resolveCountryFromPhone(cleanPhone);
-    if (phoneCountry) {
-      if (!country || normalizeCountry(country) !== phoneCountry) {
-        console.log(`[LeadRouting] Pays corrigé via téléphone: ${country} → ${phoneCountry} (phone: ${phone})`);
-      }
-      country = phoneCountry;
+    const resolvedCountry = resolveCountry(country || '', phone);
+    if (resolvedCountry) {
+      country = resolvedCountry;
     }
   }
 
-  const countryCode = normalizeCountry(country);
-  console.log(`[LeadRouting] Routing lead: CP=${postalCode} Country=${country} Phone=${phone} → CountryCode=${countryCode}`);
+  console.log(`[LeadRouting] Routing lead: CP=${postalCode} Country=${country} Phone=${phone}`);
 
-  let conn: mysql.Connection | null = null;
-  try {
-    conn = await mysql.createConnection(dbUrl);
-
-    // ── 2. Si on a un code postal, chercher le partenaire via la table partner_territories ──
-    if (postalCode && countryCode) {
-      const regionCode = postalCodeToRegionCode(postalCode, countryCode);
-      console.log(`[LeadRouting] CP ${postalCode} → regionCode ${regionCode}`);
-
-      if (regionCode) {
-        // Chercher le partenaire qui a ce territoire assigné
-        const [rows] = await conn.execute<mysql.RowDataPacket[]>(
-          `SELECT pt.partnerId, p.companyName
-           FROM partner_territories pt
-           JOIN partners p ON p.id = pt.partnerId
-           JOIN regions r ON r.id = pt.regionId
-           WHERE r.code = ? AND p.status = 'APPROVED'
-           LIMIT 1`,
-          [regionCode]
-        );
-        if (rows.length > 0) {
-          console.log(`[LeadRouting] Match territoire: ${regionCode} → ${rows[0].companyName} (ID ${rows[0].partnerId})`);
-          return { partnerId: rows[0].partnerId, partnerName: rows[0].companyName, reason: `territory_${regionCode}` };
-        }
-        console.log(`[LeadRouting] Aucun partenaire pour le territoire ${regionCode}`);
+  // ── 2. Si on a un code postal, chercher via territories-db ─────────────────
+  if (postalCode) {
+    try {
+      const result = await findBestPartnerForPostalCode(postalCode, country);
+      if (result) {
+        console.log(`[LeadRouting] Match territoire: ${result.region} (${result.country}) → ${result.partnerName} (ID ${result.partnerId})`);
+        return {
+          partnerId: result.partnerId,
+          partnerName: result.partnerName,
+          reason: `territory_${result.region}`,
+        };
       }
+      console.log(`[LeadRouting] Aucun partenaire trouvé pour CP ${postalCode} (${country})`);
+    } catch (err) {
+      console.error('[LeadRouting] Error finding partner by postal code:', err);
     }
-
-    // ── 3. Chercher un partenaire qui couvre le pays entier ──────────────────
-    if (countryCode) {
-      // Chercher le pays dans la table countries
-      const [countryRows] = await conn.execute<mysql.RowDataPacket[]>(
-        'SELECT id FROM countries WHERE code = ?',
-        [countryCode]
-      );
-      if (countryRows.length > 0) {
-        const countryId = countryRows[0].id;
-        // Chercher un partenaire qui a au moins un territoire dans ce pays
-        const [rows] = await conn.execute<mysql.RowDataPacket[]>(
-          `SELECT pt.partnerId, p.companyName, COUNT(*) as territoryCount
-           FROM partner_territories pt
-           JOIN partners p ON p.id = pt.partnerId
-           JOIN regions r ON r.id = pt.regionId
-           WHERE r.countryId = ? AND p.status = 'APPROVED'
-           GROUP BY pt.partnerId, p.companyName
-           ORDER BY territoryCount DESC
-           LIMIT 1`,
-          [countryId]
-        );
-        if (rows.length > 0) {
-          console.log(`[LeadRouting] Fallback pays ${countryCode}: ${rows[0].companyName} (ID ${rows[0].partnerId}, ${rows[0].territoryCount} territoires)`);
-          return { partnerId: rows[0].partnerId, partnerName: rows[0].companyName, reason: `country_fallback_${countryCode}` };
-        }
-      }
-    }
-
-    // ── 4. Fallback par défaut → Les Valentins ──────────────────────────────
-    console.log(`[LeadRouting] Aucun match, fallback vers Les Valentins (ID ${DEFAULT_FALLBACK_PARTNER_ID})`);
-    return { partnerId: DEFAULT_FALLBACK_PARTNER_ID, partnerName: 'Valentin', reason: 'default_fallback' };
-
-  } catch (err) {
-    console.error('[LeadRouting] Error:', err);
-    return { partnerId: DEFAULT_FALLBACK_PARTNER_ID, partnerName: 'Valentin', reason: 'error_fallback' };
-  } finally {
-    if (conn) await conn.end();
   }
+
+  // ── 3. Aucun match → retourner null (pas de fallback hardcodé) ─────────────
+  // L'admin pourra assigner manuellement le lead depuis le dashboard.
+  console.log(`[LeadRouting] Aucun partenaire trouvé, lead non assigné (assignation manuelle requise)`);
+  return { partnerId: null, reason: 'no_territory_match' };
 }
