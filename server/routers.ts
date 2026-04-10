@@ -3617,10 +3617,16 @@ export const appRouter = router({
       )
       .mutation(async ({ input, ctx }) => {
         const isAdminUser = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
-        const targetPartnerId = input.partnerId || ctx.user.partnerId;
+        // Non-admins MUST use their own partnerId — ignore any partnerId from input
+        const targetPartnerId = isAdminUser ? (input.partnerId || ctx.user.partnerId) : ctx.user.partnerId;
         
         if (!targetPartnerId) {
           throw new Error("Veuillez sélectionner un partenaire pour inviter un membre d'équipe");
+        }
+
+        // Sécurité : un non-admin ne peut pas inviter dans un partenaire différent du sien
+        if (!isAdminUser && input.partnerId && input.partnerId !== ctx.user.partnerId) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Vous ne pouvez inviter que dans votre propre société." });
         }
 
         // Vérifier que l'email n'est pas déjà un utilisateur existant
@@ -4229,14 +4235,30 @@ export const appRouter = router({
 
     getSavSpareParts: protectedProcedure
       .input(z.object({ serviceId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ ctx, input }) => {
+        // Vérifier que l'utilisateur a accès à ce ticket
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        if (!isAdmin) {
+          const serviceData = await savDb.getSavTicketById(input.serviceId);
+          if (!serviceData || serviceData.service.partnerId !== ctx.user.partnerId) {
+            throw new TRPCError({ code: "FORBIDDEN", message: "Accès non autorisé." });
+          }
+        }
         return await savDb.getSavSpareParts(input.serviceId);
       }),
 
     // ===== CALCULATE TOTAL (for payment) =====
     calculateTotal: protectedProcedure
       .input(z.object({ serviceId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ ctx, input }) => {
+        // Vérifier que l'utilisateur a accès à ce ticket
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        if (!isAdmin) {
+          const serviceData = await savDb.getSavTicketById(input.serviceId);
+          if (!serviceData || serviceData.service.partnerId !== ctx.user.partnerId) {
+            throw new TRPCError({ code: "FORBIDDEN", message: "Accès non autorisé." });
+          }
+        }
         return await savDb.calculateSavTotal(input.serviceId);
       }),
 
@@ -4379,7 +4401,15 @@ export const appRouter = router({
 
     statusHistory: protectedProcedure
       .input(z.object({ serviceId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ ctx, input }) => {
+        // Vérifier que l'utilisateur a accès à ce ticket
+        const isAdmin = ctx.user.role === "SUPER_ADMIN" || ctx.user.role === "ADMIN";
+        if (!isAdmin) {
+          const serviceData = await savDb.getSavTicketById(input.serviceId);
+          if (!serviceData || serviceData.service.partnerId !== ctx.user.partnerId) {
+            throw new TRPCError({ code: "FORBIDDEN", message: "Accès non autorisé." });
+          }
+        }
         return await db.getAfterSalesStatusHistory(input.serviceId);
       }),
 

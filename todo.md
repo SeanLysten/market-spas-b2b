@@ -3641,3 +3641,11 @@
 - [x] Corriger le code : remplacer `part.id` par `part.sparePartId || part.id` dans la section BOM du formulaire SAV
 - [x] Vérifier dans le navigateur : erreur console disparue au step 2 du formulaire SAV
 - [x] Tests vitest : 84 fichiers, 1293 tests passent
+## Audit isolation des données par compte utilisateur/partenaire (2026-04-10)
+- [x] Audit backend SAV : vérifier que les tickets sont filtrés par partnerId de l'utilisateur connecté
+- [x] Audit backend Commandes : vérifier que les commandes sont filtrées par partnerId
+- [x] Audit backend Équipe : vérifier que les membres sont filtrés par partnerId
+- [x] Audit frontend : vérifier que les appels API transmettent le contexte utilisateur
+- [x] Corriger toute faille d'isolation trouvée (4 failles corrigées)
+- [x] Écrire des tests vitest pour valider l'isolation des données (34 tests passés)
+- [x] Rapport coherence-guard + impact-guard
