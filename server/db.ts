@@ -2473,22 +2473,22 @@ export async function reorderFromOrder(userId: number, orderId: number) {
   const db = await getDb();
   if (!db) return { success: false, message: 'Database not available' };
 
-  // Get order items
-  const orderItems = await db
+  // Get order items using Drizzle table reference
+  const items = await db
     .select()
-    .from(sql`order_items`)
-    .where(sql`order_id = ${orderId}`);
+    .from(orderItems)
+    .where(eq(orderItems.orderId, orderId));
 
-  if (orderItems.length === 0) {
+  if (items.length === 0) {
     return { success: false, message: 'Order not found or empty' };
   }
 
   // Add each item to cart
-  for (const item of orderItems) {
-    await addToCart(userId, (item as any).product_id, (item as any).quantity, false, (item as any).variant_id);
+  for (const item of items) {
+    await addToCart(userId, item.productId, item.quantity, false, item.variantId || undefined);
   }
 
-  return { success: true, itemsAdded: orderItems.length };
+  return { success: true, itemsAdded: items.length };
 }
 
 // ============================================

@@ -3549,3 +3549,6 @@
 
 ## Bug Fix — variantId null bloque la commande pour produits sans variantes
 - [x] Corriger le schéma de validation orders.create pour accepter variantId null/undefined — ajouté .nullable() sur tous les endpoints (orders.create, cart.add, cart.updateQuantity, cart.removeItem, cart.availableQuantity) + conversion null→undefined côté frontend
+
+## Bug Fix — SQL Error: select from order_items (colonnes manquantes)
+- [x] Corriger la requête SQL order_items qui ne sélectionne aucune colonne sur la page /orders — remplacé sql`order_items` par la table Drizzle orderItems dans reorderFromOrder()
