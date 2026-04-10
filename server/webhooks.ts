@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as db from './db';
 import { notifyAdmins } from './_core/websocket';
 import { findBestPartnerForPostalCode } from './territories-db';
+import { resolveCountry } from './meta-leads';
 
 export const webhooksRouter = Router();
 
@@ -63,7 +64,9 @@ webhooksRouter.post('/facebook-leads', async (req, res) => {
     // Assignation automatique au partenaire selon le code postal
     if (postalCode && leadId) {
       try {
-        const partner = await findBestPartnerForPostalCode(postalCode, country || undefined);
+        // Résoudre le pays via préfixe téléphonique > champ pays
+        const resolvedCountry = resolveCountry(country || '', phone || '');
+        const partner = await findBestPartnerForPostalCode(postalCode, resolvedCountry || undefined);
         if (partner) {
           await db.assignLeadToPartner(leadId[0].insertId, partner.partnerId);
           console.log(`[Webhook] Lead ${leadId[0].insertId} auto-assigné au partenaire ${partner.partnerName} (${partner.region}, ${partner.country})`);

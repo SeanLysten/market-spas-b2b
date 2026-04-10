@@ -79,7 +79,8 @@ const META_CONFIG = {
  * car il reflète le pays de la page Facebook, pas celui du lead.
  */
 export function resolveCountry(formCountry: string, phone: string): string {
-  // 1. Réponse explicite du formulaire (PAYS = FR, BE, etc.)
+  // 1. Champ pays du formulaire (PRIORITAIRE)
+  // Si le lead a renseigné son pays, on le prend tel quel.
   if (formCountry) {
     const fc = formCountry.toLowerCase().trim();
     if (fc === 'fr' || fc === 'france') return 'France';
@@ -93,7 +94,7 @@ export function resolveCountry(formCountry: string, phone: string): string {
     if (fc.length > 2) return formCountry;
   }
 
-  // 2. Préfixe téléphonique
+  // 2. Préfixe téléphonique (fallback si pas de champ pays)
   const cleanPhone = (phone || '').replace(/\s/g, '');
   if (cleanPhone.startsWith('+33') || cleanPhone.startsWith('0033')) return 'France';
   if (cleanPhone.startsWith('+32') || cleanPhone.startsWith('0032')) return 'Belgium';

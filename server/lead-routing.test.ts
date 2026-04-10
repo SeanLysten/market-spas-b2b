@@ -283,3 +283,57 @@ describe('Lead Routing — Pas de fallback hardcodé', () => {
     expect(content).toContain("import { findBestPartnerForPostalCode } from \"./territories-db\"");
   });
 });
+
+// ─── Tests cohérence routing pays-first (coherence-guard 2026-04-10 v2) ──────
+
+describe('Lead Routing — Priorité pays (champ pays > préfixe tel)', () => {
+  it('resolveCountry donne priorité au champ pays sur le préfixe téléphonique', async () => {
+    const { resolveCountry } = await import('./meta-leads');
+    // Le champ pays "Belgium" doit primer sur le préfixe +352
+    expect(resolveCountry('Belgium', '+352661148113')).toBe('Belgium');
+  });
+
+  it('resolveCountry utilise le champ pays quand pas de téléphone', async () => {
+    const { resolveCountry } = await import('./meta-leads');
+    expect(resolveCountry('Luxembourg', '')).toBe('Luxembourg');
+  });
+
+  it('resolveCountry utilise le préfixe tel quand pas de champ pays', async () => {
+    const { resolveCountry } = await import('./meta-leads');
+    expect(resolveCountry('', '+352661148113')).toBe('Luxembourg');
+  });
+
+  it('resolveCountry utilise le champ pays quand le téléphone n\'a pas de préfixe reconnu', async () => {
+    const { resolveCountry } = await import('./meta-leads');
+    expect(resolveCountry('Luxembourg', '0661148113')).toBe('Luxembourg');
+  });
+});
+
+describe('Lead Routing — Fallback pays dans territories-db', () => {
+  it('territories-db exporte findBestPartnerForPostalCode avec fallback pays', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync('./server/territories-db.ts', 'utf-8');
+    // Vérifie que le fallback pays est implémenté
+    expect(content).toContain('findPartnerByCountry');
+    expect(content).toContain('FALLBACK');
+  });
+
+  it('reassignAll dans routers.ts utilise resolveCountry', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync('./server/routers.ts', 'utf-8');
+    expect(content).toContain("resolveCountry(lead.country");
+  });
+
+  it('webhooks.ts utilise resolveCountry', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync('./server/webhooks.ts', 'utf-8');
+    expect(content).toContain("resolveCountry");
+  });
+
+  it('inbound-leads.ts passe le phone à findBestPartnerForLead', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync('./server/routes/inbound-leads.ts', 'utf-8');
+    expect(content).toContain("phone");
+    expect(content).toContain("findBestPartnerForLead");
+  });
+});

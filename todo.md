@@ -3568,3 +3568,9 @@
 - [x] Supprimer le fallback hardcodé "Les Valentins" (ID 60006) dans lead-routing.ts — retourne null si aucun match
 - [x] S'assurer que tous les leads VENTE sont distribués au partenaire propriétaire du territoire
 - [x] Corriger les incohérences entre les 2 systèmes de routing — lead-routing.ts délègue maintenant à territories-db.ts
+
+## Bug Fix — Routing leads ne filtre pas par pays avant CP
+- [x] findBestPartnerForPostalCode ne filtre pas par pays — ajouté fallback findPartnerByCountry + ranges LU en DB
+- [x] Corriger la logique : 1) Champ pays d'abord 2) Préfixe tel si pas de pays 3) Filtrer ranges par pays 4) Fallback pays
+- [x] Propager resolveCountry dans tous les appelants (reassignAll, webhooks, inbound-leads)
+- [ ] Vérifier que les leads existants mal assignés sont corrigés — utiliser Réassigner tous dans l'admin

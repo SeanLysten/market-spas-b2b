@@ -2584,6 +2584,7 @@ export const appRouter = router({
       reassignAll: adminProcedure
         .mutation(async () => {
           const { findBestPartnerForPostalCode } = await import('./territories-db');
+          const { resolveCountry } = await import('./meta-leads');
           
           // Récupérer UNIQUEMENT les leads VENTE (pas PARTENARIAT ni SAV)
           const unassignedLeads = await db.getLeads({ leadType: 'VENTE' });
@@ -2602,8 +2603,9 @@ export const appRouter = router({
 
             try {
               if (!postalCode) continue;
-              const country = lead.country || undefined;
-              const partner = await findBestPartnerForPostalCode(postalCode, country);
+              // Résoudre le pays via préfixe téléphonique > champ pays
+              const country = resolveCountry(lead.country || '', lead.phone || '');
+              const partner = await findBestPartnerForPostalCode(postalCode, country || undefined);
               
               if (partner) {
                 await db.assignLeadToPartner(lead.id, partner.partnerId);

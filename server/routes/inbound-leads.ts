@@ -132,7 +132,7 @@ inboundLeadsRouter.post('/api/leads/inbound', async (req: Request, res: Response
     }
 
     // ── Attribution automatique au partenaire ─────────────────────────────────
-    const { partnerId, reason } = await findBestPartnerForLead({ postalCode, city, country });
+    const { partnerId, reason } = await findBestPartnerForLead({ postalCode, city, country, phone });
 
     // ── Créer le lead ─────────────────────────────────────────────────────────
     const result = await createLead({

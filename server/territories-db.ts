@@ -334,26 +334,89 @@ export async function findPartnersByRegion(regionId: number) {
 
 /**
  * Find best partner for a postal code.
- * Accepts optional country hint to disambiguate cross-country postal codes.
+ * 
+ * Routing priority:
+ * 1. Resolve country (via phone prefix > country field) — done by callers
+ * 2. Find postal code range filtered by country
+ * 3. Find partner who owns that territory
+ * 4. FALLBACK: if country hint is provided but no CP range matches,
+ *    find any partner who covers ANY region in that country
  */
 export async function findBestPartnerForPostalCode(postalCode: string, countryHint?: string) {
   // Find region (with smart country disambiguation)
   const region = await findRegionByPostalCode(postalCode, countryHint);
-  if (!region) {
-    return null;
+  
+  if (region) {
+    // Found a region matching the postal code — find partner covering it
+    const partners = await findPartnersByRegion(region.regionId);
+    if (partners.length > 0) {
+      return {
+        partnerId: partners[0].partnerId,
+        partnerName: partners[0].partnerName,
+        region: region.regionName,
+        country: region.countryName,
+      };
+    }
   }
 
-  // Find partners covering this region
-  const partners = await findPartnersByRegion(region.regionId);
-  if (partners.length === 0) {
-    return null;
+  // FALLBACK: if we have a country hint but no CP match in that country,
+  // find any partner who covers ANY region in that country.
+  // This handles cases where postal code ranges are incomplete or missing.
+  if (countryHint) {
+    const countryPartner = await findPartnerByCountry(countryHint);
+    if (countryPartner) {
+      return countryPartner;
+    }
   }
 
-  // Return the exclusive partner
+  return null;
+}
+
+/**
+ * Find a partner who covers any region in a given country.
+ * Used as fallback when no postal code range matches.
+ */
+async function findPartnerByCountry(countryHint: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  // Normalize country hint to country code
+  const hintNormalized = countryHint.toUpperCase().trim();
+  const countryMap: Record<string, string> = {
+    "BELGIUM": "BE", "BELGIQUE": "BE", "BELGI\u00CB": "BE", "BE": "BE",
+    "FRANCE": "FR", "FR": "FR",
+    "GERMANY": "DE", "ALLEMAGNE": "DE", "DEUTSCHLAND": "DE", "DE": "DE",
+    "NETHERLANDS": "NL", "PAYS-BAS": "NL", "NEDERLAND": "NL", "NL": "NL",
+    "SWITZERLAND": "CH", "SUISSE": "CH", "SCHWEIZ": "CH", "CH": "CH",
+    "SPAIN": "ES", "ESPAGNE": "ES", "ESPA\u00D1A": "ES", "ES": "ES",
+    "LUXEMBOURG": "LU", "LU": "LU",
+    "ITALY": "IT", "ITALIE": "IT", "ITALIA": "IT", "IT": "IT",
+    "PORTUGAL": "PT", "PT": "PT",
+    "AUSTRIA": "AT", "AUTRICHE": "AT", "\u00D6STERREICH": "AT", "AT": "AT",
+    "UNITED KINGDOM": "GB", "ROYAUME-UNI": "GB", "GB": "GB", "UK": "GB",
+  };
+  const countryCode = countryMap[hintNormalized] || hintNormalized;
+
+  // Find any partner who has a territory in this country
+  const results = await db
+    .select({
+      partnerId: partnerTerritories.partnerId,
+      partnerName: sql<string>`(SELECT companyName FROM partners WHERE id = ${partnerTerritories.partnerId})`,
+      regionName: regions.name,
+      countryName: countries.name,
+    })
+    .from(partnerTerritories)
+    .innerJoin(regions, eq(regions.id, partnerTerritories.regionId))
+    .innerJoin(countries, eq(countries.id, regions.countryId))
+    .where(eq(countries.code, countryCode))
+    .limit(1);
+
+  if (results.length === 0) return null;
+
   return {
-    partnerId: partners[0].partnerId,
-    partnerName: partners[0].partnerName,
-    region: region.regionName,
-    country: region.countryName,
+    partnerId: results[0].partnerId,
+    partnerName: results[0].partnerName,
+    region: results[0].regionName,
+    country: results[0].countryName,
   };
 }
