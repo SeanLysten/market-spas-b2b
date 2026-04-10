@@ -3626,3 +3626,13 @@
 - [x] Exécuter l'import : 5 modèles + 175 pièces avec nomenclature BOM
 - [x] Corriger le compteur de pièces (bug listSpaModelsWithPartCount - LEFT JOIN + GROUP BY)
 - [x] Vérifier l'affichage dans l'admin et le formulaire SAV (compteurs corrects : 30, 36, 36, 27, 46)
+
+## Retirer autres marques + schémas techniques des modèles (2026-04-10)
+- [x] Uploader les 5 schémas techniques (Twin P&P, Neptune V2, Mykonos, Easy Relax P&P, Volcano)
+- [x] Associer les images schéma aux modèles en DB (champ schemaImageUrl)
+- [x] Admin Pièces Détachées : supprimer la vue par marques, afficher directement les 5 modèles Market Spas
+- [x] Admin Pièces Détachées : afficher le schéma technique en grand au-dessus des pièces quand on clique sur un modèle
+- [x] Utilisateur Pièces Détachées : supprimer la sélection de marque, afficher directement les 5 modèles
+- [x] Utilisateur Pièces Détachées : afficher le schéma technique en grand au-dessus des pièces
+- [x] Vérification cohérence impact-guard + coherence-guard
+- [x] Tests vitest et checkpoint (84 fichiers, 1293 tests passent)

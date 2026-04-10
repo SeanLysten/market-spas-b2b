@@ -1,0 +1,1 @@
+ALTER TABLE `spa_models` ADD `schemaImageUrl` varchar(512);

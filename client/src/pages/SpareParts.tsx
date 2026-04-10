@@ -10,28 +10,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import {
   Search, Package, ChevronRight, Info,
   Wrench, Cpu, Droplets, Zap, Thermometer, Wind, Eye, Users, Ruler,
-  Box, ArrowLeft, Loader2, AlertCircle, Check
+  Box, ArrowLeft, Loader2, FileImage
 } from "lucide-react";
 
 // ===== CONSTANTS =====
-const BRAND_LABELS: Record<string, string> = {
-  MARKET_SPAS: "Market Spas",
-  WELLIS_CLASSIC: "Wellis Classic",
-  WELLIS_LIFE: "Wellis Life",
-  WELLIS_WIBES: "Wellis Wibes",
-  PASSION_SPAS: "Passion Spas",
-  PLATINUM_SPAS: "Platinum Spas",
-};
-
-const BRAND_COLORS: Record<string, string> = {
-  MARKET_SPAS: "from-blue-500 to-blue-700",
-  WELLIS_CLASSIC: "from-purple-500 to-purple-700",
-  WELLIS_LIFE: "from-green-500 to-green-700",
-  WELLIS_WIBES: "from-orange-500 to-orange-700",
-  PASSION_SPAS: "from-red-500 to-red-700",
-  PLATINUM_SPAS: "from-gray-500 to-gray-700",
-};
-
 const CATEGORY_INFO: Record<string, { label: string; icon: any; color: string }> = {
   PUMPS: { label: "Pompes", icon: Droplets, color: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950" },
   ELECTRONICS: { label: "Électronique", icon: Cpu, color: "text-purple-600 bg-purple-50 dark:text-purple-400 dark:bg-purple-950" },
@@ -47,56 +29,19 @@ const CATEGORY_INFO: Record<string, { label: string; icon: any; color: string }>
   OTHER: { label: "Autres", icon: Package, color: "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-950" },
 };
 
-// ===== STEP 1: BRAND SELECTION =====
-function BrandSelection({ onSelect }: { onSelect: (brand: string) => void }) {
-  return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-xl md:text-2xl font-bold">Sélectionnez votre marque</h2>
-        <p className="text-sm text-muted-foreground">Choisissez la marque de votre spa pour trouver les pièces compatibles</p>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-3xl mx-auto">
-        {Object.entries(BRAND_LABELS).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => onSelect(key)}
-            className="group relative overflow-hidden rounded-xl border bg-card hover:shadow-lg transition-all duration-300 p-6 text-left"
-          >
-            <div className={`absolute inset-0 bg-gradient-to-br ${BRAND_COLORS[key]} opacity-0 group-hover:opacity-10 transition-opacity`} />
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${BRAND_COLORS[key]} flex items-center justify-center text-white`}>
-                <Box className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-base">{label}</h3>
-                <p className="text-xs text-muted-foreground">Voir les modèles</p>
-              </div>
-              <ChevronRight className="w-5 h-5 ml-auto text-muted-foreground group-hover:translate-x-1 transition-transform" />
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ===== STEP 2: MODEL SELECTION =====
+// ===== MODEL SELECTION (Direct — Market Spas only) =====
 function ModelSelection({
-  brand,
   onSelect,
-  onBack,
 }: {
-  brand: string;
   onSelect: (model: any) => void;
-  onBack: () => void;
 }) {
   const [search, setSearch] = useState("");
-  const { data: models, isLoading } = trpc.spaModels.listWithPartCount.useQuery({ brand });
+  const { data: models, isLoading } = trpc.spaModels.listWithPartCount.useQuery({ brand: "MARKET_SPAS" });
 
   const filtered = (models || []).filter((m: any) => {
     if (!search) return true;
     const s = search.toLowerCase();
-    return m.name.toLowerCase().includes(s) || (m.series || "").toLowerCase().includes(s);
+    return m.name.toLowerCase().includes(s) || (m.series || "").toLowerCase().includes(s) || (m.dimensions || "").toLowerCase().includes(s);
   });
 
   // Grouper par série
@@ -108,23 +53,18 @@ function ModelSelection({
     grouped.set(series, list);
   }
 
+  const totalParts = (models || []).reduce((sum: number, m: any) => sum + (m.partCount || 0), 0);
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={onBack} className="shrink-0">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Retour
-        </Button>
-        <div>
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <Badge className={`bg-gradient-to-r ${BRAND_COLORS[brand]} text-white border-0`}>
-              {BRAND_LABELS[brand]}
-            </Badge>
-          </h2>
-          <p className="text-sm text-muted-foreground">Sélectionnez votre modèle de spa</p>
-        </div>
+      <div className="text-center space-y-2">
+        <h2 className="text-xl md:text-2xl font-bold">Pièces détachées Market Spas</h2>
+        <p className="text-sm text-muted-foreground">
+          {models?.length || 0} modèle{(models?.length || 0) !== 1 ? "s" : ""} disponible{(models?.length || 0) !== 1 ? "s" : ""} — {totalParts} pièce{totalParts !== 1 ? "s" : ""} au catalogue
+        </p>
       </div>
 
-      <div className="relative max-w-md">
+      <div className="relative max-w-md mx-auto">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           placeholder="Rechercher un modèle..."
@@ -143,13 +83,15 @@ function ModelSelection({
           <Package className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
           <p className="text-lg font-medium text-gray-500">Aucun modèle trouvé</p>
           <p className="text-sm text-muted-foreground">
-            {search ? "Essayez un autre terme de recherche" : "Aucun modèle n'a été enregistré pour cette marque"}
+            {search ? "Essayez un autre terme de recherche" : "Aucun modèle n'a été enregistré"}
           </p>
         </div>
       ) : (
         Array.from(grouped.entries()).map(([series, seriesModels]) => (
           <div key={series} className="space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{series}</h3>
+            {grouped.size > 1 && (
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{series}</h3>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {seriesModels.map((model: any) => (
                 <button
@@ -162,8 +104,10 @@ function ModelSelection({
                       : "opacity-60 cursor-not-allowed"
                   }`}
                 >
-                  <div className="h-36 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center overflow-hidden">
-                    {model.imageUrl ? (
+                  <div className="h-40 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center overflow-hidden">
+                    {model.schemaImageUrl ? (
+                      <img src={model.schemaImageUrl} alt={model.name} className="w-full h-full object-contain p-2" />
+                    ) : model.imageUrl ? (
                       <img src={model.imageUrl} alt={model.name} className="w-full h-full object-contain p-3" />
                     ) : (
                       <Box className="w-12 h-12 text-gray-300 dark:text-gray-600" />
@@ -202,14 +146,12 @@ function ModelSelection({
   );
 }
 
-// ===== STEP 3: PARTS LIST =====
+// ===== PARTS LIST WITH SCHEMA TECHNIQUE =====
 function PartsList({
   model,
-  brand,
   onBack,
 }: {
   model: any;
-  brand: string;
   onBack: () => void;
 }) {
   const [search, setSearch] = useState("");
@@ -246,17 +188,44 @@ function PartsList({
           <ArrowLeft className="w-4 h-4 mr-1" /> Retour
         </Button>
         <div className="flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge className={`bg-gradient-to-r ${BRAND_COLORS[brand]} text-white border-0`}>
-              {BRAND_LABELS[brand]}
-            </Badge>
-            <h2 className="text-xl font-bold">{model.name}</h2>
+          <h2 className="text-xl font-bold">{model.name}</h2>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
+            {model.seats && <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {model.seats} places</span>}
+            {model.dimensions && <span className="flex items-center gap-1"><Ruler className="w-3 h-3" /> {model.dimensions}</span>}
+            <span>{parts?.length || 0} pièce{(parts?.length || 0) !== 1 ? "s" : ""} détachée{(parts?.length || 0) !== 1 ? "s" : ""}</span>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {parts?.length || 0} pièce{(parts?.length || 0) !== 1 ? "s" : ""} détachée{(parts?.length || 0) !== 1 ? "s" : ""} disponible{(parts?.length || 0) !== 1 ? "s" : ""}
-          </p>
         </div>
       </div>
+
+      {/* Schéma technique en grand */}
+      {model.schemaImageUrl && (
+        <div className="rounded-xl border bg-white dark:bg-card overflow-hidden">
+          <div className="px-4 py-3 border-b bg-muted/30 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileImage className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Schéma technique — {model.name}</span>
+            </div>
+            <span className="text-xs text-muted-foreground">{model.dimensions}</span>
+          </div>
+          <div className="p-4 flex items-center justify-center bg-white dark:bg-muted/10">
+            <img
+              src={model.schemaImageUrl}
+              alt={`Schéma technique ${model.name}`}
+              className="max-w-full max-h-[500px] object-contain cursor-zoom-in"
+              onClick={(e) => {
+                const img = e.currentTarget;
+                if (img.style.maxHeight === 'none') {
+                  img.style.maxHeight = '500px';
+                  img.style.cursor = 'zoom-in';
+                } else {
+                  img.style.maxHeight = 'none';
+                  img.style.cursor = 'zoom-out';
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Recherche + filtres catégorie */}
       <div className="space-y-3">
@@ -344,7 +313,6 @@ function PartsList({
                           <span className="text-lg font-bold">{parseFloat(part.priceHT).toFixed(2)} €</span>
                           <span className="text-xs text-muted-foreground">HT</span>
                         </div>
-
                       </div>
                     </CardContent>
                   </Card>
@@ -399,7 +367,6 @@ function PartsList({
                   <Label className="text-muted-foreground">TVA</Label>
                   <p className="font-medium text-xs">Selon pays (FR: 20%, autres: 0%)</p>
                 </div>
-
               </div>
               {detailPart.description && (
                 <div>
@@ -423,14 +390,8 @@ function PartsList({
 
 // ===== MAIN COMPONENT =====
 export default function SpareParts() {
-  const [step, setStep] = useState<"brand" | "model" | "parts">("brand");
-  const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [step, setStep] = useState<"models" | "parts">("models");
   const [selectedModel, setSelectedModel] = useState<any>(null);
-
-  const handleSelectBrand = (brand: string) => {
-    setSelectedBrand(brand);
-    setStep("model");
-  };
 
   const handleSelectModel = (model: any) => {
     setSelectedModel(model);
@@ -439,34 +400,18 @@ export default function SpareParts() {
 
   const handleBackToModels = () => {
     setSelectedModel(null);
-    setStep("model");
-  };
-
-  const handleBackToBrands = () => {
-    setSelectedBrand("");
-    setStep("brand");
+    setStep("models");
   };
 
   // Breadcrumb
   const breadcrumb = (
     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
       <button
-        onClick={() => { setStep("brand"); setSelectedBrand(""); setSelectedModel(null); }}
-        className={`hover:text-foreground transition-colors ${step === "brand" ? "text-foreground font-medium" : ""}`}
+        onClick={() => { setStep("models"); setSelectedModel(null); }}
+        className={`hover:text-foreground transition-colors ${step === "models" ? "text-foreground font-medium" : ""}`}
       >
         Pièces détachées
       </button>
-      {selectedBrand && (
-        <>
-          <ChevronRight className="w-3 h-3" />
-          <button
-            onClick={() => { setStep("model"); setSelectedModel(null); }}
-            className={`hover:text-foreground transition-colors ${step === "model" ? "text-foreground font-medium" : ""}`}
-          >
-            {BRAND_LABELS[selectedBrand]}
-          </button>
-        </>
-      )}
       {selectedModel && (
         <>
           <ChevronRight className="w-3 h-3" />
@@ -480,12 +425,9 @@ export default function SpareParts() {
     <>
       <div className="p-4 md:p-6">
         {breadcrumb}
-        {step === "brand" && <BrandSelection onSelect={handleSelectBrand} />}
-        {step === "model" && (
-          <ModelSelection brand={selectedBrand} onSelect={handleSelectModel} onBack={handleBackToBrands} />
-        )}
+        {step === "models" && <ModelSelection onSelect={handleSelectModel} />}
         {step === "parts" && selectedModel && (
-          <PartsList model={selectedModel} brand={selectedBrand} onBack={handleBackToModels} />
+          <PartsList model={selectedModel} onBack={handleBackToModels} />
         )}
       </div>
     </>

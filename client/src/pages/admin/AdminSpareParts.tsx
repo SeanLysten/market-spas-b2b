@@ -64,6 +64,7 @@ import {
   Eye,
   Hash,
   Layers,
+  FileImage,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -424,21 +425,34 @@ function CatalogueTab() {
 }
 
 // ============================================
-// ONGLET MODÈLES DE SPA — Navigation 3 niveaux
+// ONGLET MODÈLES DE SPA — Affichage direct Market Spas
 // ============================================
 
-type ModelsView = "brands" | "models" | "nomenclature";
+type ModelsView = "models" | "nomenclature";
 
 function SpaModelsTab() {
-  const [view, setView] = useState<ModelsView>("brands");
-  const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [view, setView] = useState<ModelsView>("models");
   const [selectedModel, setSelectedModel] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
   const [editModel, setEditModel] = useState<any>(null);
+  const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Queries
+  // Queries — only Market Spas models
   const { data: allModels, refetch } = trpc.spaModels.list.useQuery({});
   const { data: modelsWithCount, refetch: refetchCounts } = trpc.spaModels.listWithPartCount.useQuery({});
+
+  const marketSpasModels = useMemo(() => {
+    return (allModels || []).filter((m: any) => m.brand === "MARKET_SPAS");
+  }, [allModels]);
+
+  const partCountMap = useMemo(() => {
+    return new Map((modelsWithCount || []).map((m: any) => [m.id, m.partCount]));
+  }, [modelsWithCount]);
+
+  const totalParts = useMemo(() => {
+    return marketSpasModels.reduce((sum: number, m: any) => sum + (partCountMap.get(m.id) || 0), 0);
+  }, [marketSpasModels, partCountMap]);
 
   const deleteMutation = trpc.spaModels.delete.useMutation({
     onSuccess: () => {
@@ -451,43 +465,33 @@ function SpaModelsTab() {
 
   const handleRefresh = () => { refetch(); refetchCounts(); };
 
-  // Compute brand stats
-  const brandStats = useMemo(() => {
-    const stats = new Map<string, { count: number; withParts: number; totalParts: number }>();
-    for (const brandKey of Object.keys(BRANDS)) {
-      stats.set(brandKey, { count: 0, withParts: 0, totalParts: 0 });
+  const filtered = marketSpasModels.filter((m: any) => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return m.name.toLowerCase().includes(s) || (m.series || "").toLowerCase().includes(s) || (m.dimensions || "").toLowerCase().includes(s);
+  });
+
+  // Group by series
+  const grouped = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const m of filtered) {
+      const series = m.series || "Autres";
+      const list = map.get(series) || [];
+      list.push(m);
+      map.set(series, list);
     }
-    for (const m of (allModels || [])) {
-      const s = stats.get(m.brand) || { count: 0, withParts: 0, totalParts: 0 };
-      s.count++;
-      const pc = (modelsWithCount || []).find((mc: any) => mc.id === m.id)?.partCount || 0;
-      if (pc > 0) s.withParts++;
-      s.totalParts += pc;
-      stats.set(m.brand, s);
-    }
-    return stats;
-  }, [allModels, modelsWithCount]);
+    return map;
+  }, [filtered]);
 
   // Breadcrumb
   const breadcrumb = (
     <div className="flex items-center gap-1.5 text-sm mb-6">
       <button
-        onClick={() => { setView("brands"); setSelectedBrand(""); setSelectedModel(null); }}
-        className={`transition-colors ${view === "brands" ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
+        onClick={() => { setView("models"); setSelectedModel(null); }}
+        className={`transition-colors ${view === "models" ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
       >
-        Marques
+        Modèles Market Spas
       </button>
-      {selectedBrand && (
-        <>
-          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-          <button
-            onClick={() => { setView("models"); setSelectedModel(null); }}
-            className={`transition-colors ${view === "models" ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            {BRANDS[selectedBrand]}
-          </button>
-        </>
-      )}
       {selectedModel && (
         <>
           <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
@@ -501,35 +505,165 @@ function SpaModelsTab() {
     <div>
       {breadcrumb}
 
-      {view === "brands" && (
-        <BrandsOverview
-          brandStats={brandStats}
-          onSelectBrand={(brand) => { setSelectedBrand(brand); setView("models"); }}
-          onCreateModel={() => { setEditModel(null); setShowForm(true); }}
-        />
-      )}
+      {view === "models" && (
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight">Modèles Market Spas</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {marketSpasModels.length} modèle{marketSpasModels.length !== 1 ? "s" : ""} · {totalParts} pièce{totalParts !== 1 ? "s" : ""} au total
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex border rounded-lg overflow-hidden">
+                <button onClick={() => setViewMode("grid")} className={`p-2 transition-colors ${viewMode === "grid" ? "bg-muted" : "hover:bg-muted/50"}`}>
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button onClick={() => setViewMode("list")} className={`p-2 transition-colors ${viewMode === "list" ? "bg-muted" : "hover:bg-muted/50"}`}>
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
+              <Button onClick={() => { setEditModel(null); setShowForm(true); }} className="shrink-0">
+                <Plus className="w-4 h-4 mr-2" /> Nouveau modèle
+              </Button>
+            </div>
+          </div>
 
-      {view === "models" && selectedBrand && (
-        <BrandModelsView
-          brand={selectedBrand}
-          models={(allModels || []).filter((m: any) => m.brand === selectedBrand)}
-          modelsWithCount={modelsWithCount || []}
-          onBack={() => { setView("brands"); setSelectedBrand(""); }}
-          onSelectModel={(model) => { setSelectedModel(model); setView("nomenclature"); }}
-          onCreateModel={() => { setEditModel(null); setShowForm(true); }}
-          onEditModel={(model) => { setEditModel(model); setShowForm(true); }}
-          onDeleteModel={(model) => {
-            if (confirm(`Supprimer « ${model.name} » et toutes ses pièces associées ?`)) {
-              deleteMutation.mutate({ id: model.id });
-            }
-          }}
-        />
+          {/* Search */}
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Rechercher un modèle..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          </div>
+
+          {/* Models */}
+          {filtered.length === 0 ? (
+            <EmptyState
+              loading={!allModels}
+              message={search ? "Aucun modèle trouvé" : "Aucun modèle Market Spas"}
+              sub={search ? "Essayez un autre terme" : "Créez votre premier modèle"}
+              action={!search ? <Button variant="outline" onClick={() => { setEditModel(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Créer un modèle</Button> : undefined}
+            />
+          ) : (
+            Array.from(grouped.entries()).map(([series, seriesModels]) => (
+              <div key={series} className="space-y-3">
+                {grouped.size > 1 && (
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{series}</h3>
+                    <Separator className="flex-1" />
+                    <span className="text-xs text-muted-foreground">{seriesModels.length}</span>
+                  </div>
+                )}
+
+                {viewMode === "grid" ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {seriesModels.map((model: any) => {
+                      const pc = partCountMap.get(model.id) || 0;
+                      return (
+                        <div
+                          key={model.id}
+                          className="group rounded-xl border bg-card overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer"
+                          onClick={() => { setSelectedModel(model); setView("nomenclature"); }}
+                        >
+                          <div className="h-36 bg-muted/30 flex items-center justify-center overflow-hidden relative">
+                            {model.schemaImageUrl ? (
+                              <img src={model.schemaImageUrl} alt={model.name} className="w-full h-full object-contain p-2" />
+                            ) : model.imageUrl ? (
+                              <img src={model.imageUrl} alt={model.name} className="w-full h-full object-contain p-3" />
+                            ) : (
+                              <Box className="w-10 h-10 text-muted-foreground/30" />
+                            )}
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors flex items-center justify-center">
+                              <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium bg-background/90 px-3 py-1.5 rounded-full shadow-sm">
+                                Voir la nomenclature
+                              </span>
+                            </div>
+                          </div>
+                          <div className="p-4 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className="font-semibold text-sm leading-tight">{model.name}</h4>
+                              <div className="flex gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { setEditModel(model); setShowForm(true); }}>
+                                  <Edit className="w-3 h-3" />
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => {
+                                  if (confirm(`Supprimer « ${model.name} » et toutes ses pièces associées ?`)) deleteMutation.mutate({ id: model.id });
+                                }}>
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                              {model.seats && <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {model.seats}p</span>}
+                              {model.dimensions && <span className="flex items-center gap-1"><Ruler className="w-3 h-3" /> {model.dimensions}</span>}
+                            </div>
+                            <div className="flex items-center gap-2 pt-1">
+                              <Badge variant={pc > 0 ? "default" : "secondary"} className="text-[10px]">
+                                {pc} pièce{pc !== 1 ? "s" : ""}
+                              </Badge>
+                              {pc === 0 && <span className="text-[10px] text-amber-600 dark:text-amber-400">Nomenclature vide</span>}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {seriesModels.map((model: any) => {
+                      const pc = partCountMap.get(model.id) || 0;
+                      return (
+                        <div
+                          key={model.id}
+                          className="group flex items-center gap-4 rounded-lg border p-3 hover:bg-muted/30 transition-colors cursor-pointer"
+                          onClick={() => { setSelectedModel(model); setView("nomenclature"); }}
+                        >
+                          <div className="w-14 h-14 rounded-lg bg-muted/30 flex items-center justify-center overflow-hidden shrink-0">
+                            {model.schemaImageUrl ? (
+                              <img src={model.schemaImageUrl} alt={model.name} className="w-full h-full object-contain p-1" />
+                            ) : model.imageUrl ? (
+                              <img src={model.imageUrl} alt={model.name} className="w-full h-full object-contain p-1" />
+                            ) : (
+                              <Box className="w-6 h-6 text-muted-foreground/30" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm">{model.name}</p>
+                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
+                              {model.series && <span>Série : {model.series}</span>}
+                              {model.seats && <span>{model.seats} places</span>}
+                              {model.dimensions && <span>{model.dimensions}</span>}
+                            </div>
+                          </div>
+                          <Badge variant={pc > 0 ? "default" : "secondary"} className="text-xs shrink-0">
+                            {pc} pièce{pc !== 1 ? "s" : ""}
+                          </Badge>
+                          <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => { setEditModel(model); setShowForm(true); }}>
+                              <Edit className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => {
+                              if (confirm(`Supprimer « ${model.name} » ?`)) deleteMutation.mutate({ id: model.id });
+                            }}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       )}
 
       {view === "nomenclature" && selectedModel && (
         <NomenclatureView
           model={selectedModel}
-          brand={selectedBrand}
+          brand="MARKET_SPAS"
           onBack={() => { setView("models"); setSelectedModel(null); }}
           onRefresh={handleRefresh}
         />
@@ -541,7 +675,7 @@ function SpaModelsTab() {
           open={showForm}
           onOpenChange={(v) => { setShowForm(v); if (!v) setEditModel(null); }}
           editModel={editModel}
-          defaultBrand={selectedBrand || undefined}
+          defaultBrand="MARKET_SPAS"
           onSuccess={() => { handleRefresh(); }}
         />
       )}
@@ -549,290 +683,7 @@ function SpaModelsTab() {
   );
 }
 
-// ============================================
-// BRANDS OVERVIEW — Vue d'ensemble des marques
-// ============================================
-
-function BrandsOverview({
-  brandStats,
-  onSelectBrand,
-  onCreateModel,
-}: {
-  brandStats: Map<string, { count: number; withParts: number; totalParts: number }>;
-  onSelectBrand: (brand: string) => void;
-  onCreateModel: () => void;
-}) {
-  const totalModels = Array.from(brandStats.values()).reduce((sum, s) => sum + s.count, 0);
-  const totalParts = Array.from(brandStats.values()).reduce((sum, s) => sum + s.totalParts, 0);
-  const brandsWithModels = Array.from(brandStats.entries()).filter(([_, s]) => s.count > 0).length;
-
-  return (
-    <div className="space-y-8">
-      {/* Summary */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">Vue d'ensemble des marques</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {totalModels} modèle{totalModels !== 1 ? "s" : ""} · {totalParts} pièce{totalParts !== 1 ? "s" : ""} liée{totalParts !== 1 ? "s" : ""} · {brandsWithModels} marque{brandsWithModels !== 1 ? "s" : ""} active{brandsWithModels !== 1 ? "s" : ""}
-          </p>
-        </div>
-        <Button onClick={onCreateModel} className="shrink-0">
-          <Plus className="w-4 h-4 mr-2" /> Nouveau modèle
-        </Button>
-      </div>
-
-      {/* Brand cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Object.entries(BRANDS).map(([key, label]) => {
-          const stats = brandStats.get(key) || { count: 0, withParts: 0, totalParts: 0 };
-          const accent = BRAND_ACCENT[key];
-          const hasModels = stats.count > 0;
-
-          return (
-            <button
-              key={key}
-              onClick={() => onSelectBrand(key)}
-              className={`group relative text-left rounded-xl border p-5 transition-all duration-200 hover:ring-2 ${accent.ring} ${
-                hasModels ? "hover:shadow-md" : "opacity-70 hover:opacity-100"
-              }`}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${accent.bg}`}>
-                  <Box className={`w-5 h-5 ${accent.text}`} />
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-              </div>
-              <h3 className="font-semibold text-base">{label}</h3>
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <p className="text-lg font-semibold">{stats.count}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Modèles</p>
-                </div>
-                <div>
-                  <p className="text-lg font-semibold">{stats.withParts}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Avec BOM</p>
-                </div>
-                <div>
-                  <p className="text-lg font-semibold">{stats.totalParts}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pièces</p>
-                </div>
-              </div>
-              {!hasModels && (
-                <p className="text-xs text-muted-foreground mt-3 italic">Aucun modèle enregistré</p>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ============================================
-// BRAND MODELS VIEW — Modèles d'une marque
-// ============================================
-
-function BrandModelsView({
-  brand,
-  models,
-  modelsWithCount,
-  onBack,
-  onSelectModel,
-  onCreateModel,
-  onEditModel,
-  onDeleteModel,
-}: {
-  brand: string;
-  models: any[];
-  modelsWithCount: any[];
-  onBack: () => void;
-  onSelectModel: (model: any) => void;
-  onCreateModel: () => void;
-  onEditModel: (model: any) => void;
-  onDeleteModel: (model: any) => void;
-}) {
-  const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-
-  const partCountMap = new Map(modelsWithCount.map((m: any) => [m.id, m.partCount]));
-  const accent = BRAND_ACCENT[brand];
-
-  const filtered = models.filter((m: any) => {
-    if (!search) return true;
-    const s = search.toLowerCase();
-    return m.name.toLowerCase().includes(s) || (m.series || "").toLowerCase().includes(s);
-  });
-
-  // Group by series
-  const grouped = new Map<string, any[]>();
-  for (const m of filtered) {
-    const series = m.series || "Autres";
-    const list = grouped.get(series) || [];
-    list.push(m);
-    grouped.set(series, list);
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={onBack} className="shrink-0 -ml-2">
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div>
-            <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${accent.bg}`}>
-                <Box className={`w-4 h-4 ${accent.text}`} />
-              </div>
-              <h2 className="text-xl font-semibold">{BRANDS[brand]}</h2>
-              <Badge variant="secondary" className="text-xs">{models.length} modèle{models.length !== 1 ? "s" : ""}</Badge>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex border rounded-lg overflow-hidden">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`p-2 transition-colors ${viewMode === "grid" ? "bg-muted" : "hover:bg-muted/50"}`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={`p-2 transition-colors ${viewMode === "list" ? "bg-muted" : "hover:bg-muted/50"}`}
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
-          <Button onClick={onCreateModel} className="shrink-0">
-            <Plus className="w-4 h-4 mr-2" /> Nouveau modèle
-          </Button>
-        </div>
-      </div>
-
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="Rechercher un modèle ou une série..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-      </div>
-
-      {/* Models */}
-      {filtered.length === 0 ? (
-        <EmptyState
-          message={search ? "Aucun modèle trouvé" : `Aucun modèle pour ${BRANDS[brand]}`}
-          sub={search ? "Essayez un autre terme" : "Créez votre premier modèle pour cette marque"}
-          action={!search ? <Button variant="outline" onClick={onCreateModel}><Plus className="w-4 h-4 mr-2" /> Créer un modèle</Button> : undefined}
-        />
-      ) : (
-        Array.from(grouped.entries()).map(([series, seriesModels]) => (
-          <div key={series} className="space-y-3">
-            <div className="flex items-center gap-2">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{series}</h3>
-              <Separator className="flex-1" />
-              <span className="text-xs text-muted-foreground">{seriesModels.length}</span>
-            </div>
-
-            {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {seriesModels.map((model: any) => {
-                  const pc = partCountMap.get(model.id) || 0;
-                  return (
-                    <div
-                      key={model.id}
-                      className="group rounded-xl border bg-card overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer"
-                      onClick={() => onSelectModel(model)}
-                    >
-                      <div className="h-36 bg-muted/30 flex items-center justify-center overflow-hidden relative">
-                        {model.imageUrl ? (
-                          <img src={model.imageUrl} alt={model.name} className="w-full h-full object-contain p-3" />
-                        ) : (
-                          <Box className="w-10 h-10 text-muted-foreground/30" />
-                        )}
-                        {/* Hover overlay */}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors flex items-center justify-center">
-                          <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium bg-background/90 px-3 py-1.5 rounded-full shadow-sm">
-                            Voir la nomenclature
-                          </span>
-                        </div>
-                      </div>
-                      <div className="p-4 space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-semibold text-sm leading-tight">{model.name}</h4>
-                          <div className="flex gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => onEditModel(model)}>
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => onDeleteModel(model)}>
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                          {model.seats && <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {model.seats}p</span>}
-                          {model.dimensions && <span className="flex items-center gap-1"><Ruler className="w-3 h-3" /> {model.dimensions}</span>}
-                        </div>
-                        <div className="flex items-center gap-2 pt-1">
-                          <Badge variant={pc > 0 ? "default" : "secondary"} className="text-[10px]">
-                            {pc} pièce{pc !== 1 ? "s" : ""}
-                          </Badge>
-                          {pc === 0 && (
-                            <span className="text-[10px] text-amber-600 dark:text-amber-400">Nomenclature vide</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {seriesModels.map((model: any) => {
-                  const pc = partCountMap.get(model.id) || 0;
-                  return (
-                    <div
-                      key={model.id}
-                      className="group flex items-center gap-4 rounded-lg border p-3 hover:bg-muted/30 transition-colors cursor-pointer"
-                      onClick={() => onSelectModel(model)}
-                    >
-                      <div className="w-14 h-14 rounded-lg bg-muted/30 flex items-center justify-center overflow-hidden shrink-0">
-                        {model.imageUrl ? (
-                          <img src={model.imageUrl} alt={model.name} className="w-full h-full object-contain p-1" />
-                        ) : (
-                          <Box className="w-6 h-6 text-muted-foreground/30" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{model.name}</p>
-                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
-                          {model.series && <span>Série : {model.series}</span>}
-                          {model.seats && <span>{model.seats} places</span>}
-                          {model.dimensions && <span>{model.dimensions}</span>}
-                        </div>
-                      </div>
-                      <Badge variant={pc > 0 ? "default" : "secondary"} className="text-xs shrink-0">
-                        {pc} pièce{pc !== 1 ? "s" : ""}
-                      </Badge>
-                      <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => onEditModel(model)}>
-                          <Edit className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => onDeleteModel(model)}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        ))
-      )}
-    </div>
-  );
-}
+// BrandsOverview and BrandModelsView removed — now directly showing Market Spas models in SpaModelsTab
 
 // ============================================
 // NOMENCLATURE VIEW — Pièces d'un modèle
@@ -918,6 +769,36 @@ function NomenclatureView({
           <Plus className="w-4 h-4 mr-2" /> Ajouter des pièces
         </Button>
       </div>
+
+      {/* Schema technique */}
+      {model.schemaImageUrl && (
+        <div className="rounded-xl border bg-white dark:bg-card overflow-hidden">
+          <div className="px-4 py-3 border-b bg-muted/30 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileImage className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Schéma technique — {model.name}</span>
+            </div>
+            <span className="text-xs text-muted-foreground">{model.dimensions}</span>
+          </div>
+          <div className="p-4 flex items-center justify-center bg-white dark:bg-muted/10">
+            <img
+              src={model.schemaImageUrl}
+              alt={`Schéma technique ${model.name}`}
+              className="max-w-full max-h-[500px] object-contain cursor-zoom-in"
+              onClick={(e) => {
+                const img = e.currentTarget;
+                if (img.style.maxHeight === 'none') {
+                  img.style.maxHeight = '500px';
+                  img.style.cursor = 'zoom-in';
+                } else {
+                  img.style.maxHeight = 'none';
+                  img.style.cursor = 'zoom-out';
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">

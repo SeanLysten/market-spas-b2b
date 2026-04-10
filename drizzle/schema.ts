@@ -2363,6 +2363,7 @@ export const spaModels = mysqlTable(
     brand: savBrandEnum.notNull(),
     series: varchar("series", { length: 100 }),
     imageUrl: varchar("imageUrl", { length: 512 }),
+    schemaImageUrl: varchar("schemaImageUrl", { length: 512 }),
     description: text("description"),
     seats: int("seats"),
     dimensions: varchar("dimensions", { length: 100 }),

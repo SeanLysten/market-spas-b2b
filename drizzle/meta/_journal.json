@@ -386,6 +386,13 @@
       "when": 1775826681845,
       "tag": "0054_illegal_zombie",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "5",
+      "when": 1775829289892,
+      "tag": "0055_ambiguous_tarantula",
+      "breakpoints": true
     }
   ]
 }
