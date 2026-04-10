@@ -397,7 +397,7 @@ function PartsList({
                 </div>
                 <div>
                   <Label className="text-muted-foreground">TVA</Label>
-                  <p className="font-medium">{detailPart.vatRate || 21}%</p>
+                  <p className="font-medium text-xs">Selon pays (FR: 20%, autres: 0%)</p>
                 </div>
 
               </div>

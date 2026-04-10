@@ -3530,3 +3530,9 @@
 
 ## Bug Fix — Filtre catalogue Spa de nage
 - [x] Les produits catégorisés "Spa de nage" n'apparaissent pas quand on filtre par cette catégorie dans le catalogue — le champ category n'était pas inclus dans l'objet data envoyé à la mutation create/update
+
+## Correction logique TVA
+- [x] Corriger la logique TVA : 0% hors France, 20% France (pas 21%) — Audit coherence-guard complet, 14 corrections appliquées
+- [x] Corriger le produit test Mollie (TVA 20% au lieu de 21%) — vatRate mis à jour en DB
+- [x] Implémenter le calcul TVA dynamique basé sur le pays du partenaire — getVatRateForPartner déjà en place, supprimé tous les 21% hardcodés
+- [x] Tests pour la logique TVA conditionnelle — vat-coherence.test.ts + order-pricing.test.ts passent

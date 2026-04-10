@@ -3,7 +3,7 @@
  * Gère les tickets SAV, pièces détachées, règles de garantie et paiements
  */
 import { eq, and, desc, asc, gte, lte, like, count, sql, inArray } from "drizzle-orm";
-import { getDb } from "./db";
+import { getDb, getVatRateForPartner } from "./db";
 import {
   afterSalesServices,
   afterSalesMedia,
@@ -546,7 +546,7 @@ export async function createSparePart(data: {
     description: data.description,
     category: data.category as any,
     priceHT: data.priceHT,
-    vatRate: data.vatRate || "21",
+    vatRate: data.vatRate || "20",
     stockQuantity: data.stockQuantity ?? 0,
     lowStockThreshold: data.lowStockThreshold ?? 3,
     imageUrl: data.imageUrl,
@@ -890,9 +890,11 @@ export async function calculateSavTotal(serviceId: number) {
   }
 
   const shippingCost = service.shippingCost ? parseFloat(service.shippingCost) : 0;
-  const vatRate = 0.21; // 21% TVA Belgique
+  // Dynamic VAT rate based on partner country (FR=20%, others=0%)
+  const vatConfig = await getVatRateForPartner(service.partnerId);
+  const vatRateDecimal = vatConfig.vatRate / 100;
   const subtotalHT = partsTotal + shippingCost;
-  const vat = subtotalHT * vatRate;
+  const vat = subtotalHT * vatRateDecimal;
   const totalTTC = subtotalHT + vat;
 
   return {

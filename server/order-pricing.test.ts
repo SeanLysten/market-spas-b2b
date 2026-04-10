@@ -150,14 +150,14 @@ describe("getTaxConfig", () => {
 
   it("uses custom tax config from system settings", async () => {
     const customTax = {
-      vatRate: 21,
-      vatLabel: "BTW",
+      vatRate: 20,
+      vatLabel: "TVA (20%)",
     };
     await upsertSystemSetting("tax", JSON.stringify(customTax));
 
     const config = await getTaxConfig();
-    expect(config.vatRate).toBe(21);
-    expect(config.vatLabel).toBe("BTW");
+    expect(config.vatRate).toBe(20);
+    expect(config.vatLabel).toBe("TVA (20%)");
 
     // Restore default (0%)
     const defaultTax = {

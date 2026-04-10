@@ -490,7 +490,7 @@ export default function AdminSettings() {
                   Paramètres de TVA
                 </CardTitle>
                 <CardDescription>
-                  Configurez le taux de TVA général appliqué à tous les produits du site
+                  La TVA est calculée automatiquement selon le pays du partenaire
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -506,8 +506,8 @@ export default function AdminSettings() {
                       onChange={(e) => updateTax({ vatRate: Number(e.target.value) })}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Taux appliqué à tous les produits et services. Actuellement à {taxSettings.vatRate}%.
-                      Exemples : 0% (exonéré), 20% (France), 21% (Belgique)
+                      Ce taux est utilisé comme référence par défaut. En pratique, la TVA est calculée automatiquement :
+                      20% pour les partenaires en France, 0% pour les partenaires hors France (autoliquidation intra-UE B2B).
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -526,8 +526,8 @@ export default function AdminSettings() {
                   <div className="flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 text-amber-600" />
                     <p className="text-sm text-amber-700 dark:text-amber-400">
-                      Le taux de TVA est actuellement à <strong>{taxSettings.vatRate}%</strong>. 
-                      Toute modification sera appliquée immédiatement à toutes les nouvelles commandes.
+                      La TVA est calculée dynamiquement : <strong>20% pour la France</strong>, <strong>0% pour les autres pays</strong> (autoliquidation intra-UE B2B).
+                      Ce paramètre sert de référence par défaut uniquement.
                     </p>
                   </div>
                 </div>

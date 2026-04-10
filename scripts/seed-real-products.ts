@@ -330,7 +330,7 @@ async function main() {
         ${spa.category},
         ${0},
         ${0},
-        ${"21"},
+        ${"20"},
         ${spa.weight},
         ${spa.length},
         ${spa.width},

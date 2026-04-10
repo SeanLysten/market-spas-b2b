@@ -1231,7 +1231,7 @@ function SparePartFormDialog({
     description: "",
     category: "PUMPS",
     priceHT: "",
-    vatRate: "21",
+    vatRate: "20",
     stockQuantity: 0,
     lowStockThreshold: 3,
     imageUrl: "",
@@ -1247,7 +1247,7 @@ function SparePartFormDialog({
         description: part.description || "",
         category: part.category || "PUMPS",
         priceHT: part.priceHT || "",
-        vatRate: part.vatRate || "21",
+        vatRate: part.vatRate || "20",
         stockQuantity: part.stockQuantity || 0,
         lowStockThreshold: part.lowStockThreshold || 3,
         imageUrl: part.imageUrl || "",
@@ -1265,7 +1265,7 @@ function SparePartFormDialog({
         description: part.description || "",
         category: part.category || "PUMPS",
         priceHT: part.priceHT || "",
-        vatRate: part.vatRate || "21",
+        vatRate: part.vatRate || "20",
         stockQuantity: part.stockQuantity || 0,
         lowStockThreshold: part.lowStockThreshold || 3,
         imageUrl: part.imageUrl || "",
@@ -1278,7 +1278,7 @@ function SparePartFormDialog({
         description: "",
         category: "PUMPS",
         priceHT: "",
-        vatRate: "21",
+        vatRate: "20",
         stockQuantity: 0,
         lowStockThreshold: 3,
         imageUrl: "",
@@ -1360,7 +1360,7 @@ function SparePartFormDialog({
               step="0.01"
               value={form.vatRate}
               onChange={(e) => setForm({ ...form, vatRate: e.target.value })}
-              placeholder="21"
+              placeholder="20"
             />
           </div>
           <div className="space-y-2">
@@ -1424,7 +1424,7 @@ function SparePartFormDialog({
                 description: form.description || undefined,
                 category: form.category,
                 priceHT: form.priceHT,
-                vatRate: form.vatRate || "21",
+                vatRate: form.vatRate || "20",
                 stockQuantity: form.stockQuantity,
                 lowStockThreshold: form.lowStockThreshold,
                 imageUrl: form.imageUrl || undefined,

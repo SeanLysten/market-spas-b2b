@@ -436,7 +436,7 @@ export default function ProductDetail() {
                     )}
                     <div className="flex justify-between py-2 border-b">
                       <span className="text-muted-foreground dark:text-muted-foreground">TVA</span>
-                      <span className="font-medium">{product.vatRate}%</span>
+                      <span className="font-medium text-xs">Selon pays (FR: 20%, autres: 0%)</span>
                     </div>
                   </div>
                 </CardContent>

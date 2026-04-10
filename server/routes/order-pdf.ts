@@ -430,9 +430,13 @@ router.get("/api/orders/:id/pdf", async (req, res) => {
       .text(formatEuro(order.totalHT), 470, tableY, { width: 70, align: "right" });
     tableY += 14;
 
-    // TVA
+    // TVA — Dynamic rate based on order amounts
+    const totalHTVal = parseFloat(order.totalHT) || 0;
+    const totalVATVal = parseFloat(order.totalVAT) || 0;
+    const effectiveVatPercent = totalHTVal > 0 ? Math.round((totalVATVal / totalHTVal) * 100) : 0;
+    const vatLabel = effectiveVatPercent > 0 ? `TVA (${effectiveVatPercent}%)` : "TVA (0% - Autoliquidation)";
     doc.fontSize(8).font("Helvetica").fillColor(mutedColor)
-      .text("TVA (21%)", 350, tableY);
+      .text(vatLabel, 350, tableY);
     doc.fontSize(8).font("Helvetica").fillColor(darkColor)
       .text(formatEuro(order.totalVAT), 470, tableY, { width: 70, align: "right" });
     tableY += 16;

@@ -495,7 +495,7 @@ export const products = mysqlTable(
     // Pricing
     pricePublicHT: decimal("pricePublicHT", { precision: 10, scale: 2 }).notNull(),
     pricePartnerHT: decimal("pricePartnerHT", { precision: 10, scale: 2 }).notNull(),
-    vatRate: decimal("vatRate", { precision: 5, scale: 2 }).default("21"),
+    vatRate: decimal("vatRate", { precision: 5, scale: 2 }).default("20"),
 
     // Cost
     costPrice: decimal("costPrice", { precision: 10, scale: 2 }),
@@ -2282,7 +2282,7 @@ export const spareParts = mysqlTable(
     description: text("description"),
     category: sparePartCategoryEnum.notNull(),
     priceHT: decimal("priceHT", { precision: 10, scale: 2 }).notNull(),
-    vatRate: decimal("vatRate", { precision: 5, scale: 2 }).default("21"),
+    vatRate: decimal("vatRate", { precision: 5, scale: 2 }).default("20"),
     stockQuantity: int("stockQuantity").default(0),
     lowStockThreshold: int("lowStockThreshold").default(3),
     imageUrl: varchar("imageUrl", { length: 512 }),
