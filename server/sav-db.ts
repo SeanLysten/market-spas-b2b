@@ -38,6 +38,10 @@ export async function createSavTicket(data: {
   modelName?: string;
   component?: string;
   defectType?: string;
+  // Other brand fields
+  otherBrandName?: string;
+  purchaseYear?: string;
+  spaIdentifier?: string;
   purchaseDate?: string;
   deliveryDate?: string;
   usageType?: string;
@@ -85,6 +89,10 @@ export async function createSavTicket(data: {
     modelName: data.modelName,
     component: data.component,
     defectType: data.defectType,
+    // Other brand fields
+    otherBrandName: data.otherBrandName,
+    purchaseYear: data.purchaseYear,
+    spaIdentifier: data.spaIdentifier,
     // Dates
     purchaseDate: data.purchaseDate ? new Date(data.purchaseDate) : undefined,
     deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : undefined,

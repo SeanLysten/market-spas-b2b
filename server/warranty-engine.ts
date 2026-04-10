@@ -12,7 +12,7 @@
 
 export type WarrantyStatus = "COVERED" | "PARTIAL" | "EXPIRED" | "EXCLUDED" | "REVIEW_NEEDED";
 
-export type SavBrand = "MARKET_SPAS" | "WELLIS_CLASSIC" | "WELLIS_LIFE" | "WELLIS_WIBES" | "PASSION_SPAS" | "PLATINUM_SPAS";
+export type SavBrand = "MARKET_SPAS" | "WELLIS_CLASSIC" | "WELLIS_LIFE" | "WELLIS_WIBES" | "PASSION_SPAS" | "PLATINUM_SPAS" | "OTHER_BRAND";
 
 export type UsageType = "PRIVATE" | "COMMERCIAL" | "HOLIDAY_LET";
 
@@ -150,6 +150,9 @@ const WARRANTY_MATRIX: WarrantyMatrix = {
       { component: "Composants EVA (appuie-tête, couvercle filtre)", months: 0, coverage: 0, startType: "PURCHASE_DATE", notes: "Consommable — NON couvert" },
     ],
   },
+  OTHER_BRAND: {
+    default: [],
+  },
   PLATINUM_SPAS: {
     Deluxe: [
       { component: "Structure / Coque", months: 999, coverage: 100, startType: "DELIVERY_DATE" },
@@ -243,6 +246,7 @@ export const COMPONENTS_BY_BRAND: Record<SavBrand, string[]> = {
     "Système audio", "Éclairage LED", "Couverture thermique",
     "Composants EVA (appuie-tête, couvercle filtre)", "Jets",
   ],
+  OTHER_BRAND: [],
 };
 
 // ============================================
@@ -280,6 +284,7 @@ export const PRODUCT_LINES_BY_BRAND: Record<SavBrand, string[]> = {
   WELLIS_WIBES: [],
   PASSION_SPAS: [],
   PLATINUM_SPAS: ["Deluxe", "Premium", "Luxury"],
+  OTHER_BRAND: [],
 };
 
 // ============================================

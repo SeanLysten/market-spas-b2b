@@ -26,8 +26,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarEleme
 
 // ===== CONSTANTS =====
 const BRAND_LABELS: Record<string, string> = {
-  MARKET_SPAS: "Market Spas", WELLIS_CLASSIC: "Wellis Classic", WELLIS_LIFE: "Wellis Life",
-  WELLIS_WIBES: "Wellis Wibes", PASSION_SPAS: "Passion Spas", PLATINUM_SPAS: "Platinum Spas",
+  MARKET_SPAS: "Market Spas", OTHER_BRAND: "Autre marque",
 };
 
 const STATUS_CONFIG: Record<string, { label: string; icon: any; variant: "default" | "secondary" | "destructive" | "outline"; color?: string }> = {
@@ -184,7 +183,7 @@ function AdminManageDialog({ serviceId, open, onOpenChange, onSuccess }: {
                   <p><strong>Spa modifié :</strong> {service.isModified ? "OUI ⚠️" : "Non"}</p>
                   <p><strong>Entretien conforme :</strong> {service.isMaintenanceConform ? "Oui" : "Non ⚠️"}</p>
                   <p><strong>Chimie conforme :</strong> {service.isChemistryConform ? "Oui" : "Non ⚠️"}</p>
-                  {service.brand === "PLATINUM_SPAS" && (
+                  {service.usesHydrogenPeroxide && (
                     <p><strong>Peroxyde d'hydrogène :</strong> {service.usesHydrogenPeroxide ? "OUI ⚠️" : "Non"}</p>
                   )}
                 </div>

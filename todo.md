@@ -3606,3 +3606,15 @@
 - [x] Design high-end pour toutes les interfaces SAV (impeccable + emil-design-eng)
 - [x] Tests vitest pour les nouvelles fonctionnalités (83 fichiers, 1277 tests passent)
 - [x] Vérification cohérence impact-guard + coherence-guard
+
+## Simplification SAV : Market Spas uniquement + option Autre marque (2026-04-10)
+- [x] Retirer les marques Wellis/Platinum du formulaire SAV (garder uniquement Market Spas)
+- [x] Ajouter option "Spa autre marque" dans le formulaire SAV
+- [x] Formulaire "Autre marque" : champs manuels (marque, année achat, modèle, ID spa, problème)
+- [x] Formulaire "Autre marque" : upload photos et vidéos du problème
+- [x] Formulaire "Market Spas" : upload photos et vidéos du problème
+- [x] Adapter la route tRPC afterSales.create pour les deux parcours
+- [x] Adapter le schéma DB si nécessaire (champs année achat, spa ID)
+- [x] Mettre à jour l'admin SAV pour afficher correctement les deux types de tickets
+- [x] Tests vitest pour les deux parcours (84 fichiers, 1293 tests passent)
+- [x] Vérification cohérence impact-guard + coherence-guard

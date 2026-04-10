@@ -19,11 +19,7 @@ interface AfterSalesDetailProps {
 
 const BRAND_LABELS: Record<string, string> = {
   MARKET_SPAS: "Market Spas",
-  WELLIS_CLASSIC: "Wellis Classic",
-  WELLIS_LIFE: "Wellis Life",
-  WELLIS_WIBES: "Wellis Wibes",
-  PASSION_SPAS: "Passion Spas",
-  PLATINUM_SPAS: "Platinum Spas",
+  OTHER_BRAND: "Autre marque",
 };
 
 const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }> = {

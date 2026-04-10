@@ -1,4 +1,4 @@
-import { useState } from "react";
+
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertCircle, Clock, CheckCircle, XCircle, Package, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Shield, ShieldAlert, ShieldCheck, ShieldX, Truck, CreditCard, Info, ChevronRight, ChevronLeft, Upload, Wrench, Eye, BarChart3, Timer, CircleDot, Check } from "lucide-react";
+import { Plus, Search, AlertCircle, Clock, CheckCircle, XCircle, Package, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Shield, ShieldAlert, ShieldCheck, ShieldX, Truck, CreditCard, Info, ChevronRight, ChevronLeft, Upload, Wrench, Eye, BarChart3, Timer, CircleDot, Check, Camera, Video, X, Building2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,18 +15,13 @@ import AfterSalesDetail from "@/components/AfterSalesDetail";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { savTour } from "@/config/onboarding-tours";
+import { useState, useCallback } from "react";
 
 // ===== BRAND LABELS =====
 const BRAND_LABELS: Record<string, string> = {
   MARKET_SPAS: "Market Spas",
-  WELLIS_CLASSIC: "Wellis Classic",
-  WELLIS_LIFE: "Wellis Life",
-  WELLIS_WIBES: "Wellis Wibes",
-  PASSION_SPAS: "Passion Spas",
-  PLATINUM_SPAS: "Platinum Spas",
+  OTHER_BRAND: "Autre marque",
 };
-
-const BRANDS = Object.keys(BRAND_LABELS);
 
 // ===== STATUS CONFIG =====
 const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: any; color?: string }> = {
@@ -50,15 +45,23 @@ const WARRANTY_STATUS_CONFIG: Record<string, { label: string; icon: any; color: 
   REVIEW_NEEDED: { label: "Analyse requise", icon: Info, color: "text-info dark:text-info-dark bg-info/10 dark:bg-info-light border-info/20 dark:border-info/30" },
 };
 
-// ===== STEPPER FORM =====
-type FormStep = 1 | 2 | 3 | 4 | 5;
+// ===== FORM TYPES =====
+type BrandChoice = "MARKET_SPAS" | "OTHER_BRAND" | "";
 
 interface SavFormData {
+  brandChoice: BrandChoice;
+  // Market Spas fields
   brand: string;
   productLine: string;
   modelName: string;
   spaModelId: number | null;
   selectedPartIds: number[];
+  // Other brand fields
+  otherBrandName: string;
+  purchaseYear: string;
+  spaIdentifier: string;
+  otherModelName: string;
+  // Common fields
   serialNumber: string;
   component: string;
   defectType: string;
@@ -81,11 +84,16 @@ interface SavFormData {
 }
 
 const initialFormData: SavFormData = {
+  brandChoice: "",
   brand: "",
   productLine: "",
   modelName: "",
   spaModelId: null,
   selectedPartIds: [],
+  otherBrandName: "",
+  purchaseYear: "",
+  spaIdentifier: "",
+  otherModelName: "",
   serialNumber: "",
   component: "",
   defectType: "",
@@ -160,83 +168,24 @@ function SavDashboard({ services, isLoading, onFilterClick }: {
   const stats = computeSavStats(services);
 
   const cards = [
-    {
-      label: "Total tickets",
-      value: stats.total,
-      icon: BarChart3,
-      color: "text-slate-700",
-      bg: "bg-slate-50 border-slate-200",
-      filterValue: "all",
-    },
-    {
-      label: "Ouverts",
-      value: stats.open,
-      icon: CircleDot,
-      color: "text-info dark:text-info-dark",
-      bg: "bg-info/10 dark:bg-info-light border-info/20 dark:border-info/30",
-      filterValue: "NEW",
-    },
-    {
-      label: "Action requise",
-      value: stats.actionRequired,
-      icon: AlertCircle,
-      color: "text-yellow-600",
-      bg: "bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20 dark:border-amber-500/30",
-      filterValue: "INFO_REQUIRED",
-    },
-    {
-      label: "Devis en attente",
-      value: stats.quotePending,
-      icon: CreditCard,
-      color: "text-orange-600 dark:text-orange-400",
-      bg: "bg-orange-500/10 dark:bg-orange-500/20 border-orange-500/20 dark:border-orange-500/30",
-      filterValue: "QUOTE_PENDING",
-    },
-    {
-      label: "En cours",
-      value: stats.inProgress,
-      icon: Timer,
-      color: "text-purple-600 dark:text-purple-400",
-      bg: "bg-purple-500/10 dark:bg-purple-500/20 border-purple-500/20 dark:border-purple-500/30",
-      filterValue: "PAYMENT_CONFIRMED",
-    },
-    {
-      label: "Expédiés",
-      value: stats.shipped,
-      icon: Truck,
-      color: "text-indigo-600",
-      bg: "bg-indigo-500/10 dark:bg-indigo-500/20 border-indigo-200",
-      filterValue: "SHIPPED",
-    },
-    {
-      label: "Résolus",
-      value: stats.resolved,
-      icon: CheckCircle,
-      color: "text-emerald-600 dark:text-emerald-400",
-      bg: "bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20 dark:border-emerald-500/30",
-      filterValue: "RESOLVED",
-    },
+    { label: "Total tickets", value: stats.total, icon: BarChart3, color: "text-slate-700", bg: "bg-slate-50 border-slate-200", filterValue: "all" },
+    { label: "Ouverts", value: stats.open, icon: CircleDot, color: "text-info dark:text-info-dark", bg: "bg-info/10 dark:bg-info-light border-info/20 dark:border-info/30", filterValue: "NEW" },
+    { label: "Action requise", value: stats.actionRequired, icon: AlertCircle, color: "text-yellow-600", bg: "bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20 dark:border-amber-500/30", filterValue: "INFO_REQUIRED" },
+    { label: "Devis en attente", value: stats.quotePending, icon: CreditCard, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10 dark:bg-orange-500/20 border-orange-500/20 dark:border-orange-500/30", filterValue: "QUOTE_PENDING" },
+    { label: "En cours", value: stats.inProgress, icon: Timer, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-500/10 dark:bg-purple-500/20 border-purple-500/20 dark:border-purple-500/30", filterValue: "IN_PROGRESS" },
+    { label: "Expédiés", value: stats.shipped, icon: Truck, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-500/10 dark:bg-indigo-500/20 border-indigo-500/20 dark:border-indigo-500/30", filterValue: "SHIPPED" },
+    { label: "Résolus", value: stats.resolved, icon: CheckCircle, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20 dark:border-emerald-500/30", filterValue: "RESOLVED" },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 mb-6">
-        {cards.map((_, i) => (
-          <div key={i} className="h-24 rounded-lg border bg-muted/30 animate-pulse" />
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 mb-6">
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2 mb-6">
       {cards.map((card) => {
         const Icon = card.icon;
         return (
           <button
-            key={card.label}
+            key={card.filterValue}
             onClick={() => onFilterClick(card.filterValue)}
-            className={`relative flex flex-col items-center justify-center p-3 rounded-lg border transition-shadow hover:shadow-md ${card.bg}`}
+            className={`relative flex flex-col items-center justify-center p-2 md:p-3 rounded-xl border transition-all hover:shadow-md ${card.bg}`}
           >
             <Icon className={`h-5 w-5 mb-1 ${card.color}`} />
             <span className={`text-2xl font-bold ${card.color}`}>{card.value}</span>
@@ -259,6 +208,7 @@ function SavDashboard({ services, isLoading, onFilterClick }: {
   );
 }
 
+// ===== CREATE SAV DIALOG =====
 function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -266,42 +216,44 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
   user: any;
   partners: any[];
 }) {
-  const [step, setStep] = useState<FormStep>(1);
+  const [step, setStep] = useState<number>(0); // 0 = brand choice, 1-5 = form steps
   const [formData, setFormData] = useState<SavFormData>(initialFormData);
   const [mediaFiles, setMediaFiles] = useState<Array<{ file: File; type: "IMAGE" | "VIDEO"; preview: string }>>([]);
   const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(null);
-  const [warrantyPreview, setWarrantyPreview] = useState<any>(null);
 
-  // Dynamic data queries
+  const isMarketSpas = formData.brandChoice === "MARKET_SPAS";
+  const isOtherBrand = formData.brandChoice === "OTHER_BRAND";
+
+  // Dynamic data queries (only for Market Spas)
   const { data: components } = trpc.afterSales.getComponentsByBrand.useQuery(
-    { brand: formData.brand },
-    { enabled: !!formData.brand }
+    { brand: "MARKET_SPAS" },
+    { enabled: isMarketSpas }
   );
   const { data: defectTypes } = trpc.afterSales.getDefectTypesByComponent.useQuery(
     { component: formData.component },
-    { enabled: !!formData.component }
+    { enabled: isMarketSpas && !!formData.component }
   );
   const { data: productLines } = trpc.afterSales.getProductLinesByBrand.useQuery(
-    { brand: formData.brand },
-    { enabled: !!formData.brand }
+    { brand: "MARKET_SPAS" },
+    { enabled: isMarketSpas }
   );
 
-  // Spa models for the selected brand
+  // Spa models for Market Spas
   const { data: spaModelsList } = trpc.spaModels.listWithPartCount.useQuery(
-    { brand: formData.brand },
-    { enabled: !!formData.brand }
+    { brand: "MARKET_SPAS" },
+    { enabled: isMarketSpas }
   );
 
   // Parts (BOM) for the selected spa model
   const { data: modelParts } = trpc.spaModels.getParts.useQuery(
     { spaModelId: formData.spaModelId! },
-    { enabled: !!formData.spaModelId }
+    { enabled: isMarketSpas && !!formData.spaModelId }
   );
 
-  // Warranty preview
+  // Warranty preview (only for Market Spas)
   const { data: warrantyAnalysis } = trpc.afterSales.analyzeWarranty.useQuery(
     {
-      brand: formData.brand,
+      brand: "MARKET_SPAS",
       productLine: formData.productLine || undefined,
       component: formData.component,
       defectType: formData.defectType,
@@ -315,7 +267,7 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
       usesHydrogenPeroxide: formData.usesHydrogenPeroxide,
     },
     {
-      enabled: !!formData.brand && !!formData.component && !!formData.defectType && !!formData.purchaseDate && !!formData.deliveryDate && step >= 4,
+      enabled: isMarketSpas && !!formData.component && !!formData.defectType && !!formData.purchaseDate && !!formData.deliveryDate && step >= 4,
     }
   );
 
@@ -334,9 +286,8 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
   const resetForm = () => {
     setFormData(initialFormData);
     setMediaFiles([]);
-    setStep(1);
+    setStep(0);
     setSelectedPartnerId(null);
-    setWarrantyPreview(null);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -347,6 +298,11 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
       preview: URL.createObjectURL(file),
     }));
     setMediaFiles([...mediaFiles, ...newMedia]);
+  };
+
+  const removeMedia = (index: number) => {
+    URL.revokeObjectURL(mediaFiles[index].preview);
+    setMediaFiles(mediaFiles.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
@@ -363,82 +319,110 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
 
     const mediaData = await Promise.all(mediaPromises);
 
-    createMutation.mutate({
-      ...formData,
-      spaModelId: formData.spaModelId || undefined,
-      selectedPartIds: formData.selectedPartIds.length > 0 ? formData.selectedPartIds : undefined,
-      media: mediaData.length > 0 ? mediaData : undefined,
-      partnerId: selectedPartnerId || undefined,
-    });
-  };
-
-  const canGoNext = (): boolean => {
-    switch (step) {
-      case 1: return !!formData.brand && !!formData.serialNumber;
-      case 2: return !!formData.component && !!formData.defectType;
-      case 3: return !!formData.purchaseDate && !!formData.deliveryDate;
-      case 4: return mediaFiles.length >= 2;
-      case 5: return !!formData.description;
-      default: return false;
+    if (isMarketSpas) {
+      createMutation.mutate({
+        brand: "MARKET_SPAS",
+        productLine: formData.productLine || undefined,
+        modelName: formData.modelName || undefined,
+        spaModelId: formData.spaModelId || undefined,
+        selectedPartIds: formData.selectedPartIds.length > 0 ? formData.selectedPartIds : undefined,
+        serialNumber: formData.serialNumber,
+        component: formData.component || undefined,
+        defectType: formData.defectType || undefined,
+        issueType: formData.defectType || formData.description.substring(0, 50),
+        description: formData.description,
+        urgency: formData.urgency,
+        purchaseDate: formData.purchaseDate || undefined,
+        deliveryDate: formData.deliveryDate || undefined,
+        usageType: formData.usageType,
+        isOriginalBuyer: formData.isOriginalBuyer,
+        isModified: formData.isModified,
+        isMaintenanceConform: formData.isMaintenanceConform,
+        isChemistryConform: formData.isChemistryConform,
+        usesHydrogenPeroxide: formData.usesHydrogenPeroxide,
+        customerName: formData.customerName || undefined,
+        customerPhone: formData.customerPhone || undefined,
+        customerEmail: formData.customerEmail || undefined,
+        customerAddress: formData.customerAddress || undefined,
+        installationDate: formData.installationDate || undefined,
+        partnerId: selectedPartnerId || undefined,
+        media: mediaData.length > 0 ? mediaData : undefined,
+      });
+    } else {
+      // Other brand - simplified submission
+      createMutation.mutate({
+        brand: "OTHER_BRAND",
+        otherBrandName: formData.otherBrandName || undefined,
+        purchaseYear: formData.purchaseYear || undefined,
+        spaIdentifier: formData.spaIdentifier || undefined,
+        modelName: formData.otherModelName || undefined,
+        serialNumber: formData.serialNumber || "N/A",
+        issueType: formData.description.substring(0, 50),
+        description: formData.description,
+        urgency: formData.urgency,
+        customerName: formData.customerName || undefined,
+        customerPhone: formData.customerPhone || undefined,
+        customerEmail: formData.customerEmail || undefined,
+        customerAddress: formData.customerAddress || undefined,
+        partnerId: selectedPartnerId || undefined,
+        media: mediaData.length > 0 ? mediaData : undefined,
+      });
     }
   };
 
-  const stepTitles = [
+  // Step titles depend on brand choice
+  const marketSpasSteps = [
     "Identification du produit",
     "Diagnostic du problème",
     "Conditions de garantie",
-    "Photos et preuves",
+    "Photos et vidéos",
     "Récapitulatif et envoi",
   ];
+
+  const otherBrandSteps = [
+    "Informations du spa",
+    "Description du problème",
+    "Photos et vidéos",
+    "Récapitulatif et envoi",
+  ];
+
+  const stepTitles = isMarketSpas ? marketSpasSteps : otherBrandSteps;
+  const totalSteps = stepTitles.length;
+
+  const canGoNext = (): boolean => {
+    if (step === 0) return !!formData.brandChoice;
+
+    if (isMarketSpas) {
+      switch (step) {
+        case 1: return !!formData.serialNumber;
+        case 2: return !!formData.component && !!formData.defectType && formData.description.length >= 10;
+        case 3: return !!formData.purchaseDate && !!formData.deliveryDate;
+        case 4: return mediaFiles.length >= 2;
+        case 5: return true;
+        default: return false;
+      }
+    } else {
+      switch (step) {
+        case 1: return !!formData.otherBrandName && !!formData.otherModelName;
+        case 2: return formData.description.length >= 10;
+        case 3: return mediaFiles.length >= 2;
+        case 4: return true;
+        default: return false;
+      }
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
       <DialogContent className="max-w-3xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl text-display text-display">Nouvelle demande SAV</DialogTitle>
+          <DialogTitle className="text-xl">Nouvelle demande SAV</DialogTitle>
         </DialogHeader>
 
-        {/* Stepper */}
-        {/* Stepper - version mobile simplifiée */}
-        <div className="hidden sm:flex items-center justify-between mb-6 px-4">
-          {stepTitles.map((title, i) => (
-            <div key={i} className="flex items-center">
-              <div className={`flex flex-col items-center ${i + 1 <= step ? "text-primary" : "text-muted-foreground"}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
-                  i + 1 < step ? "bg-primary text-white border-primary" :
-                  i + 1 === step ? "border-primary text-primary" :
-                  "border-muted text-muted-foreground"
-                }`}>
-                  {i + 1 < step ? "✓" : i + 1}
-                </div>
-                <span className="text-xs mt-1 text-center max-w-[80px]">{title}</span>
-              </div>
-              {i < stepTitles.length - 1 && (
-                <div className={`h-0.5 w-8 mx-1 mt-[-16px] ${i + 1 < step ? "bg-primary" : "bg-muted"}`} />
-              )}
-            </div>
-          ))}
-        </div>
-        {/* Stepper mobile - compact */}
-        <div className="sm:hidden flex items-center justify-center gap-2 mb-4">
-          <span className="text-sm font-medium text-primary">Étape {step}/{stepTitles.length}</span>
-          <span className="text-sm text-muted-foreground">- {stepTitles[step - 1]}</span>
-        </div>
-        <div className="sm:hidden flex gap-1 mb-4">
-          {stepTitles.map((_, i) => (
-            <div key={i} className={`h-1 flex-1 rounded-full ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
-          ))}
-        </div>
-
-        {/* Step 1: Product Identification */}
-        {step === 1 && (
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg flex items-center gap-2">
-              <Wrench className="h-5 w-5" />
-              Identification du produit
-            </h3>
-
-            {/* Sélection partenaire uniquement pour les admins */}
+        {/* Step 0: Brand Choice */}
+        {step === 0 && (
+          <div className="space-y-6">
+            {/* Admin partner selector */}
             {isAdminUser(user) && !user?.partnerId && partners && partners.length > 0 && (
               <div className="space-y-2">
                 <Label>Partenaire *</Label>
@@ -453,33 +437,112 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Marque *</Label>
-                <Select value={formData.brand} onValueChange={(v) => setFormData({ ...formData, brand: v, productLine: "", modelName: "", spaModelId: null, selectedPartIds: [], component: "", defectType: "" })}>
-                  <SelectTrigger><SelectValue placeholder="Sélectionnez la marque" /></SelectTrigger>
-                  <SelectContent>
-                    {BRANDS.map((b) => (
-                      <SelectItem key={b} value={b}>{BRAND_LABELS[b]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {productLines && productLines.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Gamme</Label>
-                  <Select value={formData.productLine} onValueChange={(v) => setFormData({ ...formData, productLine: v })}>
-                    <SelectTrigger><SelectValue placeholder="Sélectionnez la gamme" /></SelectTrigger>
-                    <SelectContent>
-                      {productLines.map((pl: string) => (
-                        <SelectItem key={pl} value={pl}>{pl}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+            <div>
+              <h3 className="font-semibold text-lg mb-1">Type de spa</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Sélectionnez le type de spa concerné par votre demande SAV
+              </p>
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Market Spas card */}
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, brandChoice: "MARKET_SPAS", brand: "MARKET_SPAS" })}
+                className={`relative flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all text-left ${
+                  formData.brandChoice === "MARKET_SPAS"
+                    ? "border-primary bg-primary/5 shadow-md ring-2 ring-primary/20"
+                    : "border-border hover:border-primary/40 hover:bg-muted/30"
+                }`}
+              >
+                {formData.brandChoice === "MARKET_SPAS" && (
+                  <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="h-4 w-4 text-white" />
+                  </div>
+                )}
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <ShieldCheck className="h-7 w-7 text-primary" />
+                </div>
+                <div className="text-center">
+                  <h4 className="font-semibold text-base">Market Spas</h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Sélection du modèle, pièces détachées identifiées automatiquement, analyse de garantie
+                  </p>
+                </div>
+              </button>
+
+              {/* Other brand card */}
+              <button
+                type="button"
+                onClick={() => setFormData({ ...initialFormData, brandChoice: "OTHER_BRAND", brand: "OTHER_BRAND" })}
+                className={`relative flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all text-left ${
+                  formData.brandChoice === "OTHER_BRAND"
+                    ? "border-primary bg-primary/5 shadow-md ring-2 ring-primary/20"
+                    : "border-border hover:border-primary/40 hover:bg-muted/30"
+                }`}
+              >
+                {formData.brandChoice === "OTHER_BRAND" && (
+                  <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="h-4 w-4 text-white" />
+                  </div>
+                )}
+                <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center">
+                  <Building2 className="h-7 w-7 text-muted-foreground" />
+                </div>
+                <div className="text-center">
+                  <h4 className="font-semibold text-base">Spa autre marque</h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Remplissez manuellement les informations du spa (marque, modèle, année, problème)
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Stepper (only shown after brand choice) */}
+        {step > 0 && (
+          <>
+            {/* Desktop stepper */}
+            <div className="hidden sm:flex items-center justify-between mb-4 px-2">
+              {stepTitles.map((title, i) => (
+                <div key={i} className="flex items-center">
+                  <div className={`flex flex-col items-center ${i + 1 <= step ? "text-primary" : "text-muted-foreground"}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
+                      i + 1 < step ? "bg-primary text-white border-primary" :
+                      i + 1 === step ? "border-primary text-primary" :
+                      "border-muted text-muted-foreground"
+                    }`}>
+                      {i + 1 < step ? <Check className="h-4 w-4" /> : i + 1}
+                    </div>
+                    <span className="text-xs mt-1 text-center max-w-[80px]">{title}</span>
+                  </div>
+                  {i < stepTitles.length - 1 && (
+                    <div className={`h-0.5 w-8 mx-1 mt-[-16px] ${i + 1 < step ? "bg-primary" : "bg-muted"}`} />
+                  )}
+                </div>
+              ))}
+            </div>
+            {/* Mobile stepper */}
+            <div className="sm:hidden flex items-center justify-center gap-2 mb-3">
+              <span className="text-sm font-medium text-primary">Étape {step}/{totalSteps}</span>
+              <span className="text-sm text-muted-foreground">— {stepTitles[step - 1]}</span>
+            </div>
+            <div className="sm:hidden flex gap-1 mb-3">
+              {stepTitles.map((_, i) => (
+                <div key={i} className={`h-1 flex-1 rounded-full ${i + 1 <= step ? "bg-primary" : "bg-muted"}`} />
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* ===== MARKET SPAS STEPS ===== */}
+        {isMarketSpas && step === 1 && (
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <Wrench className="h-5 w-5" />
+              Identification du produit Market Spas
+            </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -525,7 +588,7 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
                   </Select>
                 ) : (
                   <Input
-                    placeholder="Ex: MyLine Saturn, Wellis Pluto..."
+                    placeholder="Ex: MyLine Saturn..."
                     value={formData.modelName}
                     onChange={(e) => setFormData({ ...formData, modelName: e.target.value })}
                   />
@@ -537,6 +600,7 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
                   </p>
                 )}
               </div>
+
               <div className="space-y-2">
                 <Label>Numéro de série *</Label>
                 <Input
@@ -547,11 +611,24 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
                 />
               </div>
             </div>
+
+            {productLines && productLines.length > 0 && (
+              <div className="space-y-2">
+                <Label>Gamme</Label>
+                <Select value={formData.productLine} onValueChange={(v) => setFormData({ ...formData, productLine: v })}>
+                  <SelectTrigger><SelectValue placeholder="Sélectionnez la gamme" /></SelectTrigger>
+                  <SelectContent>
+                    {productLines.map((pl: string) => (
+                      <SelectItem key={pl} value={pl}>{pl}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Step 2: Problem Diagnosis */}
-        {step === 2 && (
+        {isMarketSpas && step === 2 && (
           <div className="space-y-4">
             <h3 className="font-semibold text-lg flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />
@@ -619,11 +696,10 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Sélectionnez les pièces que vous pensez nécessaires pour cette réparation. Cela accélérera le traitement de votre demande.
+                  Sélectionnez les pièces que vous pensez nécessaires pour cette réparation.
                 </p>
                 <div className="max-h-64 overflow-y-auto space-y-1">
                   {(() => {
-                    // Group parts by category
                     const grouped = new Map<string, any[]>();
                     for (const part of modelParts) {
                       const cat = (part as any).category || "Autres";
@@ -679,8 +755,7 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
           </div>
         )}
 
-        {/* Step 3: Warranty Conditions */}
-        {step === 3 && (
+        {isMarketSpas && step === 3 && (
           <div className="space-y-4">
             <h3 className="font-semibold text-lg flex items-center gap-2">
               <Shield className="h-5 w-5" />
@@ -712,33 +787,22 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
 
             <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
               <h4 className="font-medium">Vérifications obligatoires</h4>
-
               <div className="flex items-center gap-3">
                 <Checkbox id="isOriginalBuyer" checked={formData.isOriginalBuyer} onCheckedChange={(v) => setFormData({ ...formData, isOriginalBuyer: !!v })} />
                 <Label htmlFor="isOriginalBuyer" className="cursor-pointer">Le client est l'acheteur initial du spa</Label>
               </div>
-
               <div className="flex items-center gap-3">
                 <Checkbox id="isMaintenanceConform" checked={formData.isMaintenanceConform} onCheckedChange={(v) => setFormData({ ...formData, isMaintenanceConform: !!v })} />
                 <Label htmlFor="isMaintenanceConform" className="cursor-pointer">L'entretien est conforme aux recommandations du fabricant</Label>
               </div>
-
               <div className="flex items-center gap-3">
                 <Checkbox id="isChemistryConform" checked={formData.isChemistryConform} onCheckedChange={(v) => setFormData({ ...formData, isChemistryConform: !!v })} />
                 <Label htmlFor="isChemistryConform" className="cursor-pointer">Les produits chimiques utilisés sont conformes</Label>
               </div>
-
               <div className="flex items-center gap-3">
                 <Checkbox id="isModified" checked={formData.isModified} onCheckedChange={(v) => setFormData({ ...formData, isModified: !!v })} />
                 <Label htmlFor="isModified" className="cursor-pointer text-destructive dark:text-destructive">Le spa a été modifié sans autorisation du fabricant</Label>
               </div>
-
-              {formData.brand === "PLATINUM_SPAS" && (
-                <div className="flex items-center gap-3">
-                  <Checkbox id="usesHydrogenPeroxide" checked={formData.usesHydrogenPeroxide} onCheckedChange={(v) => setFormData({ ...formData, usesHydrogenPeroxide: !!v })} />
-                  <Label htmlFor="usesHydrogenPeroxide" className="cursor-pointer text-destructive dark:text-destructive">Le client utilise du peroxyde d'hydrogène</Label>
-                </div>
-              )}
             </div>
 
             {/* Customer info */}
@@ -770,50 +834,172 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
           </div>
         )}
 
-        {/* Step 4: Photos */}
-        {step === 4 && (
+        {/* ===== OTHER BRAND STEPS ===== */}
+        {isOtherBrand && step === 1 && (
           <div className="space-y-4">
             <h3 className="font-semibold text-lg flex items-center gap-2">
-              <Upload className="h-5 w-5" />
-              Photos et preuves
+              <Building2 className="h-5 w-5" />
+              Informations du spa
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Renseignez les informations du spa concerné par votre demande SAV.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Marque du spa *</Label>
+                <Input
+                  placeholder="Ex: Jacuzzi, Sundance, Caldera..."
+                  value={formData.otherBrandName}
+                  onChange={(e) => setFormData({ ...formData, otherBrandName: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Modèle *</Label>
+                <Input
+                  placeholder="Ex: J-335, Optima..."
+                  value={formData.otherModelName}
+                  onChange={(e) => setFormData({ ...formData, otherModelName: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Année d'achat</Label>
+                <Select value={formData.purchaseYear} onValueChange={(v) => setFormData({ ...formData, purchaseYear: v })}>
+                  <SelectTrigger><SelectValue placeholder="Sélectionnez l'année" /></SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 20 }, (_, i) => {
+                      const year = new Date().getFullYear() - i;
+                      return <SelectItem key={year} value={year.toString()}>{year}</SelectItem>;
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Identifiant / Numéro de série du spa</Label>
+                <Input
+                  placeholder="Numéro de série ou identifiant unique"
+                  value={formData.spaIdentifier}
+                  onChange={(e) => setFormData({ ...formData, spaIdentifier: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Urgence</Label>
+              <Select value={formData.urgency} onValueChange={(v: any) => setFormData({ ...formData, urgency: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NORMAL">Normale</SelectItem>
+                  <SelectItem value="URGENT">Urgente</SelectItem>
+                  <SelectItem value="CRITICAL">Critique</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Customer info for other brand */}
+            <div className="border-t pt-4">
+              <h4 className="font-medium mb-3">Informations du client final</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Nom du client</Label>
+                  <Input value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Téléphone</Label>
+                  <Input value={formData.customerPhone} onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input type="email" value={formData.customerEmail} onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })} />
+                </div>
+              </div>
+              <div className="space-y-2 mt-4">
+                <Label>Adresse</Label>
+                <Textarea value={formData.customerAddress} onChange={(e) => setFormData({ ...formData, customerAddress: e.target.value })} rows={2} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isOtherBrand && step === 2 && (
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              Description du problème
             </h3>
 
-            <div className="border-2 border-dashed rounded-lg p-4 md:p-6 text-center bg-muted/30">
-              <Upload className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-              <p className="text-xs md:text-sm text-muted-foreground mb-2">
+            <div className="space-y-2">
+              <Label>Décrivez le problème rencontré *</Label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Décrivez le problème en détail : quand est-il apparu, dans quelles circonstances, symptômes observés, composant concerné..."
+                rows={6}
+              />
+              <p className="text-xs text-muted-foreground">
+                Minimum 10 caractères. Soyez le plus précis possible pour accélérer le traitement.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ===== PHOTOS/VIDEOS STEP (shared) ===== */}
+        {((isMarketSpas && step === 4) || (isOtherBrand && step === 3)) && (
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <Camera className="h-5 w-5" />
+              Photos et vidéos du problème
+            </h3>
+
+            <div className="border-2 border-dashed rounded-xl p-6 text-center bg-muted/20 hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <Camera className="h-8 w-8 text-muted-foreground" />
+                <Video className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">
                 Ajoutez au minimum <strong>2 photos</strong> du problème
               </p>
               <p className="text-xs text-muted-foreground mb-4">
-                Photos claires du défaut, de l'étiquette du spa (numéro de série), et de l'environnement
+                Photos claires du défaut, de l'étiquette du spa (numéro de série), et de l'environnement. Les vidéos sont également acceptées.
               </p>
-              <Input type="file" accept="image/*,video/*" multiple onChange={handleFileUpload} className="max-w-xs mx-auto" />
+              <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground cursor-pointer hover:bg-primary/90 transition-colors text-sm font-medium">
+                <Upload className="h-4 w-4" />
+                Choisir des fichiers
+                <input type="file" accept="image/*,video/*" multiple onChange={handleFileUpload} className="hidden" />
+              </label>
             </div>
 
             {mediaFiles.length > 0 && (
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                 {mediaFiles.map((media, index) => (
-                  <div key={index} className="relative group">
+                  <div key={index} className="relative group rounded-lg overflow-hidden border">
                     {media.type === "IMAGE" ? (
-                      <img src={media.preview} alt="Preview" className="w-full h-24 object-cover rounded border" />
+                      <img src={media.preview} alt={`Photo ${index + 1}`} className="w-full h-24 object-cover" />
                     ) : (
-                      <video src={media.preview} className="w-full h-24 object-cover rounded border" />
+                      <div className="w-full h-24 bg-muted flex items-center justify-center">
+                        <Video className="h-8 w-8 text-muted-foreground" />
+                      </div>
                     )}
-                    <Button
+                    <button
                       type="button"
-                      variant="destructive"
-                      size="sm"
-                      className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity w-full sm:w-auto"
-                      onClick={() => setMediaFiles(mediaFiles.filter((_, i) => i !== index))}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeMedia(index)}
                     >
-                      ×
-                    </Button>
+                      <X className="h-3 w-3" />
+                    </button>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] text-center py-0.5">
+                      {media.type === "IMAGE" ? "Photo" : "Vidéo"}
+                    </div>
                   </div>
                 ))}
               </div>
             )}
 
             {mediaFiles.length < 2 && (
-              <p className="text-sm text-red-500 flex items-center gap-1">
+              <p className="text-sm text-destructive flex items-center gap-1">
                 <AlertCircle className="h-4 w-4" />
                 Minimum 2 photos requises ({mediaFiles.length}/2)
               </p>
@@ -821,8 +1007,8 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
           </div>
         )}
 
-        {/* Step 5: Summary & Submit */}
-        {step === 5 && (
+        {/* ===== SUMMARY STEP (Market Spas) ===== */}
+        {isMarketSpas && step === 5 && (
           <div className="space-y-4">
             <h3 className="font-semibold text-lg flex items-center gap-2">
               <CheckCircle className="h-5 w-5" />
@@ -861,11 +1047,10 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
               </div>
             )}
 
-            {/* Summary */}
             <Card>
               <CardContent className="pt-6 space-y-3 text-sm">
                 <div className="grid grid-cols-2 gap-x-8 gap-y-2">
-                  <div><strong>Marque :</strong> {BRAND_LABELS[formData.brand] || formData.brand}</div>
+                  <div><strong>Marque :</strong> Market Spas</div>
                   {formData.productLine && <div><strong>Gamme :</strong> {formData.productLine}</div>}
                   {formData.modelName && <div><strong>Modèle :</strong> {formData.modelName}</div>}
                   <div><strong>N° de série :</strong> {formData.serialNumber}</div>
@@ -903,7 +1088,53 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
                   </div>
                 )}
                 <div className="border-t pt-2">
-                  <strong>Photos :</strong> {mediaFiles.length} fichier(s) joint(s)
+                  <strong>Fichiers joints :</strong> {mediaFiles.length} ({mediaFiles.filter(m => m.type === "IMAGE").length} photos, {mediaFiles.filter(m => m.type === "VIDEO").length} vidéos)
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* ===== SUMMARY STEP (Other Brand) ===== */}
+        {isOtherBrand && step === 4 && (
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              Récapitulatif
+            </h3>
+
+            <div className="border rounded-lg p-4 bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400">
+              <div className="flex items-center gap-2 mb-1">
+                <Info className="h-5 w-5" />
+                <span className="font-semibold">Spa autre marque</span>
+              </div>
+              <p className="text-sm">
+                L'analyse de garantie automatique n'est pas disponible pour les spas d'autres marques. Un administrateur examinera votre demande manuellement.
+              </p>
+            </div>
+
+            <Card>
+              <CardContent className="pt-6 space-y-3 text-sm">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+                  <div><strong>Marque :</strong> {formData.otherBrandName}</div>
+                  <div><strong>Modèle :</strong> {formData.otherModelName}</div>
+                  {formData.purchaseYear && <div><strong>Année d'achat :</strong> {formData.purchaseYear}</div>}
+                  {formData.spaIdentifier && <div><strong>ID / N° série :</strong> {formData.spaIdentifier}</div>}
+                  <div><strong>Urgence :</strong> {formData.urgency === "CRITICAL" ? "Critique" : formData.urgency === "URGENT" ? "Urgente" : "Normale"}</div>
+                </div>
+                <div className="border-t pt-2">
+                  <strong>Description du problème :</strong>
+                  <p className="mt-1 text-muted-foreground">{formData.description}</p>
+                </div>
+                {formData.customerName && (
+                  <div className="border-t pt-2">
+                    <strong>Client :</strong> {formData.customerName}
+                    {formData.customerPhone && ` • ${formData.customerPhone}`}
+                    {formData.customerEmail && ` • ${formData.customerEmail}`}
+                  </div>
+                )}
+                <div className="border-t pt-2">
+                  <strong>Fichiers joints :</strong> {mediaFiles.length} ({mediaFiles.filter(m => m.type === "IMAGE").length} photos, {mediaFiles.filter(m => m.type === "VIDEO").length} vidéos)
                 </div>
               </CardContent>
             </Card>
@@ -912,18 +1143,31 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
 
         {/* Navigation */}
         <div className="flex justify-between pt-4 border-t">
-          <Button variant="outline" onClick={() => step > 1 ? setStep((step - 1) as FormStep) : onOpenChange(false)}>
+          <Button variant="outline" onClick={() => {
+            if (step === 0) {
+              onOpenChange(false);
+            } else if (step === 1) {
+              setStep(0);
+            } else {
+              setStep(step - 1);
+            }
+          }}>
             <ChevronLeft className="mr-1 h-4 w-4" />
-            {step === 1 ? "Annuler" : "Précédent"}
+            {step === 0 ? "Annuler" : step === 1 ? "Retour au choix" : "Précédent"}
           </Button>
 
-          {step < 5 ? (
-            <Button onClick={() => setStep((step + 1) as FormStep)} disabled={!canGoNext()}>
+          {step === 0 ? (
+            <Button onClick={() => setStep(1)} disabled={!formData.brandChoice}>
+              Continuer
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          ) : step < totalSteps ? (
+            <Button onClick={() => setStep(step + 1)} disabled={!canGoNext()}>
               Suivant
               <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={createMutation.isPending || !formData.description}>
+            <Button onClick={handleSubmit} disabled={createMutation.isPending}>
               {createMutation.isPending ? "Envoi en cours..." : "Envoyer la demande SAV"}
             </Button>
           )}
@@ -937,7 +1181,6 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
 export default function AfterSales() {
   const { data: user } = trpc.auth.me.useQuery();
   const onboarding = useOnboarding("sav");
-  // Only load partners list for admins (partners don't need to select a partner)
   const isAdmin = isAdminUser(user);
   const { data: partners } = trpc.partners.list.useQuery({}, { enabled: isAdmin });
 
@@ -974,7 +1217,6 @@ export default function AfterSales() {
     setOrderDirection("desc");
   };
 
-  // Unfiltered query for dashboard stats (always shows total counts)
   const { data: allServices, isLoading: isLoadingAll } = trpc.afterSales.list.useQuery({});
 
   const { data: services, isLoading, refetch } = trpc.afterSales.list.useQuery({
@@ -999,7 +1241,8 @@ export default function AfterSales() {
       service.description?.toLowerCase().includes(q) ||
       service.brand?.toLowerCase().includes(q) ||
       service.modelName?.toLowerCase().includes(q) ||
-      service.customerName?.toLowerCase().includes(q)
+      service.customerName?.toLowerCase().includes(q) ||
+      service.otherBrandName?.toLowerCase().includes(q)
     );
   });
 
@@ -1033,6 +1276,13 @@ export default function AfterSales() {
     return <Badge variant="secondary">Normal</Badge>;
   };
 
+  const getBrandDisplay = (service: any) => {
+    if (service.brand === "OTHER_BRAND") {
+      return service.otherBrandName || "Autre marque";
+    }
+    return BRAND_LABELS[service.brand] || service.brand;
+  };
+
   return (
     <div className="container mx-auto px-3 sm:px-6 py-4 md:py-8">
       <div data-tour="sav-header" className="space-y-3 mb-6">
@@ -1051,7 +1301,6 @@ export default function AfterSales() {
         </Button>
       </div>
 
-      {/* Create Dialog */}
       <CreateSavDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
@@ -1060,7 +1309,6 @@ export default function AfterSales() {
         partners={partners || []}
       />
 
-      {/* SAV Dashboard Summary */}
       <SavDashboard
         services={allServices || []}
         isLoading={isLoadingAll}
@@ -1077,7 +1325,6 @@ export default function AfterSales() {
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="space-y-3">
-            {/* Recherche */}
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -1088,7 +1335,6 @@ export default function AfterSales() {
               />
             </div>
 
-            {/* Filtres */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Statut" /></SelectTrigger>
@@ -1195,15 +1441,14 @@ export default function AfterSales() {
                     <div>
                       <CardTitle className="text-lg flex items-center gap-2">
                         {service.ticketNumber}
-                        {service.brand && (
-                          <span className="text-sm font-normal text-muted-foreground">
-                            {BRAND_LABELS[service.brand] || service.brand}
-                            {service.modelName && ` — ${service.modelName}`}
-                          </span>
-                        )}
+                        <span className="text-sm font-normal text-muted-foreground">
+                          {getBrandDisplay(service)}
+                          {service.modelName && ` — ${service.modelName}`}
+                        </span>
                       </CardTitle>
                       <CardDescription>
-                        N° série: {service.serialNumber} • Créé le {new Date(service.createdAt).toLocaleDateString("fr-FR")}
+                        {service.serialNumber && service.serialNumber !== "N/A" ? `N° série: ${service.serialNumber} • ` : ""}
+                        Créé le {new Date(service.createdAt).toLocaleDateString("fr-FR")}
                         {service.component && ` • ${service.component}`}
                       </CardDescription>
                     </div>

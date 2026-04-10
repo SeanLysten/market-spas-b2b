@@ -1977,6 +1977,7 @@ export const savBrandEnum = mysqlEnum("brand", [
   "WELLIS_WIBES",
   "PASSION_SPAS",
   "PLATINUM_SPAS",
+  "OTHER_BRAND",
 ]);
 
 // SAV usage type enum
@@ -2048,6 +2049,11 @@ export const afterSalesServices = mysqlTable(
     modelName: varchar("modelName", { length: 255 }),
     component: varchar("component", { length: 255 }),
     defectType: varchar("defectType", { length: 255 }),
+
+    // Other brand fields (when brand = OTHER_BRAND)
+    otherBrandName: varchar("otherBrandName", { length: 255 }),
+    purchaseYear: varchar("purchaseYear", { length: 4 }),
+    spaIdentifier: varchar("spaIdentifier", { length: 255 }),
 
     // Dates for warranty calculation
     purchaseDate: date("purchaseDate"),
