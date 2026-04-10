@@ -711,17 +711,18 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
                       <div key={category} className="mb-3">
                         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1 px-1">{category}</div>
                         {parts.map((part: any) => {
-                          const isSelected = formData.selectedPartIds.includes(part.id);
+                          const partId = part.sparePartId || part.id;
+                          const isSelected = formData.selectedPartIds.includes(partId);
                           return (
                             <div
-                              key={part.id}
+                              key={partId}
                               className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors ${
                                 isSelected ? "bg-primary/10 border border-primary/20" : "hover:bg-muted/50"
                               }`}
                               onClick={() => {
                                 const newIds = isSelected
-                                  ? formData.selectedPartIds.filter((id) => id !== part.id)
-                                  : [...formData.selectedPartIds, part.id];
+                                  ? formData.selectedPartIds.filter((id) => id !== partId)
+                                  : [...formData.selectedPartIds, partId];
                                 setFormData({ ...formData, selectedPartIds: newIds });
                               }}
                             >

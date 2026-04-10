@@ -3636,3 +3636,8 @@
 - [x] Utilisateur Pièces Détachées : afficher le schéma technique en grand au-dessus des pièces
 - [x] Vérification cohérence impact-guard + coherence-guard
 - [x] Tests vitest et checkpoint (84 fichiers, 1293 tests passent)
+## Bug fix : erreur React "missing key prop" dans CreateSavDialog (2026-04-10)
+- [x] Identifier la cause : les données de spaModels.getParts retournent `sparePartId` (pas `id`), donc `part.id` était `undefined` pour toutes les pièces BOM
+- [x] Corriger le code : remplacer `part.id` par `part.sparePartId || part.id` dans la section BOM du formulaire SAV
+- [x] Vérifier dans le navigateur : erreur console disparue au step 2 du formulaire SAV
+- [x] Tests vitest : 84 fichiers, 1293 tests passent
