@@ -3543,3 +3543,6 @@
 
 ## Bug Fix — React Error #310 (hooks conditionnels)
 - [x] Corriger l'erreur React #310 dans ProductAddToCartDialog — hooks appelés conditionnellement causent un crash — réécriture complète avec tous les hooks au top level
+
+## Bug Fix — React Error #310 sur la page Panier
+- [x] Corriger l'erreur React #310 sur la page panier — hooks useState/useEffect/useCallback déplacés AVANT le early return isLoading dans Cart.tsx

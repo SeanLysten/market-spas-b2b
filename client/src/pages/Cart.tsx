@@ -18,24 +18,7 @@ export default function Cart() {
   const removeItemMutation = trpc.cart.removeItem.useMutation();
   const clearCartMutation = trpc.cart.clear.useMutation();
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded w-48" />
-          <div className="h-4 bg-muted rounded w-32" />
-          <div className="space-y-3 mt-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-24 bg-muted rounded" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Countdown timer for cart reservation
+  // ALL HOOKS MUST BE BEFORE ANY EARLY RETURN
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [expired, setExpired] = useState(false);
 
@@ -109,6 +92,23 @@ export default function Cart() {
   const formatPrice = (price: number) => {
     return price.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
+
+  // EARLY RETURNS AFTER ALL HOOKS
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-muted rounded w-48" />
+          <div className="h-4 bg-muted rounded w-32" />
+          <div className="space-y-3 mt-6">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-24 bg-muted rounded" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
