@@ -28,10 +28,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState, useRef, useEffect } from "react";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Plus,
   Search,
@@ -49,6 +57,13 @@ import {
   Loader2,
   Check,
   Upload,
+  ChevronRight,
+  ArrowLeft,
+  LayoutGrid,
+  List,
+  Eye,
+  Hash,
+  Layers,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -80,13 +95,13 @@ const BRANDS: Record<string, string> = {
   PLATINUM_SPAS: "Platinum Spas",
 };
 
-const BRAND_COLORS: Record<string, string> = {
-  MARKET_SPAS: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  WELLIS_CLASSIC: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-  WELLIS_LIFE: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  WELLIS_WIBES: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
-  PASSION_SPAS: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-  PLATINUM_SPAS: "bg-gray-100 text-gray-800 dark:bg-gray-700/30 dark:text-gray-300",
+const BRAND_ACCENT: Record<string, { bg: string; text: string; ring: string }> = {
+  MARKET_SPAS: { bg: "bg-sky-50 dark:bg-sky-950/40", text: "text-sky-700 dark:text-sky-300", ring: "ring-sky-200 dark:ring-sky-800" },
+  WELLIS_CLASSIC: { bg: "bg-violet-50 dark:bg-violet-950/40", text: "text-violet-700 dark:text-violet-300", ring: "ring-violet-200 dark:ring-violet-800" },
+  WELLIS_LIFE: { bg: "bg-emerald-50 dark:bg-emerald-950/40", text: "text-emerald-700 dark:text-emerald-300", ring: "ring-emerald-200 dark:ring-emerald-800" },
+  WELLIS_WIBES: { bg: "bg-amber-50 dark:bg-amber-950/40", text: "text-amber-700 dark:text-amber-300", ring: "ring-amber-200 dark:ring-amber-800" },
+  PASSION_SPAS: { bg: "bg-rose-50 dark:bg-rose-950/40", text: "text-rose-700 dark:text-rose-300", ring: "ring-rose-200 dark:ring-rose-800" },
+  PLATINUM_SPAS: { bg: "bg-zinc-100 dark:bg-zinc-800/40", text: "text-zinc-700 dark:text-zinc-300", ring: "ring-zinc-300 dark:ring-zinc-700" },
 };
 
 const COMPONENTS = [
@@ -119,35 +134,31 @@ export default function AdminSpareParts() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        {/* Header */}
+      <div className="space-y-8">
         <div>
-          <h1 className="text-xl md:text-2xl text-display font-bold">Pièces Détachées</h1>
-          <p className="text-muted-foreground">
-            Gérez le catalogue de pièces détachées et les modèles de spa
+          <h1 className="text-2xl font-semibold tracking-tight">Pièces Détachées</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Gérez le catalogue de pièces et les nomenclatures par modèle de spa
           </p>
         </div>
 
-        {/* Onglets principaux */}
         <Tabs value={mainTab} onValueChange={setMainTab}>
-          <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="catalogue" className="flex items-center gap-2">
+          <TabsList>
+            <TabsTrigger value="catalogue" className="gap-2">
               <Package className="h-4 w-4" />
-              <span className="hidden sm:inline">Catalogue de pièces</span>
-              <span className="sm:hidden">Pièces</span>
+              Catalogue
             </TabsTrigger>
-            <TabsTrigger value="models" className="flex items-center gap-2">
-              <Box className="h-4 w-4" />
-              <span className="hidden sm:inline">Modèles de Spa</span>
-              <span className="sm:hidden">Modèles</span>
+            <TabsTrigger value="models" className="gap-2">
+              <Layers className="h-4 w-4" />
+              Modèles et nomenclatures
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="catalogue" className="mt-4">
+          <TabsContent value="catalogue" className="mt-6">
             <CatalogueTab />
           </TabsContent>
 
-          <TabsContent value="models" className="mt-4">
+          <TabsContent value="models" className="mt-6">
             <SpaModelsTab />
           </TabsContent>
         </Tabs>
@@ -218,162 +229,106 @@ function CatalogueTab() {
   });
 
   const parts = partsQuery.data || [];
-  const lowStockParts = parts.filter(
-    (p: any) => p.isActive && p.stockQuantity !== null && p.lowStockThreshold !== null && p.stockQuantity <= p.lowStockThreshold
+  const activeParts = parts.filter((p: any) => p.isActive);
+  const lowStockParts = activeParts.filter(
+    (p: any) => p.stockQuantity !== null && p.lowStockThreshold !== null && p.stockQuantity <= p.lowStockThreshold
   );
 
   return (
     <div className="space-y-6">
-      {/* Action button */}
-      <div className="flex justify-end">
-        <Button onClick={() => setShowCreateDialog(true)}>
+      {/* Top bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 flex-1">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher par nom, référence..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Catégorie" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les catégories</SelectItem>
+              {Object.entries(CATEGORIES).map(([key, label]) => (
+                <SelectItem key={key} value={key}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button onClick={() => setShowCreateDialog(true)} className="shrink-0">
           <Plus className="h-4 w-4 mr-2" />
           Ajouter une pièce
         </Button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Metrics row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Package className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground">Total pièces</p>
-                <p className="text-2xl text-display font-bold">{parts.filter((p: any) => p.isActive).length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-500/15 dark:bg-orange-500/25 rounded-lg">
-                <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-              </div>
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground">Stock bas</p>
-                <p className="text-2xl text-display font-bold text-orange-600 dark:text-orange-400">{lowStockParts.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500/15 dark:bg-emerald-500/25 rounded-lg">
-                <Cog className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground">Catégories</p>
-                <p className="text-2xl text-display font-bold">
-                  {new Set(parts.filter((p: any) => p.isActive).map((p: any) => p.category)).size}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-info/15 dark:bg-info-light rounded-lg">
-                <Link2 className="h-5 w-5 text-info dark:text-info-dark" />
-              </div>
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground">Inactives</p>
-                <p className="text-2xl text-display font-bold">{parts.filter((p: any) => !p.isActive).length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard label="Total pièces" value={activeParts.length} icon={Package} />
+        <MetricCard label="Stock bas" value={lowStockParts.length} icon={AlertTriangle} accent={lowStockParts.length > 0 ? "warning" : undefined} />
+        <MetricCard label="Catégories" value={new Set(activeParts.map((p: any) => p.category)).size} icon={Cog} />
+        <MetricCard label="Inactives" value={parts.filter((p: any) => !p.isActive).length} icon={Link2} />
       </div>
 
-      {/* Alerts */}
+      {/* Low stock alert */}
       {lowStockParts.length > 0 && (
-        <Card className="border-orange-500/20 dark:border-orange-500/30 bg-orange-500/10 dark:bg-orange-500/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400 mt-0.5" />
-              <div>
-                <p className="font-medium text-orange-800 dark:text-orange-400">Alerte stock bas</p>
-                <p className="text-sm text-orange-700 dark:text-orange-400">
-                  {lowStockParts.length} pièce(s) en stock bas :{" "}
-                  {lowStockParts.map((p: any) => `${p.name} (${p.stockQuantity})`).join(", ")}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Filters & Search */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher par nom, référence..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
+        <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 p-4 flex gap-3 items-start">
+          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+              {lowStockParts.length} pièce{lowStockParts.length > 1 ? "s" : ""} en stock bas
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+              {lowStockParts.map((p: any) => `${p.name} (${p.stockQuantity})`).join(" · ")}
+            </p>
+          </div>
         </div>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-full sm:w-[220px]">
-            <Filter className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="Catégorie" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Toutes les catégories</SelectItem>
-            {Object.entries(CATEGORIES).map(([key, label]) => (
-              <SelectItem key={key} value={key}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      )}
 
       {/* Parts Table */}
       <Card>
-        {/* Vue mobile en cartes */}
-        <div className="md:hidden p-3 space-y-3">
+        {/* Mobile cards */}
+        <div className="md:hidden p-3 space-y-2">
           {parts.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              {partsQuery.isLoading ? "Chargement..." : "Aucune pièce trouvée."}
-            </div>
+            <EmptyState loading={partsQuery.isLoading} message="Aucune pièce trouvée" sub="Cliquez sur « Ajouter une pièce » pour commencer." />
           ) : (
             parts.map((part: any) => (
-              <Card key={part.id} className={`p-3 ${!part.isActive ? 'opacity-50' : ''}`}>
+              <div key={part.id} className={`rounded-lg border p-3 space-y-2 ${!part.isActive ? "opacity-50" : ""}`}>
                 <div className="flex items-start gap-3">
-                  {part.imageUrl && <img src={part.imageUrl} alt={part.name} className="w-12 h-12 rounded object-cover flex-shrink-0" />}
+                  {part.imageUrl && <img src={part.imageUrl} alt={part.name} className="w-12 h-12 rounded object-cover shrink-0" />}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm truncate">{part.name}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{part.reference}</p>
-                      </div>
-                      <p className="font-semibold text-sm flex-shrink-0">{parseFloat(part.priceHT).toFixed(2)} €</p>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      <Badge variant="outline" className="text-[10px]">{CATEGORIES[part.category] || part.category}</Badge>
-                      <Badge variant={part.stockQuantity <= (part.lowStockThreshold || 3) ? 'destructive' : 'default'} className="text-[10px]">Stock: {part.stockQuantity}</Badge>
-                      <Badge variant={part.isActive ? 'default' : 'secondary'} className="text-[10px]">{part.isActive ? 'Actif' : 'Inactif'}</Badge>
-                    </div>
-                    <div className="flex gap-1 mt-2">
-                      <Button variant="ghost" size="sm" onClick={() => setCompatDialog(part)}><Link2 className="h-3 w-3" /></Button>
-                      <Button variant="ghost" size="sm" onClick={() => setEditingPart(part)}><Edit className="h-3 w-3" /></Button>
-                      {part.isActive && <Button variant="ghost" size="sm" onClick={() => { if (confirm('Désactiver ?')) deleteMutation.mutate({ id: part.id }); }}><Trash2 className="h-3 w-3 text-destructive" /></Button>}
-                    </div>
+                    <p className="font-medium text-sm truncate">{part.name}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{part.reference}</p>
+                  </div>
+                  <p className="font-semibold text-sm shrink-0">{parseFloat(part.priceHT).toFixed(2)} €</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap gap-1">
+                    <Badge variant="outline" className="text-[10px]">{CATEGORIES[part.category] || part.category}</Badge>
+                    <Badge variant={part.stockQuantity <= (part.lowStockThreshold || 3) ? "destructive" : "default"} className="text-[10px]">
+                      Stock: {part.stockQuantity}
+                    </Badge>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setCompatDialog(part)}><Link2 className="h-3 w-3" /></Button>
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingPart(part)}><Edit className="h-3 w-3" /></Button>
+                    {part.isActive && (
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { if (confirm("Désactiver ?")) deleteMutation.mutate({ id: part.id }); }}>
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
+                    )}
                   </div>
                 </div>
-              </Card>
+              </div>
             ))
           )}
         </div>
 
-        {/* Vue desktop en tableau */}
+        {/* Desktop table */}
         <CardContent className="p-0 hidden md:block">
           <Table>
             <TableHeader>
@@ -391,9 +346,7 @@ function CatalogueTab() {
               {parts.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                    {partsQuery.isLoading
-                      ? "Chargement..."
-                      : "Aucune pièce trouvée. Cliquez sur 'Ajouter une pièce' pour commencer."}
+                    {partsQuery.isLoading ? "Chargement..." : "Aucune pièce trouvée. Cliquez sur « Ajouter une pièce » pour commencer."}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -402,23 +355,17 @@ function CatalogueTab() {
                     <TableCell className="font-mono text-sm">{part.reference}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        {part.imageUrl && (
-                          <img src={part.imageUrl} alt={part.name} className="w-10 h-10 rounded object-cover" />
-                        )}
+                        {part.imageUrl && <img src={part.imageUrl} alt={part.name} className="w-10 h-10 rounded object-cover" />}
                         <div>
                           <p className="font-medium">{part.name}</p>
-                          {part.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-1">{part.description}</p>
-                          )}
+                          {part.description && <p className="text-xs text-muted-foreground line-clamp-1">{part.description}</p>}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{CATEGORIES[part.category] || part.category}</Badge>
                     </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {parseFloat(part.priceHT).toFixed(2)} €
-                    </TableCell>
+                    <TableCell className="text-right font-medium">{parseFloat(part.priceHT).toFixed(2)} €</TableCell>
                     <TableCell className="text-center">
                       <Badge variant={part.stockQuantity <= (part.lowStockThreshold || 3) ? "destructive" : "default"}>
                         {part.stockQuantity}
@@ -431,23 +378,14 @@ function CatalogueTab() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => setCompatDialog(part)} title="Gérer les compatibilités">
+                        <Button variant="ghost" size="sm" onClick={() => setCompatDialog(part)} title="Compatibilités">
                           <Link2 className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => setEditingPart(part)} title="Modifier">
                           <Edit className="h-4 w-4" />
                         </Button>
                         {part.isActive && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              if (confirm("Désactiver cette pièce ?")) {
-                                deleteMutation.mutate({ id: part.id });
-                              }
-                            }}
-                            title="Désactiver"
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => { if (confirm("Désactiver cette pièce ?")) deleteMutation.mutate({ id: part.id }); }} title="Désactiver">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         )}
@@ -461,25 +399,17 @@ function CatalogueTab() {
         </CardContent>
       </Card>
 
-      {/* Create/Edit Dialog */}
+      {/* Dialogs */}
       <SparePartFormDialog
         open={showCreateDialog || !!editingPart}
-        onClose={() => {
-          setShowCreateDialog(false);
-          setEditingPart(null);
-        }}
+        onClose={() => { setShowCreateDialog(false); setEditingPart(null); }}
         part={editingPart}
         onSubmit={(data) => {
-          if (editingPart) {
-            updateMutation.mutate({ id: editingPart.id, data });
-          } else {
-            createMutation.mutate(data);
-          }
+          if (editingPart) updateMutation.mutate({ id: editingPart.id, data });
+          else createMutation.mutate(data);
         }}
         isLoading={createMutation.isPending || updateMutation.isPending}
       />
-
-      {/* Compatibility Dialog */}
       {compatDialog && (
         <CompatibilityDialog
           part={compatDialog}
@@ -494,225 +424,646 @@ function CatalogueTab() {
 }
 
 // ============================================
-// ONGLET MODÈLES DE SPA
+// ONGLET MODÈLES DE SPA — Navigation 3 niveaux
 // ============================================
 
+type ModelsView = "brands" | "models" | "nomenclature";
+
 function SpaModelsTab() {
-  const [search, setSearch] = useState("");
-  const [brandFilter, setBrandFilter] = useState("all");
+  const [view, setView] = useState<ModelsView>("brands");
+  const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [selectedModel, setSelectedModel] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
   const [editModel, setEditModel] = useState<any>(null);
-  const [assignModel, setAssignModel] = useState<any>(null);
 
-  const { data: models, refetch } = trpc.spaModels.list.useQuery({
-    brand: brandFilter !== "all" ? brandFilter : undefined,
-    search: search || undefined,
-  });
+  // Queries
+  const { data: allModels, refetch } = trpc.spaModels.list.useQuery({});
+  const { data: modelsWithCount, refetch: refetchCounts } = trpc.spaModels.listWithPartCount.useQuery({});
 
   const deleteMutation = trpc.spaModels.delete.useMutation({
     onSuccess: () => {
       toast.success("Modèle supprimé");
       refetch();
+      refetchCounts();
     },
     onError: (err) => toast.error(err.message),
   });
 
-  const { data: modelsWithCount } = trpc.spaModels.listWithPartCount.useQuery({
-    brand: brandFilter !== "all" ? brandFilter : undefined,
-  });
+  const handleRefresh = () => { refetch(); refetchCounts(); };
 
-  const partCountMap = new Map((modelsWithCount || []).map((m: any) => [m.id, m.partCount]));
-
-  const filteredModels = (models || []).filter((m: any) => {
-    if (search) {
-      const s = search.toLowerCase();
-      return m.name.toLowerCase().includes(s) || (m.series || "").toLowerCase().includes(s);
+  // Compute brand stats
+  const brandStats = useMemo(() => {
+    const stats = new Map<string, { count: number; withParts: number; totalParts: number }>();
+    for (const brandKey of Object.keys(BRANDS)) {
+      stats.set(brandKey, { count: 0, withParts: 0, totalParts: 0 });
     }
-    return true;
-  });
+    for (const m of (allModels || [])) {
+      const s = stats.get(m.brand) || { count: 0, withParts: 0, totalParts: 0 };
+      s.count++;
+      const pc = (modelsWithCount || []).find((mc: any) => mc.id === m.id)?.partCount || 0;
+      if (pc > 0) s.withParts++;
+      s.totalParts += pc;
+      stats.set(m.brand, s);
+    }
+    return stats;
+  }, [allModels, modelsWithCount]);
 
-  // Grouper par marque
-  const grouped = new Map<string, any[]>();
-  for (const m of filteredModels) {
-    const list = grouped.get(m.brand) || [];
-    list.push(m);
-    grouped.set(m.brand, list);
-  }
+  // Breadcrumb
+  const breadcrumb = (
+    <div className="flex items-center gap-1.5 text-sm mb-6">
+      <button
+        onClick={() => { setView("brands"); setSelectedBrand(""); setSelectedModel(null); }}
+        className={`transition-colors ${view === "brands" ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
+      >
+        Marques
+      </button>
+      {selectedBrand && (
+        <>
+          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+          <button
+            onClick={() => { setView("models"); setSelectedModel(null); }}
+            className={`transition-colors ${view === "models" ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            {BRANDS[selectedBrand]}
+          </button>
+        </>
+      )}
+      {selectedModel && (
+        <>
+          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="text-foreground font-medium">{selectedModel.name}</span>
+        </>
+      )}
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
-      {/* Action button */}
-      <div className="flex justify-end">
-        <Button onClick={() => { setEditModel(null); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-2" /> Nouveau modèle
-        </Button>
-      </div>
+    <div>
+      {breadcrumb}
 
-      {/* Filtres */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher un modèle..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={brandFilter} onValueChange={setBrandFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="Marque" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Toutes les marques</SelectItem>
-            {Object.entries(BRANDS).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{filteredModels.length}</p>
-            <p className="text-xs text-muted-foreground">Modèles</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{grouped.size}</p>
-            <p className="text-xs text-muted-foreground">Marques</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">
-              {filteredModels.filter((m: any) => (partCountMap.get(m.id) || 0) > 0).length}
-            </p>
-            <p className="text-xs text-muted-foreground">Avec pièces</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">
-              {filteredModels.filter((m: any) => (partCountMap.get(m.id) || 0) === 0).length}
-            </p>
-            <p className="text-xs text-muted-foreground">Sans pièces</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Liste des modèles groupés par marque */}
-      {Array.from(grouped.entries()).map(([brand, brandModels]) => (
-        <div key={brand} className="space-y-3">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Badge className={BRAND_COLORS[brand] || ""}>{BRANDS[brand] || brand}</Badge>
-            <span className="text-sm text-muted-foreground">({brandModels.length} modèles)</span>
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {brandModels.map((model: any) => {
-              const pc = partCountMap.get(model.id) || 0;
-              return (
-                <Card key={model.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="h-40 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center overflow-hidden">
-                    {model.imageUrl ? (
-                      <img src={model.imageUrl} alt={model.name} className="w-full h-full object-contain p-2" />
-                    ) : (
-                      <Package className="w-12 h-12 text-gray-300 dark:text-gray-600" />
-                    )}
-                  </div>
-                  <CardContent className="p-4 space-y-3">
-                    <div>
-                      <h3 className="font-semibold text-base">{model.name}</h3>
-                      {model.series && (
-                        <p className="text-xs text-muted-foreground">Gamme : {model.series}</p>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                      {model.seats && (
-                        <span className="flex items-center gap-1">
-                          <Users className="w-3 h-3" /> {model.seats} places
-                        </span>
-                      )}
-                      {model.dimensions && (
-                        <span className="flex items-center gap-1">
-                          <Ruler className="w-3 h-3" /> {model.dimensions}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Badge variant={pc > 0 ? "default" : "secondary"} className="text-xs">
-                        {pc} pièce{pc !== 1 ? "s" : ""}
-                      </Badge>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 text-xs"
-                          onClick={() => setAssignModel(model)}
-                        >
-                          <Link2 className="w-3 h-3 mr-1" /> Pièces
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => { setEditModel(model); setShowForm(true); }}
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                          onClick={() => {
-                            if (confirm(`Supprimer "${model.name}" ?`)) {
-                              deleteMutation.mutate({ id: model.id });
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-
-      {filteredModels.length === 0 && (
-        <div className="text-center py-16">
-          <Package className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-          <p className="text-lg font-medium text-gray-500">Aucun modèle de spa</p>
-          <p className="text-sm text-muted-foreground mb-4">Commencez par créer vos modèles de spa</p>
-          <Button onClick={() => { setEditModel(null); setShowForm(true); }}>
-            <Plus className="w-4 h-4 mr-2" /> Créer un modèle
-          </Button>
-        </div>
+      {view === "brands" && (
+        <BrandsOverview
+          brandStats={brandStats}
+          onSelectBrand={(brand) => { setSelectedBrand(brand); setView("models"); }}
+          onCreateModel={() => { setEditModel(null); setShowForm(true); }}
+        />
       )}
 
-      {/* Dialogs */}
+      {view === "models" && selectedBrand && (
+        <BrandModelsView
+          brand={selectedBrand}
+          models={(allModels || []).filter((m: any) => m.brand === selectedBrand)}
+          modelsWithCount={modelsWithCount || []}
+          onBack={() => { setView("brands"); setSelectedBrand(""); }}
+          onSelectModel={(model) => { setSelectedModel(model); setView("nomenclature"); }}
+          onCreateModel={() => { setEditModel(null); setShowForm(true); }}
+          onEditModel={(model) => { setEditModel(model); setShowForm(true); }}
+          onDeleteModel={(model) => {
+            if (confirm(`Supprimer « ${model.name} » et toutes ses pièces associées ?`)) {
+              deleteMutation.mutate({ id: model.id });
+            }
+          }}
+        />
+      )}
+
+      {view === "nomenclature" && selectedModel && (
+        <NomenclatureView
+          model={selectedModel}
+          brand={selectedBrand}
+          onBack={() => { setView("models"); setSelectedModel(null); }}
+          onRefresh={handleRefresh}
+        />
+      )}
+
+      {/* Create/Edit Model Dialog */}
       {showForm && (
         <ModelFormDialog
           open={showForm}
           onOpenChange={(v) => { setShowForm(v); if (!v) setEditModel(null); }}
           editModel={editModel}
-          onSuccess={refetch}
+          defaultBrand={selectedBrand || undefined}
+          onSuccess={() => { handleRefresh(); }}
         />
       )}
-      {assignModel && (
+    </div>
+  );
+}
+
+// ============================================
+// BRANDS OVERVIEW — Vue d'ensemble des marques
+// ============================================
+
+function BrandsOverview({
+  brandStats,
+  onSelectBrand,
+  onCreateModel,
+}: {
+  brandStats: Map<string, { count: number; withParts: number; totalParts: number }>;
+  onSelectBrand: (brand: string) => void;
+  onCreateModel: () => void;
+}) {
+  const totalModels = Array.from(brandStats.values()).reduce((sum, s) => sum + s.count, 0);
+  const totalParts = Array.from(brandStats.values()).reduce((sum, s) => sum + s.totalParts, 0);
+  const brandsWithModels = Array.from(brandStats.entries()).filter(([_, s]) => s.count > 0).length;
+
+  return (
+    <div className="space-y-8">
+      {/* Summary */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Vue d'ensemble des marques</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {totalModels} modèle{totalModels !== 1 ? "s" : ""} · {totalParts} pièce{totalParts !== 1 ? "s" : ""} liée{totalParts !== 1 ? "s" : ""} · {brandsWithModels} marque{brandsWithModels !== 1 ? "s" : ""} active{brandsWithModels !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <Button onClick={onCreateModel} className="shrink-0">
+          <Plus className="w-4 h-4 mr-2" /> Nouveau modèle
+        </Button>
+      </div>
+
+      {/* Brand cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Object.entries(BRANDS).map(([key, label]) => {
+          const stats = brandStats.get(key) || { count: 0, withParts: 0, totalParts: 0 };
+          const accent = BRAND_ACCENT[key];
+          const hasModels = stats.count > 0;
+
+          return (
+            <button
+              key={key}
+              onClick={() => onSelectBrand(key)}
+              className={`group relative text-left rounded-xl border p-5 transition-all duration-200 hover:ring-2 ${accent.ring} ${
+                hasModels ? "hover:shadow-md" : "opacity-70 hover:opacity-100"
+              }`}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${accent.bg}`}>
+                  <Box className={`w-5 h-5 ${accent.text}`} />
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <h3 className="font-semibold text-base">{label}</h3>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="text-lg font-semibold">{stats.count}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Modèles</p>
+                </div>
+                <div>
+                  <p className="text-lg font-semibold">{stats.withParts}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Avec BOM</p>
+                </div>
+                <div>
+                  <p className="text-lg font-semibold">{stats.totalParts}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pièces</p>
+                </div>
+              </div>
+              {!hasModels && (
+                <p className="text-xs text-muted-foreground mt-3 italic">Aucun modèle enregistré</p>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// BRAND MODELS VIEW — Modèles d'une marque
+// ============================================
+
+function BrandModelsView({
+  brand,
+  models,
+  modelsWithCount,
+  onBack,
+  onSelectModel,
+  onCreateModel,
+  onEditModel,
+  onDeleteModel,
+}: {
+  brand: string;
+  models: any[];
+  modelsWithCount: any[];
+  onBack: () => void;
+  onSelectModel: (model: any) => void;
+  onCreateModel: () => void;
+  onEditModel: (model: any) => void;
+  onDeleteModel: (model: any) => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  const partCountMap = new Map(modelsWithCount.map((m: any) => [m.id, m.partCount]));
+  const accent = BRAND_ACCENT[brand];
+
+  const filtered = models.filter((m: any) => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return m.name.toLowerCase().includes(s) || (m.series || "").toLowerCase().includes(s);
+  });
+
+  // Group by series
+  const grouped = new Map<string, any[]>();
+  for (const m of filtered) {
+    const series = m.series || "Autres";
+    const list = grouped.get(series) || [];
+    list.push(m);
+    grouped.set(series, list);
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={onBack} className="shrink-0 -ml-2">
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div>
+            <div className="flex items-center gap-2">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${accent.bg}`}>
+                <Box className={`w-4 h-4 ${accent.text}`} />
+              </div>
+              <h2 className="text-xl font-semibold">{BRANDS[brand]}</h2>
+              <Badge variant="secondary" className="text-xs">{models.length} modèle{models.length !== 1 ? "s" : ""}</Badge>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex border rounded-lg overflow-hidden">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`p-2 transition-colors ${viewMode === "grid" ? "bg-muted" : "hover:bg-muted/50"}`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`p-2 transition-colors ${viewMode === "list" ? "bg-muted" : "hover:bg-muted/50"}`}
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
+          <Button onClick={onCreateModel} className="shrink-0">
+            <Plus className="w-4 h-4 mr-2" /> Nouveau modèle
+          </Button>
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input placeholder="Rechercher un modèle ou une série..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+      </div>
+
+      {/* Models */}
+      {filtered.length === 0 ? (
+        <EmptyState
+          message={search ? "Aucun modèle trouvé" : `Aucun modèle pour ${BRANDS[brand]}`}
+          sub={search ? "Essayez un autre terme" : "Créez votre premier modèle pour cette marque"}
+          action={!search ? <Button variant="outline" onClick={onCreateModel}><Plus className="w-4 h-4 mr-2" /> Créer un modèle</Button> : undefined}
+        />
+      ) : (
+        Array.from(grouped.entries()).map(([series, seriesModels]) => (
+          <div key={series} className="space-y-3">
+            <div className="flex items-center gap-2">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{series}</h3>
+              <Separator className="flex-1" />
+              <span className="text-xs text-muted-foreground">{seriesModels.length}</span>
+            </div>
+
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {seriesModels.map((model: any) => {
+                  const pc = partCountMap.get(model.id) || 0;
+                  return (
+                    <div
+                      key={model.id}
+                      className="group rounded-xl border bg-card overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer"
+                      onClick={() => onSelectModel(model)}
+                    >
+                      <div className="h-36 bg-muted/30 flex items-center justify-center overflow-hidden relative">
+                        {model.imageUrl ? (
+                          <img src={model.imageUrl} alt={model.name} className="w-full h-full object-contain p-3" />
+                        ) : (
+                          <Box className="w-10 h-10 text-muted-foreground/30" />
+                        )}
+                        {/* Hover overlay */}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors flex items-center justify-center">
+                          <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium bg-background/90 px-3 py-1.5 rounded-full shadow-sm">
+                            Voir la nomenclature
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-4 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-semibold text-sm leading-tight">{model.name}</h4>
+                          <div className="flex gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => onEditModel(model)}>
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => onDeleteModel(model)}>
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          {model.seats && <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {model.seats}p</span>}
+                          {model.dimensions && <span className="flex items-center gap-1"><Ruler className="w-3 h-3" /> {model.dimensions}</span>}
+                        </div>
+                        <div className="flex items-center gap-2 pt-1">
+                          <Badge variant={pc > 0 ? "default" : "secondary"} className="text-[10px]">
+                            {pc} pièce{pc !== 1 ? "s" : ""}
+                          </Badge>
+                          {pc === 0 && (
+                            <span className="text-[10px] text-amber-600 dark:text-amber-400">Nomenclature vide</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {seriesModels.map((model: any) => {
+                  const pc = partCountMap.get(model.id) || 0;
+                  return (
+                    <div
+                      key={model.id}
+                      className="group flex items-center gap-4 rounded-lg border p-3 hover:bg-muted/30 transition-colors cursor-pointer"
+                      onClick={() => onSelectModel(model)}
+                    >
+                      <div className="w-14 h-14 rounded-lg bg-muted/30 flex items-center justify-center overflow-hidden shrink-0">
+                        {model.imageUrl ? (
+                          <img src={model.imageUrl} alt={model.name} className="w-full h-full object-contain p-1" />
+                        ) : (
+                          <Box className="w-6 h-6 text-muted-foreground/30" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{model.name}</p>
+                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
+                          {model.series && <span>Série : {model.series}</span>}
+                          {model.seats && <span>{model.seats} places</span>}
+                          {model.dimensions && <span>{model.dimensions}</span>}
+                        </div>
+                      </div>
+                      <Badge variant={pc > 0 ? "default" : "secondary"} className="text-xs shrink-0">
+                        {pc} pièce{pc !== 1 ? "s" : ""}
+                      </Badge>
+                      <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => onEditModel(model)}>
+                          <Edit className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => onDeleteModel(model)}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+// ============================================
+// NOMENCLATURE VIEW — Pièces d'un modèle
+// ============================================
+
+function NomenclatureView({
+  model,
+  brand,
+  onBack,
+  onRefresh,
+}: {
+  model: any;
+  brand: string;
+  onBack: () => void;
+  onRefresh: () => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [showAssign, setShowAssign] = useState(false);
+
+  const { data: parts, refetch } = trpc.spaModels.getParts.useQuery({ spaModelId: model.id });
+  const accent = BRAND_ACCENT[brand];
+
+  const removeMutation = trpc.spaModels.removePart.useMutation({
+    onSuccess: () => {
+      toast.success("Pièce retirée de la nomenclature");
+      refetch();
+      onRefresh();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const filtered = (parts || []).filter((p: any) => {
+    if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
+    if (search) {
+      const s = search.toLowerCase();
+      return p.name.toLowerCase().includes(s) || p.reference.toLowerCase().includes(s);
+    }
+    return true;
+  });
+
+  // Group by category
+  const grouped = new Map<string, any[]>();
+  for (const p of filtered) {
+    const list = grouped.get(p.category) || [];
+    list.push(p);
+    grouped.set(p.category, list);
+  }
+
+  const availableCategories = [...new Set((parts || []).map((p: any) => p.category))];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <Button variant="ghost" size="sm" onClick={onBack} className="shrink-0 -ml-2 mt-0.5">
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div className="flex gap-4">
+            {model.imageUrl && (
+              <div className="w-20 h-20 rounded-lg bg-muted/30 overflow-hidden shrink-0 hidden sm:block">
+                <img src={model.imageUrl} alt={model.name} className="w-full h-full object-contain p-1" />
+              </div>
+            )}
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-xl font-semibold">{model.name}</h2>
+                <Badge className={`${accent.bg} ${accent.text} border-0 text-xs`}>{BRANDS[brand]}</Badge>
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
+                {model.series && <span>Série : {model.series}</span>}
+                {model.seats && <span>{model.seats} places</span>}
+                {model.dimensions && <span>{model.dimensions}</span>}
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                <strong className="text-foreground">{parts?.length || 0}</strong> pièce{(parts?.length || 0) !== 1 ? "s" : ""} dans la nomenclature
+              </p>
+            </div>
+          </div>
+        </div>
+        <Button onClick={() => setShowAssign(true)} className="shrink-0">
+          <Plus className="w-4 h-4 mr-2" /> Ajouter des pièces
+        </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Rechercher une pièce..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        {availableCategories.length > 1 && (
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              onClick={() => setCategoryFilter("all")}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                categoryFilter === "all" ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              Toutes ({parts?.length || 0})
+            </button>
+            {availableCategories.map((cat) => {
+              const count = (parts || []).filter((p: any) => p.category === cat).length;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setCategoryFilter(cat === categoryFilter ? "all" : cat)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    categoryFilter === cat ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {CATEGORIES[cat] || cat} ({count})
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Parts list by category */}
+      {(!parts || parts.length === 0) ? (
+        <EmptyState
+          message="Nomenclature vide"
+          sub={`Aucune pièce n'est associée à ${model.name}. Ajoutez des pièces depuis le catalogue.`}
+          action={<Button variant="outline" onClick={() => setShowAssign(true)}><Plus className="w-4 h-4 mr-2" /> Ajouter des pièces</Button>}
+        />
+      ) : filtered.length === 0 ? (
+        <EmptyState message="Aucune pièce trouvée" sub="Essayez un autre terme de recherche ou catégorie" />
+      ) : (
+        Array.from(grouped.entries()).map(([category, categoryParts]) => (
+          <div key={category} className="space-y-2">
+            <div className="flex items-center gap-2">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {CATEGORIES[category] || category}
+              </h3>
+              <Separator className="flex-1" />
+              <span className="text-xs text-muted-foreground">{categoryParts.length}</span>
+            </div>
+            <div className="space-y-1">
+              {categoryParts.map((part: any) => (
+                <div key={part.linkId} className="flex items-center gap-3 rounded-lg border p-3 hover:bg-muted/20 transition-colors">
+                  {part.imageUrl ? (
+                    <img src={part.imageUrl} alt={part.name} className="w-10 h-10 rounded object-cover shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded bg-muted/30 flex items-center justify-center shrink-0">
+                      <Package className="w-4 h-4 text-muted-foreground/40" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{part.name}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{part.reference}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-semibold text-sm">{parseFloat(part.priceHT).toFixed(2)} €</p>
+                    <p className="text-[10px] text-muted-foreground">HT</p>
+                  </div>
+                  <Badge variant={part.stockQuantity > 0 ? "default" : "destructive"} className="text-[10px] shrink-0">
+                    Stock: {part.stockQuantity}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive shrink-0"
+                    onClick={() => removeMutation.mutate({ linkId: part.linkId })}
+                    disabled={removeMutation.isPending}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      )}
+
+      {/* Assign parts dialog */}
+      {showAssign && (
         <AssignPartsDialog
-          open={!!assignModel}
-          onOpenChange={(v) => { if (!v) setAssignModel(null); }}
-          model={assignModel}
-          onSuccess={refetch}
+          open={showAssign}
+          onOpenChange={setShowAssign}
+          model={model}
+          onSuccess={() => { refetch(); onRefresh(); }}
         />
       )}
+    </div>
+  );
+}
+
+// ============================================
+// METRIC CARD
+// ============================================
+
+function MetricCard({ label, value, icon: Icon, accent }: { label: string; value: number; icon: any; accent?: "warning" }) {
+  return (
+    <Card>
+      <CardContent className="p-4 flex items-center gap-3">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+          accent === "warning" ? "bg-amber-50 dark:bg-amber-950/40" : "bg-muted/50"
+        }`}>
+          <Icon className={`w-5 h-5 ${accent === "warning" ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`} />
+        </div>
+        <div>
+          <p className={`text-2xl font-semibold ${accent === "warning" && value > 0 ? "text-amber-600 dark:text-amber-400" : ""}`}>{value}</p>
+          <p className="text-xs text-muted-foreground">{label}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================
+// EMPTY STATE
+// ============================================
+
+function EmptyState({ loading, message, sub, action }: { loading?: boolean; message: string; sub?: string; action?: React.ReactNode }) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+  return (
+    <div className="text-center py-16 space-y-3">
+      <Package className="w-10 h-10 mx-auto text-muted-foreground/30" />
+      <div>
+        <p className="font-medium text-muted-foreground">{message}</p>
+        {sub && <p className="text-sm text-muted-foreground/70 mt-1">{sub}</p>}
+      </div>
+      {action && <div className="pt-2">{action}</div>}
     </div>
   );
 }
@@ -724,11 +1075,13 @@ function ModelFormDialog({
   open,
   onOpenChange,
   editModel,
+  defaultBrand,
   onSuccess,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editModel?: any;
+  defaultBrand?: string;
   onSuccess: () => void;
 }) {
   const [name, setName] = useState("");
@@ -744,11 +1097,10 @@ function ModelFormDialog({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset form when dialog opens or editModel changes
   useEffect(() => {
     if (open) {
       setName(editModel?.name || "");
-      setBrand(editModel?.brand || "MARKET_SPAS");
+      setBrand(editModel?.brand || defaultBrand || "MARKET_SPAS");
       setSeries(editModel?.series || "");
       setImageUrl(editModel?.imageUrl || "");
       setDescription(editModel?.description || "");
@@ -759,7 +1111,7 @@ function ModelFormDialog({
       setIsDragging(false);
       setIsUploading(false);
     }
-  }, [open, editModel]);
+  }, [open, editModel, defaultBrand]);
 
   const uploadImageMutation = trpc.spaModels.uploadImage.useMutation();
 
@@ -782,96 +1134,53 @@ function ModelFormDialog({
   });
 
   const handleImageFile = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Veuillez sélectionner une image");
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("L'image ne doit pas dépasser 10 Mo");
-      return;
-    }
+    if (!file.type.startsWith("image/")) { toast.error("Veuillez sélectionner une image"); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("L'image ne doit pas dépasser 10 Mo"); return; }
     setIsUploading(true);
     try {
-      // Show local preview immediately
       const localPreview = URL.createObjectURL(file);
       setPreviewUrl(localPreview);
-
-      // Convert to base64 and upload
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result as string);
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
-
-      const result = await uploadImageMutation.mutateAsync({
-        imageData: base64,
-        fileName: file.name,
-      });
-
+      const result = await uploadImageMutation.mutateAsync({ imageData: base64, fileName: file.name });
       setImageUrl(result.url);
       setPreviewUrl(result.url);
-      toast.success("Image uploadée avec succès");
-    } catch (err) {
-      console.error("Upload error:", err);
-      toast.error("Erreur lors de l'upload de l'image");
+      toast.success("Image uploadée");
+    } catch {
+      toast.error("Erreur lors de l'upload");
       setPreviewUrl(imageUrl || null);
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleImageFile(file);
-  };
+  const handleDrop = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); const file = e.dataTransfer.files?.[0]; if (file) handleImageFile(file); };
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); };
+  const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); };
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file) handleImageFile(file); };
+  const handleRemoveImage = () => { setImageUrl(""); setPreviewUrl(null); };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleImageFile(file);
-  };
-
-  const handleRemoveImage = () => {
-    setImageUrl("");
-    setPreviewUrl(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   const handleSubmit = () => {
-    if (!name.trim()) return toast.error("Le nom est requis");
+    if (!name.trim() || !brand) { toast.error("Le nom et la marque sont requis"); return; }
     const data = {
       name: name.trim(),
       brand,
       series: series.trim() || undefined,
-      imageUrl: imageUrl.trim() || undefined,
+      imageUrl: imageUrl || undefined,
       description: description.trim() || undefined,
       seats: seats ? parseInt(seats) : undefined,
       dimensions: dimensions.trim() || undefined,
       sortOrder: sortOrder ? parseInt(sortOrder) : 0,
     };
-    if (editModel) {
-      updateMutation.mutate({ id: editModel.id, data });
-    } else {
-      createMutation.mutate(data);
-    }
+    if (editModel) updateMutation.mutate({ id: editModel.id, data });
+    else createMutation.mutate(data);
   };
-
-  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -880,86 +1189,54 @@ function ModelFormDialog({
           <DialogTitle>{editModel ? "Modifier le modèle" : "Nouveau modèle de spa"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div>
-            <Label>Nom du modèle *</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Cityline 5" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Nom du modèle *</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Everest" />
+            </div>
+            <div className="space-y-2">
+              <Label>Marque *</Label>
+              <Select value={brand} onValueChange={setBrand}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(BRANDS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div>
-            <Label>Marque *</Label>
-            <Select value={brand} onValueChange={(val) => setBrand(val)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une marque" />
-              </SelectTrigger>
-              <SelectContent className="z-[10001]">
-                {Object.entries(BRANDS).map(([k, v]) => (
-                  <SelectItem key={k} value={k}>{v}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label>Gamme / Série</Label>
               <Input value={series} onChange={(e) => setSeries(e.target.value)} placeholder="Ex: Cityline" />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label>Nombre de places</Label>
               <Input type="number" value={seats} onChange={(e) => setSeats(e.target.value)} placeholder="Ex: 5" />
             </div>
           </div>
-          <div>
+          <div className="space-y-2">
             <Label>Dimensions</Label>
             <Input value={dimensions} onChange={(e) => setDimensions(e.target.value)} placeholder="Ex: 220 x 220 x 90 cm" />
           </div>
 
-          {/* Image drag & drop zone */}
-          <div>
+          {/* Image upload */}
+          <div className="space-y-2">
             <Label>Image du modèle</Label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-              disabled={isUploading}
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" disabled={isUploading} />
             {previewUrl ? (
-              <div className="mt-2 relative group">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="h-40 w-full object-contain rounded-lg border-2 border-border bg-gray-50 dark:bg-gray-800"
-                />
+              <div className="relative group">
+                <img src={previewUrl} alt="Preview" className="h-36 w-full object-contain rounded-lg border bg-muted/20" />
                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon"
-                    className="h-8 w-8 bg-white/90 dark:bg-gray-800/90 shadow-sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    title="Remplacer l'image"
-                  >
-                    <Upload className="h-4 w-4" />
+                  <Button type="button" variant="secondary" size="icon" className="h-7 w-7" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                    <Upload className="h-3.5 w-3.5" />
                   </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="h-8 w-8 shadow-sm"
-                    onClick={handleRemoveImage}
-                    disabled={isUploading}
-                    title="Supprimer l'image"
-                  >
-                    <X className="h-4 w-4" />
+                  <Button type="button" variant="destructive" size="icon" className="h-7 w-7" onClick={handleRemoveImage} disabled={isUploading}>
+                    <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
                 {isUploading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
-                    <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-lg">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm font-medium">Upload en cours...</span>
-                    </div>
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
+                    <Loader2 className="h-5 w-5 animate-spin text-white" />
                   </div>
                 )}
               </div>
@@ -969,38 +1246,27 @@ function ModelFormDialog({
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onClick={() => !isUploading && fileInputRef.current?.click()}
-                className={`mt-2 h-40 w-full rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
-                  isDragging
-                    ? "border-primary bg-primary/5 scale-[1.02]"
-                    : "border-gray-300 dark:border-gray-600 hover:border-primary/50 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                className={`h-36 rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
+                  isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/20 hover:border-muted-foreground/40"
                 }`}
               >
                 {isUploading ? (
-                  <>
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <span className="text-sm text-muted-foreground">Upload en cours...</span>
-                  </>
-                ) : isDragging ? (
-                  <>
-                    <Upload className="h-8 w-8 text-primary" />
-                    <span className="text-sm font-medium text-primary">Déposez l'image ici</span>
-                  </>
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 ) : (
                   <>
-                    <Upload className="h-8 w-8 text-gray-400" />
-                    <span className="text-sm text-muted-foreground">Glissez-déposez une image ici</span>
-                    <span className="text-xs text-muted-foreground">ou cliquez pour parcourir</span>
+                    <Upload className="h-6 w-6 text-muted-foreground/40" />
+                    <span className="text-xs text-muted-foreground">Glissez-déposez ou cliquez</span>
                   </>
                 )}
               </div>
             )}
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label>Description</Label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Description du modèle..." />
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="Description du modèle..." />
           </div>
-          <div>
+          <div className="space-y-2">
             <Label>Ordre d'affichage</Label>
             <Input type="number" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} placeholder="0" />
           </div>
@@ -1018,7 +1284,7 @@ function ModelFormDialog({
 }
 
 // ============================================
-// PARTS ASSIGNMENT DIALOG
+// ASSIGN PARTS DIALOG
 // ============================================
 function AssignPartsDialog({
   open,
@@ -1040,10 +1306,7 @@ function AssignPartsDialog({
     { enabled: !!model }
   );
 
-  const { data: allParts } = trpc.spareParts.list.useQuery(
-    { isActive: true },
-    { enabled: open }
-  );
+  const { data: allParts } = trpc.spareParts.list.useQuery({ isActive: true }, { enabled: open });
 
   const addMultipleMutation = trpc.spaModels.addMultipleParts.useMutation({
     onSuccess: (result) => {
@@ -1089,116 +1352,98 @@ function AssignPartsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Link2 className="w-5 h-5" />
-            Pièces détachées — {model?.name}
-            <Badge className={BRAND_COLORS[model?.brand] || ""}>{BRANDS[model?.brand]}</Badge>
+            Gérer la nomenclature — {model?.name}
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Colonne gauche : pièces attribuées */}
+          {/* Left: assigned */}
           <div className="flex flex-col overflow-hidden">
-            <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-              <Check className="w-4 h-4 text-green-600" />
-              Pièces attribuées ({assignedParts?.length || 0})
+            <h3 className="font-medium text-sm mb-2 flex items-center gap-2">
+              <Check className="w-4 h-4 text-emerald-600" />
+              Pièces dans la nomenclature ({assignedParts?.length || 0})
             </h3>
-            <div className="flex-1 overflow-y-auto space-y-1 border rounded-lg p-2 bg-green-50/30 dark:bg-green-900/10">
+            <ScrollArea className="flex-1 border rounded-lg p-2">
               {(!assignedParts || assignedParts.length === 0) ? (
-                <p className="text-sm text-muted-foreground text-center py-8">Aucune pièce attribuée</p>
+                <p className="text-sm text-muted-foreground text-center py-8">Aucune pièce dans la nomenclature</p>
               ) : (
-                assignedParts.map((p: any) => (
-                  <div key={p.linkId} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-md px-3 py-2 border">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{p.name}</p>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">{p.reference}</span>
-                        <Badge variant="outline" className="text-[10px] px-1">{CATEGORIES[p.category] || p.category}</Badge>
+                <div className="space-y-1">
+                  {assignedParts.map((p: any) => (
+                    <div key={p.linkId} className="flex items-center justify-between rounded-md px-3 py-2 border bg-card">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{p.name}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground font-mono">{p.reference}</span>
+                          <Badge variant="outline" className="text-[10px] px-1">{CATEGORIES[p.category] || p.category}</Badge>
+                        </div>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive shrink-0 h-7 w-7 p-0"
+                        onClick={() => removeMutation.mutate({ linkId: p.linkId })}
+                        disabled={removeMutation.isPending}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0"
-                      onClick={() => removeMutation.mutate({ linkId: p.linkId })}
-                      disabled={removeMutation.isPending}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
-            </div>
+            </ScrollArea>
           </div>
 
-          {/* Colonne droite : pièces disponibles */}
+          {/* Right: available */}
           <div className="flex flex-col overflow-hidden">
-            <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+            <h3 className="font-medium text-sm mb-2 flex items-center gap-2">
               <Package className="w-4 h-4" />
-              Pièces disponibles
+              Catalogue disponible
             </h3>
             <div className="flex gap-2 mb-2">
-              <Input
-                placeholder="Rechercher..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="flex-1 h-8 text-sm"
-              />
+              <Input placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1 h-8 text-sm" />
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger className="w-[140px] h-8 text-sm">
                   <SelectValue placeholder="Catégorie" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes</SelectItem>
-                  {Object.entries(CATEGORIES).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
-                  ))}
+                  {Object.entries(CATEGORIES).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex-1 overflow-y-auto space-y-1 border rounded-lg p-2">
+            <ScrollArea className="flex-1 border rounded-lg p-2">
               {filteredParts.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8">Aucune pièce disponible</p>
               ) : (
-                filteredParts.map((p: any) => (
-                  <label
-                    key={p.id}
-                    className={`flex items-center gap-3 bg-white dark:bg-gray-800 rounded-md px-3 py-2 border cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors ${
-                      selectedIds.has(p.id) ? "border-blue-400 bg-blue-50/30 dark:bg-blue-900/30" : ""
-                    }`}
-                  >
-                    <Checkbox
-                      checked={selectedIds.has(p.id)}
-                      onCheckedChange={() => toggleSelect(p.id)}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{p.name}</p>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">{p.reference}</span>
-                        <Badge variant="outline" className="text-[10px] px-1">{CATEGORIES[p.category] || p.category}</Badge>
+                <div className="space-y-1">
+                  {filteredParts.map((p: any) => (
+                    <label
+                      key={p.id}
+                      className={`flex items-center gap-3 rounded-md px-3 py-2 border cursor-pointer transition-colors ${
+                        selectedIds.has(p.id) ? "border-primary/50 bg-primary/5" : "bg-card hover:bg-muted/30"
+                      }`}
+                    >
+                      <Checkbox checked={selectedIds.has(p.id)} onCheckedChange={() => toggleSelect(p.id)} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{p.name}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground font-mono">{p.reference}</span>
+                          <Badge variant="outline" className="text-[10px] px-1">{CATEGORIES[p.category] || p.category}</Badge>
+                        </div>
                       </div>
-                    </div>
-                    {p.imageUrl && (
-                      <img src={p.imageUrl} alt="" className="w-8 h-8 object-contain rounded" />
-                    )}
-                  </label>
-                ))
+                      {p.imageUrl && <img src={p.imageUrl} alt="" className="w-8 h-8 object-contain rounded shrink-0" />}
+                    </label>
+                  ))}
+                </div>
               )}
-            </div>
+            </ScrollArea>
             {selectedIds.size > 0 && (
-              <Button
-                className="mt-2 w-full"
-                onClick={handleAddSelected}
-                disabled={addMultipleMutation.isPending}
-              >
-                {addMultipleMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Plus className="w-4 h-4 mr-2" />
-                )}
-                Ajouter {selectedIds.size} pièce(s)
+              <Button className="mt-2 w-full" onClick={handleAddSelected} disabled={addMultipleMutation.isPending}>
+                {addMultipleMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                Ajouter {selectedIds.size} pièce{selectedIds.size > 1 ? "s" : ""}
               </Button>
             )}
           </div>
@@ -1226,71 +1471,27 @@ function SparePartFormDialog({
   isLoading: boolean;
 }) {
   const [form, setForm] = useState<any>({
-    reference: "",
-    name: "",
-    description: "",
-    category: "PUMPS",
-    priceHT: "",
-    vatRate: "20",
-    stockQuantity: 0,
-    lowStockThreshold: 3,
-    imageUrl: "",
-    weight: "",
+    reference: "", name: "", description: "", category: "PUMPS",
+    priceHT: "", vatRate: "20", stockQuantity: 0, lowStockThreshold: 3, imageUrl: "", weight: "",
   });
 
-  // Reset form when dialog opens
-  useState(() => {
-    if (part) {
-      setForm({
-        reference: part.reference || "",
-        name: part.name || "",
-        description: part.description || "",
-        category: part.category || "PUMPS",
-        priceHT: part.priceHT || "",
-        vatRate: part.vatRate || "20",
-        stockQuantity: part.stockQuantity || 0,
-        lowStockThreshold: part.lowStockThreshold || 3,
-        imageUrl: part.imageUrl || "",
-        weight: part.weight || "",
-      });
+  useEffect(() => {
+    if (open) {
+      if (part) {
+        setForm({
+          reference: part.reference || "", name: part.name || "", description: part.description || "",
+          category: part.category || "PUMPS", priceHT: part.priceHT || "", vatRate: part.vatRate || "20",
+          stockQuantity: part.stockQuantity || 0, lowStockThreshold: part.lowStockThreshold || 3,
+          imageUrl: part.imageUrl || "", weight: part.weight || "",
+        });
+      } else {
+        setForm({
+          reference: "", name: "", description: "", category: "PUMPS",
+          priceHT: "", vatRate: "20", stockQuantity: 0, lowStockThreshold: 3, imageUrl: "", weight: "",
+        });
+      }
     }
-  });
-
-  // Update form when part changes
-  const handleOpen = () => {
-    if (part) {
-      setForm({
-        reference: part.reference || "",
-        name: part.name || "",
-        description: part.description || "",
-        category: part.category || "PUMPS",
-        priceHT: part.priceHT || "",
-        vatRate: part.vatRate || "20",
-        stockQuantity: part.stockQuantity || 0,
-        lowStockThreshold: part.lowStockThreshold || 3,
-        imageUrl: part.imageUrl || "",
-        weight: part.weight || "",
-      });
-    } else {
-      setForm({
-        reference: "",
-        name: "",
-        description: "",
-        category: "PUMPS",
-        priceHT: "",
-        vatRate: "20",
-        stockQuantity: 0,
-        lowStockThreshold: 3,
-        imageUrl: "",
-        weight: "",
-      });
-    }
-  };
-
-  // biome-ignore lint: reset form on open
-  if (open && form.reference === "" && part?.reference) {
-    handleOpen();
-  }
+  }, [open, part]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -1298,137 +1499,66 @@ function SparePartFormDialog({
         <DialogHeader>
           <DialogTitle>{part ? "Modifier la pièce" : "Ajouter une pièce"}</DialogTitle>
         </DialogHeader>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Référence *</Label>
-            <Input
-              value={form.reference}
-              onChange={(e) => setForm({ ...form, reference: e.target.value })}
-              placeholder="Ex: PMP-001"
-            />
+            <Input value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} placeholder="Ex: PMP-001" />
           </div>
           <div className="space-y-2">
             <Label>Nom *</Label>
-            <Input
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Ex: Pompe de circulation 2HP"
-            />
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex: Pompe de circulation 2HP" />
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>Description</Label>
-            <Textarea
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Description détaillée de la pièce..."
-              rows={3}
-            />
+            <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description détaillée..." rows={2} />
           </div>
           <div className="space-y-2">
             <Label>Catégorie *</Label>
-            <Select
-              value={form.category}
-              onValueChange={(v) => setForm({ ...form, category: v })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
+            <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {Object.entries(CATEGORIES).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>
-                    {label}
-                  </SelectItem>
-                ))}
+                {Object.entries(CATEGORIES).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label>Prix HT (€) *</Label>
-            <Input
-              type="number"
-              step="0.01"
-              value={form.priceHT}
-              onChange={(e) => setForm({ ...form, priceHT: e.target.value })}
-              placeholder="0.00"
-            />
+            <Input type="number" step="0.01" value={form.priceHT} onChange={(e) => setForm({ ...form, priceHT: e.target.value })} placeholder="0.00" />
           </div>
           <div className="space-y-2">
             <Label>TVA (%)</Label>
-            <Input
-              type="number"
-              step="0.01"
-              value={form.vatRate}
-              onChange={(e) => setForm({ ...form, vatRate: e.target.value })}
-              placeholder="20"
-            />
+            <Input type="number" step="0.01" value={form.vatRate} onChange={(e) => setForm({ ...form, vatRate: e.target.value })} placeholder="20" />
           </div>
           <div className="space-y-2">
             <Label>Stock</Label>
-            <Input
-              type="number"
-              value={form.stockQuantity}
-              onChange={(e) => setForm({ ...form, stockQuantity: parseInt(e.target.value) || 0 })}
-            />
+            <Input type="number" value={form.stockQuantity} onChange={(e) => setForm({ ...form, stockQuantity: parseInt(e.target.value) || 0 })} />
           </div>
           <div className="space-y-2">
             <Label>Seuil alerte stock</Label>
-            <Input
-              type="number"
-              value={form.lowStockThreshold}
-              onChange={(e) =>
-                setForm({ ...form, lowStockThreshold: parseInt(e.target.value) || 3 })
-              }
-            />
+            <Input type="number" value={form.lowStockThreshold} onChange={(e) => setForm({ ...form, lowStockThreshold: parseInt(e.target.value) || 3 })} />
           </div>
           <div className="space-y-2">
             <Label>Poids (kg)</Label>
-            <Input
-              type="number"
-              step="0.001"
-              value={form.weight}
-              onChange={(e) => setForm({ ...form, weight: e.target.value })}
-              placeholder="0.000"
-            />
+            <Input type="number" step="0.001" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} placeholder="0.000" />
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>URL de l'image</Label>
-            <Input
-              value={form.imageUrl}
-              onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-              placeholder="https://..."
-            />
+            <Input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="https://..." />
             {form.imageUrl && (
-              <img
-                src={form.imageUrl}
-                alt="Aperçu"
-                className="w-20 h-20 rounded object-cover mt-2"
-                onError={(e) => ((e.target as HTMLImageElement).style.display = "none")}
-              />
+              <img src={form.imageUrl} alt="Aperçu" className="w-16 h-16 rounded object-cover mt-1" onError={(e) => ((e.target as HTMLImageElement).style.display = "none")} />
             )}
           </div>
         </div>
-
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Annuler
-          </Button>
+          <Button variant="outline" onClick={onClose}>Annuler</Button>
           <Button
             onClick={() => {
-              if (!form.reference || !form.name || !form.priceHT) {
-                return;
-              }
+              if (!form.reference || !form.name || !form.priceHT) return;
               onSubmit({
-                reference: form.reference,
-                name: form.name,
-                description: form.description || undefined,
-                category: form.category,
-                priceHT: form.priceHT,
-                vatRate: form.vatRate || "20",
-                stockQuantity: form.stockQuantity,
-                lowStockThreshold: form.lowStockThreshold,
-                imageUrl: form.imageUrl || undefined,
-                weight: form.weight || undefined,
+                reference: form.reference, name: form.name, description: form.description || undefined,
+                category: form.category, priceHT: form.priceHT, vatRate: form.vatRate || "20",
+                stockQuantity: form.stockQuantity, lowStockThreshold: form.lowStockThreshold,
+                imageUrl: form.imageUrl || undefined, weight: form.weight || undefined,
               });
             }}
             disabled={isLoading || !form.reference || !form.name || !form.priceHT}
@@ -1460,10 +1590,7 @@ function CompatibilityDialog({
 }) {
   const partDetail = trpc.spareParts.getById.useQuery({ id: part.id });
   const [newCompat, setNewCompat] = useState({
-    brand: "MARKET_SPAS",
-    productLine: "",
-    modelName: "",
-    component: "Pompes",
+    brand: "MARKET_SPAS", productLine: "", modelName: "", component: "Pompes",
   });
 
   const compatList = (partDetail.data as any)?.compatibility || [];
@@ -1472,46 +1599,26 @@ function CompatibilityDialog({
     <Dialog open={true} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            Compatibilités — {part.name} ({part.reference})
-          </DialogTitle>
+          <DialogTitle>Compatibilités — {part.name} ({part.reference})</DialogTitle>
         </DialogHeader>
 
-        {/* Existing compatibilities */}
         <div className="space-y-3">
-          <h3 className="font-medium text-sm text-muted-foreground">
-            Compatibilités existantes ({compatList.length})
-          </h3>
+          <h3 className="font-medium text-sm text-muted-foreground">Compatibilités existantes ({compatList.length})</h3>
           {compatList.length === 0 ? (
-            <p className="text-xs md:text-sm text-muted-foreground py-4 text-center">
-              Aucune compatibilité définie. Ajoutez-en ci-dessous.
-            </p>
+            <p className="text-sm text-muted-foreground py-4 text-center">Aucune compatibilité définie</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1">
               {compatList.map((c: any) => (
-                <div
-                  key={c.id}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                >
+                <div key={c.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge>{BRANDS[c.brand] || c.brand}</Badge>
                     {c.productLine && <Badge variant="outline">{c.productLine}</Badge>}
-                    {c.modelName && (
-                      <Badge variant="secondary">{c.modelName}</Badge>
-                    )}
+                    {c.modelName && <Badge variant="secondary">{c.modelName}</Badge>}
                     <span className="text-sm text-muted-foreground">→</span>
                     <span className="text-sm font-medium">{c.component}</span>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      if (confirm("Supprimer cette compatibilité ?")) {
-                        onRemove(c.id);
-                      }
-                    }}
-                  >
-                    <X className="h-4 w-4 text-destructive" />
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { if (confirm("Supprimer ?")) onRemove(c.id); }}>
+                    <X className="h-3.5 w-3.5 text-destructive" />
                   </Button>
                 </div>
               ))}
@@ -1519,65 +1626,34 @@ function CompatibilityDialog({
           )}
         </div>
 
-        {/* Add new compatibility */}
-        <div className="border-t pt-4 space-y-3">
-          <h3 className="font-medium text-sm text-muted-foreground">
-            Ajouter une compatibilité
-          </h3>
+        <Separator />
+
+        <div className="space-y-3">
+          <h3 className="font-medium text-sm text-muted-foreground">Ajouter une compatibilité</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Marque *</Label>
-              <Select
-                value={newCompat.brand}
-                onValueChange={(v) => setNewCompat({ ...newCompat, brand: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+              <Select value={newCompat.brand} onValueChange={(v) => setNewCompat({ ...newCompat, brand: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {Object.entries(BRANDS).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
+                  {Object.entries(BRANDS).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Gamme (optionnel)</Label>
-              <Input
-                value={newCompat.productLine}
-                onChange={(e) =>
-                  setNewCompat({ ...newCompat, productLine: e.target.value })
-                }
-                placeholder="Ex: Deluxe, Premium..."
-              />
+              <Input value={newCompat.productLine} onChange={(e) => setNewCompat({ ...newCompat, productLine: e.target.value })} placeholder="Ex: Deluxe, Premium..." />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Modèle (optionnel)</Label>
-              <Input
-                value={newCompat.modelName}
-                onChange={(e) =>
-                  setNewCompat({ ...newCompat, modelName: e.target.value })
-                }
-                placeholder="Ex: Everest, Kilimanjaro..."
-              />
+              <Input value={newCompat.modelName} onChange={(e) => setNewCompat({ ...newCompat, modelName: e.target.value })} placeholder="Ex: Everest, Kilimanjaro..." />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Composant *</Label>
-              <Select
-                value={newCompat.component}
-                onValueChange={(v) => setNewCompat({ ...newCompat, component: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+              <Select value={newCompat.component} onValueChange={(v) => setNewCompat({ ...newCompat, component: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {COMPONENTS.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
+                  {COMPONENTS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -1585,30 +1661,23 @@ function CompatibilityDialog({
           <Button
             onClick={() => {
               onAdd({
-                sparePartId: part.id,
-                brand: newCompat.brand,
+                sparePartId: part.id, brand: newCompat.brand,
                 productLine: newCompat.productLine || undefined,
                 modelName: newCompat.modelName || undefined,
                 component: newCompat.component,
               });
-              setNewCompat({
-                ...newCompat,
-                productLine: "",
-                modelName: "",
-              });
+              setNewCompat({ ...newCompat, productLine: "", modelName: "" });
             }}
             disabled={isAdding}
             size="sm"
           >
             <Plus className="h-4 w-4 mr-2" />
-            {isAdding ? "Ajout..." : "Ajouter la compatibilité"}
+            {isAdding ? "Ajout..." : "Ajouter"}
           </Button>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Fermer
-          </Button>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Fermer</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

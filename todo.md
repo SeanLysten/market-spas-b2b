@@ -3595,3 +3595,14 @@
 - [x] Refonte UI formulaire SAV avec sélection modèle → pièces filtrées
 - [x] Nettoyage des données test SAV et pièces détachées
 - [x] Tests et vérification impact-guard
+
+## Refonte complète SAV et Pièces Détachées v2 (2026-04-10)
+- [x] Audit complet existant : pages admin SAV, routes tRPC, pages utilisateur
+- [x] Supprimer TOUTES les données de test SAV (tickets 60005-60024)
+- [x] Refonte admin SAV : interface gestion marques → modèles → nomenclature pièces
+- [x] Refonte admin SAV : interface de gestion des tickets SAV améliorée
+- [x] Refonte formulaire SAV utilisateur : sélection marque → modèle → pièces BOM
+- [x] Refonte page Pièces Détachées utilisateur : navigation intuitive marque/modèle
+- [x] Design high-end pour toutes les interfaces SAV (impeccable + emil-design-eng)
+- [x] Tests vitest pour les nouvelles fonctionnalités (83 fichiers, 1277 tests passent)
+- [x] Vérification cohérence impact-guard + coherence-guard
