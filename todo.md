@@ -3546,3 +3546,6 @@
 
 ## Bug Fix — React Error #310 sur la page Panier
 - [x] Corriger l'erreur React #310 sur la page panier — hooks useState/useEffect/useCallback déplacés AVANT le early return isLoading dans Cart.tsx
+
+## Bug Fix — variantId null bloque la commande pour produits sans variantes
+- [x] Corriger le schéma de validation orders.create pour accepter variantId null/undefined — ajouté .nullable() sur tous les endpoints (orders.create, cart.add, cart.updateQuantity, cart.removeItem, cart.availableQuantity) + conversion null→undefined côté frontend

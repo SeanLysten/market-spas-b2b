@@ -155,7 +155,7 @@ export default function Checkout() {
       const result = await createOrderMutation.mutateAsync({
         items: cartItems.map(item => ({
           productId: item.productId,
-          variantId: (item as any).variantId,
+          ...((item as any).variantId ? { variantId: (item as any).variantId } : {}),
           quantity: item.quantity,
           isPreorder: (item as any).isPreorder || false,
         })),
