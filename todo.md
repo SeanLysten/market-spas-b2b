@@ -3536,3 +3536,7 @@
 - [x] Corriger le produit test Mollie (TVA 20% au lieu de 21%) — vatRate mis à jour en DB
 - [x] Implémenter le calcul TVA dynamique basé sur le pays du partenaire — getVatRateForPartner déjà en place, supprimé tous les 21% hardcodés
 - [x] Tests pour la logique TVA conditionnelle — vat-coherence.test.ts + order-pricing.test.ts passent
+
+## Bug Fix — Produits sans variantes bloqués par dialogue couleur
+- [x] Les produits sans variantes/couleurs affichent un dialogue "Choisir une couleur" vide qui bloque l'ajout au panier
+- [x] Permettre l'ajout direct au panier quand un produit n'a pas de variantes — Step 0 (direct add) ajouté dans ProductAddToCartDialog

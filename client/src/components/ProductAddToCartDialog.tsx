@@ -57,8 +57,8 @@ export default function ProductAddToCartDialog({
   onOpenChange,
   product,
 }: ProductAddToCartDialogProps) {
-  // Step 1: color, Step 2: source
-  const [step, setStep] = useState<1 | 2>(1);
+  // Step 0: no variants (direct add), Step 1: color, Step 2: source
+  const [step, setStep] = useState<0 | 1 | 2>(1);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSource, setSelectedSource] = useState<SourceOption | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -96,7 +96,7 @@ export default function ProductAddToCartDialog({
   });
 
   const resetForm = () => {
-    setStep(1);
+    setStep(hasNoVariants ? 0 : 1);
     setSelectedColor(null);
     setSelectedSource(null);
     setQuantity(1);
@@ -112,6 +112,14 @@ export default function ProductAddToCartDialog({
   }, [selectedSource?.variantId, selectedSource?.type]);
 
   const activeVariants = variants?.filter((v: any) => v.isActive !== false) || [];
+  const hasNoVariants = activeVariants.length === 0;
+
+  // Auto-switch to step 0 (direct add) when product has no variants
+  useEffect(() => {
+    if (open && hasNoVariants && variantsData !== undefined) {
+      setStep(0);
+    }
+  }, [open, hasNoVariants, variantsData]);
 
   // Group variants by color
   const colorGroups = useMemo(() => {
@@ -197,7 +205,21 @@ export default function ProductAddToCartDialog({
   };
 
   const handleAddToCart = () => {
-    if (!product || !selectedSource) return;
+    if (!product) return;
+    // For products without variants (step 0), add directly without variantId
+    if (hasNoVariants) {
+      if (directMaxQuantity > 0 && quantity > directMaxQuantity) {
+        toast.error(`Quantité maximale disponible : ${directMaxQuantity}`);
+        return;
+      }
+      addToCartMutation.mutate({
+        productId: product.id,
+        quantity,
+        isPreorder: false,
+      });
+      return;
+    }
+    if (!selectedSource) return;
     if (maxQuantity > 0 && quantity > maxQuantity) {
       toast.error(`Quantité maximale disponible : ${maxQuantity}`);
       return;
@@ -216,6 +238,15 @@ export default function ProductAddToCartDialog({
   const isOverLimit = quantity > maxQuantity;
   const isReservation = selectedSource?.type === "transit";
 
+  // For products without variants, query availability directly from product stock
+  const { data: directAvailabilityData } = trpc.cart.availableQuantity.useQuery(
+    { productId: product?.id },
+    { enabled: open && !!product?.id && hasNoVariants }
+  );
+  const directAvailability = useSafeQuery(directAvailabilityData);
+  const directMaxQuantity = directAvailability?.available ?? (product?.stockQuantity || 0);
+  const directIsOverLimit = hasNoVariants && quantity > directMaxQuantity;
+
   const selectedGroup = colorGroups.find(g => g.color === selectedColor);
   const selectedVariant = selectedSource ? activeVariants.find((v: any) => v.id === selectedSource.variantId) : null;
   const displayImage = selectedVariant?.imageUrl || product.imageUrl;
@@ -225,12 +256,100 @@ export default function ProductAddToCartDialog({
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {step === 1 ? "Choisir une couleur" : "Choisir la disponibilité"}
+            {step === 0 ? "Ajouter au panier" : step === 1 ? "Choisir une couleur" : "Choisir la disponibilité"}
           </DialogTitle>
           <DialogDescription>{product.name}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 py-4">
+          {/* ====== STEP 0: Direct Add (no variants) ====== */}
+          {step === 0 && (
+            <>
+              {/* Product Image */}
+              <div className="relative w-full h-52 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-full object-contain transition-all duration-300 p-2"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Package className="w-16 h-16 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+
+              {/* Quantity */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="quantity-direct">Quantité</Label>
+                  {directMaxQuantity > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      {directMaxQuantity} disponible(s)
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    disabled={quantity <= 1}
+                  >
+                    -
+                  </Button>
+                  <input
+                    id="quantity-direct"
+                    type="number"
+                    min="1"
+                    max={directMaxQuantity > 0 ? directMaxQuantity : undefined}
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    className={`flex h-10 w-full rounded-lg border bg-background px-3 py-2 text-sm text-center ${
+                      directIsOverLimit ? "border-red-500 text-red-600" : "border-input"
+                    }`}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setQuantity(Math.min(quantity + 1, directMaxQuantity > 0 ? directMaxQuantity : quantity + 1))}
+                    disabled={directMaxQuantity > 0 && quantity >= directMaxQuantity}
+                  >
+                    +
+                  </Button>
+                </div>
+
+                {directIsOverLimit && (
+                  <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                    <span>
+                      Quantité maximale disponible : <strong>{directMaxQuantity}</strong>
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Price Summary */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Prix unitaire HT</span>
+                  <span className="font-medium">
+                    {parseFloat(String(product.pricePartnerHT || 0)).toFixed(2)} €
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-base font-semibold text-display mt-2">
+                  <span>Total HT</span>
+                  <span>
+                    {(parseFloat(String(product.pricePartnerHT || 0)) * quantity).toFixed(2)} €
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+
           {/* ====== STEP 1: Color Selection ====== */}
           {step === 1 && (
             <div className="space-y-3">
@@ -473,6 +592,25 @@ export default function ProductAddToCartDialog({
         </div>
 
         <DialogFooter>
+          {step === 0 && (
+            <>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Annuler
+              </Button>
+              <Button
+                onClick={handleAddToCart}
+                disabled={
+                  addToCartMutation.isPending ||
+                  directIsOverLimit ||
+                  (directMaxQuantity === 0 && quantity > 0)
+                }
+                className="gap-2"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                Ajouter au panier
+              </Button>
+            </>
+          )}
           {step === 1 && (
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
