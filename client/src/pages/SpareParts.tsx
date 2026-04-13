@@ -37,21 +37,48 @@ const staggerContainer = {
   visible: { transition: { staggerChildren: 0.06 } },
 };
 
-/* ─── Layer images (placeholder gradients when no image configured) ─── */
-const LAYER_VISUALS: Record<string, { gradient: string; pattern: string }> = {
+/* ─── Layer visuals — image-first with fallback gradients ─── */
+const GECKO_PUMP_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031645455/jX4Ppf2KXZ8z9Tppipem7T/layer-gecko-pump_642e2cc2.jpg";
+
+const LAYER_VISUALS: Record<string, {
+  fallbackGradient: string;
+  overlayGradient: string;
+  accentColor: string;
+  accentBg: string;
+}> = {
   SHELL: {
-    gradient: "from-blue-500/90 via-cyan-500/80 to-teal-500/70",
-    pattern: "radial-gradient(circle at 30% 40%, rgba(255,255,255,0.1) 0%, transparent 60%)",
+    fallbackGradient: "from-sky-600 via-blue-700 to-indigo-800",
+    overlayGradient: "from-sky-900/80 via-blue-900/60 to-transparent",
+    accentColor: "text-sky-300",
+    accentBg: "bg-sky-500/20 border-sky-400/30",
   },
   TECHNICAL: {
-    gradient: "from-orange-500/90 via-amber-500/80 to-yellow-500/70",
-    pattern: "radial-gradient(circle at 70% 30%, rgba(255,255,255,0.1) 0%, transparent 60%)",
+    fallbackGradient: "from-orange-600 via-amber-700 to-yellow-800",
+    overlayGradient: "from-orange-950/80 via-amber-900/60 to-transparent",
+    accentColor: "text-amber-300",
+    accentBg: "bg-amber-500/20 border-amber-400/30",
   },
   EXTERIOR: {
-    gradient: "from-emerald-600/90 via-green-500/80 to-lime-500/70",
-    pattern: "radial-gradient(circle at 50% 60%, rgba(255,255,255,0.1) 0%, transparent 60%)",
+    fallbackGradient: "from-emerald-600 via-teal-700 to-green-800",
+    overlayGradient: "from-emerald-950/80 via-teal-900/60 to-transparent",
+    accentColor: "text-emerald-300",
+    accentBg: "bg-emerald-500/20 border-emerald-400/30",
   },
 };
+
+/** Get the image URL for a layer based on model data */
+function getLayerImage(layerKey: string, model: any): string | null {
+  switch (layerKey) {
+    case "SHELL":
+      return model.imageUrl || model.schemaImageUrl || null;
+    case "TECHNICAL":
+      return GECKO_PUMP_IMG;
+    case "EXTERIOR":
+      return model.imageUrl || null;
+    default:
+      return null;
+  }
+}
 
 /* ═══════════════════════════════════════════════════════════
    MODEL SELECTION — Grid of spa models
@@ -396,61 +423,101 @@ function LayerExplorer({ model, onBack }: { model: any; onBack: () => void }) {
             transition={{ duration: 0.35, ease: EASE_OUT as unknown as number[] }}
             className="space-y-5"
           >
-            {/* Layer cards — large visual cards */}
-            <div className="grid grid-cols-1 gap-4">
+            {/* Layer cards — premium hero cards with images */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {LAYERS.map((layer, i) => {
                 const count = getLayerPartCount(tree, layer.key);
                 const LayerIcon = layer.icon;
                 const vis = LAYER_VISUALS[layer.key];
+                const imgUrl = getLayerImage(layer.key, model);
+                const activeSubs = layer.subcategories.filter((s) => {
+                  const layerMap = tree.get(layer.key);
+                  return (layerMap?.get(s.key)?.length || 0) > 0;
+                });
 
                 return (
                   <motion.button
                     key={layer.key}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.08, duration: 0.4, ease: EASE_OUT as unknown as number[] }}
+                    initial={{ opacity: 0, y: 24, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ delay: i * 0.1, duration: 0.5, ease: EASE_OUT as unknown as number[] }}
                     onClick={() => count > 0 && goToLayer(layer.key)}
                     disabled={count === 0}
-                    whileHover={count > 0 ? { scale: 1.01, transition: { duration: 0.2, ease: EASE_OUT as unknown as number[] } } : undefined}
-                    whileTap={count > 0 ? { scale: 0.98 } : undefined}
-                    className={`group relative overflow-hidden rounded-2xl text-left transition-shadow duration-300 ${
-                      count > 0 ? "cursor-pointer hover:shadow-xl" : "opacity-50 cursor-not-allowed"
+                    whileHover={count > 0 ? {
+                      y: -6,
+                      scale: 1.02,
+                      transition: { duration: 0.3, ease: EASE_OUT as unknown as number[] }
+                    } : undefined}
+                    whileTap={count > 0 ? { scale: 0.97 } : undefined}
+                    className={`group relative overflow-hidden rounded-2xl text-left transition-all duration-500 ${
+                      count > 0
+                        ? "cursor-pointer hover:shadow-2xl hover:shadow-black/20 ring-1 ring-white/10 hover:ring-white/20"
+                        : "opacity-40 cursor-not-allowed grayscale"
                     }`}
                   >
-                    {/* Background gradient */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${vis.gradient}`} />
-                    <div className="absolute inset-0" style={{ backgroundImage: vis.pattern }} />
+                    {/* Background image or fallback gradient */}
+                    {imgUrl ? (
+                      <div className="absolute inset-0">
+                        <img
+                          src={imgUrl}
+                          alt={layer.label}
+                          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                        />
+                      </div>
+                    ) : (
+                      <div className={`absolute inset-0 bg-gradient-to-br ${vis.fallbackGradient}`} />
+                    )}
+
+                    {/* Dark overlay gradient — always present for readability */}
+                    <div className={`absolute inset-0 bg-gradient-to-t ${vis.overlayGradient}`} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
+
+                    {/* Subtle noise texture */}
+                    <div className="absolute inset-0 opacity-[0.03]" style={{
+                      backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")"
+                    }} />
 
                     {/* Content */}
-                    <div className="relative z-10 flex items-center gap-5 p-6 md:p-8">
-                      <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
-                        <LayerIcon className="w-7 h-7 md:w-8 md:h-8 text-white" />
+                    <div className="relative z-10 flex flex-col justify-between p-5 md:p-6 min-h-[220px] md:min-h-[280px]">
+                      {/* Top: icon badge */}
+                      <div className="flex items-start justify-between">
+                        <div className={`w-11 h-11 rounded-xl border backdrop-blur-md flex items-center justify-center ${vis.accentBg}`}>
+                          <LayerIcon className={`w-5 h-5 ${vis.accentColor}`} />
+                        </div>
+                        <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <span className="text-xs text-white/70">Explorer</span>
+                          <ChevronRight className="w-4 h-4 text-white/70 group-hover:translate-x-0.5 transition-transform duration-200" />
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg md:text-xl font-bold text-white">{layer.label}</h3>
-                        <p className="text-sm text-white/80 mt-0.5">{layer.description}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-xs font-medium text-white">
+
+                      {/* Bottom: text content */}
+                      <div className="space-y-3">
+                        <div>
+                          <h3 className="text-lg md:text-xl font-bold text-white leading-tight">
+                            {layer.label}
+                          </h3>
+                          <p className="text-sm text-white/60 mt-1 leading-relaxed line-clamp-2">
+                            {layer.description}
+                          </p>
+                        </div>
+
+                        {/* Stats row */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold text-white backdrop-blur-sm ${vis.accentBg}`}>
+                            <Package className="w-3 h-3" />
                             {count} pièce{count !== 1 ? "s" : ""}
                           </span>
-                          {layer.subcategories.filter((s) => {
-                            const layerMap = tree.get(layer.key);
-                            return (layerMap?.get(s.key)?.length || 0) > 0;
-                          }).length > 0 && (
-                            <span className="text-xs text-white/60">
-                              {layer.subcategories.filter((s) => {
-                                const layerMap = tree.get(layer.key);
-                                return (layerMap?.get(s.key)?.length || 0) > 0;
-                              }).length} catégorie{layer.subcategories.filter((s) => {
-                                const layerMap = tree.get(layer.key);
-                                return (layerMap?.get(s.key)?.length || 0) > 0;
-                              }).length !== 1 ? "s" : ""}
+                          {activeSubs.length > 0 && (
+                            <span className="text-xs text-white/40">
+                              {activeSubs.length} catégorie{activeSubs.length !== 1 ? "s" : ""}
                             </span>
                           )}
                         </div>
                       </div>
-                      <ChevronRight className="w-6 h-6 text-white/60 group-hover:translate-x-1 group-hover:text-white transition-all duration-200 shrink-0" />
                     </div>
+
+                    {/* Bottom shine effect on hover */}
+                    <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   </motion.button>
                 );
               })}

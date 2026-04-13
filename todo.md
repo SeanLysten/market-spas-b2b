@@ -3703,3 +3703,10 @@
 - [x] Dialog détail pièce avec classification couche/sous-catégorie
 - [x] Schéma technique collapsible
 - [x] 1357 tests passent (86 fichiers)
+
+## Refonte cartes de couches avec images premium
+- [x] Trouver des images représentatives pour les 3 couches (pompe Gecko uploadée CDN)
+- [x] Uploader les images via manus-upload-file --webdev
+- [x] Refaire les cartes de couches avec images de fond hero, overlay gradient, zoom hover
+- [x] Grille 3 colonnes desktop, images spécifiques par modèle (coque + extérieur)
+- [x] Vérifier dans le navigateur et tester les animations (1357 tests passent)
