@@ -445,79 +445,70 @@ function LayerExplorer({ model, onBack }: { model: any; onBack: () => void }) {
                     disabled={count === 0}
                     whileHover={count > 0 ? {
                       y: -6,
-                      scale: 1.02,
                       transition: { duration: 0.3, ease: EASE_OUT as unknown as number[] }
                     } : undefined}
                     whileTap={count > 0 ? { scale: 0.97 } : undefined}
-                    className={`group relative overflow-hidden rounded-2xl text-left transition-all duration-500 ${
+                    className={`group overflow-hidden rounded-2xl border bg-card text-left transition-all duration-500 ${
                       count > 0
-                        ? "cursor-pointer hover:shadow-2xl hover:shadow-black/20 ring-1 ring-white/10 hover:ring-white/20"
+                        ? "cursor-pointer hover:shadow-xl hover:shadow-primary/8 hover:border-primary/20"
                         : "opacity-40 cursor-not-allowed grayscale"
                     }`}
                   >
-                    {/* Background image or fallback gradient */}
-                    {imgUrl ? (
-                      <div className="absolute inset-0">
+                    {/* Image area — clean, no overlay */}
+                    <div className={`relative aspect-[16/10] overflow-hidden ${
+                      !imgUrl ? `bg-gradient-to-br ${vis.fallbackGradient}` : "bg-muted"
+                    }`}>
+                      {imgUrl && (
                         <img
                           src={imgUrl}
                           alt={layer.label}
-                          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                          className="w-full h-full object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-105"
                         />
+                      )}
+                      {!imgUrl && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <LayerIcon className="w-16 h-16 text-white/30" />
+                        </div>
+                      )}
+                      {/* Subtle bottom fade for smooth transition to text */}
+                      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card to-transparent" />
+                      {/* Icon badge — top left */}
+                      <div className={`absolute top-3 left-3 w-9 h-9 rounded-lg border backdrop-blur-md flex items-center justify-center ${vis.accentBg}`}>
+                        <LayerIcon className={`w-4 h-4 ${vis.accentColor}`} />
                       </div>
-                    ) : (
-                      <div className={`absolute inset-0 bg-gradient-to-br ${vis.fallbackGradient}`} />
-                    )}
-
-                    {/* Dark overlay gradient — always present for readability */}
-                    <div className={`absolute inset-0 bg-gradient-to-t ${vis.overlayGradient}`} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
-
-                    {/* Subtle noise texture */}
-                    <div className="absolute inset-0 opacity-[0.03]" style={{
-                      backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")"
-                    }} />
-
-                    {/* Content */}
-                    <div className="relative z-10 flex flex-col justify-between p-5 md:p-6 min-h-[220px] md:min-h-[280px]">
-                      {/* Top: icon badge */}
-                      <div className="flex items-start justify-between">
-                        <div className={`w-11 h-11 rounded-xl border backdrop-blur-md flex items-center justify-center ${vis.accentBg}`}>
-                          <LayerIcon className={`w-5 h-5 ${vis.accentColor}`} />
-                        </div>
-                        <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <span className="text-xs text-white/70">Explorer</span>
-                          <ChevronRight className="w-4 h-4 text-white/70 group-hover:translate-x-0.5 transition-transform duration-200" />
-                        </div>
-                      </div>
-
-                      {/* Bottom: text content */}
-                      <div className="space-y-3">
-                        <div>
-                          <h3 className="text-lg md:text-xl font-bold text-white leading-tight">
-                            {layer.label}
-                          </h3>
-                          <p className="text-sm text-white/60 mt-1 leading-relaxed line-clamp-2">
-                            {layer.description}
-                          </p>
-                        </div>
-
-                        {/* Stats row */}
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold text-white backdrop-blur-sm ${vis.accentBg}`}>
-                            <Package className="w-3 h-3" />
-                            {count} pièce{count !== 1 ? "s" : ""}
-                          </span>
-                          {activeSubs.length > 0 && (
-                            <span className="text-xs text-white/40">
-                              {activeSubs.length} catégorie{activeSubs.length !== 1 ? "s" : ""}
-                            </span>
-                          )}
-                        </div>
+                      {/* Explorer hint — top right on hover */}
+                      <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <span className={`text-xs font-medium px-2 py-1 rounded-md border backdrop-blur-md ${vis.accentBg} ${vis.accentColor}`}>Explorer</span>
                       </div>
                     </div>
 
-                    {/* Bottom shine effect on hover */}
-                    <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    {/* Text content — below image, on card background */}
+                    <div className="p-4 md:p-5 space-y-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="text-base md:text-lg font-bold tracking-tight text-foreground leading-tight">
+                            {layer.label}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">
+                            {layer.description}
+                          </p>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground/40 shrink-0 mt-0.5 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-200" />
+                      </div>
+
+                      {/* Stats row */}
+                      <div className="flex items-center gap-2 flex-wrap pt-1">
+                        <Badge variant="secondary" className="text-xs font-medium">
+                          <Package className="w-3 h-3 mr-1" />
+                          {count} pièce{count !== 1 ? "s" : ""}
+                        </Badge>
+                        {activeSubs.length > 0 && (
+                          <span className="text-xs text-muted-foreground">
+                            {activeSubs.length} catégorie{activeSubs.length !== 1 ? "s" : ""}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </motion.button>
                 );
               })}

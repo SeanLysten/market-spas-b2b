@@ -3710,3 +3710,9 @@
 - [x] Refaire les cartes de couches avec images de fond hero, overlay gradient, zoom hover
 - [x] Grille 3 colonnes desktop, images spécifiques par modèle (coque + extérieur)
 - [x] Vérifier dans le navigateur et tester les animations (1357 tests passent)
+
+## Correction cartes de couches — overlay et placement texte
+- [x] Retirer l'overlay coloré lourd sur les images de couches
+- [x] Placer le texte (titre, description, compteurs) en dessous de l'image
+- [x] Garder les couleurs d'accent en subtil (bordure, badge, titre)
+- [x] Image bien visible et distincte comme la pompe Gecko
