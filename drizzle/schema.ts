@@ -798,6 +798,7 @@ export const orders = mysqlTable(
       "COMPLETED",
       "CANCELLED",
       "REFUNDED",
+      "REFUSED",
     ]).default("DRAFT").notNull(),
 
     // Notes

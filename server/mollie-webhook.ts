@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import { getMolliePaymentById, MOLLIE_STATUS } from "./mollie";
 import { notifyPaymentReceived, notifyPaymentFailed } from "./notification-service";
-import { notifySupplierDepositPaid } from "./supplier-api";
 
 /**
  * Log a webhook event to the mollie_webhook_logs table
@@ -305,13 +304,9 @@ async function handleOrderPaymentUpdate(
         console.log("[Mollie Webhook] Email notification skipped:", (e as any).message);
       }
 
-      // Notify supplier API that deposit has been paid
-      try {
-        const supplierResult = await notifySupplierDepositPaid(orderId, currentOrder.orderNumber);
-        console.log(`[Mollie Webhook] Order ${orderId}: Supplier API notification ${supplierResult ? 'sent successfully' : 'skipped or failed'}`);
-      } catch (e) {
-        console.error("[Mollie Webhook] Supplier API forwarding error:", (e as any).message);
-      }
+      // Note: Pas de push sortant vers le fournisseur.
+      // Le fournisseur récupère les commandes via GET /api/supplier/orders/export
+      console.log(`[Mollie Webhook] Order ${orderId}: Deposit paid, commande disponible pour le fournisseur via GET export`);
       break;
 
     case MOLLIE_STATUS.FAILED:

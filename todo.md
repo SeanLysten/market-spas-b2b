@@ -3721,3 +3721,13 @@
 - [x] Analyser le flux de données : getExplorerData retourne les layers avec imageUrl, mais SpareParts.tsx ne l'appelait pas
 - [x] Connecter les images de couches admin (getExplorerData) aux cartes de couches partenaire (SpareParts.tsx) — priorité admin > fallback
 - [x] Vérifier dans le navigateur que les images configurées dans l'admin s'affichent côté partenaire — confirmé OK
+
+## Corrections API Fournisseur — Incohérences & supplierClientCode
+- [x] I1: Corriger l'interface TypeScript SupplierDepositNotification.payment pour correspondre au payload réel (champs français)
+- [x] I2: ANNULÉ — Pas d'API fournisseur externe, tout passe par notre API (GET/POST). Supprimer le code mort de push sortant.
+- [x] I3: Ajouter REFUSED à l'enum inline status de la table orders dans le schéma Drizzle
+- [x] Supprimer le code mort notifySupplierDepositPaid + supplier-api.ts (push sortant inexistant)
+- [x] Nettoyer les appels à notifySupplierDepositPaid dans mollie-webhook.ts
+- [x] Supprimer le test supplier-api-flows.test.ts (teste du code mort)
+- [x] Vérifier que supplierClientCode est bien présent dans les endpoints GET/POST existants — DÉJÀ présent dans F2 (export commandes L.428)
+- [x] Mettre à jour les tests unitaires pour refléter les corrections — 85 fichiers, 1344 tests passés
