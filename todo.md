@@ -3746,3 +3746,6 @@
 ## Page admin Logs API Fournisseur
 - [x] Créer la page admin Logs API Fournisseur avec liste des imports et détails
 - [x] Ajouter la route dans la navigation admin
+
+## Bug: Route tRPC manquante admin.supplierApiLogs.list
+- [x] Créer la route tRPC admin.supplierApiLogs.list dans routers.ts — Déplacé du niveau racine vers le namespace admin
