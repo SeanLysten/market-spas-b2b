@@ -1,5 +1,6 @@
-import { useState, useRef, useCallback, lazy, Suspense } from "react";
+import { useState, lazy, Suspense } from "react";
 import { trpc } from "@/lib/trpc";
+import { LAYERS, groupPartsByLayer, getLayerPartCount, type LayerKey } from "@/lib/spare-parts-layers";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,33 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
-  Search, Package, ChevronRight, Info,
-  Wrench, Cpu, Droplets, Zap, Thermometer, Wind, Eye, Users, Ruler,
-  Box, ArrowLeft, Loader2, FileImage
+  Search, Package, ChevronRight, ChevronDown, Info,
+  Users, Ruler, Box, ArrowLeft, Loader2, FileImage
 } from "lucide-react";
 
-// ===== CONSTANTS =====
-const CATEGORY_INFO: Record<string, { label: string; icon: any; color: string }> = {
-  PUMPS: { label: "Pompes", icon: Droplets, color: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950" },
-  ELECTRONICS: { label: "Électronique", icon: Cpu, color: "text-purple-600 bg-purple-50 dark:text-purple-400 dark:bg-purple-950" },
-  JETS: { label: "Jets", icon: Wind, color: "text-cyan-600 bg-cyan-50 dark:text-cyan-400 dark:bg-cyan-950" },
-  SCREENS: { label: "Écrans / Afficheurs", icon: Eye, color: "text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-950" },
-  HEATING: { label: "Chauffage", icon: Thermometer, color: "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950" },
-  PLUMBING: { label: "Plomberie", icon: Wrench, color: "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-950" },
-  COVERS: { label: "Couvertures", icon: Package, color: "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-950" },
-  CABINETS: { label: "Habillage", icon: Box, color: "text-stone-600 bg-stone-50 dark:text-stone-400 dark:bg-stone-950" },
-  LIGHTING: { label: "Éclairage LED", icon: Zap, color: "text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-950" },
-  AUDIO: { label: "Audio", icon: Wind, color: "text-pink-600 bg-pink-50 dark:text-pink-400 dark:bg-pink-950" },
-  OZONE_UVC: { label: "Ozone / UVC", icon: Droplets, color: "text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-950" },
-  OTHER: { label: "Autres", icon: Package, color: "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-950" },
-};
-
-// ===== MODEL SELECTION (Direct — Market Spas only) =====
-function ModelSelection({
-  onSelect,
-}: {
-  onSelect: (model: any) => void;
-}) {
+// ===== MODEL SELECTION =====
+function ModelSelection({ onSelect }: { onSelect: (model: any) => void }) {
   const [search, setSearch] = useState("");
   const { data: models, isLoading } = trpc.spaModels.listWithPartCount.useQuery({ brand: "MARKET_SPAS" });
 
@@ -44,7 +24,6 @@ function ModelSelection({
     return m.name.toLowerCase().includes(s) || (m.series || "").toLowerCase().includes(s) || (m.dimensions || "").toLowerCase().includes(s);
   });
 
-  // Grouper par série
   const grouped = new Map<string, any[]>();
   for (const m of filtered) {
     const series = m.series || "Autres";
@@ -66,43 +45,28 @@ function ModelSelection({
 
       <div className="relative max-w-md mx-auto">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Rechercher un modèle..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
+        <Input placeholder="Rechercher un modèle..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
+        <div className="flex items-center justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
           <Package className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
           <p className="text-lg font-medium text-gray-500">Aucun modèle trouvé</p>
-          <p className="text-sm text-muted-foreground">
-            {search ? "Essayez un autre terme de recherche" : "Aucun modèle n'a été enregistré"}
-          </p>
+          <p className="text-sm text-muted-foreground">{search ? "Essayez un autre terme de recherche" : "Aucun modèle n'a été enregistré"}</p>
         </div>
       ) : (
         Array.from(grouped.entries()).map(([series, seriesModels]) => (
           <div key={series} className="space-y-3">
-            {grouped.size > 1 && (
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{series}</h3>
-            )}
+            {grouped.size > 1 && <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{series}</h3>}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {seriesModels.map((model: any) => (
                 <button
                   key={model.id}
                   onClick={() => model.partCount > 0 ? onSelect(model) : null}
                   disabled={model.partCount === 0}
-                  className={`group relative overflow-hidden rounded-xl border bg-card text-left transition-all duration-300 ${
-                    model.partCount > 0
-                      ? "hover:shadow-lg cursor-pointer"
-                      : "opacity-60 cursor-not-allowed"
-                  }`}
+                  className={`group relative overflow-hidden rounded-xl border bg-card text-left transition-all duration-300 ${model.partCount > 0 ? "hover:shadow-lg cursor-pointer" : "opacity-60 cursor-not-allowed"}`}
                 >
                   <div className="h-40 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center overflow-hidden">
                     {model.schemaImageUrl ? (
@@ -116,24 +80,12 @@ function ModelSelection({
                   <div className="p-4 space-y-2">
                     <h4 className="font-semibold text-base">{model.name}</h4>
                     <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                      {model.seats && (
-                        <span className="flex items-center gap-1">
-                          <Users className="w-3 h-3" /> {model.seats} places
-                        </span>
-                      )}
-                      {model.dimensions && (
-                        <span className="flex items-center gap-1">
-                          <Ruler className="w-3 h-3" /> {model.dimensions}
-                        </span>
-                      )}
+                      {model.seats && <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {model.seats} places</span>}
+                      {model.dimensions && <span className="flex items-center gap-1"><Ruler className="w-3 h-3" /> {model.dimensions}</span>}
                     </div>
                     <div className="flex items-center justify-between">
-                      <Badge variant={model.partCount > 0 ? "default" : "secondary"} className="text-xs">
-                        {model.partCount} pièce{model.partCount !== 1 ? "s" : ""}
-                      </Badge>
-                      {model.partCount > 0 && (
-                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-                      )}
+                      <Badge variant={model.partCount > 0 ? "default" : "secondary"} className="text-xs">{model.partCount} pièce{model.partCount !== 1 ? "s" : ""}</Badge>
+                      {model.partCount > 0 && <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />}
                     </div>
                   </div>
                 </button>
@@ -146,39 +98,39 @@ function ModelSelection({
   );
 }
 
-// ===== PARTS LIST WITH SCHEMA TECHNIQUE =====
-function PartsList({
-  model,
-  onBack,
-}: {
-  model: any;
-  onBack: () => void;
-}) {
+// ===== PARTS LIST WITH LAYER TREE =====
+function PartsList({ model, onBack }: { model: any; onBack: () => void }) {
   const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [expandedLayers, setExpandedLayers] = useState<Set<LayerKey>>(new Set(["SHELL", "TECHNICAL", "EXTERIOR"]));
+  const [expandedSubs, setExpandedSubs] = useState<Set<string>>(new Set());
   const [detailPart, setDetailPart] = useState<any>(null);
 
   const { data: parts, isLoading } = trpc.spaModels.getParts.useQuery({ spaModelId: model.id });
 
+  // Filter by search
   const filtered = (parts || []).filter((p: any) => {
-    if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
-    if (search) {
-      const s = search.toLowerCase();
-      return p.name.toLowerCase().includes(s) || p.reference.toLowerCase().includes(s);
-    }
-    return true;
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return p.name.toLowerCase().includes(s) || p.reference.toLowerCase().includes(s);
   });
 
-  // Grouper par catégorie
-  const grouped = new Map<string, any[]>();
-  for (const p of filtered) {
-    const list = grouped.get(p.category) || [];
-    list.push(p);
-    grouped.set(p.category, list);
-  }
+  // Group into layer tree
+  const tree = groupPartsByLayer(filtered);
 
-  // Catégories disponibles
-  const availableCategories = [...new Set((parts || []).map((p: any) => p.category))];
+  const toggleLayer = (key: LayerKey) => {
+    const next = new Set(expandedLayers);
+    if (next.has(key)) next.delete(key); else next.add(key);
+    setExpandedLayers(next);
+  };
+
+  const toggleSub = (key: string) => {
+    const next = new Set(expandedSubs);
+    if (next.has(key)) next.delete(key); else next.add(key);
+    setExpandedSubs(next);
+  };
+
+  // Auto-expand subcategories that have parts when searching
+  const getVisibleSubKey = (layerKey: LayerKey, subKey: string) => `${layerKey}:${subKey}`;
 
   return (
     <div className="space-y-6">
@@ -197,7 +149,7 @@ function PartsList({
         </div>
       </div>
 
-      {/* Schéma technique en grand */}
+      {/* Schéma technique */}
       {model.schemaImageUrl && (
         <div className="rounded-xl border bg-white dark:bg-card overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30 flex items-center justify-between">
@@ -214,113 +166,154 @@ function PartsList({
               className="max-w-full max-h-[500px] object-contain cursor-zoom-in"
               onClick={(e) => {
                 const img = e.currentTarget;
-                if (img.style.maxHeight === 'none') {
-                  img.style.maxHeight = '500px';
-                  img.style.cursor = 'zoom-in';
-                } else {
-                  img.style.maxHeight = 'none';
-                  img.style.cursor = 'zoom-out';
-                }
+                if (img.style.maxHeight === "none") { img.style.maxHeight = "500px"; img.style.cursor = "zoom-in"; }
+                else { img.style.maxHeight = "none"; img.style.cursor = "zoom-out"; }
               }}
             />
           </div>
         </div>
       )}
 
-      {/* Recherche + filtres catégorie */}
-      <div className="space-y-3">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher une pièce..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setCategoryFilter("all")}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              categoryFilter === "all"
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted hover:bg-muted/80 text-muted-foreground"
-            }`}
-          >
-            Toutes ({parts?.length || 0})
-          </button>
-          {availableCategories.map((cat) => {
-            const info = CATEGORY_INFO[cat] || { label: cat, icon: Package, color: "text-gray-600 bg-gray-50" };
-            const count = (parts || []).filter((p: any) => p.category === cat).length;
-            return (
-              <button
-                key={cat}
-                onClick={() => setCategoryFilter(cat === categoryFilter ? "all" : cat)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
-                  categoryFilter === cat
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted hover:bg-muted/80 text-muted-foreground"
-                }`}
-              >
-                {info.label} ({count})
-              </button>
-            );
-          })}
-        </div>
+      {/* Filtre rapide */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input placeholder="Rechercher une pièce (nom, référence)..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
       </div>
 
-      {/* Liste des pièces */}
+      {/* Layer summary cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {LAYERS.map((layer) => {
+          const count = getLayerPartCount(tree, layer.key);
+          const LayerIcon = layer.icon;
+          return (
+            <button
+              key={layer.key}
+              onClick={() => {
+                toggleLayer(layer.key);
+                // Scroll to the layer section
+                document.getElementById(`layer-${layer.key}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              className={`p-4 rounded-xl border text-left transition-all hover:shadow-md ${layer.bgColor} ${expandedLayers.has(layer.key) ? "ring-2 ring-primary/30" : ""}`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-white/80 dark:bg-black/20 ${layer.color}`}>
+                  <LayerIcon className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-sm">{layer.label}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{count} pièce{count !== 1 ? "s" : ""}</p>
+                </div>
+                {expandedLayers.has(layer.key) ? (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Loading */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
+        <div className="flex items-center justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
           <Search className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
           <p className="text-lg font-medium text-gray-500">Aucune pièce trouvée</p>
-          <p className="text-sm text-muted-foreground">Essayez un autre terme de recherche ou catégorie</p>
+          <p className="text-sm text-muted-foreground">Essayez un autre terme de recherche</p>
         </div>
       ) : (
-        Array.from(grouped.entries()).map(([category, categoryParts]) => {
-          const info = CATEGORY_INFO[category] || { label: category, icon: Package, color: "text-gray-600 bg-gray-50" };
-          const Icon = info.icon;
-          return (
-            <div key={category} className="space-y-3">
-              <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${info.color}`}>
-                  <Icon className="w-4 h-4" />
-                </div>
-                <h3 className="font-semibold text-base">{info.label}</h3>
-                <Badge variant="secondary" className="text-xs">{categoryParts.length}</Badge>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {categoryParts.map((part: any) => (
-                  <Card
-                    key={part.sparePartId}
-                    className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => setDetailPart(part)}
-                  >
-                    <CardContent className="p-0">
-                      {part.imageUrl && (
-                        <div className="h-32 bg-muted/30 flex items-center justify-center overflow-hidden">
-                          <img src={part.imageUrl} alt={part.name} className="w-full h-full object-contain p-2" />
+        /* Layer tree */
+        <div className="space-y-6">
+          {LAYERS.map((layer) => {
+            const layerMap = tree.get(layer.key);
+            const layerCount = getLayerPartCount(tree, layer.key);
+            if (layerCount === 0 && search) return null; // Hide empty layers when searching
+            const isExpanded = expandedLayers.has(layer.key);
+            const LayerIcon = layer.icon;
+
+            return (
+              <div key={layer.key} id={`layer-${layer.key}`} className="space-y-3">
+                {/* Layer header */}
+                <button
+                  onClick={() => toggleLayer(layer.key)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all hover:shadow-sm ${layer.bgColor}`}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-white/80 dark:bg-black/20 ${layer.color}`}>
+                    <LayerIcon className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h3 className="font-semibold text-sm">{layer.label}</h3>
+                    <p className="text-xs text-muted-foreground">{layer.description}</p>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">{layerCount}</Badge>
+                  {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                </button>
+
+                {/* Subcategories */}
+                {isExpanded && layerMap && (
+                  <div className="ml-4 md:ml-6 space-y-3 border-l-2 border-muted pl-4">
+                    {layer.subcategories.map((sub) => {
+                      const subParts = layerMap.get(sub.key) || [];
+                      if (subParts.length === 0) return null;
+                      const subFullKey = getVisibleSubKey(layer.key, sub.key);
+                      const isSubExpanded = expandedSubs.has(subFullKey) || !!search; // Auto-expand when searching
+                      const SubIcon = sub.icon;
+
+                      return (
+                        <div key={sub.key} className="space-y-2">
+                          {/* Subcategory header */}
+                          <button
+                            onClick={() => toggleSub(subFullKey)}
+                            className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                          >
+                            <div className={`w-7 h-7 rounded-md flex items-center justify-center ${sub.color}`}>
+                              <SubIcon className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="font-medium text-sm flex-1 text-left">{sub.label}</span>
+                            <Badge variant="outline" className="text-xs">{subParts.length}</Badge>
+                            {isSubExpanded ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
+                          </button>
+
+                          {/* Parts grid */}
+                          {isSubExpanded && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 ml-2">
+                              {subParts.map((part: any) => (
+                                <Card
+                                  key={part.sparePartId || part.linkId}
+                                  className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                                  onClick={() => setDetailPart(part)}
+                                >
+                                  <CardContent className="p-0">
+                                    {part.imageUrl && (
+                                      <div className="h-28 bg-muted/30 flex items-center justify-center overflow-hidden">
+                                        <img src={part.imageUrl} alt={part.name} className="w-full h-full object-contain p-2" />
+                                      </div>
+                                    )}
+                                    <div className="p-3 space-y-1.5">
+                                      <h4 className="font-medium text-sm leading-tight line-clamp-2">{part.name}</h4>
+                                      <p className="text-xs text-muted-foreground font-mono">{part.reference}</p>
+                                      {part.quantity && <p className="text-xs text-muted-foreground">{part.quantity} PCS</p>}
+                                      <div className="flex items-center justify-between pt-1">
+                                        <span className="text-base font-bold">{parseFloat(part.priceHT || "0").toFixed(2)} €</span>
+                                        <span className="text-xs text-muted-foreground">HT</span>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      )}
-                      <div className="p-4 space-y-2">
-                        <h4 className="font-medium text-sm leading-tight">{part.name}</h4>
-                        <p className="text-xs text-muted-foreground font-mono">{part.reference}</p>
-                        <div className="flex items-center justify-between pt-1">
-                          <span className="text-lg font-bold">{parseFloat(part.priceHT).toFixed(2)} €</span>
-                          <span className="text-xs text-muted-foreground">HT</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
-          );
-        })
+            );
+          })}
+        </div>
       )}
 
       {/* Info box */}
@@ -357,16 +350,18 @@ function PartsList({
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Catégorie</Label>
-                  <p className="font-medium">{CATEGORY_INFO[detailPart.category]?.label || detailPart.category}</p>
+                  <p className="font-medium">{detailPart.category}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Prix HT</Label>
-                  <p className="font-medium text-lg">{parseFloat(detailPart.priceHT).toFixed(2)} €</p>
+                  <p className="font-medium text-lg">{parseFloat(detailPart.priceHT || "0").toFixed(2)} €</p>
                 </div>
-                <div>
-                  <Label className="text-muted-foreground">TVA</Label>
-                  <p className="font-medium text-xs">Selon pays (FR: 20%, autres: 0%)</p>
-                </div>
+                {detailPart.quantity && (
+                  <div>
+                    <Label className="text-muted-foreground">Quantité</Label>
+                    <p className="font-medium">{detailPart.quantity} PCS</p>
+                  </div>
+                )}
               </div>
               {detailPart.description && (
                 <div>
@@ -397,8 +392,8 @@ export default function SpareParts() {
 
   const handleSelectModel = (model: any) => {
     setSelectedModel(model);
-    // Try explorer first, it will fallback to parts list if not configured
-    setStep("explorer");
+    // Go directly to parts list with layer tree (explorer is for future interactive hotspots)
+    setStep("parts");
   };
 
   const handleBackToModels = () => {
@@ -410,7 +405,6 @@ export default function SpareParts() {
     setStep("parts");
   };
 
-  // Breadcrumb (only for parts list view, explorer has its own)
   const breadcrumb = step !== "explorer" ? (
     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
       <button
@@ -429,23 +423,15 @@ export default function SpareParts() {
   ) : null;
 
   return (
-    <>
-      <div className="p-4 md:p-6">
-        {breadcrumb}
-        {step === "models" && <ModelSelection onSelect={handleSelectModel} />}
-        {step === "explorer" && selectedModel && (
-          <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>}>
-            <VisualExplorer
-              model={selectedModel}
-              onBack={handleBackToModels}
-              onFallbackToList={handleFallbackToList}
-            />
-          </Suspense>
-        )}
-        {step === "parts" && selectedModel && (
-          <PartsList model={selectedModel} onBack={handleBackToModels} />
-        )}
-      </div>
-    </>
+    <div className="p-4 md:p-6">
+      {breadcrumb}
+      {step === "models" && <ModelSelection onSelect={handleSelectModel} />}
+      {step === "explorer" && selectedModel && (
+        <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>}>
+          <VisualExplorer model={selectedModel} onBack={handleBackToModels} onFallbackToList={handleFallbackToList} />
+        </Suspense>
+      )}
+      {step === "parts" && selectedModel && <PartsList model={selectedModel} onBack={handleBackToModels} />}
+    </div>
   );
 }

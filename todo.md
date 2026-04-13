@@ -3678,3 +3678,14 @@
 - [x] Partenaire : responsive mobile (pinch-zoom, bottom sheet, touch targets)
 - [x] Partenaire : animations de transition entre étapes
 - [x] Tests vitest pour les nouvelles routes (30 tests passés)
+
+## Bug : onglet Explorateur visuel absent dans l'admin
+- [x] Diagnostiquer pourquoi l'onglet Explorateur visuel ne s'affiche pas dans Admin > Pièces Détachées (icône Pillow inexistante dans lucide-react)
+- [x] Corriger le problème (remplacé Pillow par Sofa)
+
+## Réorganisation nomenclature en arbre (couches/sous-catégories)
+- [x] Mapper les catégories de pièces existantes vers les 3 couches (Coque, Pompe/Électronique, Extérieur)
+- [x] Restructurer la vue Nomenclature admin avec navigation en arbre par couche
+- [x] Restructurer la vue Pièces Détachées partenaire avec la même structure en arbre
+- [x] Ajouter un filtre rapide de recherche
+- [x] Vérifier dans le navigateur et tester
