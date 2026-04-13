@@ -3716,3 +3716,8 @@
 - [x] Placer le texte (titre, description, compteurs) en dessous de l'image
 - [x] Garder les couleurs d'accent en subtil (bordure, badge, titre)
 - [x] Image bien visible et distincte comme la pompe Gecko
+
+## Bug cohérence : images de couches admin non reprises côté partenaire
+- [x] Analyser le flux de données : getExplorerData retourne les layers avec imageUrl, mais SpareParts.tsx ne l'appelait pas
+- [x] Connecter les images de couches admin (getExplorerData) aux cartes de couches partenaire (SpareParts.tsx) — priorité admin > fallback
+- [x] Vérifier dans le navigateur que les images configurées dans l'admin s'affichent côté partenaire — confirmé OK

@@ -67,7 +67,12 @@ const LAYER_VISUALS: Record<string, {
 };
 
 /** Get the image URL for a layer based on model data */
-function getLayerImage(layerKey: string, model: any): string | null {
+function getLayerImage(layerKey: string, model: any, adminLayerImages?: Map<string, string>): string | null {
+  // Priority: admin-configured image > default fallback
+  const adminImg = adminLayerImages?.get(layerKey);
+  if (adminImg) return adminImg;
+
+  // Fallback defaults
   switch (layerKey) {
     case "SHELL":
       return model.imageUrl || model.schemaImageUrl || null;
@@ -241,6 +246,22 @@ function LayerExplorer({ model, onBack }: { model: any; onBack: () => void }) {
   const [detailPart, setDetailPart] = useState<any>(null);
 
   const { data: parts, isLoading } = trpc.spaModels.getParts.useQuery({ spaModelId: model.id });
+
+  // Fetch explorer data (admin-configured layer images)
+  const { data: explorerData } = trpc.spaModels.getExplorerData.useQuery({ spaModelId: model.id });
+
+  // Build a map of layerType → imageUrl from admin-configured layers
+  const adminLayerImages = useMemo(() => {
+    const map = new Map<string, string>();
+    if (explorerData?.layers) {
+      for (const layer of explorerData.layers) {
+        if (layer.imageUrl) {
+          map.set(layer.layerType, layer.imageUrl);
+        }
+      }
+    }
+    return map;
+  }, [explorerData]);
 
   const tree = useMemo(() => groupPartsByLayer(parts || []), [parts]);
 
@@ -429,7 +450,7 @@ function LayerExplorer({ model, onBack }: { model: any; onBack: () => void }) {
                 const count = getLayerPartCount(tree, layer.key);
                 const LayerIcon = layer.icon;
                 const vis = LAYER_VISUALS[layer.key];
-                const imgUrl = getLayerImage(layer.key, model);
+                const imgUrl = getLayerImage(layer.key, model, adminLayerImages);
                 const activeSubs = layer.subcategories.filter((s) => {
                   const layerMap = tree.get(layer.key);
                   return (layerMap?.get(s.key)?.length || 0) > 0;
