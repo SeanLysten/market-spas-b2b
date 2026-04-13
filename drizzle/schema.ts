@@ -2402,6 +2402,93 @@ export type SpaModelSparePart = typeof spaModelSpareParts.$inferSelect;
 export type InsertSpaModelSparePart = typeof spaModelSpareParts.$inferInsert;
 
 // ============================================
+// EXPLORATEUR VISUEL DE PIÈCES DÉTACHÉES
+// ============================================
+
+// Types de couches
+export const layerTypeEnum = mysqlEnum("layerType", [
+  "SHELL",      // Coque intérieure (jets, écran, oreillers, éclairage, audio)
+  "TECHNICAL",  // Pompes & Électronique (pompes, chauffage, plomberie, ozone)
+  "EXTERIOR",   // Extérieur (panneaux, coins, couverture, habillage)
+]);
+
+// Couches d'un modèle de spa
+export const spaModelLayers = mysqlTable(
+  "spa_model_layers",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    spaModelId: int("spaModelId").notNull(),
+    layerType: layerTypeEnum.notNull(),
+    label: varchar("label", { length: 100 }).notNull(), // Ex: "Coque intérieure"
+    description: varchar("description", { length: 500 }),
+    imageUrl: varchar("imageUrl", { length: 512 }),
+    sortOrder: int("sortOrder").default(0),
+    isActive: boolean("isActive").default(true),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    spaModelIdIdx: index("sml_spaModelId_idx").on(table.spaModelId),
+    uniqueModelLayer: index("sml_unique_model_layer_idx").on(table.spaModelId, table.layerType),
+  })
+);
+
+export type SpaModelLayer = typeof spaModelLayers.$inferSelect;
+export type InsertSpaModelLayer = typeof spaModelLayers.$inferInsert;
+
+// Zones cliquables dans une couche (ex: "Lounger 1", "Écran de contrôle")
+export const spaModelZones = mysqlTable(
+  "spa_model_zones",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    layerId: int("layerId").notNull(),
+    name: varchar("name", { length: 100 }).notNull(), // Identifiant interne
+    label: varchar("label", { length: 150 }).notNull(), // Label affiché
+    description: varchar("description", { length: 500 }),
+    imageUrl: varchar("imageUrl", { length: 512 }), // Image de détail optionnelle
+    // Position de la zone sur l'image de la couche (en % pour responsive)
+    posX: decimal("posX", { precision: 5, scale: 2 }), // Centre X de la zone (0-100)
+    posY: decimal("posY", { precision: 5, scale: 2 }), // Centre Y de la zone (0-100)
+    width: decimal("width", { precision: 5, scale: 2 }), // Largeur de la zone (0-100)
+    height: decimal("height", { precision: 5, scale: 2 }), // Hauteur de la zone (0-100)
+    sortOrder: int("sortOrder").default(0),
+    isActive: boolean("isActive").default(true),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    layerIdIdx: index("smz_layerId_idx").on(table.layerId),
+  })
+);
+
+export type SpaModelZone = typeof spaModelZones.$inferSelect;
+export type InsertSpaModelZone = typeof spaModelZones.$inferInsert;
+
+// Hotspots positionnés sur une zone, liés à une pièce détachée
+export const spaModelHotspots = mysqlTable(
+  "spa_model_hotspots",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    zoneId: int("zoneId").notNull(),
+    sparePartId: int("sparePartId").notNull(),
+    label: varchar("label", { length: 150 }), // Label optionnel (sinon on utilise le nom de la pièce)
+    // Position du hotspot sur l'image de la zone (en % pour responsive)
+    posX: decimal("posX", { precision: 5, scale: 2 }).notNull(), // X (0-100)
+    posY: decimal("posY", { precision: 5, scale: 2 }).notNull(), // Y (0-100)
+    sortOrder: int("sortOrder").default(0),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    zoneIdIdx: index("smh_zoneId_idx").on(table.zoneId),
+    sparePartIdIdx: index("smh_sparePartId_idx").on(table.sparePartId),
+  })
+);
+
+export type SpaModelHotspot = typeof spaModelHotspots.$inferSelect;
+export type InsertSpaModelHotspot = typeof spaModelHotspots.$inferInsert;
+
+// ============================================
 // NOTIFICATION PREFERENCES
 // ============================================
 

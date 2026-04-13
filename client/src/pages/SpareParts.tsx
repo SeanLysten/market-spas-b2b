@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback, lazy, Suspense } from "react";
 import { trpc } from "@/lib/trpc";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -388,14 +388,17 @@ function PartsList({
   );
 }
 
+const VisualExplorer = lazy(() => import("@/components/VisualExplorer"));
+
 // ===== MAIN COMPONENT =====
 export default function SpareParts() {
-  const [step, setStep] = useState<"models" | "parts">("models");
+  const [step, setStep] = useState<"models" | "explorer" | "parts">("models");
   const [selectedModel, setSelectedModel] = useState<any>(null);
 
   const handleSelectModel = (model: any) => {
     setSelectedModel(model);
-    setStep("parts");
+    // Try explorer first, it will fallback to parts list if not configured
+    setStep("explorer");
   };
 
   const handleBackToModels = () => {
@@ -403,8 +406,12 @@ export default function SpareParts() {
     setStep("models");
   };
 
-  // Breadcrumb
-  const breadcrumb = (
+  const handleFallbackToList = () => {
+    setStep("parts");
+  };
+
+  // Breadcrumb (only for parts list view, explorer has its own)
+  const breadcrumb = step !== "explorer" ? (
     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
       <button
         onClick={() => { setStep("models"); setSelectedModel(null); }}
@@ -419,13 +426,22 @@ export default function SpareParts() {
         </>
       )}
     </div>
-  );
+  ) : null;
 
   return (
     <>
       <div className="p-4 md:p-6">
         {breadcrumb}
         {step === "models" && <ModelSelection onSelect={handleSelectModel} />}
+        {step === "explorer" && selectedModel && (
+          <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>}>
+            <VisualExplorer
+              model={selectedModel}
+              onBack={handleBackToModels}
+              onFallbackToList={handleFallbackToList}
+            />
+          </Suspense>
+        )}
         {step === "parts" && selectedModel && (
           <PartsList model={selectedModel} onBack={handleBackToModels} />
         )}

@@ -4601,6 +4601,146 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await spaModelsDb.listSpaModelsWithPartCount(input?.brand);
       }),
+
+    // --- Explorer visuel : Layers ---
+    getLayers: protectedProcedure
+      .input(z.object({ spaModelId: z.number() }))
+      .query(async ({ input }) => {
+        return await spaModelsDb.getModelLayers(input.spaModelId);
+      }),
+
+    createLayer: adminProcedure
+      .input(z.object({
+        spaModelId: z.number(),
+        layerType: z.enum(["SHELL", "TECHNICAL", "EXTERIOR"]),
+        label: z.string().min(1),
+        description: z.string().optional(),
+        imageUrl: z.string().optional(),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.createLayer(input);
+      }),
+
+    updateLayer: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        data: z.object({
+          label: z.string().optional(),
+          description: z.string().optional(),
+          imageUrl: z.string().optional(),
+          sortOrder: z.number().optional(),
+          isActive: z.boolean().optional(),
+        }),
+      }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.updateLayer(input.id, input.data);
+      }),
+
+    deleteLayer: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.deleteLayer(input.id);
+      }),
+
+    // --- Explorer visuel : Zones ---
+    getZones: protectedProcedure
+      .input(z.object({ layerId: z.number() }))
+      .query(async ({ input }) => {
+        return await spaModelsDb.getLayerZones(input.layerId);
+      }),
+
+    createZone: adminProcedure
+      .input(z.object({
+        layerId: z.number(),
+        name: z.string().min(1),
+        label: z.string().min(1),
+        description: z.string().optional(),
+        imageUrl: z.string().optional(),
+        posX: z.string().optional(),
+        posY: z.string().optional(),
+        width: z.string().optional(),
+        height: z.string().optional(),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.createZone(input);
+      }),
+
+    updateZone: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        data: z.object({
+          name: z.string().optional(),
+          label: z.string().optional(),
+          description: z.string().optional(),
+          imageUrl: z.string().optional(),
+          posX: z.string().optional(),
+          posY: z.string().optional(),
+          width: z.string().optional(),
+          height: z.string().optional(),
+          sortOrder: z.number().optional(),
+          isActive: z.boolean().optional(),
+        }),
+      }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.updateZone(input.id, input.data);
+      }),
+
+    deleteZone: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.deleteZone(input.id);
+      }),
+
+    // --- Explorer visuel : Hotspots ---
+    getHotspots: protectedProcedure
+      .input(z.object({ zoneId: z.number() }))
+      .query(async ({ input }) => {
+        return await spaModelsDb.getZoneHotspots(input.zoneId);
+      }),
+
+    createHotspot: adminProcedure
+      .input(z.object({
+        zoneId: z.number(),
+        sparePartId: z.number(),
+        label: z.string().optional(),
+        posX: z.string(),
+        posY: z.string(),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.createHotspot(input);
+      }),
+
+    updateHotspot: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        data: z.object({
+          sparePartId: z.number().optional(),
+          label: z.string().optional(),
+          posX: z.string().optional(),
+          posY: z.string().optional(),
+          sortOrder: z.number().optional(),
+        }),
+      }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.updateHotspot(input.id, input.data);
+      }),
+
+    deleteHotspot: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await spaModelsDb.deleteHotspot(input.id);
+      }),
+
+    // --- Explorer visuel : Lecture complète ---
+    getExplorerData: protectedProcedure
+      .input(z.object({ spaModelId: z.number() }))
+      .query(async ({ input }) => {
+        const layers = await spaModelsDb.getExplorerData(input.spaModelId);
+        return { layers: layers || [] };
+      }),
   }),
 
   // ============================================

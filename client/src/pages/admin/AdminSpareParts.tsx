@@ -39,7 +39,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, lazy, Suspense } from "react";
 import {
   Plus,
   Search,
@@ -689,6 +689,8 @@ function SpaModelsTab() {
 // NOMENCLATURE VIEW — Pièces d'un modèle
 // ============================================
 
+const VisualExplorerAdmin = lazy(() => import("@/components/VisualExplorerAdmin"));
+
 function NomenclatureView({
   model,
   brand,
@@ -703,6 +705,7 @@ function NomenclatureView({
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [showAssign, setShowAssign] = useState(false);
+  const [subTab, setSubTab] = useState<"nomenclature" | "explorer">("nomenclature");
 
   const { data: parts, refetch } = trpc.spaModels.getParts.useQuery({ spaModelId: model.id });
   const accent = BRAND_ACCENT[brand];
@@ -769,6 +772,40 @@ function NomenclatureView({
           <Plus className="w-4 h-4 mr-2" /> Ajouter des pièces
         </Button>
       </div>
+
+      {/* Sub-tabs: Nomenclature / Explorateur visuel */}
+      <div className="flex gap-1 p-1 rounded-lg bg-muted/50 w-fit">
+        <button
+          onClick={() => setSubTab("nomenclature")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            subTab === "nomenclature"
+              ? "bg-background shadow-sm text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Package className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+          Nomenclature
+        </button>
+        <button
+          onClick={() => setSubTab("explorer")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            subTab === "explorer"
+              ? "bg-background shadow-sm text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Eye className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+          Explorateur visuel
+        </button>
+      </div>
+
+      {subTab === "explorer" && (
+        <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>}>
+          <VisualExplorerAdmin model={model} />
+        </Suspense>
+      )}
+
+      {subTab === "nomenclature" && (<>
 
       {/* Schema technique */}
       {model.schemaImageUrl && (
@@ -889,6 +926,8 @@ function NomenclatureView({
           </div>
         ))
       )}
+
+      </>)}
 
       {/* Assign parts dialog */}
       {showAssign && (

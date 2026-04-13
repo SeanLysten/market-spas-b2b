@@ -3649,3 +3649,32 @@
 - [x] Corriger toute faille d'isolation trouvée (4 failles corrigées)
 - [x] Écrire des tests vitest pour valider l'isolation des données (34 tests passés)
 - [x] Rapport coherence-guard + impact-guard
+## Bug : sélection des pièces SAV sélectionne tout (2026-04-10)
+- [x] Corriger la logique de sélection/désélection des pièces dans le formulaire SAV — corrigé par le fix part.id → part.sparePartId
+- [x] Vérifier que le bouton Suivant fonctionne après correction — vérifié dans le navigateur
+
+## Explorateur interactif de pièces détachées
+
+- [x] DB : table spa_model_layers (layerType, imageUrl, sortOrder)
+- [x] DB : table spa_model_zones (layerId, name, label, imageUrl, sortOrder)
+- [x] DB : table spa_model_hotspots (zoneId, sparePartId, posX, posY, label)
+- [x] DB : migration des 3 nouvelles tables
+- [x] API : routes CRUD layers (create, update, delete, list par modèle)
+- [x] API : routes CRUD zones (create, update, delete, list par layer)
+- [x] API : routes CRUD hotspots (create, update, delete, list par zone)
+- [x] API : route de lecture complète (getExplorerData par modèle)
+- [x] Admin : onglet "Explorateur visuel" dans gestion modèles
+- [x] Admin : upload images par couche
+- [x] Admin : gestion des zones (CRUD)
+- [x] Admin : placement hotspots interactif (clic sur image + lien pièce)
+- [x] Admin : drag-and-drop repositionnement hotspots
+- [x] Admin : prévisualisation
+- [x] Partenaire : sélection de couche (3 cartes animées)
+- [x] Partenaire : exploration de la couche avec zones survolables/cliquables
+- [x] Partenaire : détail zone avec hotspots pulsants
+- [x] Partenaire : fiche pièce au clic sur hotspot
+- [x] Partenaire : breadcrumb navigation
+- [x] Partenaire : fallback liste classique si modèle non configuré
+- [x] Partenaire : responsive mobile (pinch-zoom, bottom sheet, touch targets)
+- [x] Partenaire : animations de transition entre étapes
+- [x] Tests vitest pour les nouvelles routes (30 tests passés)

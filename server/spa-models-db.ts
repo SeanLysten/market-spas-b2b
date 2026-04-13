@@ -8,6 +8,9 @@ import {
   spaModels,
   spaModelSpareParts,
   spareParts,
+  spaModelLayers,
+  spaModelZones,
+  spaModelHotspots,
 } from "../drizzle/schema";
 
 // ============================================
@@ -166,6 +169,211 @@ export async function removePartFromModelByIds(spaModelId: number, sparePartId: 
       )
     );
   return { success: true };
+}
+
+// ============================================
+// EXPLORATEUR VISUEL - LAYERS
+// ============================================
+
+export async function getModelLayers(spaModelId: number) {
+  const db = await getDb();
+  return db
+    .select()
+    .from(spaModelLayers)
+    .where(eq(spaModelLayers.spaModelId, spaModelId))
+    .orderBy(asc(spaModelLayers.sortOrder));
+}
+
+export async function createLayer(data: {
+  spaModelId: number;
+  layerType: string;
+  label: string;
+  description?: string;
+  imageUrl?: string;
+  sortOrder?: number;
+}) {
+  const db = await getDb();
+  const [result] = await db.insert(spaModelLayers).values(data as any);
+  return { id: result.insertId };
+}
+
+export async function updateLayer(id: number, data: Record<string, any>) {
+  const db = await getDb();
+  await db.update(spaModelLayers).set({ ...data, updatedAt: new Date() } as any).where(eq(spaModelLayers.id, id));
+  return { success: true };
+}
+
+export async function deleteLayer(id: number) {
+  const db = await getDb();
+  // Supprimer les hotspots des zones de cette couche
+  const zones = await db.select({ id: spaModelZones.id }).from(spaModelZones).where(eq(spaModelZones.layerId, id));
+  if (zones.length > 0) {
+    const zoneIds = zones.map(z => z.id);
+    await db.delete(spaModelHotspots).where(inArray(spaModelHotspots.zoneId, zoneIds));
+  }
+  // Supprimer les zones
+  await db.delete(spaModelZones).where(eq(spaModelZones.layerId, id));
+  // Supprimer la couche
+  await db.delete(spaModelLayers).where(eq(spaModelLayers.id, id));
+  return { success: true };
+}
+
+// ============================================
+// EXPLORATEUR VISUEL - ZONES
+// ============================================
+
+export async function getLayerZones(layerId: number) {
+  const db = await getDb();
+  return db
+    .select()
+    .from(spaModelZones)
+    .where(eq(spaModelZones.layerId, layerId))
+    .orderBy(asc(spaModelZones.sortOrder));
+}
+
+export async function createZone(data: {
+  layerId: number;
+  name: string;
+  label: string;
+  description?: string;
+  imageUrl?: string;
+  posX?: string;
+  posY?: string;
+  width?: string;
+  height?: string;
+  sortOrder?: number;
+}) {
+  const db = await getDb();
+  const [result] = await db.insert(spaModelZones).values(data as any);
+  return { id: result.insertId };
+}
+
+export async function updateZone(id: number, data: Record<string, any>) {
+  const db = await getDb();
+  await db.update(spaModelZones).set({ ...data, updatedAt: new Date() } as any).where(eq(spaModelZones.id, id));
+  return { success: true };
+}
+
+export async function deleteZone(id: number) {
+  const db = await getDb();
+  // Supprimer les hotspots de cette zone
+  await db.delete(spaModelHotspots).where(eq(spaModelHotspots.zoneId, id));
+  // Supprimer la zone
+  await db.delete(spaModelZones).where(eq(spaModelZones.id, id));
+  return { success: true };
+}
+
+// ============================================
+// EXPLORATEUR VISUEL - HOTSPOTS
+// ============================================
+
+export async function getZoneHotspots(zoneId: number) {
+  const db = await getDb();
+  return db
+    .select({
+      id: spaModelHotspots.id,
+      zoneId: spaModelHotspots.zoneId,
+      sparePartId: spaModelHotspots.sparePartId,
+      label: spaModelHotspots.label,
+      posX: spaModelHotspots.posX,
+      posY: spaModelHotspots.posY,
+      sortOrder: spaModelHotspots.sortOrder,
+      // Joindre les infos de la pièce
+      partName: spareParts.name,
+      partReference: spareParts.reference,
+      partCategory: spareParts.category,
+      partPriceHT: spareParts.priceHT,
+      partImageUrl: spareParts.imageUrl,
+      partDescription: spareParts.description,
+    })
+    .from(spaModelHotspots)
+    .innerJoin(spareParts, eq(spaModelHotspots.sparePartId, spareParts.id))
+    .where(eq(spaModelHotspots.zoneId, zoneId))
+    .orderBy(asc(spaModelHotspots.sortOrder));
+}
+
+export async function createHotspot(data: {
+  zoneId: number;
+  sparePartId: number;
+  label?: string;
+  posX: string;
+  posY: string;
+  sortOrder?: number;
+}) {
+  const db = await getDb();
+  const [result] = await db.insert(spaModelHotspots).values(data as any);
+  return { id: result.insertId };
+}
+
+export async function updateHotspot(id: number, data: Record<string, any>) {
+  const db = await getDb();
+  await db.update(spaModelHotspots).set({ ...data, updatedAt: new Date() } as any).where(eq(spaModelHotspots.id, id));
+  return { success: true };
+}
+
+export async function deleteHotspot(id: number) {
+  const db = await getDb();
+  await db.delete(spaModelHotspots).where(eq(spaModelHotspots.id, id));
+  return { success: true };
+}
+
+// ============================================
+// EXPLORATEUR VISUEL - LECTURE COMPLÈTE
+// ============================================
+
+export async function getExplorerData(spaModelId: number) {
+  const db = await getDb();
+
+  // Récupérer les couches
+  const layers = await db
+    .select()
+    .from(spaModelLayers)
+    .where(and(eq(spaModelLayers.spaModelId, spaModelId), eq(spaModelLayers.isActive, true)))
+    .orderBy(asc(spaModelLayers.sortOrder));
+
+  if (layers.length === 0) return null; // Pas configuré → fallback
+
+  // Pour chaque couche, récupérer les zones et hotspots
+  const result = await Promise.all(
+    layers.map(async (layer) => {
+      const zones = await db
+        .select()
+        .from(spaModelZones)
+        .where(and(eq(spaModelZones.layerId, layer.id), eq(spaModelZones.isActive, true)))
+        .orderBy(asc(spaModelZones.sortOrder));
+
+      const zonesWithHotspots = await Promise.all(
+        zones.map(async (zone) => {
+          const hotspots = await db
+            .select({
+              id: spaModelHotspots.id,
+              zoneId: spaModelHotspots.zoneId,
+              sparePartId: spaModelHotspots.sparePartId,
+              label: spaModelHotspots.label,
+              posX: spaModelHotspots.posX,
+              posY: spaModelHotspots.posY,
+              sortOrder: spaModelHotspots.sortOrder,
+              partName: spareParts.name,
+              partReference: spareParts.reference,
+              partCategory: spareParts.category,
+              partPriceHT: spareParts.priceHT,
+              partImageUrl: spareParts.imageUrl,
+              partDescription: spareParts.description,
+            })
+            .from(spaModelHotspots)
+            .innerJoin(spareParts, eq(spaModelHotspots.sparePartId, spareParts.id))
+            .where(eq(spaModelHotspots.zoneId, zone.id))
+            .orderBy(asc(spaModelHotspots.sortOrder));
+
+          return { ...zone, hotspots };
+        })
+      );
+
+      return { ...layer, zones: zonesWithHotspots };
+    })
+  );
+
+  return result;
 }
 
 // ============================================
