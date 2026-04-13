@@ -32,6 +32,7 @@ import {
   ArrowRightLeft,
   Truck as TruckIcon,
   Activity,
+  FileText,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
@@ -81,6 +82,7 @@ const ROUTE_MODULE_MAP: Record<string, string> = {
   '/admin/supplier-integration': 'settings',
   '/admin/settings': 'settings',
   '/admin/webhook-logs': 'settings',
+  '/admin/supplier-logs': 'settings',
 };
 
 function hasModuleAccess(user: any, module: string): boolean {
@@ -185,6 +187,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { name: "Équipe interne", href: "/admin/users", icon: Users, module: "users" },
         ...(user?.role === 'SUPER_ADMIN' ? [{ name: "Intégration Fournisseur", href: "/admin/supplier-integration", icon: ArrowRightLeft }] : []),
         { name: "Logs Webhooks", href: "/admin/webhook-logs", icon: Activity },
+        ...(user?.role === 'SUPER_ADMIN' ? [{ name: "Logs API Fournisseur", href: "/admin/supplier-logs", icon: FileText }] : []),
       ],
     },
   ];

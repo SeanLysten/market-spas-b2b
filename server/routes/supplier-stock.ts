@@ -915,4 +915,376 @@ router.post("/api/supplier/orders/balance-paid", async (req, res) => {
   }
 });
 
+// ============================================
+// Supplier Order Status Update API
+// POST /api/supplier/orders/update-status
+// Allows supplier to update order status (IN_PRODUCTION, READY_TO_SHIP, SHIPPED, DELIVERED)
+// ============================================
+
+const ALLOWED_SUPPLIER_STATUSES = [
+  "IN_PRODUCTION",
+  "READY_TO_SHIP",
+  "SHIPPED",
+  "DELIVERED",
+] as const;
+
+router.post("/orders/update-status", async (req, res) => {
+  if (!validateApiKey(req, res)) return;
+
+  try {
+    const db = await getDb();
+    if (!db) return res.status(500).json({ success: false, error: "Base de donn\u00e9es indisponible" });
+
+    const { orderNumber, status, note, estimatedDeliveryDate, supplierReference } = req.body;
+
+    if (!orderNumber || !status) {
+      return res.status(400).json({
+        success: false,
+        error: "Champs requis: orderNumber, status",
+        allowedStatuses: ALLOWED_SUPPLIER_STATUSES,
+      });
+    }
+
+    if (!ALLOWED_SUPPLIER_STATUSES.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: `Statut invalide: ${status}. Statuts autoris\u00e9s: ${ALLOWED_SUPPLIER_STATUSES.join(", ")}`,
+      });
+    }
+
+    // Trouver la commande
+    const [order] = await db.select().from(orders).where(eq(orders.orderNumber, orderNumber)).limit(1);
+    if (!order) {
+      return res.status(404).json({ success: false, error: `Commande ${orderNumber} introuvable` });
+    }
+
+    const previousStatus = order.status;
+
+    // Mettre \u00e0 jour le statut de la commande
+    const updateData: any = {
+      status,
+      updatedAt: new Date(),
+    };
+
+    // Mettre \u00e0 jour les timestamps sp\u00e9cifiques selon le statut
+    if (status === "SHIPPED" && !order.shippedAt) {
+      updateData.shippedAt = new Date();
+    }
+    if (status === "DELIVERED" && !order.deliveredAt) {
+      updateData.deliveredAt = new Date();
+    }
+    if (estimatedDeliveryDate) {
+      updateData.deliveryConfirmedDate = new Date(estimatedDeliveryDate);
+    }
+
+    await db.update(orders).set(updateData).where(eq(orders.id, order.id));
+
+    // Ajouter dans l'historique des statuts
+    const { orderStatusHistory } = await import("../../drizzle/schema");
+    await db.insert(orderStatusHistory).values({
+      orderId: order.id,
+      oldStatus: previousStatus,
+      newStatus: status,
+      note: note || `Mise \u00e0 jour fournisseur: ${status}${supplierReference ? ` (R\u00e9f: ${supplierReference})` : ""}`,
+      estimatedDeliveryDate: estimatedDeliveryDate ? new Date(estimatedDeliveryDate) : null,
+    });
+
+    // Logger l'appel API
+    try {
+      await db.insert(supplierApiLogs).values({
+        importKey: "order_update_status",
+        rawPayload: JSON.stringify(req.body),
+        totalItems: 1,
+        matchedItems: 1,
+        unmatchedItems: 0,
+        errorItems: 0,
+        resultsJson: JSON.stringify({
+          orderNumber,
+          previousStatus,
+          newStatus: status,
+          estimatedDeliveryDate: estimatedDeliveryDate || null,
+          supplierReference: supplierReference || null,
+        }),
+        ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+        userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+        success: true,
+        errorMessage: null,
+      });
+    } catch (logErr) {
+      console.error("[SupplierUpdateStatus] Failed to log:", logErr);
+    }
+
+    return res.json({
+      success: true,
+      message: `Commande ${orderNumber} mise \u00e0 jour: ${previousStatus} \u2192 ${status}`,
+      order: {
+        id: order.id,
+        number: orderNumber,
+        previousStatus,
+        newStatus: status,
+        estimatedDeliveryDate: estimatedDeliveryDate || null,
+        supplierReference: supplierReference || null,
+      },
+    });
+  } catch (error: any) {
+    console.error("[SupplierUpdateStatus] Error:", error.message);
+
+    try {
+      const db = await getDb();
+      if (db) {
+        await db.insert(supplierApiLogs).values({
+          importKey: "order_update_status_error",
+          rawPayload: JSON.stringify(req.body || {}),
+          totalItems: 0,
+          matchedItems: 0,
+          unmatchedItems: 0,
+          errorItems: 1,
+          resultsJson: null,
+          ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+          userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+          success: false,
+          errorMessage: error.message?.slice(0, 500) || "Erreur interne",
+        });
+      }
+    } catch (logErr) {
+      console.error("[SupplierUpdateStatus] Failed to log error:", logErr);
+    }
+
+    return res.status(500).json({ success: false, error: error.message || "Erreur interne du serveur" });
+  }
+});
+
+// ============================================
+// Supplier Confirm Delivery Date API
+// POST /api/supplier/orders/confirm-delivery
+// Allows supplier to confirm or update the estimated delivery date
+// ============================================
+
+router.post("/orders/confirm-delivery", async (req, res) => {
+  if (!validateApiKey(req, res)) return;
+
+  try {
+    const db = await getDb();
+    if (!db) return res.status(500).json({ success: false, error: "Base de donn\u00e9es indisponible" });
+
+    const { orderNumber, estimatedDeliveryDate, note } = req.body;
+
+    if (!orderNumber || !estimatedDeliveryDate) {
+      return res.status(400).json({
+        success: false,
+        error: "Champs requis: orderNumber, estimatedDeliveryDate (format ISO 8601: YYYY-MM-DD)",
+      });
+    }
+
+    const parsedDate = new Date(estimatedDeliveryDate);
+    if (isNaN(parsedDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        error: "estimatedDeliveryDate invalide. Format attendu: YYYY-MM-DD",
+      });
+    }
+
+    // Trouver la commande
+    const [order] = await db.select().from(orders).where(eq(orders.orderNumber, orderNumber)).limit(1);
+    if (!order) {
+      return res.status(404).json({ success: false, error: `Commande ${orderNumber} introuvable` });
+    }
+
+    const previousDate = order.deliveryConfirmedDate;
+
+    // Mettre \u00e0 jour la date de livraison confirm\u00e9e
+    await db.update(orders).set({
+      deliveryConfirmedDate: parsedDate,
+      updatedAt: new Date(),
+    }).where(eq(orders.id, order.id));
+
+    // Ajouter dans l'historique
+    const { orderStatusHistory } = await import("../../drizzle/schema");
+    await db.insert(orderStatusHistory).values({
+      orderId: order.id,
+      oldStatus: order.status,
+      newStatus: order.status, // Le statut ne change pas
+      note: note || `Date de livraison estim\u00e9e confirm\u00e9e: ${estimatedDeliveryDate}${previousDate ? ` (pr\u00e9c\u00e9dente: ${previousDate.toISOString().split("T")[0]})` : ""}`,
+      estimatedDeliveryDate: parsedDate,
+    });
+
+    // Logger
+    try {
+      await db.insert(supplierApiLogs).values({
+        importKey: "order_confirm_delivery",
+        rawPayload: JSON.stringify(req.body),
+        totalItems: 1,
+        matchedItems: 1,
+        unmatchedItems: 0,
+        errorItems: 0,
+        resultsJson: JSON.stringify({
+          orderNumber,
+          estimatedDeliveryDate,
+          previousDate: previousDate ? previousDate.toISOString() : null,
+        }),
+        ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+        userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+        success: true,
+        errorMessage: null,
+      });
+    } catch (logErr) {
+      console.error("[SupplierConfirmDelivery] Failed to log:", logErr);
+    }
+
+    return res.json({
+      success: true,
+      message: `Date de livraison estim\u00e9e confirm\u00e9e pour ${orderNumber}: ${estimatedDeliveryDate}`,
+      order: {
+        id: order.id,
+        number: orderNumber,
+        status: order.status,
+        estimatedDeliveryDate,
+        previousDate: previousDate ? previousDate.toISOString().split("T")[0] : null,
+      },
+    });
+  } catch (error: any) {
+    console.error("[SupplierConfirmDelivery] Error:", error.message);
+
+    try {
+      const db = await getDb();
+      if (db) {
+        await db.insert(supplierApiLogs).values({
+          importKey: "order_confirm_delivery_error",
+          rawPayload: JSON.stringify(req.body || {}),
+          totalItems: 0,
+          matchedItems: 0,
+          unmatchedItems: 0,
+          errorItems: 1,
+          resultsJson: null,
+          ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+          userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+          success: false,
+          errorMessage: error.message?.slice(0, 500) || "Erreur interne",
+        });
+      }
+    } catch (logErr) {
+      console.error("[SupplierConfirmDelivery] Failed to log error:", logErr);
+    }
+
+    return res.status(500).json({ success: false, error: error.message || "Erreur interne du serveur" });
+  }
+});
+
+// ============================================
+// Supplier Mark Delivered API
+// POST /api/supplier/orders/mark-delivered
+// Allows supplier to confirm that the spa has been delivered
+// ============================================
+
+router.post("/orders/mark-delivered", async (req, res) => {
+  if (!validateApiKey(req, res)) return;
+
+  try {
+    const db = await getDb();
+    if (!db) return res.status(500).json({ success: false, error: "Base de donn\u00e9es indisponible" });
+
+    const { orderNumber, deliveredAt, note } = req.body;
+
+    if (!orderNumber) {
+      return res.status(400).json({
+        success: false,
+        error: "Champ requis: orderNumber. Optionnel: deliveredAt (ISO 8601), note",
+      });
+    }
+
+    // Trouver la commande
+    const [order] = await db.select().from(orders).where(eq(orders.orderNumber, orderNumber)).limit(1);
+    if (!order) {
+      return res.status(404).json({ success: false, error: `Commande ${orderNumber} introuvable` });
+    }
+
+    if (order.status === "DELIVERED" || order.status === "COMPLETED") {
+      return res.status(409).json({
+        success: false,
+        error: `Commande ${orderNumber} est d\u00e9j\u00e0 au statut ${order.status}`,
+      });
+    }
+
+    const previousStatus = order.status;
+    const deliveryTimestamp = deliveredAt ? new Date(deliveredAt) : new Date();
+
+    // Mettre \u00e0 jour la commande
+    await db.update(orders).set({
+      status: "DELIVERED",
+      deliveredAt: deliveryTimestamp,
+      updatedAt: new Date(),
+    }).where(eq(orders.id, order.id));
+
+    // Ajouter dans l'historique
+    const { orderStatusHistory } = await import("../../drizzle/schema");
+    await db.insert(orderStatusHistory).values({
+      orderId: order.id,
+      oldStatus: previousStatus,
+      newStatus: "DELIVERED",
+      note: note || `Livraison confirm\u00e9e par le fournisseur le ${deliveryTimestamp.toISOString().split("T")[0]}`,
+    });
+
+    // Logger
+    try {
+      await db.insert(supplierApiLogs).values({
+        importKey: "order_mark_delivered",
+        rawPayload: JSON.stringify(req.body),
+        totalItems: 1,
+        matchedItems: 1,
+        unmatchedItems: 0,
+        errorItems: 0,
+        resultsJson: JSON.stringify({
+          orderNumber,
+          previousStatus,
+          newStatus: "DELIVERED",
+          deliveredAt: deliveryTimestamp.toISOString(),
+        }),
+        ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+        userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+        success: true,
+        errorMessage: null,
+      });
+    } catch (logErr) {
+      console.error("[SupplierMarkDelivered] Failed to log:", logErr);
+    }
+
+    return res.json({
+      success: true,
+      message: `Commande ${orderNumber} marqu\u00e9e comme livr\u00e9e`,
+      order: {
+        id: order.id,
+        number: orderNumber,
+        previousStatus,
+        newStatus: "DELIVERED",
+        deliveredAt: deliveryTimestamp.toISOString(),
+      },
+    });
+  } catch (error: any) {
+    console.error("[SupplierMarkDelivered] Error:", error.message);
+
+    try {
+      const db = await getDb();
+      if (db) {
+        await db.insert(supplierApiLogs).values({
+          importKey: "order_mark_delivered_error",
+          rawPayload: JSON.stringify(req.body || {}),
+          totalItems: 0,
+          matchedItems: 0,
+          unmatchedItems: 0,
+          errorItems: 1,
+          resultsJson: null,
+          ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
+          userAgent: (req.headers["user-agent"] || "").slice(0, 500),
+          success: false,
+          errorMessage: error.message?.slice(0, 500) || "Erreur interne",
+        });
+      }
+    } catch (logErr) {
+      console.error("[SupplierMarkDelivered] Failed to log error:", logErr);
+    }
+
+    return res.status(500).json({ success: false, error: error.message || "Erreur interne du serveur" });
+  }
+});
+
 export const supplierStockRouter = router;

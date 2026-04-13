@@ -3731,3 +3731,18 @@
 - [x] Supprimer le test supplier-api-flows.test.ts (teste du code mort)
 - [x] Vérifier que supplierClientCode est bien présent dans les endpoints GET/POST existants — DÉJÀ présent dans F2 (export commandes L.428)
 - [x] Mettre à jour les tests unitaires pour refléter les corrections — 85 fichiers, 1344 tests passés
+
+## Bug leads admin — coordonnées manquantes
+- [x] Investiguer pourquoi les colonnes Lead et Contact sont vides — Cause: formulaire Meta FR utilise prénom/nom_de_famille/e-mail/numéro_de_téléphone
+- [x] Corriger le mapping dans createLeadFromMeta (meta-leads.ts) + syncLeads (routers.ts) pour les variantes françaises
+- [x] Corriger le lead 4620069 en base (Sylvia Pastermadjian) avec les données de customFields
+
+## Endpoints API Fournisseur — Suivi commandes
+- [x] Créer POST /api/supplier/orders/update-status (IN_PRODUCTION, READY_TO_SHIP, SHIPPED, DELIVERED)
+- [x] Créer POST /api/supplier/orders/confirm-delivery (date de livraison estimée)
+- [x] Créer POST /api/supplier/orders/mark-delivered (livraison effectuée)
+- [x] Ajouter les tests pour les 3 nouveaux endpoints — 21 tests passés
+
+## Page admin Logs API Fournisseur
+- [x] Créer la page admin Logs API Fournisseur avec liste des imports et détails
+- [x] Ajouter la route dans la navigation admin

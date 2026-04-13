@@ -5075,11 +5075,17 @@ export const appRouter = router({
               fields[field.name.toLowerCase()] = field.values[0] || "";
             }
 
-            const firstName = fields.first_name || fields.full_name?.split(' ')[0] || "";
-            const lastName = fields.last_name || fields.full_name?.split(' ').slice(1).join(' ') || "";
-            const email = fields.email || "";
-            const phone = fields.phone_number || fields.phone || "";
-            const postalCode = fields.postal_code || fields.zip || fields.code_postal || "";
+            let firstName = fields.first_name || fields.prenom || fields["pr\u00e9nom"] || fields.firstname || "";
+            let lastName = fields.last_name || fields.nom || fields.nom_de_famille || fields.lastname || "";
+            // Fallback: split full_name si firstName/lastName vides
+            if (!firstName && !lastName && fields.full_name) {
+              const parts = fields.full_name.trim().split(/\s+/);
+              firstName = parts[0] || "";
+              lastName = parts.slice(1).join(" ") || "";
+            }
+            const email = fields.email || fields["e-mail"] || "";
+            const phone = fields.phone_number || fields.phone || fields.telephone || fields["t\u00e9l\u00e9phone"] || fields["num\u00e9ro_de_t\u00e9l\u00e9phone"] || "";
+            const postalCode = fields.post_code || fields.postal_code || fields.zip || fields.code_postal || fields.postcode || "";
             const city = fields.city || fields.ville || "";
             const message = fields.message || fields.comments || "";
             const productInterest = fields.product_interest || fields.produit || "";
