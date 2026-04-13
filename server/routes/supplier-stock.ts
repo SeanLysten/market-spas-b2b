@@ -706,7 +706,7 @@ router.post("/api/supplier/orders/balance-paid", async (req, res) => {
 
       try {
         await db.insert(supplierApiLogs).values({
-          importKey: `balance_paid_${identifier}`,
+          importKey: "balance_paid",
           rawPayload: JSON.stringify(payload),
           totalItems: 0,
           matchedItems: 0,
@@ -736,13 +736,13 @@ router.post("/api/supplier/orders/balance-paid", async (req, res) => {
 
       try {
         await db.insert(supplierApiLogs).values({
-          importKey: `balance_paid_${order.orderNumber}`,
+          importKey: "balance_paid",
           rawPayload: JSON.stringify(payload),
           totalItems: 0,
           matchedItems: 0,
           unmatchedItems: 0,
           errorItems: 1,
-          resultsJson: JSON.stringify({ error: "Deposit not yet paid" }),
+          resultsJson: JSON.stringify({ error: "Deposit not yet paid", orderNumber: order.orderNumber }),
           ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
           userAgent: (req.headers["user-agent"] || "").slice(0, 500),
           success: false,
@@ -764,13 +764,13 @@ router.post("/api/supplier/orders/balance-paid", async (req, res) => {
 
       try {
         await db.insert(supplierApiLogs).values({
-          importKey: `balance_paid_${order.orderNumber}`,
+          importKey: "balance_paid",
           rawPayload: JSON.stringify(payload),
           totalItems: 0,
           matchedItems: 1,
           unmatchedItems: 0,
           errorItems: 0,
-          resultsJson: JSON.stringify({ status: "already_paid" }),
+          resultsJson: JSON.stringify({ status: "already_paid", orderNumber: order.orderNumber }),
           ipAddress: (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").slice(0, 100),
           userAgent: (req.headers["user-agent"] || "").slice(0, 500),
           success: true,
@@ -849,7 +849,7 @@ router.post("/api/supplier/orders/balance-paid", async (req, res) => {
     // Log success
     try {
       await db.insert(supplierApiLogs).values({
-        importKey: `balance_paid_${order.orderNumber}`,
+        importKey: "balance_paid",
         rawPayload: JSON.stringify(payload),
         totalItems: 1,
         matchedItems: 1,
@@ -928,7 +928,7 @@ const ALLOWED_SUPPLIER_STATUSES = [
   "DELIVERED",
 ] as const;
 
-router.post("/orders/update-status", async (req, res) => {
+router.post("/api/supplier/orders/update-status", async (req, res) => {
   if (!validateApiKey(req, res)) return;
 
   try {
@@ -1060,7 +1060,7 @@ router.post("/orders/update-status", async (req, res) => {
 // Allows supplier to confirm or update the estimated delivery date
 // ============================================
 
-router.post("/orders/confirm-delivery", async (req, res) => {
+router.post("/api/supplier/orders/confirm-delivery", async (req, res) => {
   if (!validateApiKey(req, res)) return;
 
   try {
@@ -1176,7 +1176,7 @@ router.post("/orders/confirm-delivery", async (req, res) => {
 // Allows supplier to confirm that the spa has been delivered
 // ============================================
 
-router.post("/orders/mark-delivered", async (req, res) => {
+router.post("/api/supplier/orders/mark-delivered", async (req, res) => {
   if (!validateApiKey(req, res)) return;
 
   try {
