@@ -3689,3 +3689,17 @@
 - [x] Restructurer la vue Pièces Détachées partenaire avec la même structure en arbre
 - [x] Ajouter un filtre rapide de recherche
 - [x] Vérifier dans le navigateur et tester
+
+## Refonte visuelle page Pièces Détachées partenaire (Emil Kowalski design)
+- [x] Cartes de couches avec dégradés colorés et icônes (framer-motion)
+- [x] Animations slide fluides entre couches (ease-out cubic-bezier, framer-motion AnimatePresence)
+- [x] Micro-interactions sur hover (whileHover y:-4, scale, chevron translate)
+- [x] Transition animée quand on entre dans une sous-catégorie (slideVariants + direction)
+- [x] Breadcrumb animé avec transitions
+- [x] Cartes de pièces avec images, référence badge, prix et design soigné
+- [x] Responsive mobile (grille adaptive 1/2/3 colonnes)
+- [x] Stagger animations sur les grilles (fadeUp + staggerContainer)
+- [x] Recherche globale avec résultats animés
+- [x] Dialog détail pièce avec classification couche/sous-catégorie
+- [x] Schéma technique collapsible
+- [x] 1357 tests passent (86 fichiers)
