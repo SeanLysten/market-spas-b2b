@@ -3749,3 +3749,32 @@
 
 ## Bug: Route tRPC manquante admin.supplierApiLogs.list
 - [x] Créer la route tRPC admin.supplierApiLogs.list dans routers.ts — Déplacé du niveau racine vers le namespace admin
+
+## Routes API Mobile manquantes — Implémentation complète
+### Partenaire (mobile-api-user.ts)
+- [x] team.invite / team.remove / team.cancelInvitation / team.updatePermissions / team.listInvitations
+- [x] notifications.markAllAsRead / notifications.getUnreadCount
+- [x] resources.download / resources.listByFolder
+- [x] leads.export
+- [x] afterSales.analyzeWarranty / afterSales.getProductLinesByBrand / afterSales.getDefectTypesByComponent
+- [x] forum.markHelpful / forum.markResolved
+- [x] checkout/paiement Mollie (initier paiement)
+
+### Admin (mobile-api-admin.ts)
+- [x] admin.users.invite / updateRole / listInvitations / resendInvitation / cancelInvitation
+- [x] admin.partners.create / delete / approve / getProductDiscounts / bulkUpsertProductDiscounts
+- [x] admin.products.createVariant / updateVariant / deleteVariant / reorder (uploadImage via S3)
+- [x] admin.leads.partnershipLeads / reassignAll
+- [x] admin.events.togglePublish
+- [x] admin.candidates actions avancées (toggleVisited, incrementEmail, incrementPhoneCall, saveCoordinates, detectDuplicates, autoMergeAll, mergeDuplicates, reclassifyPartnerLeads)
+- [x] admin.territories.assign / unassign / byPartner / countries / regions
+- [x] admin.afterSales.getById / addNote / setShippingCost / createPayment / weeklyStats
+- [x] admin.customerSav.stats
+- [x] admin.newsletter.send / schedule / deleteScheduled
+- [x] admin.mailingLists CRUD + contacts (list/create/update/delete + contacts CRUD + bulk)
+- [x] admin.resources.list / moveToFolder / mediaFolders CRUD / techFolders CRUD / technicalResources CRUD
+- [x] admin.shippingZones.create / update / delete
+- [x] admin.analytics.ga4 / metaAds / googleAds / shopify (status endpoints)
+
+### Documentation
+- [x] Rédiger le document complet de documentation API mobile — 210 endpoints documentés

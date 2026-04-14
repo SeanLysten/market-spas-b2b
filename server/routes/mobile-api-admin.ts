@@ -1111,4 +1111,1145 @@ router.put("/api/mobile/admin/leads/:id", async (req: AuthenticatedRequest, res:
   }
 });
 
+// ============================================
+// ADMIN USERS - EXTENDED
+// ============================================
+
+// POST /api/mobile/admin/users/invite
+router.post("/api/mobile/admin/users/invite", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { invitations } = await import("../../drizzle/schema");
+    const db = await getDb();
+    const { email, role, partnerId } = req.body;
+    if (!email) return res.status(400).json({ error: "VALIDATION_ERROR", message: "Email requis" });
+    const token = require("crypto").randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const [invitation] = await db.insert(invitations).values({
+      email, role: role || "PARTNER_USER", partnerId: partnerId || null,
+      invitedBy: parseInt(req.mobileUser!.sub), token, expiresAt,
+    }).returning();
+    // Send invitation email
+    try {
+      const { sendInvitationEmail } = await import("../email");
+      await sendInvitationEmail(email, token, req.mobileUser!.name);
+    } catch (e) { /* email failure non-blocking */ }
+    return res.json({ invitation });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// PUT /api/mobile/admin/users/:id/role
+router.put("/api/mobile/admin/users/:id/role", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const { role } = req.body;
+    if (!role) return res.status(400).json({ error: "VALIDATION_ERROR", message: "R\u00f4le requis" });
+    const { getDb } = await import("../db");
+    const { users } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.update(users).set({ role }).where(eq(users.id, userId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/users/invitations
+router.get("/api/mobile/admin/users/invitations", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { invitations } = await import("../../drizzle/schema");
+    const { isNull } = await import("drizzle-orm");
+    const db = await getDb();
+    const pending = await db.select().from(invitations).where(isNull(invitations.acceptedAt));
+    return res.json({ invitations: pending });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/users/invitations/:id/resend
+router.post("/api/mobile/admin/users/invitations/:id/resend", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const invId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { invitations } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const [inv] = await db.select().from(invitations).where(eq(invitations.id, invId));
+    if (!inv) return res.status(404).json({ error: "NOT_FOUND" });
+    try {
+      const { sendInvitationEmail } = await import("../email");
+      await sendInvitationEmail(inv.email, inv.token, req.mobileUser!.name);
+    } catch (e) { /* non-blocking */ }
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// DELETE /api/mobile/admin/users/invitations/:id
+router.delete("/api/mobile/admin/users/invitations/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const invId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { invitations } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.delete(invitations).where(eq(invitations.id, invId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// ADMIN PARTNERS - EXTENDED
+// ============================================
+
+// DELETE /api/mobile/admin/partners/:id
+router.delete("/api/mobile/admin/partners/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const partnerId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { partners } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.delete(partners).where(eq(partners.id, partnerId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/partners/:id/approve
+router.post("/api/mobile/admin/partners/:id/approve", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const partnerId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { partners } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.update(partners).set({ status: "ACTIVE", approvedAt: new Date() }).where(eq(partners.id, partnerId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/partners/:id/discounts
+router.get("/api/mobile/admin/partners/:id/discounts", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const partnerId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { partnerProductDiscounts, products } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const discounts = await db.select({
+      id: partnerProductDiscounts.id,
+      productId: partnerProductDiscounts.productId,
+      discountPercent: partnerProductDiscounts.discountPercent,
+      productName: products.name,
+    }).from(partnerProductDiscounts)
+      .leftJoin(products, eq(partnerProductDiscounts.productId, products.id))
+      .where(eq(partnerProductDiscounts.partnerId, partnerId));
+    return res.json({ discounts });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// PUT /api/mobile/admin/partners/:id/discounts
+router.put("/api/mobile/admin/partners/:id/discounts", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const partnerId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { partnerProductDiscounts } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const { discounts } = req.body; // [{ productId, discountPercent }]
+    if (!Array.isArray(discounts)) return res.status(400).json({ error: "VALIDATION_ERROR" });
+    // Delete existing and re-insert
+    await db.delete(partnerProductDiscounts).where(eq(partnerProductDiscounts.partnerId, partnerId));
+    if (discounts.length > 0) {
+      await db.insert(partnerProductDiscounts).values(
+        discounts.map((d: any) => ({ partnerId, productId: d.productId, discountPercent: d.discountPercent.toString() }))
+      );
+    }
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// ADMIN PRODUCTS - VARIANTS
+// ============================================
+
+// POST /api/mobile/admin/products/:id/variants
+router.post("/api/mobile/admin/products/:id/variants", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const productId = parseInt(req.params.id);
+    const { createProductVariant } = await import("../db");
+    const variant = await createProductVariant({ ...req.body, productId });
+    return res.json({ variant });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// PUT /api/mobile/admin/variants/:id
+router.put("/api/mobile/admin/variants/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const variantId = parseInt(req.params.id);
+    const { updateProductVariant } = await import("../db");
+    const variant = await updateProductVariant(variantId, req.body);
+    return res.json({ variant });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// DELETE /api/mobile/admin/variants/:id
+router.delete("/api/mobile/admin/variants/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const variantId = parseInt(req.params.id);
+    const { deleteProductVariant } = await import("../db");
+    await deleteProductVariant(variantId);
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// PUT /api/mobile/admin/products/reorder
+router.put("/api/mobile/admin/products/reorder", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { productIds } = req.body; // array of product IDs in new order
+    if (!Array.isArray(productIds)) return res.status(400).json({ error: "VALIDATION_ERROR" });
+    const { getDb } = await import("../db");
+    const { products } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    for (let i = 0; i < productIds.length; i++) {
+      await db.update(products).set({ sortOrder: i }).where(eq(products.id, productIds[i]));
+    }
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// ADMIN LEADS - EXTENDED
+// ============================================
+
+// GET /api/mobile/admin/leads/partnership
+router.get("/api/mobile/admin/leads/partnership", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { leads } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const partnerLeads = await db.select().from(leads).where(eq(leads.type, "PARTNERSHIP"));
+    return res.json({ leads: partnerLeads });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/leads/reassign-all
+router.post("/api/mobile/admin/leads/reassign-all", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { leads } = await import("../../drizzle/schema");
+    const { isNull } = await import("drizzle-orm");
+    const db = await getDb();
+    // Reassign unassigned leads based on territory
+    const unassigned = await db.select().from(leads).where(isNull(leads.partnerId));
+    let reassigned = 0;
+    // Simple auto-assignment logic based on postal code
+    for (const lead of unassigned) {
+      if (lead.postalCode) {
+        const { territories, partners } = await import("../../drizzle/schema");
+        const { eq, and, sql } = await import("drizzle-orm");
+        const matchingTerritory = await db.select().from(territories)
+          .where(sql`${lead.postalCode} LIKE CONCAT(${territories.postalPrefix}, '%')`)
+          .limit(1);
+        if (matchingTerritory.length > 0) {
+          await db.update(leads).set({ partnerId: matchingTerritory[0].partnerId, status: "ASSIGNED" })
+            .where(eq(leads.id, lead.id));
+          reassigned++;
+        }
+      }
+    }
+    return res.json({ success: true, reassigned, total: unassigned.length });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// ADMIN EVENTS - EXTENDED
+// ============================================
+
+// POST /api/mobile/admin/events/:id/toggle-publish
+router.post("/api/mobile/admin/events/:id/toggle-publish", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const eventId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { events } = await import("../../drizzle/schema");
+    const { eq, sql } = await import("drizzle-orm");
+    const db = await getDb();
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    if (!event) return res.status(404).json({ error: "NOT_FOUND" });
+    await db.update(events).set({ isPublished: !event.isPublished }).where(eq(events.id, eventId));
+    return res.json({ success: true, isPublished: !event.isPublished });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// ADMIN CANDIDATES - EXTENDED
+// ============================================
+
+// POST /api/mobile/admin/candidates/:id/toggle-visited
+router.post("/api/mobile/admin/candidates/:id/toggle-visited", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const candidateId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { candidates } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const [c] = await db.select().from(candidates).where(eq(candidates.id, candidateId));
+    if (!c) return res.status(404).json({ error: "NOT_FOUND" });
+    await db.update(candidates).set({ visited: !c.visited }).where(eq(candidates.id, candidateId));
+    return res.json({ success: true, visited: !c.visited });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/candidates/:id/increment-email
+router.post("/api/mobile/admin/candidates/:id/increment-email", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const candidateId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { candidates } = await import("../../drizzle/schema");
+    const { eq, sql } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.update(candidates).set({ emailCount: sql`COALESCE(${candidates.emailCount}, 0) + 1` })
+      .where(eq(candidates.id, candidateId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/candidates/:id/increment-phone
+router.post("/api/mobile/admin/candidates/:id/increment-phone", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const candidateId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { candidates } = await import("../../drizzle/schema");
+    const { eq, sql } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.update(candidates).set({ phoneCount: sql`COALESCE(${candidates.phoneCount}, 0) + 1` })
+      .where(eq(candidates.id, candidateId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// PUT /api/mobile/admin/candidates/:id/coordinates
+router.put("/api/mobile/admin/candidates/:id/coordinates", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const candidateId = parseInt(req.params.id);
+    const { lat, lng } = req.body;
+    const { getDb } = await import("../db");
+    const { candidates } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.update(candidates).set({ latitude: lat?.toString(), longitude: lng?.toString() })
+      .where(eq(candidates.id, candidateId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/candidates/detect-duplicates
+router.post("/api/mobile/admin/candidates/detect-duplicates", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { candidates } = await import("../../drizzle/schema");
+    const { sql } = await import("drizzle-orm");
+    const db = await getDb();
+    // Find candidates with same name or same address
+    const duplicates = await db.execute(sql`
+      SELECT a.id as id1, b.id as id2, a.company_name, a.city
+      FROM candidates a JOIN candidates b ON a.id < b.id
+      AND (LOWER(a.company_name) = LOWER(b.company_name) OR (a.address = b.address AND a.city = b.city))
+      LIMIT 100
+    `);
+    return res.json({ duplicates: duplicates.rows || duplicates });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/candidates/auto-merge
+router.post("/api/mobile/admin/candidates/auto-merge", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { candidates } = await import("../../drizzle/schema");
+    const { eq, sql } = await import("drizzle-orm");
+    const db = await getDb();
+    // Auto-merge exact duplicates by company name
+    const dupes = await db.execute(sql`
+      SELECT MIN(id) as keep_id, GROUP_CONCAT(id) as all_ids, company_name
+      FROM candidates GROUP BY LOWER(company_name) HAVING COUNT(*) > 1 LIMIT 50
+    `);
+    let merged = 0;
+    const rows = (dupes.rows || dupes) as any[];
+    for (const row of rows) {
+      const ids = row.all_ids.split(',').map(Number);
+      const keepId = row.keep_id;
+      const deleteIds = ids.filter((id: number) => id !== keepId);
+      for (const delId of deleteIds) {
+        await db.delete(candidates).where(eq(candidates.id, delId));
+        merged++;
+      }
+    }
+    return res.json({ success: true, merged });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/candidates/merge
+router.post("/api/mobile/admin/candidates/merge", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { keepId, mergeIds } = req.body;
+    if (!keepId || !Array.isArray(mergeIds)) return res.status(400).json({ error: "VALIDATION_ERROR" });
+    const { getDb } = await import("../db");
+    const { candidates } = await import("../../drizzle/schema");
+    const { eq, inArray } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.delete(candidates).where(inArray(candidates.id, mergeIds));
+    return res.json({ success: true, kept: keepId, deleted: mergeIds.length });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/candidates/reclassify-partner-leads
+router.post("/api/mobile/admin/candidates/reclassify-partner-leads", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { candidates, partners } = await import("../../drizzle/schema");
+    const { eq, sql } = await import("drizzle-orm");
+    const db = await getDb();
+    // Find candidates that match existing partners and mark them
+    const result = await db.execute(sql`
+      UPDATE candidates c SET c.status = 'PARTNER_EXISTING'
+      WHERE EXISTS (SELECT 1 FROM partners p WHERE LOWER(p.company_name) = LOWER(c.company_name))
+      AND c.status != 'PARTNER_EXISTING'
+    `);
+    return res.json({ success: true, reclassified: (result as any).changes || 0 });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// ADMIN TERRITORIES - EXTENDED
+// ============================================
+
+// POST /api/mobile/admin/territories/assign
+router.post("/api/mobile/admin/territories/assign", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { partnerId, postalPrefix, country, region } = req.body;
+    const { getDb } = await import("../db");
+    const { territories } = await import("../../drizzle/schema");
+    const db = await getDb();
+    const [territory] = await db.insert(territories).values({
+      partnerId, postalPrefix, country: country || "BE", region: region || null,
+    }).returning();
+    return res.json({ territory });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// DELETE /api/mobile/admin/territories/:id
+router.delete("/api/mobile/admin/territories/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const territoryId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { territories } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.delete(territories).where(eq(territories.id, territoryId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/territories/by-partner/:partnerId
+router.get("/api/mobile/admin/territories/by-partner/:partnerId", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const partnerId = parseInt(req.params.partnerId);
+    const { getDb } = await import("../db");
+    const { territories } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const items = await db.select().from(territories).where(eq(territories.partnerId, partnerId));
+    return res.json({ territories: items });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/territories/countries
+router.get("/api/mobile/admin/territories/countries", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { territories } = await import("../../drizzle/schema");
+    const db = await getDb();
+    const countries = await db.selectDistinct({ country: territories.country }).from(territories);
+    return res.json({ countries: countries.map(c => c.country) });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/territories/regions
+router.get("/api/mobile/admin/territories/regions", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const country = req.query.country as string;
+    const { getDb } = await import("../db");
+    const { territories } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    let query = db.selectDistinct({ region: territories.region }).from(territories);
+    if (country) query = query.where(eq(territories.country, country)) as any;
+    const regions = await query;
+    return res.json({ regions: regions.map(r => r.region).filter(Boolean) });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// ADMIN AFTER SALES - EXTENDED
+// ============================================
+
+// GET /api/mobile/admin/sav/:id
+router.get("/api/mobile/admin/sav/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const savId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { afterSalesServices, afterSalesNotes, partners, users } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const [sav] = await db.select().from(afterSalesServices).where(eq(afterSalesServices.id, savId));
+    if (!sav) return res.status(404).json({ error: "NOT_FOUND" });
+    const notes = await db.select().from(afterSalesNotes).where(eq(afterSalesNotes.afterSalesId, savId));
+    let partner = null;
+    if (sav.partnerId) {
+      const [p] = await db.select().from(partners).where(eq(partners.id, sav.partnerId));
+      partner = p || null;
+    }
+    return res.json({ sav, notes, partner });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/sav/:id/note
+router.post("/api/mobile/admin/sav/:id/note", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const savId = parseInt(req.params.id);
+    const userId = parseInt(req.mobileUser!.sub);
+    const { content, isInternal } = req.body;
+    if (!content) return res.status(400).json({ error: "VALIDATION_ERROR", message: "Contenu requis" });
+    const { getDb } = await import("../db");
+    const { afterSalesNotes } = await import("../../drizzle/schema");
+    const db = await getDb();
+    const [note] = await db.insert(afterSalesNotes).values({
+      afterSalesId: savId, userId, content, isInternal: isInternal || false,
+    }).returning();
+    return res.json({ note });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// PUT /api/mobile/admin/sav/:id/shipping-cost
+router.put("/api/mobile/admin/sav/:id/shipping-cost", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const savId = parseInt(req.params.id);
+    const { shippingCost } = req.body;
+    const { getDb } = await import("../db");
+    const { afterSalesServices } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.update(afterSalesServices).set({ shippingCost: shippingCost?.toString() })
+      .where(eq(afterSalesServices.id, savId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/sav/:id/payment
+router.post("/api/mobile/admin/sav/:id/payment", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const savId = parseInt(req.params.id);
+    const { amount, method, reference } = req.body;
+    const { getDb } = await import("../db");
+    const { afterSalesPayments } = await import("../../drizzle/schema");
+    const db = await getDb();
+    const [payment] = await db.insert(afterSalesPayments).values({
+      afterSalesId: savId, amount: amount?.toString(), method: method || "BANK_TRANSFER", reference,
+    }).returning();
+    return res.json({ payment });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/sav/weekly-stats
+router.get("/api/mobile/admin/sav/weekly-stats", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { afterSalesServices } = await import("../../drizzle/schema");
+    const { sql, gte } = await import("drizzle-orm");
+    const db = await getDb();
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const [stats] = await db.select({
+      total: sql<number>`COUNT(*)`,
+      newThisWeek: sql<number>`SUM(CASE WHEN ${afterSalesServices.createdAt} >= ${oneWeekAgo} THEN 1 ELSE 0 END)`,
+      pending: sql<number>`SUM(CASE WHEN ${afterSalesServices.status} = 'PENDING' THEN 1 ELSE 0 END)`,
+      inProgress: sql<number>`SUM(CASE WHEN ${afterSalesServices.status} = 'IN_PROGRESS' THEN 1 ELSE 0 END)`,
+    }).from(afterSalesServices);
+    return res.json(stats);
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// ADMIN CUSTOMER SAV - EXTENDED
+// ============================================
+
+// GET /api/mobile/admin/customer-sav/stats
+router.get("/api/mobile/admin/customer-sav/stats", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { customerSavRequests } = await import("../../drizzle/schema");
+    const { sql } = await import("drizzle-orm");
+    const db = await getDb();
+    const [stats] = await db.select({
+      total: sql<number>`COUNT(*)`,
+      pending: sql<number>`SUM(CASE WHEN ${customerSavRequests.status} = 'PENDING' THEN 1 ELSE 0 END)`,
+      inProgress: sql<number>`SUM(CASE WHEN ${customerSavRequests.status} = 'IN_PROGRESS' THEN 1 ELSE 0 END)`,
+      resolved: sql<number>`SUM(CASE WHEN ${customerSavRequests.status} = 'RESOLVED' THEN 1 ELSE 0 END)`,
+    }).from(customerSavRequests);
+    return res.json(stats);
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// ADMIN NEWSLETTER - EXTENDED
+// ============================================
+
+// POST /api/mobile/admin/newsletters/send
+router.post("/api/mobile/admin/newsletters/send", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { subject, htmlContent, mailingListId, testEmail } = req.body;
+    if (!subject || !htmlContent) return res.status(400).json({ error: "VALIDATION_ERROR", message: "Sujet et contenu requis" });
+    const { getDb } = await import("../db");
+    const db = await getDb();
+    if (testEmail) {
+      // Send test email
+      const { Resend } = await import("resend");
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({ from: process.env.EMAIL_FROM || "noreply@marketspas.pro", to: testEmail, subject, html: htmlContent });
+      return res.json({ success: true, type: "test", sentTo: testEmail });
+    }
+    // Send to mailing list
+    if (!mailingListId) return res.status(400).json({ error: "VALIDATION_ERROR", message: "Liste de diffusion requise" });
+    const { mailingListContacts } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const contacts = await db.select().from(mailingListContacts).where(eq(mailingListContacts.mailingListId, mailingListId));
+    const { Resend } = await import("resend");
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    let sent = 0;
+    for (const contact of contacts) {
+      try {
+        await resend.emails.send({ from: process.env.EMAIL_FROM || "noreply@marketspas.pro", to: contact.email, subject, html: htmlContent });
+        sent++;
+      } catch (e) { /* skip failed */ }
+    }
+    return res.json({ success: true, type: "broadcast", sent, total: contacts.length });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/newsletters/schedule
+router.post("/api/mobile/admin/newsletters/schedule", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { subject, htmlContent, mailingListId, scheduledAt } = req.body;
+    if (!subject || !htmlContent || !scheduledAt) return res.status(400).json({ error: "VALIDATION_ERROR" });
+    const { getDb } = await import("../db");
+    const { scheduledNewsletters } = await import("../../drizzle/schema");
+    const db = await getDb();
+    const [newsletter] = await db.insert(scheduledNewsletters).values({
+      subject, htmlContent, mailingListId, scheduledAt: new Date(scheduledAt),
+      createdBy: parseInt(req.mobileUser!.sub),
+    }).returning();
+    return res.json({ newsletter });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// DELETE /api/mobile/admin/newsletters/scheduled/:id
+router.delete("/api/mobile/admin/newsletters/scheduled/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { scheduledNewsletters } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.delete(scheduledNewsletters).where(eq(scheduledNewsletters.id, id));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// ADMIN MAILING LISTS
+// ============================================
+
+// GET /api/mobile/admin/mailing-lists
+router.get("/api/mobile/admin/mailing-lists", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { mailingLists, mailingListContacts } = await import("../../drizzle/schema");
+    const { sql, eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const lists = await db.select({
+      id: mailingLists.id, name: mailingLists.name, description: mailingLists.description,
+      createdAt: mailingLists.createdAt,
+      contactCount: sql<number>`(SELECT COUNT(*) FROM mailing_list_contacts WHERE mailing_list_id = ${mailingLists.id})`,
+    }).from(mailingLists);
+    return res.json({ mailingLists: lists });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/mailing-lists
+router.post("/api/mobile/admin/mailing-lists", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { name, description } = req.body;
+    if (!name) return res.status(400).json({ error: "VALIDATION_ERROR" });
+    const { getDb } = await import("../db");
+    const { mailingLists } = await import("../../drizzle/schema");
+    const db = await getDb();
+    const [list] = await db.insert(mailingLists).values({ name, description }).returning();
+    return res.json({ mailingList: list });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// PUT /api/mobile/admin/mailing-lists/:id
+router.put("/api/mobile/admin/mailing-lists/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const listId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { mailingLists } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.update(mailingLists).set(req.body).where(eq(mailingLists.id, listId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// DELETE /api/mobile/admin/mailing-lists/:id
+router.delete("/api/mobile/admin/mailing-lists/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const listId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { mailingLists, mailingListContacts } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.delete(mailingListContacts).where(eq(mailingListContacts.mailingListId, listId));
+    await db.delete(mailingLists).where(eq(mailingLists.id, listId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/mailing-lists/:id/contacts
+router.get("/api/mobile/admin/mailing-lists/:id/contacts", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const listId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { mailingListContacts } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const contacts = await db.select().from(mailingListContacts).where(eq(mailingListContacts.mailingListId, listId));
+    return res.json({ contacts });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/mailing-lists/:id/contacts
+router.post("/api/mobile/admin/mailing-lists/:id/contacts", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const listId = parseInt(req.params.id);
+    const { email, name } = req.body;
+    if (!email) return res.status(400).json({ error: "VALIDATION_ERROR" });
+    const { getDb } = await import("../db");
+    const { mailingListContacts } = await import("../../drizzle/schema");
+    const db = await getDb();
+    const [contact] = await db.insert(mailingListContacts).values({ mailingListId: listId, email, name }).returning();
+    return res.json({ contact });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/mailing-lists/:id/contacts/bulk
+router.post("/api/mobile/admin/mailing-lists/:id/contacts/bulk", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const listId = parseInt(req.params.id);
+    const { contacts } = req.body; // [{ email, name }]
+    if (!Array.isArray(contacts)) return res.status(400).json({ error: "VALIDATION_ERROR" });
+    const { getDb } = await import("../db");
+    const { mailingListContacts } = await import("../../drizzle/schema");
+    const db = await getDb();
+    const inserted = await db.insert(mailingListContacts).values(
+      contacts.map((c: any) => ({ mailingListId: listId, email: c.email, name: c.name }))
+    ).returning();
+    return res.json({ contacts: inserted, count: inserted.length });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// DELETE /api/mobile/admin/mailing-lists/:listId/contacts/:contactId
+router.delete("/api/mobile/admin/mailing-lists/:listId/contacts/:contactId", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const contactId = parseInt(req.params.contactId);
+    const { getDb } = await import("../db");
+    const { mailingListContacts } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.delete(mailingListContacts).where(eq(mailingListContacts.id, contactId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// ADMIN RESOURCES - EXTENDED
+// ============================================
+
+// GET /api/mobile/admin/resources
+router.get("/api/mobile/admin/resources", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getAllResources } = await import("../db");
+    const resources = await getAllResources();
+    return res.json({ resources });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// PUT /api/mobile/admin/resources/:id/move
+router.put("/api/mobile/admin/resources/:id/move", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const resourceId = parseInt(req.params.id);
+    const { folderId } = req.body;
+    const { getDb } = await import("../db");
+    const { resources } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.update(resources).set({ folderId: folderId || null }).where(eq(resources.id, resourceId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/media-folders
+router.post("/api/mobile/admin/media-folders", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { name, parentId } = req.body;
+    if (!name) return res.status(400).json({ error: "VALIDATION_ERROR" });
+    const { getDb } = await import("../db");
+    const { mediaFolders } = await import("../../drizzle/schema");
+    const db = await getDb();
+    const [folder] = await db.insert(mediaFolders).values({ name, parentId: parentId || null }).returning();
+    return res.json({ folder });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// PUT /api/mobile/admin/media-folders/:id
+router.put("/api/mobile/admin/media-folders/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const folderId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { mediaFolders } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.update(mediaFolders).set(req.body).where(eq(mediaFolders.id, folderId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// DELETE /api/mobile/admin/media-folders/:id
+router.delete("/api/mobile/admin/media-folders/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const folderId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { mediaFolders } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.delete(mediaFolders).where(eq(mediaFolders.id, folderId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/tech-folders
+router.get("/api/mobile/admin/tech-folders", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { techFolders } = await import("../../drizzle/schema");
+    const db = await getDb();
+    const folders = await db.select().from(techFolders);
+    return res.json({ folders });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/admin/tech-folders
+router.post("/api/mobile/admin/tech-folders", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { name, description } = req.body;
+    if (!name) return res.status(400).json({ error: "VALIDATION_ERROR" });
+    const { getDb } = await import("../db");
+    const { techFolders } = await import("../../drizzle/schema");
+    const db = await getDb();
+    const [folder] = await db.insert(techFolders).values({ name, description }).returning();
+    return res.json({ folder });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// PUT /api/mobile/admin/tech-folders/:id
+router.put("/api/mobile/admin/tech-folders/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const folderId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { techFolders } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.update(techFolders).set(req.body).where(eq(techFolders.id, folderId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// DELETE /api/mobile/admin/tech-folders/:id
+router.delete("/api/mobile/admin/tech-folders/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const folderId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { techFolders } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.delete(techFolders).where(eq(techFolders.id, folderId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/technical-resources
+router.get("/api/mobile/admin/technical-resources", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { technicalResources } = await import("../../drizzle/schema");
+    const db = await getDb();
+    const items = await db.select().from(technicalResources);
+    return res.json({ resources: items });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// PUT /api/mobile/admin/technical-resources/:id
+router.put("/api/mobile/admin/technical-resources/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const resourceId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { technicalResources } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.update(technicalResources).set(req.body).where(eq(technicalResources.id, resourceId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// DELETE /api/mobile/admin/technical-resources/:id
+router.delete("/api/mobile/admin/technical-resources/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const resourceId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { technicalResources } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.delete(technicalResources).where(eq(technicalResources.id, resourceId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// ADMIN SHIPPING ZONES - EXTENDED
+// ============================================
+
+// POST /api/mobile/admin/shipping-zones
+router.post("/api/mobile/admin/shipping-zones", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { shippingZones } = await import("../../drizzle/schema");
+    const db = await getDb();
+    const [zone] = await db.insert(shippingZones).values(req.body).returning();
+    return res.json({ zone });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// PUT /api/mobile/admin/shipping-zones/:id
+router.put("/api/mobile/admin/shipping-zones/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const zoneId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { shippingZones } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.update(shippingZones).set(req.body).where(eq(shippingZones.id, zoneId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// DELETE /api/mobile/admin/shipping-zones/:id
+router.delete("/api/mobile/admin/shipping-zones/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const zoneId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { shippingZones } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.delete(shippingZones).where(eq(shippingZones.id, zoneId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// ADMIN ANALYTICS & REPORTS
+// ============================================
+
+// GET /api/mobile/admin/analytics/ga4
+router.get("/api/mobile/admin/analytics/ga4", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { startDate, endDate, metrics, dimensions } = req.query;
+    // Forward to GA4 API if configured
+    const propertyId = process.env.GA4_PROPERTY_ID;
+    if (!propertyId) return res.status(400).json({ error: "NOT_CONFIGURED", message: "GA4 non configur\u00e9" });
+    // Return placeholder - actual GA4 integration uses the tRPC route
+    return res.json({ configured: true, propertyId, message: "Utilisez le dashboard web pour les rapports GA4 d\u00e9taill\u00e9s" });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/analytics/meta-ads
+router.get("/api/mobile/admin/analytics/meta-ads", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { adAccounts } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const accounts = await db.select().from(adAccounts).where(eq(adAccounts.platform, "meta"));
+    return res.json({ accounts, configured: accounts.length > 0 });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/analytics/google-ads
+router.get("/api/mobile/admin/analytics/google-ads", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { adAccounts } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const accounts = await db.select().from(adAccounts).where(eq(adAccounts.platform, "google"));
+    return res.json({ accounts, configured: accounts.length > 0 });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/admin/analytics/shopify
+router.get("/api/mobile/admin/analytics/shopify", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const configured = !!(process.env.SHOPIFY_STORE_DOMAIN && process.env.SHOPIFY_CLIENT_ID);
+    return res.json({ configured, storeDomain: process.env.SHOPIFY_STORE_DOMAIN || null });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
 export const mobileApiAdminRouter = router;

@@ -1065,4 +1065,389 @@ router.get("/api/mobile/v1/media-folders", async (req: AuthenticatedRequest, res
   }
 });
 
+// ============================================
+// TEAM - MANAGEMENT
+// ============================================
+
+// POST /api/mobile/v1/team/invite
+router.post("/api/mobile/v1/team/invite", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.mobileUser!.sub);
+    const { getDb } = await import("../db");
+    const { users, partners, invitations } = await import("../../drizzle/schema");
+    const { eq, and } = await import("drizzle-orm");
+    const db = await getDb();
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user || !user.partnerId) return res.status(403).json({ error: "FORBIDDEN", message: "Partenaire requis" });
+    const { email, role } = req.body;
+    if (!email) return res.status(400).json({ error: "VALIDATION_ERROR", message: "Email requis" });
+    const token = require("crypto").randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const [invitation] = await db.insert(invitations).values({
+      email,
+      role: role || "PARTNER_USER",
+      partnerId: user.partnerId,
+      invitedBy: userId,
+      token,
+      expiresAt,
+    }).returning();
+    return res.json({ invitation: { id: invitation.id, email, role: invitation.role, expiresAt } });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/v1/team/invitations
+router.get("/api/mobile/v1/team/invitations", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.mobileUser!.sub);
+    const { getDb } = await import("../db");
+    const { users, invitations } = await import("../../drizzle/schema");
+    const { eq, and, isNull } = await import("drizzle-orm");
+    const db = await getDb();
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user || !user.partnerId) return res.status(403).json({ error: "FORBIDDEN" });
+    const pending = await db.select().from(invitations).where(
+      and(eq(invitations.partnerId, user.partnerId), isNull(invitations.acceptedAt))
+    );
+    return res.json({ invitations: pending });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// DELETE /api/mobile/v1/team/invitations/:id
+router.delete("/api/mobile/v1/team/invitations/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const invitationId = parseInt(req.params.id);
+    const userId = parseInt(req.mobileUser!.sub);
+    const { getDb } = await import("../db");
+    const { users, invitations } = await import("../../drizzle/schema");
+    const { eq, and } = await import("drizzle-orm");
+    const db = await getDb();
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user || !user.partnerId) return res.status(403).json({ error: "FORBIDDEN" });
+    await db.delete(invitations).where(
+      and(eq(invitations.id, invitationId), eq(invitations.partnerId, user.partnerId))
+    );
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// DELETE /api/mobile/v1/team/:memberId
+router.delete("/api/mobile/v1/team/:memberId", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const memberId = parseInt(req.params.memberId);
+    const userId = parseInt(req.mobileUser!.sub);
+    const { getDb } = await import("../db");
+    const { users } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user || !user.partnerId) return res.status(403).json({ error: "FORBIDDEN" });
+    // Deactivate the member
+    await db.update(users).set({ isActive: false }).where(eq(users.id, memberId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// PUT /api/mobile/v1/team/:memberId/permissions
+router.put("/api/mobile/v1/team/:memberId/permissions", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const memberId = parseInt(req.params.memberId);
+    const userId = parseInt(req.mobileUser!.sub);
+    const { getDb } = await import("../db");
+    const { users, teamPermissions } = await import("../../drizzle/schema");
+    const { eq, and } = await import("drizzle-orm");
+    const db = await getDb();
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user || !user.partnerId) return res.status(403).json({ error: "FORBIDDEN" });
+    const { permissions } = req.body;
+    if (!permissions) return res.status(400).json({ error: "VALIDATION_ERROR", message: "Permissions requises" });
+    // Upsert permissions
+    const existing = await db.select().from(teamPermissions).where(
+      and(eq(teamPermissions.userId, memberId), eq(teamPermissions.partnerId, user.partnerId))
+    );
+    if (existing.length > 0) {
+      await db.update(teamPermissions).set(permissions).where(
+        and(eq(teamPermissions.userId, memberId), eq(teamPermissions.partnerId, user.partnerId))
+      );
+    } else {
+      await db.insert(teamPermissions).values({ userId: memberId, partnerId: user.partnerId, ...permissions });
+    }
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// NOTIFICATIONS - EXTENDED
+// ============================================
+
+// POST /api/mobile/v1/notifications/mark-all-read
+router.post("/api/mobile/v1/notifications/mark-all-read", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.mobileUser!.sub);
+    const { getDb } = await import("../db");
+    const { notifications } = await import("../../drizzle/schema");
+    const { eq, and, isNull } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.update(notifications).set({ readAt: new Date() }).where(
+      and(eq(notifications.userId, userId), isNull(notifications.readAt))
+    );
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/v1/notifications/unread-count
+router.get("/api/mobile/v1/notifications/unread-count", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.mobileUser!.sub);
+    const { getUnreadNotificationsCount } = await import("../db");
+    const count = await getUnreadNotificationsCount(userId);
+    return res.json({ count });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// RESOURCES - EXTENDED
+// ============================================
+
+// GET /api/mobile/v1/resources/by-folder/:folderId
+router.get("/api/mobile/v1/resources/by-folder/:folderId", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const folderId = parseInt(req.params.folderId);
+    const { getDb } = await import("../db");
+    const { resources } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const items = await db.select().from(resources).where(eq(resources.folderId, folderId));
+    return res.json({ resources: items });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/v1/resources/download/:id
+router.get("/api/mobile/v1/resources/download/:id", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const resourceId = parseInt(req.params.id);
+    const { getResourceById, incrementResourceDownload } = await import("../db");
+    const resource = await getResourceById(resourceId);
+    if (!resource) return res.status(404).json({ error: "NOT_FOUND", message: "Ressource introuvable" });
+    await incrementResourceDownload(resourceId);
+    // Return the URL for the mobile app to download
+    return res.json({ url: resource.fileUrl, filename: resource.title, mimeType: resource.mimeType });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// LEADS - EXPORT
+// ============================================
+
+// GET /api/mobile/v1/leads/export
+router.get("/api/mobile/v1/leads/export", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.mobileUser!.sub);
+    const { getDb } = await import("../db");
+    const { users, leads } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user || !user.partnerId) return res.status(403).json({ error: "FORBIDDEN" });
+    const myLeads = await db.select().from(leads).where(eq(leads.partnerId, user.partnerId));
+    // Return as JSON array for mobile to format
+    return res.json({ leads: myLeads });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// AFTER SALES - EXTENDED
+// ============================================
+
+// POST /api/mobile/v1/sav/analyze-warranty
+router.post("/api/mobile/v1/sav/analyze-warranty", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { warrantyRules } = await import("../../drizzle/schema");
+    const { eq, and, gte, lte, or, isNull } = await import("drizzle-orm");
+    const db = await getDb();
+    const { brand, productLine, purchaseDate, component, defectType } = req.body;
+    if (!brand || !purchaseDate) return res.status(400).json({ error: "VALIDATION_ERROR", message: "Marque et date d'achat requises" });
+    const purchase = new Date(purchaseDate);
+    const monthsSincePurchase = Math.floor((Date.now() - purchase.getTime()) / (1000 * 60 * 60 * 24 * 30));
+    // Find matching warranty rules
+    const rules = await db.select().from(warrantyRules).where(eq(warrantyRules.brand, brand));
+    const matchingRule = rules.find(r => {
+      if (r.productLine && productLine && r.productLine !== productLine) return false;
+      if (r.component && component && r.component !== component) return false;
+      return true;
+    });
+    const isUnderWarranty = matchingRule ? monthsSincePurchase <= matchingRule.durationMonths : monthsSincePurchase <= 24;
+    return res.json({
+      isUnderWarranty,
+      monthsSincePurchase,
+      warrantyDuration: matchingRule?.durationMonths || 24,
+      rule: matchingRule || null,
+      recommendation: isUnderWarranty ? "COVERED" : "OUT_OF_WARRANTY",
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/v1/sav/product-lines/:brand
+router.get("/api/mobile/v1/sav/product-lines/:brand", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { products } = await import("../../drizzle/schema");
+    const { eq, sql } = await import("drizzle-orm");
+    const db = await getDb();
+    const brand = req.params.brand;
+    const lines = await db.selectDistinct({ productLine: products.productLine })
+      .from(products)
+      .where(eq(products.brand, brand));
+    return res.json({ productLines: lines.map(l => l.productLine).filter(Boolean) });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// GET /api/mobile/v1/sav/defect-types/:component
+router.get("/api/mobile/v1/sav/defect-types/:component", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { getDb } = await import("../db");
+    const { afterSalesServices } = await import("../../drizzle/schema");
+    const { eq, sql } = await import("drizzle-orm");
+    const db = await getDb();
+    const component = decodeURIComponent(req.params.component);
+    const defects = await db.selectDistinct({ defectType: afterSalesServices.defectType })
+      .from(afterSalesServices)
+      .where(eq(afterSalesServices.component, component));
+    return res.json({ defectTypes: defects.map(d => d.defectType).filter(Boolean) });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// FORUM - EXTENDED
+// ============================================
+
+// POST /api/mobile/v1/forum/topics/:id/helpful
+router.post("/api/mobile/v1/forum/topics/:id/helpful", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const topicId = parseInt(req.params.id);
+    const { replyId } = req.body;
+    const { getDb } = await import("../db");
+    const { forumReplies } = await import("../../drizzle/schema");
+    const { eq, sql } = await import("drizzle-orm");
+    const db = await getDb();
+    if (!replyId) return res.status(400).json({ error: "VALIDATION_ERROR", message: "replyId requis" });
+    await db.update(forumReplies).set({ isHelpful: true }).where(eq(forumReplies.id, replyId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// POST /api/mobile/v1/forum/topics/:id/resolve
+router.post("/api/mobile/v1/forum/topics/:id/resolve", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const topicId = parseInt(req.params.id);
+    const { getDb } = await import("../db");
+    const { forumTopics } = await import("../../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await getDb();
+    await db.update(forumTopics).set({ isResolved: true }).where(eq(forumTopics.id, topicId));
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
+// ============================================
+// CHECKOUT / PAYMENT
+// ============================================
+
+// POST /api/mobile/v1/checkout
+router.post("/api/mobile/v1/checkout", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.mobileUser!.sub);
+    const { getDb, getCart } = await import("../db");
+    const { users, orders, orderItems, partners, cartItems, products, productVariants } = await import("../../drizzle/schema");
+    const { eq, and } = await import("drizzle-orm");
+    const db = await getDb();
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user || !user.partnerId) return res.status(403).json({ error: "FORBIDDEN" });
+    const { shippingAddressId, billingAddressId, notes, paymentMethod } = req.body;
+    // Get cart items
+    const cart = await getCart(userId);
+    if (!cart || cart.items.length === 0) return res.status(400).json({ error: "EMPTY_CART", message: "Le panier est vide" });
+    // Create order number
+    const orderNumber = `CMD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+    const totalHT = cart.items.reduce((sum: number, item: any) => sum + (item.unitPrice * item.quantity), 0);
+    const totalTTC = totalHT * 1.21; // TVA 21%
+    const depositAmount = totalTTC * 0.3; // 30% acompte
+    const [order] = await db.insert(orders).values({
+      orderNumber,
+      partnerId: user.partnerId,
+      userId,
+      status: "PENDING",
+      totalHT: totalHT.toString(),
+      totalTTC: totalTTC.toString(),
+      depositAmount: depositAmount.toString(),
+      shippingAddressId: shippingAddressId || null,
+      billingAddressId: billingAddressId || null,
+      notes: notes || null,
+    }).returning();
+    // Create order items from cart
+    for (const item of cart.items) {
+      await db.insert(orderItems).values({
+        orderId: order.id,
+        productId: item.productId,
+        variantId: item.variantId || null,
+        quantity: item.quantity,
+        unitPriceHT: item.unitPrice.toString(),
+        totalHT: (item.unitPrice * item.quantity).toString(),
+      });
+    }
+    // If Mollie payment, create payment link
+    let paymentUrl = null;
+    if (paymentMethod === "mollie" || paymentMethod === "online") {
+      try {
+        const { createMolliePayment } = await import("../mollie");
+        const payment = await createMolliePayment({
+          orderId: order.id,
+          amount: depositAmount,
+          description: `Acompte commande ${orderNumber}`,
+          redirectUrl: `${req.headers.origin || process.env.SITE_URL}/order-confirmation/${order.id}`,
+        });
+        paymentUrl = payment?.checkoutUrl || null;
+      } catch (e) {
+        // Payment creation failed but order is created
+      }
+    }
+    // Clear cart
+    const { clearCart } = await import("../db");
+    await clearCart(userId);
+    return res.json({ order: { id: order.id, orderNumber, status: "PENDING", totalHT, totalTTC, depositAmount }, paymentUrl });
+  } catch (err: any) {
+    return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });
+  }
+});
+
 export const mobileApiUserRouter = router;
