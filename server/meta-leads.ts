@@ -649,6 +649,7 @@ export async function reclassifyExistingPartnerLeads(): Promise<{
       await db.update(leads)
         .set({
           leadType: "PARTENARIAT" as any,
+          status: "QUALIFIED" as any,
           notes: "Lead Devenir Partenaire - Redirigé vers la Carte du Réseau",
           assignmentReason: "partner_candidate",
           assignedPartnerId: null,

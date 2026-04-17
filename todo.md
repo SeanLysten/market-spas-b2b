@@ -3778,3 +3778,10 @@
 
 ### Documentation
 - [x] Rédiger le document complet de documentation API mobile — 210 endpoints documentés
+
+## Bug: Carte des leads de partenariat ne se met plus à jour
+- [x] Investiguer pourquoi les leads de partenariat ne s'affichent plus sur la carte
+- [x] Cause racine : syncLeads créait les leads PARTENARIAT avec status=NEW sans créer de candidat dans partner_candidates
+- [x] Fix 1 : syncLeads met maintenant status=QUALIFIED + notes + assignmentReason directement
+- [x] Fix 2 : reclassifyExistingPartnerLeads met aussi status=QUALIFIED (manquait)
+- [x] Rattrapage : 33 candidats créés pour les leads PARTENARIAT sans candidat (total 142 candidats)

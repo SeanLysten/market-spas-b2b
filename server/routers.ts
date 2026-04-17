@@ -5140,14 +5140,25 @@ export const appRouter = router({
             const productInterest = fields.product_interest || fields.produit || "";
 
             // Détecter si c'est un lead partenariat (Devenir Partenaire)
-            const { isPartnerLead } = await import('./meta-leads');
+            const { isPartnerLead, resolveCountry } = await import('./meta-leads');
             const isPartnership = isPartnerLead(fields);
             const leadType = isPartnership ? 'PARTENARIAT' : 'VENTE';
+            const status = isPartnership ? 'QUALIFIED' : 'NEW';
+
+            // Résoudre le pays
+            const formCountry = fields.pays || fields.country || fields.land || '';
+            const country = resolveCountry(formCountry, phone);
 
             await conn.execute(
-              `INSERT INTO leads (firstName, lastName, email, phone, postalCode, city, source, status, leadType, metaLeadgenId, metaFormId, productInterest, message, customFields, receivedAt, createdAt, updatedAt)
-               VALUES (?, ?, ?, ?, ?, ?, 'META_ADS', 'NEW', ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-              [firstName, lastName, email, phone, postalCode, city, leadType, leadData.id, form.id, productInterest, message, JSON.stringify(fields), new Date(leadData.created_time)]
+              `INSERT INTO leads (firstName, lastName, email, phone, postalCode, city, country, source, status, leadType, notes, assignmentReason, metaLeadgenId, metaFormId, productInterest, message, customFields, receivedAt, createdAt, updatedAt)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 'META_ADS', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+              [
+                firstName, lastName, email, phone, postalCode, city, country,
+                status, leadType,
+                isPartnership ? 'Lead Devenir Partenaire - Redirigé vers la Carte du Réseau' : null,
+                isPartnership ? 'partner_candidate' : null,
+                leadData.id, form.id, productInterest, message, JSON.stringify(fields), new Date(leadData.created_time)
+              ]
             );
 
             imported++;
