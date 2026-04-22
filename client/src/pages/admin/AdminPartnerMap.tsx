@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { io } from 'socket.io-client';
 import { AdminLayout } from '@/components/AdminLayout';
 import InteractivePartnerMap from '@/components/InteractivePartnerMap';
 import { trpc } from '@/lib/trpc';
@@ -1682,7 +1683,35 @@ export default function AdminPartnerMap() {
   const [activeTab, setActiveTab] = useState('carte');
   const [candidateFilter, setCandidateFilter] = useState('all');
 
-  const { data: candidates, isLoading: candidatesLoading, refetch: refetchCandidates } = trpc.admin.candidates.list.useQuery();
+  const { data: candidates, isLoading: candidatesLoading, refetch: refetchCandidates } = trpc.admin.candidates.list.useQuery(
+    undefined,
+    { refetchInterval: 30000, refetchIntervalInBackground: false }
+  );
+
+  // WebSocket : rafraîchir automatiquement quand un nouveau candidat/lead arrive
+  useEffect(() => {
+    const socket = io(window.location.origin, {
+      transports: ['websocket', 'polling'],
+    });
+
+    socket.on('connect', () => {
+      socket.emit('join:admin');
+    });
+
+    socket.on('candidates:refresh', () => {
+      console.log('[AdminPartnerMap] Candidates refresh event received');
+      refetchCandidates();
+    });
+
+    socket.on('leads:refresh', () => {
+      console.log('[AdminPartnerMap] Leads refresh event received');
+      // Les leads partnership sont aussi rafraîchis via leur propre refetchInterval
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [refetchCandidates]);
 
   const candidatesList = candidates || [];
 

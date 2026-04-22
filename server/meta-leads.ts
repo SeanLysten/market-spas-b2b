@@ -359,6 +359,7 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
               type: "unknown",
             });
             notifyAdmins("leads:refresh", { timestamp: Date.now() });
+            notifyAdmins("candidates:refresh", { timestamp: Date.now() });
           }
         } catch (error) {
           console.error(`[Meta] Erreur traitement lead ${leadgenId}:`, error);
@@ -376,6 +377,7 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
               type: "unknown",
             });
             notifyAdmins("leads:refresh", { timestamp: Date.now() });
+            notifyAdmins("candidates:refresh", { timestamp: Date.now() });
           } catch (fallbackError) {
             console.error(`[Meta] Échec complet du traitement du lead ${leadgenId}:`, fallbackError);
           }
@@ -660,6 +662,11 @@ export async function reclassifyExistingPartnerLeads(): Promise<{
       errors++;
       console.error(`[Meta] Erreur reclassification lead ${lead.id}:`, error);
     }
+  }
+
+  // Notifier les admins si des candidats ont été créés
+  if (created > 0) {
+    notifyAdmins("candidates:refresh", { timestamp: Date.now(), created });
   }
 
   return { processed, created, alreadyExists, errors };

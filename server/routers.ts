@@ -2951,7 +2951,11 @@ export const appRouter = router({
 
       reclassifyPartnerLeads: adminProcedure
         .mutation(async () => {
-          return await reclassifyExistingPartnerLeads();
+          const result = await reclassifyExistingPartnerLeads();
+          if (result.created > 0) {
+            notifyAdmins("candidates:refresh", { timestamp: Date.now(), created: result.created });
+          }
+          return result;
         }),
 
       // Deduplication
@@ -5180,6 +5184,7 @@ export const appRouter = router({
         // Notifier les admins si de nouveaux leads ont été importés
         if (imported > 0) {
           notifyAdmins("leads:refresh", { timestamp: Date.now() });
+          notifyAdmins("candidates:refresh", { timestamp: Date.now() });
         }
 
         return { success: true, imported, skipped, forms: forms.length };

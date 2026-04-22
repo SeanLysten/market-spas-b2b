@@ -3785,3 +3785,11 @@
 - [x] Fix 1 : syncLeads met maintenant status=QUALIFIED + notes + assignmentReason directement
 - [x] Fix 2 : reclassifyExistingPartnerLeads met aussi status=QUALIFIED (manquait)
 - [x] Rattrapage : 33 candidats créés pour les leads PARTENARIAT sans candidat (total 142 candidats)
+
+## Bug: Carte partenaires ne s'actualise pas en temps réel
+- [x] Investiguer le mécanisme de rafraîchissement de la carte (polling, WebSocket, invalidation)
+- [x] Cause : candidates.list n'avait aucun refetchInterval + pas de listener WebSocket
+- [x] Ajout refetchInterval 30s sur candidates.list dans AdminPartnerMap
+- [x] Ajout listener WebSocket candidates:refresh pour rafraîchir en temps réel
+- [x] Ajout émission candidates:refresh dans tous les chemins serveur (webhook, fallback, reclassify, syncLeads)
+- [x] Vérifié que le WebSocket émet candidates:refresh dans les 6 chemins de création de candidats
