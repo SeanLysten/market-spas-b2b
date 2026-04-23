@@ -3793,3 +3793,8 @@
 - [x] Ajout listener WebSocket candidates:refresh pour rafraîchir en temps réel
 - [x] Ajout émission candidates:refresh dans tous les chemins serveur (webhook, fallback, reclassify, syncLeads)
 - [x] Vérifié que le WebSocket émet candidates:refresh dans les 6 chemins de création de candidats
+
+## Retour Eric — Format API + Acompte montant fixe
+- [x] Adapter endpoint update-status pour accepter un tableau de commandes (Eric envoie un array) — Accepte objet unique OU tableau
+- [x] Acompte : DÉJÀ en montant fixe (300€/spa TTC) — depositPercent calculé a posteriori pour affichage
+- [x] Mettre à jour la documentation API pour Eric
