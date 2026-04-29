@@ -3817,3 +3817,10 @@
 - [x] Capturer projectType, subject et metadata dans /api/leads/inbound
 - [x] Mapper projectType vers productInterest en DB
 - [x] Tester avec un payload complet simulant le formulaire Shopify
+
+
+## Fix double-count shipping dans les récapitulatifs de commande
+- [x] OrderTracking.tsx : Sous-total = totalHT - shippingHT, Total = totalHT, Solde = totalHT - deposit
+- [x] OrderSummary.tsx : idem + suppression du double "Sous-total HT"
+- [x] AdminOrders.tsx : idem côté admin
+- [x] Vérification visuelle côté partenaire et admin — tous les montants corrects

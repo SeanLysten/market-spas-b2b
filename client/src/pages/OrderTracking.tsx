@@ -377,7 +377,7 @@ export default function OrderTracking() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Sous-total HT</span>
-                    <span>{formatPrice(order.totalHT)}</span>
+                    <span>{formatPrice(Number(order.totalHT || 0) - Number((order as any).shippingHT || 0))}</span>
                   </div>
                   {Number((order as any).shippingHT || 0) > 0 && (
                     <div className="flex justify-between text-sm">
@@ -388,7 +388,7 @@ export default function OrderTracking() {
                   <Separator />
                   <div className="flex justify-between text-base font-semibold text-display">
                     <span>Total HT</span>
-                    <span className="text-primary">{formatPrice(Number(order.totalHT || 0) + Number((order as any).shippingHT || 0))}</span>
+                    <span className="text-primary">{formatPrice(order.totalHT)}</span>
                   </div>
                 </div>
 
@@ -402,7 +402,7 @@ export default function OrderTracking() {
                       </div>
                       <div className="flex justify-between text-sm text-amber-700 bg-amber-50 p-2 rounded font-medium">
                         <span>Solde restant</span>
-                        <span>{formatPrice(Number(order.totalHT || 0) + Number((order as any).shippingHT || 0) - Number(order.depositAmount || 0))} HT</span>
+                        <span>{formatPrice(Number(order.totalHT || 0) - Number(order.depositAmount || 0))} HT</span>
                       </div>
                     </div>
                   </>

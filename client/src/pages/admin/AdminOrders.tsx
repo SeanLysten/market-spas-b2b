@@ -711,7 +711,7 @@ export default function AdminOrders() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Sous-total HT</span>
-                    <span>{formatPrice(selectedOrder.totalHT)}</span>
+                    <span>{formatPrice(Number(selectedOrder.totalHT || 0) - Number(selectedOrder.shippingHT || selectedOrder.shippingCost || 0))}</span>
                   </div>
                   {Number(selectedOrder.shippingHT || selectedOrder.shippingCost || 0) > 0 && (
                     <div className="flex justify-between">
@@ -721,7 +721,7 @@ export default function AdminOrders() {
                   )}
                   <div className="flex justify-between text-base font-semibold">
                     <span>Total HT</span>
-                    <span>{formatPrice(Number(selectedOrder.totalHT || 0) + Number(selectedOrder.shippingHT || selectedOrder.shippingCost || 0))}</span>
+                    <span>{formatPrice(selectedOrder.totalHT)}</span>
                   </div>
                   {Number(selectedOrder.depositAmount || 0) > 0 && (
                     <>
@@ -745,7 +745,7 @@ export default function AdminOrders() {
                           )}
                         </div>
                         <div className="text-right">
-                          <span className="font-semibold">{formatPrice(Number(selectedOrder.totalHT || 0) + Number(selectedOrder.shippingHT || selectedOrder.shippingCost || 0) - Number(selectedOrder.depositAmount || 0))} HT</span>
+                          <span className="font-semibold">{formatPrice(Number(selectedOrder.totalHT || 0) - Number(selectedOrder.depositAmount || 0))} HT</span>
                           <p className="text-xs font-medium">{(selectedOrder as any).balancePaid ? '✅ Payé' : '⏳ À régler via fournisseur'}</p>
                         </div>
                       </div>

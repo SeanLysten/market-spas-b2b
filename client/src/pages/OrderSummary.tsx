@@ -202,7 +202,7 @@ export default function OrderSummary() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center w-full sm:w-auto">
                   <div>
                     <p className="text-xs text-muted-foreground">Total HT</p>
-                    <p className="text-sm font-semibold">{formatPrice(Number(order.totalHT || 0) + Number(order.shippingHT || 0))}</p>
+                    <p className="text-sm font-semibold">{formatPrice(order.totalHT)}</p>
                   </div>
                   {Number(order.shippingHT || 0) > 0 && (
                     <div>
@@ -219,7 +219,7 @@ export default function OrderSummary() {
                   {Number(order.depositAmount || 0) > 0 && (
                     <div>
                       <p className="text-xs text-muted-foreground">Solde restant</p>
-                      <p className="text-sm font-semibold text-amber-600">{formatPrice(Number(order.totalHT || 0) + Number(order.shippingHT || 0) - Number(order.depositAmount || 0))}</p>
+                      <p className="text-sm font-semibold text-amber-600">{formatPrice(Number(order.totalHT || 0) - Number(order.depositAmount || 0))}</p>
                     </div>
                   )}
                 </div>
@@ -348,14 +348,10 @@ export default function OrderSummary() {
                     <span>{formatPrice(order.shippingHT)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm font-medium">
-                  <span>Sous-total HT</span>
-                  <span>{formatPrice(order.totalHT)}</span>
-                </div>
                 <Separator />
                 <div className="flex justify-between text-base md:text-lg font-bold">
                   <span>Total HT</span>
-                  <span className="text-primary">{formatPrice(Number(order.totalHT || 0) + Number(order.shippingHT || 0))}</span>
+                  <span className="text-primary">{formatPrice(order.totalHT)}</span>
                 </div>
                 {Number(order.depositAmount || 0) > 0 && (
                   <>
@@ -365,7 +361,7 @@ export default function OrderSummary() {
                     </div>
                     <div className="flex justify-between text-sm text-amber-700 bg-amber-50 p-2 rounded">
                       <span className="font-medium">Solde restant</span>
-                      <span className="font-semibold">{formatPrice(Number(order.totalHT || 0) + Number(order.shippingHT || 0) - Number(order.depositAmount || 0))} HT</span>
+                      <span className="font-semibold">{formatPrice(Number(order.totalHT || 0) - Number(order.depositAmount || 0))} HT</span>
                     </div>
                   </>
                 )}
