@@ -1257,6 +1257,7 @@ export const leadSourceEnum = mysqlEnum("source", [
   "PHONE",
   "EMAIL",
   "TRADE_SHOW",
+  "SHOPIFY_FORM",
   "OTHER",
 ]);
 

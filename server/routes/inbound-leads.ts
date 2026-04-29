@@ -108,20 +108,32 @@ inboundLeadsRouter.post('/api/leads/inbound', async (req: Request, res: Response
       budget,
       message,
       source = 'WEBSITE',
+      // Champs supplémentaires envoyés par le formulaire Shopify
+      subject,
+      projectType,
+      metadata,
     } = req.body;
+
+    // Mapper projectType vers productInterest si productInterest n'est pas fourni
+    const resolvedProductInterest = productInterest || projectType || null;
 
     // Validation minimale
     if (!email && !phone && !firstName) {
       return res.status(400).json({ error: 'At least one contact field required (email, phone, or firstName)' });
     }
 
-    console.log(`[InboundLead] Nouveau lead Shopify: ${firstName} ${lastName} <${email}> CP:${postalCode} Pays:${country}`);
+    console.log(`[InboundLead] Nouveau lead Shopify: ${firstName} ${lastName} <${email}> CP:${postalCode} Pays:${country} Projet:${resolvedProductInterest || 'N/A'}`);
 
     // ── Anti-doublon ──────────────────────────────────────────────────────────
     const existingLeadId = await findExistingLead({ email, phone });
     if (existingLeadId) {
       // Enrichir le lead existant sans le dupliquer
-      await enrichExistingLead(existingLeadId, { postalCode, city, country, productInterest, budget, message });
+      const enrichMessage = [
+        subject ? `Sujet: ${subject}` : '',
+        message || '',
+        metadata?.shopifyPage ? `Page: ${metadata.shopifyPage}` : '',
+      ].filter(Boolean).join('\n');
+      await enrichExistingLead(existingLeadId, { postalCode, city, country, productInterest: resolvedProductInterest, budget, message: enrichMessage || message });
       console.log(`[InboundLead] Doublon détecté → enrichissement du lead #${existingLeadId}`);
       return res.status(200).json({
         success: true,
@@ -134,6 +146,14 @@ inboundLeadsRouter.post('/api/leads/inbound', async (req: Request, res: Response
     // ── Attribution automatique au partenaire ─────────────────────────────────
     const { partnerId, reason } = await findBestPartnerForLead({ postalCode, city, country, phone });
 
+    // ── Construire le message enrichi avec les données Shopify ──────────────
+    const fullMessage = [
+      subject ? `Sujet: ${subject}` : '',
+      message || '',
+      metadata?.shopifyPage ? `Page source: ${metadata.shopifyPage}` : '',
+      metadata?.submittedAt ? `Soumis le: ${metadata.submittedAt}` : '',
+    ].filter(Boolean).join('\n');
+
     // ── Créer le lead ─────────────────────────────────────────────────────────
     const result = await createLead({
       firstName,
@@ -144,9 +164,9 @@ inboundLeadsRouter.post('/api/leads/inbound', async (req: Request, res: Response
       city,
       country,
       source: source as any,
-      productInterest,
+      productInterest: resolvedProductInterest,
       budget,
-      message,
+      message: fullMessage || message,
       assignedPartnerId: partnerId || undefined,
     });
 

@@ -3812,3 +3812,8 @@
 - [x] C1: Remplacer "ACTIVE" par "APPROVED" dans mobile-api-admin.ts et mobile-api.ts
 - [x] H1: Supprimer le fallback p.payment_status dans supplier-stock.ts:556
 - [x] M1: Corriger les 2 tests warranty-engine en échec
+
+## Shopify Leads — Champs manquants
+- [x] Capturer projectType, subject et metadata dans /api/leads/inbound
+- [x] Mapper projectType vers productInterest en DB
+- [x] Tester avec un payload complet simulant le formulaire Shopify

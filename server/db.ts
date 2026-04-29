@@ -2724,7 +2724,7 @@ export async function createLead(data: {
   postalCode?: string;
   country?: string;
   leadType?: 'VENTE' | 'PARTENARIAT' | 'SAV';
-  source: 'META_ADS' | 'GOOGLE_ADS' | 'WEBSITE' | 'REFERRAL' | 'PHONE' | 'EMAIL' | 'TRADE_SHOW' | 'OTHER';
+  source: 'META_ADS' | 'GOOGLE_ADS' | 'WEBSITE' | 'REFERRAL' | 'PHONE' | 'EMAIL' | 'TRADE_SHOW' | 'SHOPIFY_FORM' | 'OTHER';
   metaCampaignId?: string;
   metaAdsetId?: string;
   metaAdId?: string;
