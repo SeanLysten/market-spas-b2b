@@ -67,7 +67,7 @@ export const orderStatusEnum = mysqlEnum("order_status", [
   "REFUSED",
 ]);
 
-export const paymentStatusEnum = mysqlEnum("payment_status", [
+export const paymentStatusEnum = mysqlEnum("status", [
   "PENDING",
   "PROCESSING",
   "SUCCEEDED",

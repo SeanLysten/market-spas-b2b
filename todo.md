@@ -3803,3 +3803,7 @@
 - [x] Modifier SwimFlow existant → SwimFlow Standard (663200) avec 3 variantes couleur
 - [x] Créer SwimFlow Semi-Recessed (663300) avec 3 variantes couleur
 - [x] Vérifier que les 6 variantes sont reconnues par l'import stock fournisseur
+
+## Fix bug payment_status
+- [x] Lancer db:push pour ajouter la colonne payment_status manquante dans la table payments (fix: status COMPLETED → SUCCEEDED)
+- [x] Vérifier que l'endpoint /api/supplier/orders/balance-paid fonctionne après le fix

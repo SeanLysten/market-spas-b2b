@@ -824,7 +824,7 @@ router.post("/api/supplier/orders/balance-paid", async (req, res) => {
         orderId: order.id,
         amount: payload.balanceAmount ? String(payload.balanceAmount) : order.balanceAmount,
         method: "supplier_direct",
-        status: "COMPLETED",
+        status: "SUCCEEDED",
         paidAt: balancePaidAt,
         notes: `Solde payé via fournisseur${payload.supplierReference ? ` (Réf: ${payload.supplierReference})` : ""}`,
       });
