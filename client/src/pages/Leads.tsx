@@ -514,7 +514,7 @@ export default function Leads() {
                   {selectedLead.message && (
                     <div className="bg-muted/50 rounded-lg p-4">
                       <h4 className="font-medium text-foreground mb-2">Message du prospect</h4>
-                      <p className="text-xs md:text-sm text-muted-foreground">{selectedLead.message}</p>
+                      <p className="text-xs md:text-sm text-muted-foreground whitespace-pre-line break-words">{selectedLead.message}</p>
                     </div>
                   )}
 

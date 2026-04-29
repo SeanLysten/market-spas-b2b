@@ -3824,3 +3824,9 @@
 - [x] OrderSummary.tsx : idem + suppression du double "Sous-total HT"
 - [x] AdminOrders.tsx : idem côté admin
 - [x] Vérification visuelle côté partenaire et admin — tous les montants corrects
+
+
+## Séparation données par partenaire + affichage leads
+- [x] Vérifier la séparation des données par partenaire (commandes, leads, équipe) — audit complet confirmé
+- [x] Corriger l'affichage illisible du message des leads dans la modale — whitespace-pre-line break-words ajouté dans Leads.tsx
+- [x] Améliorer le formatage du message enrichi côté API inbound-leads — sections séparées (Sujet, Projet, Budget, message, Informations complémentaires)

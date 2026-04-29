@@ -147,12 +147,21 @@ inboundLeadsRouter.post('/api/leads/inbound', async (req: Request, res: Response
     const { partnerId, reason } = await findBestPartnerForLead({ postalCode, city, country, phone });
 
     // ── Construire le message enrichi avec les données Shopify ──────────────
-    const fullMessage = [
-      subject ? `Sujet: ${subject}` : '',
-      message || '',
-      metadata?.shopifyPage ? `Page source: ${metadata.shopifyPage}` : '',
-      metadata?.submittedAt ? `Soumis le: ${metadata.submittedAt}` : '',
-    ].filter(Boolean).join('\n');
+    const messageParts: string[] = [];
+    if (subject) messageParts.push(`Sujet: ${subject}`);
+    if (resolvedProductInterest) messageParts.push(`Projet: ${resolvedProductInterest}`);
+    if (budget) messageParts.push(`Budget: ${budget}`);
+    if (message) {
+      messageParts.push('');
+      messageParts.push(message);
+    }
+    if (metadata?.shopifyPage || metadata?.submittedAt) {
+      messageParts.push('');
+      messageParts.push('--- Informations complémentaires ---');
+      if (metadata.shopifyPage) messageParts.push(`Page source: ${metadata.shopifyPage}`);
+      if (metadata.submittedAt) messageParts.push(`Soumis le: ${new Date(metadata.submittedAt).toLocaleString('fr-FR')}`);
+    }
+    const fullMessage = messageParts.join('\n');
 
     // ── Créer le lead ─────────────────────────────────────────────────────────
     const result = await createLead({
