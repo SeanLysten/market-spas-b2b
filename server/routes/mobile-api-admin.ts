@@ -1233,7 +1233,7 @@ router.post("/api/mobile/admin/partners/:id/approve", async (req: AuthenticatedR
     const { partners } = await import("../../drizzle/schema");
     const { eq } = await import("drizzle-orm");
     const db = await getDb();
-    await db.update(partners).set({ status: "ACTIVE", approvedAt: new Date() }).where(eq(partners.id, partnerId));
+    await db.update(partners).set({ status: "APPROVED", approvedAt: new Date() }).where(eq(partners.id, partnerId));
     return res.json({ success: true });
   } catch (err: any) {
     return res.status(500).json({ error: "INTERNAL_ERROR", message: err.message });

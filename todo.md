@@ -3807,3 +3807,8 @@
 ## Fix bug payment_status
 - [x] Lancer db:push pour ajouter la colonne payment_status manquante dans la table payments (fix: status COMPLETED → SUCCEEDED)
 - [x] Vérifier que l'endpoint /api/supplier/orders/balance-paid fonctionne après le fix
+
+## Corrections Coherence Guard
+- [x] C1: Remplacer "ACTIVE" par "APPROVED" dans mobile-api-admin.ts et mobile-api.ts
+- [x] H1: Supprimer le fallback p.payment_status dans supplier-stock.ts:556
+- [x] M1: Corriger les 2 tests warranty-engine en échec

@@ -173,7 +173,7 @@ describe("Warranty Engine", () => {
           brand: "MARKET_SPAS",
           component: "Pompes",
           defectType: "Bruit anormal",
-          deliveryDate: new Date(Date.now() - 25 * 30 * 24 * 60 * 60 * 1000).toISOString(), // 25 months ago
+          deliveryDate: new Date(Date.now() - 26 * 30 * 24 * 60 * 60 * 1000).toISOString(), // 26 months ago (well past 24-month warranty)
         }));
         validateResultStructure(result);
         expect(result.status).toBe("EXPIRED");
@@ -197,7 +197,7 @@ describe("Warranty Engine", () => {
           brand: "MARKET_SPAS",
           component: "Couverture thermique",
           defectType: "Déformation",
-          deliveryDate: new Date(Date.now() - 13 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+          deliveryDate: new Date(Date.now() - 14 * 30 * 24 * 60 * 60 * 1000).toISOString(), // 14 months ago (well past 12-month warranty)
         }));
         validateResultStructure(result);
         expect(result.status).toBe("EXPIRED");

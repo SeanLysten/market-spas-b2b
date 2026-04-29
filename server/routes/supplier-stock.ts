@@ -553,7 +553,7 @@ router.get("/api/supplier/orders/export", async (req, res) => {
           type: idx === 0 ? "DEPOSIT" : "BALANCE",
           amount: p.amount,
           method: p.method,
-          status: p.status || p.payment_status || "UNKNOWN",
+          status: p.status || "UNKNOWN",
           paidAt: p.paidAt || null,
         }));
       } catch (e: any) {

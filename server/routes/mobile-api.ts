@@ -1594,7 +1594,7 @@ router.get("/api/mobile/admin/stats", async (req: AuthenticatedRequest, res: Res
     const db = await getDb();
     const [totalPartners, activePartners, totalOrders, pendingOrders, totalRevenue, totalLeads, openSav, recentOrders] = await Promise.all([
       db.select({ count: sql<number>`COUNT(*)` }).from(partners),
-      db.select({ count: sql<number>`COUNT(*)` }).from(partners).where(eq(partners.status, "ACTIVE")),
+      db.select({ count: sql<number>`COUNT(*)` }).from(partners).where(eq(partners.status, "APPROVED")),
       db.select({ count: sql<number>`COUNT(*)` }).from(orders),
       db.select({ count: sql<number>`COUNT(*)` }).from(orders).where(eq(orders.status, "PENDING")),
       db.select({ total: sql<number>`COALESCE(SUM(totalTTC), 0)` }).from(orders),
