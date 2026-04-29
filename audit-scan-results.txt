@@ -1,21 +1,21 @@
 === CODEBASE AUDIT SCAN ===
 Project: /home/ubuntu/market-spas-b2b
-Date: 2026-03-17T12:22:19Z
+Date: 2026-04-28T07:53:04Z
 
 ## 1. PROJECT STATS
-Total TS/TSX files: 274
-Total lines of code: 89553
+Total TS/TSX files: 307
+Total lines of code: 110976
 Largest files:
-   5357 /home/ubuntu/market-spas-b2b/server/routers.ts
-   5186 /home/ubuntu/market-spas-b2b/server/db.ts
-   2767 /home/ubuntu/market-spas-b2b/drizzle/schema.ts
+   6154 /home/ubuntu/market-spas-b2b/server/routers.ts
+   5759 /home/ubuntu/market-spas-b2b/server/db.ts
+   3112 /home/ubuntu/market-spas-b2b/drizzle/schema.ts
    2305 /home/ubuntu/market-spas-b2b/client/src/pages/admin/AdminLeads.tsx
-   1985 /home/ubuntu/market-spas-b2b/client/src/pages/admin/AdminPartnerMap.tsx
-   1850 /home/ubuntu/market-spas-b2b/server/email.ts
-   1616 /home/ubuntu/market-spas-b2b/client/src/pages/admin/AdminSpareParts.tsx
-   1452 /home/ubuntu/market-spas-b2b/client/src/components/InteractivePartnerMap.tsx
-   1295 /home/ubuntu/market-spas-b2b/client/src/pages/admin/AdminProducts.tsx
-   1239 /home/ubuntu/market-spas-b2b/client/src/pages/admin/AdminSettings.tsx
+   2255 /home/ubuntu/market-spas-b2b/server/routes/mobile-api-admin.ts
+   2014 /home/ubuntu/market-spas-b2b/client/src/pages/admin/AdminPartnerMap.tsx
+   1771 /home/ubuntu/market-spas-b2b/server/routes/mobile-api.ts
+   1605 /home/ubuntu/market-spas-b2b/client/src/pages/admin/AdminSpareParts.tsx
+   1531 /home/ubuntu/market-spas-b2b/client/src/pages/admin/AdminNewsletter.tsx
+   1519 /home/ubuntu/market-spas-b2b/server/email.ts
 
 ## 2. POTENTIALLY DEAD COMPONENTS
 DEAD: accordion (64 lines) — /home/ubuntu/market-spas-b2b/client/src/components/ui/accordion.tsx
@@ -26,7 +26,6 @@ DEAD: hover-card (42 lines) — /home/ubuntu/market-spas-b2b/client/src/componen
 DEAD: input-otp (75 lines) — /home/ubuntu/market-spas-b2b/client/src/components/ui/input-otp.tsx
 DEAD: menubar (274 lines) — /home/ubuntu/market-spas-b2b/client/src/components/ui/menubar.tsx
 DEAD: resizable (54 lines) — /home/ubuntu/market-spas-b2b/client/src/components/ui/resizable.tsx
-DEAD: scroll-area (56 lines) — /home/ubuntu/market-spas-b2b/client/src/components/ui/scroll-area.tsx
 DEAD: slider (61 lines) — /home/ubuntu/market-spas-b2b/client/src/components/ui/slider.tsx
 DEAD: toggle-group (73 lines) — /home/ubuntu/market-spas-b2b/client/src/components/ui/toggle-group.tsx
 
@@ -41,29 +40,33 @@ DEAD in db.ts: createIncomingStock()
 DEAD in db.ts: updateIncomingStock()
 DEAD in db.ts: deleteIncomingStock()
 DEAD in db.ts: notifyAdminsDb()
+DEAD in db.ts: createPaymentTransaction()
+DEAD in db.ts: getPaymentTransactionByMollieId()
 DEAD in db.ts: getDiscountForPartnerLevel()
 DEAD in db.ts: getShippingConfig()
+DEAD in db.ts: getTaxConfig()
 DEAD in db.ts: calculateShippingCost()
 DEAD in db.ts: resolvePartnerDiscount()
 DEAD in db.ts: resolveProductDiscountForPartner()
+DEAD in email.ts: sendPaymentFailureEmail()
+DEAD in email.ts: sendRefundConfirmationEmail()
 
 ## 5. SECURITY SCAN
 Hardcoded secrets:
-/home/ubuntu/market-spas-b2b/server/routers.ts:5258:          mode: process.env.STRIPE_SECRET_KEY?.startsWith("sk_live") ? "live" : "test",
-/home/ubuntu/market-spas-b2b/dist/index.js:16349:              mode: process.env.STRIPE_SECRET_KEY?.startsWith("sk_live") ? "live" : "test"
 
 JWT tokens in code:
 
 Passwords/secrets logged:
-/home/ubuntu/market-spas-b2b/server/email.ts:1367:      console.error(`[Email] Error sending password reset to ${email}:`, error);
-/home/ubuntu/market-spas-b2b/server/email.ts:1371:    console.log(`[Email] Password reset sent to ${email}:`, data?.id);
-/home/ubuntu/market-spas-b2b/server/email.ts:1374:    console.error(`[Email] Exception sending password reset to ${email}:`, error);
-/home/ubuntu/market-spas-b2b/server/routers.ts:273:          console.error(`[Auth] Failed to send password reset email to ${user.email}:`, emailResult.error);
+/home/ubuntu/market-spas-b2b/server/email.ts:973:      console.error(`[Email] Error sending password reset to ${email}:`, error);
+/home/ubuntu/market-spas-b2b/server/email.ts:976:    console.log(`[Email] Password reset sent to ${email}:`, data?.id);
+/home/ubuntu/market-spas-b2b/server/email.ts:979:    console.error(`[Email] Exception sending password reset to ${email}:`, error);
+/home/ubuntu/market-spas-b2b/server/routers.ts:302:          console.log(`[Auth] Password reset requested for unknown email: ${input.email}`);
+/home/ubuntu/market-spas-b2b/server/routers.ts:318:          console.error(`[Auth] Failed to send password reset email to ${user.email}:`, emailResult.error);
 
 CSP disabled:
-/home/ubuntu/market-spas-b2b/server/_core/index.ts:56:    contentSecurityPolicy: false, // Disable CSP to allow Vite/React to work
+/home/ubuntu/market-spas-b2b/server/_core/index.ts:81:    contentSecurityPolicy: false, // Disable CSP to allow Vite/React to work
 
-Console.log count — server: 167, client: 3
+Console.log count — server: 217, client: 4
 
 ## 6. UNUSED UI COMPONENTS
 UNUSED UI: accordion
@@ -81,31 +84,34 @@ UNUSED UI: input-otp
 UNUSED UI: item
 UNUSED UI: menubar
 UNUSED UI: pagination
+UNUSED UI: radio-group
 UNUSED UI: resizable
-UNUSED UI: scroll-area
+UNUSED UI: sidebar
 UNUSED UI: slider
 UNUSED UI: toggle-group
 
 ## 7. ROOT FILE CLUTTER
+  check-stock-logs.mjs
   migrate-colors.mjs
   seed-supplier-codes.mjs
+  test-mollie-diag.mjs
+  MOBILE_API_DOCS.md
+  mobile-api-audit-plan.md
+  notes-sidebar-fix.md
   audit-scan-results.txt
-  notes-mobile-mediatheque.txt
   add-variants-tables.sql
   SHOPIFY_FORM_FINAL.liquid
   SHOPIFY_FORM_UPDATED.liquid
-Total non-config root files: 7
+Total non-config root files: 11
 
 ## 8. tRPC ROUTE COVERAGE
-Backend routes: 31
-Frontend tRPC calls (unique): 265
+Backend routes: 35
+Frontend tRPC calls (unique): 310
 
 ## 9. POTENTIALLY UNUSED DEPENDENCIES
 UNUSED: @aws-sdk/client-s3
 UNUSED: @aws-sdk/s3-request-presigner
 UNUSED: @radix-ui/react-navigation-menu
-UNUSED: @stripe/react-stripe-js
-UNUSED: @stripe/stripe-js
 UNUSED: @types/pdfkit
 UNUSED: axios
 UNUSED: streamdown

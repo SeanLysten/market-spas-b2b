@@ -3798,3 +3798,8 @@
 - [x] Adapter endpoint update-status pour accepter un tableau de commandes (Eric envoie un array) — Accepte objet unique OU tableau
 - [x] Acompte : DÉJÀ en montant fixe (300€/spa TTC) — depositPercent calculé a posteriori pour affichage
 - [x] Mettre à jour la documentation API pour Eric
+
+## SwimFlow — Mise à jour catalogue
+- [x] Modifier SwimFlow existant → SwimFlow Standard (663200) avec 3 variantes couleur
+- [x] Créer SwimFlow Semi-Recessed (663300) avec 3 variantes couleur
+- [x] Vérifier que les 6 variantes sont reconnues par l'import stock fournisseur
