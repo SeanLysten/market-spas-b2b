@@ -381,7 +381,9 @@ export default function Leads() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-gray-900 mb-2">
-                            {lead.firstName} {lead.lastName}
+                            {(lead.firstName || lead.lastName) 
+                              ? `${lead.firstName || ''} ${lead.lastName || ''}`.trim()
+                              : <span className="text-muted-foreground italic">Coordonnées non disponibles</span>}
                           </h3>
                           <div className="flex flex-wrap items-center gap-2 mb-2">
                             <Badge variant="outline" className={`${statusConfig.color} text-xs`}>
@@ -451,7 +453,9 @@ export default function Leads() {
                   </Badge>
                 </div>
                 <DialogTitle className="text-xl text-display text-display">
-                  {selectedLead.firstName} {selectedLead.lastName}
+                  {(selectedLead.firstName || selectedLead.lastName)
+                    ? `${selectedLead.firstName || ''} ${selectedLead.lastName || ''}`.trim()
+                    : "Coordonnées non disponibles"}
                 </DialogTitle>
                 <DialogDescription>
                   Reçu {formatDate(selectedLead.receivedAt)}

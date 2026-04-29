@@ -3830,3 +3830,13 @@
 - [x] Vérifier la séparation des données par partenaire (commandes, leads, équipe) — audit complet confirmé
 - [x] Corriger l'affichage illisible du message des leads dans la modale — whitespace-pre-line break-words ajouté dans Leads.tsx
 - [x] Améliorer le formatage du message enrichi côté API inbound-leads — sections séparées (Sujet, Projet, Budget, message, Informations complémentaires)
+
+
+## Bug: Leads Facebook/Instagram sans coordonnées (nom, email, téléphone vides)
+- [x] Analyser les leads vides en DB — 168/1119 Meta leads complètement vides (15%), tous ont customFields avec données complètes
+- [x] Investiguer le code de sync Meta Ads — cause racine: normalisation Unicode NFD vs NFC sur les noms de champs français
+- [x] Corriger le mapping Meta — ajout .normalize("NFC") dans createLeadFromMeta, processMetaWebhook, syncLeads + variantes votre_projet_concerne, budget_envisagé
+- [x] Nettoyer les 168 leads vides existants — script fix-empty-leads.mjs exécuté, 168/168 corrigés, 0 restants
+- [x] Audit coherence-guard ciblé sur le flux leads — séparation par partenaire OK, webhook OK, sync OK, export OK
+- [x] Ajout fallback affichage "Coordonnées non disponibles" dans Leads.tsx pour les leads sans nom
+- [x] 6 tests unitaires Unicode (NFC, NFD, mixte, EN, FR avec budget) — tous passent

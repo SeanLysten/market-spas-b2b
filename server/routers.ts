@@ -5125,7 +5125,8 @@ export const appRouter = router({
             // Parser les champs
             const fields: Record<string, string> = {};
             for (const field of (leadData.field_data || [])) {
-              fields[field.name.toLowerCase()] = field.values[0] || "";
+              // Normaliser en NFC pour éviter les problèmes d'encodage Unicode
+              fields[field.name.normalize("NFC").toLowerCase()] = field.values[0] || "";
             }
 
             let firstName = fields.first_name || fields.prenom || fields["pr\u00e9nom"] || fields.firstname || "";
@@ -5141,7 +5142,7 @@ export const appRouter = router({
             const postalCode = fields.post_code || fields.postal_code || fields.zip || fields.code_postal || fields.postcode || "";
             const city = fields.city || fields.ville || "";
             const message = fields.message || fields.comments || "";
-            const productInterest = fields.product_interest || fields.produit || "";
+            const productInterest = fields.product_interest || fields.produit || fields.votre_projet_concerne || "";
 
             // Détecter si c'est un lead partenariat (Devenir Partenaire)
             const { isPartnerLead, resolveCountry } = await import('./meta-leads');

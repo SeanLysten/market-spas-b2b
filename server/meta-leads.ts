@@ -292,7 +292,7 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
             // Parser les champs pour détecter le type de lead
             const fields: Record<string, string> = {};
             for (const field of leadData.field_data || []) {
-              fields[field.name.toLowerCase()] = field.values[0] || "";
+              fields[field.name.normalize("NFC").toLowerCase()] = field.values[0] || "";
             }
 
             if (isPartnerLead(fields)) {
@@ -544,7 +544,9 @@ async function createLeadFromMeta(
 
   const fields: Record<string, string> = {};
   for (const field of leadData.field_data) {
-    fields[field.name.toLowerCase()] = field.values[0] || "";
+    // Normaliser en NFC pour éviter les problèmes d'encodage Unicode
+    // (Meta envoie parfois les accents en NFD : e + accent combinant)
+    fields[field.name.normalize("NFC").toLowerCase()] = field.values[0] || "";
   }
 
   // Mapper les champs standards (inclut les variantes françaises avec accents/tirets)
@@ -560,8 +562,8 @@ async function createLeadFromMeta(
   const phone = fields.phone_number || fields.phone || fields.telephone || fields["t\u00e9l\u00e9phone"] || fields["num\u00e9ro_de_t\u00e9l\u00e9phone"] || "";
   const postalCode = fields.post_code || fields.postal_code || fields.zip || fields.code_postal || fields.postcode || "";
   const city = fields.city || fields.ville || "";
-  const productInterest = fields.product_interest || fields.produit || fields.interest || fields["que_recherchez-vous_?"] || "";
-  const budget = fields.budget || "";
+  const productInterest = fields.product_interest || fields.produit || fields.interest || fields["que_recherchez-vous_?"] || fields.votre_projet_concerne || "";
+  const budget = fields.budget || fields["budget_envisag\u00e9"] || "";
   const timeline = fields.timeline || fields.delai || "";
   const message = fields.message || fields.comments || "";
 
