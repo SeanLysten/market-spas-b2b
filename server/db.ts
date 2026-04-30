@@ -302,6 +302,14 @@ export async function getProductById(id: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function getProductsByIds(ids: number[]) {
+  if (ids.length === 0) return [];
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select().from(products).where(inArray(products.id, ids));
+}
+
 export async function getProductBySku(sku: string) {
   const db = await getDb();
   if (!db) return undefined;
@@ -1403,6 +1411,14 @@ export async function getProductVariantById(variantId: number) {
     .limit(1);
 
   return result.length > 0 ? result[0] : null;
+}
+
+export async function getProductVariantsByIds(ids: number[]) {
+  if (ids.length === 0) return [];
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select().from(productVariants).where(inArray(productVariants.id, ids));
 }
 
 export async function getProductVariants(productId: number) {

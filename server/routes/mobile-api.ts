@@ -947,17 +947,32 @@ router.post("/api/mobile/v1/orders", async (req: AuthenticatedRequest, res: Resp
     const vatConfig = await db.getVatRateForPartner(partnerId);
     const dynamicVatRate = vatConfig.vatRate;
 
+    // Validate items first (before any DB call)
+    for (const item of items) {
+      if (!item.productId || !item.quantity || item.quantity < 1) {
+        return res.status(400).json({ error: "INVALID_ITEM", message: `Article invalide: productId et quantity (>0) requis` });
+      }
+    }
+
+    // Batch-fetch all products and variants in 2 queries (fixes N+1)
+    const productIds = [...new Set(items.map((i: any) => i.productId))];
+    const variantIds = [...new Set(items.filter((i: any) => i.variantId).map((i: any) => i.variantId))];
+
+    const [allProducts, allVariants] = await Promise.all([
+      db.getProductsByIds(productIds),
+      variantIds.length > 0 ? db.getProductVariantsByIds(variantIds) : Promise.resolve([]),
+    ]);
+
+    const productsMap = new Map(allProducts.map(p => [p.id, p]));
+    const variantsMap = new Map(allVariants.map(v => [v.id, v]));
+
     // Build order items with product details and per-product discounts
     const orderItems: any[] = [];
     let totalDiscountWeighted = 0;
     let totalItemsValue = 0;
 
     for (const item of items) {
-      if (!item.productId || !item.quantity || item.quantity < 1) {
-        return res.status(400).json({ error: "INVALID_ITEM", message: `Article invalide: productId et quantity (>0) requis` });
-      }
-
-      const product = await db.getProductById(item.productId);
+      const product = productsMap.get(item.productId);
       if (!product) {
         return res.status(404).json({ error: "NOT_FOUND", message: `Produit ${item.productId} non trouvé` });
       }
@@ -967,9 +982,9 @@ router.post("/api/mobile/v1/orders", async (req: AuthenticatedRequest, res: Resp
       let unitPriceHT = parseFloat(product.pricePartnerHT);
       let vatRate = dynamicVatRate;
 
-      // If variant is specified, get variant details
+      // If variant is specified, get variant details from pre-fetched map
       if (item.variantId) {
-        const variant = await db.getProductVariantById(item.variantId);
+        const variant = variantsMap.get(item.variantId);
         if (variant) {
           sku = variant.sku;
           name = `${product.name} - ${variant.name}`;

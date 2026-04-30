@@ -1114,12 +1114,24 @@ export const appRouter = router({
         const vatConfig = await db.getVatRateForPartner(ctx.user.partnerId);
         const dynamicVatRate = vatConfig.vatRate;
 
+        // Batch-fetch all products and variants in 2 queries (fixes N+1)
+        const productIds = [...new Set(input.items.map(i => i.productId))];
+        const variantIds = [...new Set(input.items.filter(i => i.variantId).map(i => i.variantId!))];
+
+        const [allProducts, allVariants] = await Promise.all([
+          db.getProductsByIds(productIds),
+          variantIds.length > 0 ? db.getProductVariantsByIds(variantIds) : Promise.resolve([]),
+        ]);
+
+        const productsMap = new Map(allProducts.map(p => [p.id, p]));
+        const variantsMap = new Map(allVariants.map(v => [v.id, v]));
+
         // Build order items with product details and per-product discounts
         const orderItems = [];
         let totalDiscountWeighted = 0;
         let totalItemsValue = 0;
         for (const item of input.items) {
-          const product = await db.getProductById(item.productId);
+          const product = productsMap.get(item.productId);
           if (!product) {
             throw new Error(`Produit ${item.productId} non trouvé`);
           }
@@ -1129,9 +1141,9 @@ export const appRouter = router({
           let unitPriceHT = parseFloat(product.pricePartnerHT);
           let vatRate = dynamicVatRate;
 
-          // If variant is specified, get variant details
+          // If variant is specified, get variant details from pre-fetched map
           if (item.variantId) {
-            const variant = await db.getProductVariantById(item.variantId);
+            const variant = variantsMap.get(item.variantId);
             if (variant) {
               sku = variant.sku;
               name = `${product.name} - ${variant.name}`;

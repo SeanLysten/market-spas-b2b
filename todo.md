@@ -3848,3 +3848,6 @@
 ## Correction MEDIUM #2 — DOMPurify newsletter
 - [x] Installer dompurify + @types/dompurify
 - [x] Sanitizer le HTML dans dangerouslySetInnerHTML de AdminNewsletter.tsx (3 occurrences)
+
+## Correction MEDIUM #3 — N+1 query création commande
+- [x] Remplacer la boucle N+1 par batch fetch (getProductsByIds + getProductVariantsByIds) dans routers.ts et mobile-api.ts — 16 tests passent
