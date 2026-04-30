@@ -250,7 +250,7 @@ router.post("/api/supplier/stock/import", async (req, res) => {
     }
 
     // Log the import to console
-    console.log(
+    console.info(
       `[SupplierStock] Import completed: ${matched} matched, ${unmatched} unmatched, ${errors} errors out of ${payload.data.length} items (key: ${payload.key})`
     );
 
@@ -760,7 +760,7 @@ router.post("/api/supplier/orders/balance-paid", async (req, res) => {
 
     // Check if balance is already paid
     if (order.balancePaid) {
-      console.log(`[SupplierBalancePaid] Order ${order.orderNumber}: Balance already marked as paid`);
+      console.info(`[SupplierBalancePaid] Order ${order.orderNumber}: Balance already marked as paid`);
 
       try {
         await db.insert(supplierApiLogs).values({
@@ -841,10 +841,10 @@ router.post("/api/supplier/orders/balance-paid", async (req, res) => {
         await notifyBalancePaid(order.id, order.orderNumber);
       }
     } catch (notifErr) {
-      console.log("[SupplierBalancePaid] Notification skipped:", (notifErr as any).message);
+      console.info("[SupplierBalancePaid] Notification skipped:", (notifErr as any).message);
     }
 
-    console.log(`[SupplierBalancePaid] Order ${order.orderNumber}: Balance paid, status updated ${previousStatus} -> ${newStatus} (${processingTime}ms)`);
+    console.info(`[SupplierBalancePaid] Order ${order.orderNumber}: Balance paid, status updated ${previousStatus} -> ${newStatus} (${processingTime}ms)`);
 
     // Log success
     try {

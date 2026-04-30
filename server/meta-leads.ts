@@ -207,7 +207,7 @@ async function createPartnerCandidateFromLead(
       .limit(1);
 
     if (existing.length > 0) {
-      console.log(`[Meta] Candidat partenaire déjà existant pour ${email} (ID: ${existing[0].id})`);
+      console.info(`[Meta] Candidat partenaire déjà existant pour ${email} (ID: ${existing[0].id})`);
       // Mettre à jour le metaLeadId si pas encore lié
       if (!existing[0].metaLeadId) {
         await db
@@ -240,7 +240,7 @@ async function createPartnerCandidateFromLead(
     status: "non_contacte",
   });
 
-  console.log(`[Meta] Nouveau candidat partenaire créé (ID: ${result.insertId}, Score: ${score}/8) depuis lead ${leadId}`);
+  console.info(`[Meta] Nouveau candidat partenaire créé (ID: ${result.insertId}, Score: ${score}/8) depuis lead ${leadId}`);
   return { id: result.insertId, isNew: true };
 }
 
@@ -270,7 +270,7 @@ export function verifyMetaWebhook(
  */
 export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<void> {
   if (payload.object !== "page") {
-    console.log("[Meta] Webhook ignoré - object n'est pas 'page'");
+    console.info("[Meta] Webhook ignoré - object n'est pas 'page'");
     return;
   }
 
@@ -279,7 +279,7 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
       if (change.field === "leadgen") {
         const leadgenId = change.value.leadgen_id;
         const pageId = change.value.page_id;
-        console.log(`[Meta] Nouveau lead reçu: ${leadgenId} (page: ${pageId})`);
+        console.info(`[Meta] Nouveau lead reçu: ${leadgenId} (page: ${pageId})`);
         
         try {
           // Récupérer les données complètes du lead via Graph API
@@ -299,7 +299,7 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
               // === LEAD "DEVENIR PARTENAIRE" ===
               // Ces leads ne sont PAS assignés à un partenaire.
               // Ils apparaissent uniquement dans la Carte du Réseau.
-              console.log(`[Meta] Lead ${leadgenId} détecté comme candidat partenaire`);
+              console.info(`[Meta] Lead ${leadgenId} détecté comme candidat partenaire`);
               
               // Marquer le lead comme candidat partenaire avec leadType = PARTENARIAT
               const db = await getDb();
@@ -330,7 +330,7 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
               notifyAdmins("candidates:refresh", { timestamp: Date.now() });
             } else {
               // === LEAD CLIENT FINAL ===
-              console.log(`[Meta] Lead ${leadgenId} détecté comme client final`);
+              console.info(`[Meta] Lead ${leadgenId} détecté comme client final`);
               
               // Distribuer le lead au partenaire approprié
               await distributeLeadToPartner(lead.id);
@@ -346,7 +346,7 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
             }
           } else {
             // FALLBACK: Créer le lead avec les données minimales du webhook
-            console.log(`[Meta] Création du lead avec données minimales (fallback)`);
+            console.info(`[Meta] Création du lead avec données minimales (fallback)`);
             const lead = await createLeadFromWebhookOnly(change.value);
             
             // Tenter la distribution même avec les données minimales
@@ -366,7 +366,7 @@ export async function processMetaWebhook(payload: MetaWebhookPayload): Promise<v
           
           // DERNIER RECOURS: Essayer de créer le lead avec les données minimales
           try {
-            console.log(`[Meta] Tentative de création en dernier recours`);
+            console.info(`[Meta] Tentative de création en dernier recours`);
             const lead = await createLeadFromWebhookOnly(change.value);
             await distributeLeadToPartner(lead.id);
             
@@ -458,9 +458,9 @@ async function fetchLeadData(leadgenId: string, pageId?: string): Promise<MetaLe
     const pageToken = await getPageToken(pageId);
     if (pageToken) {
       token = pageToken;
-      console.log(`[Meta] Utilisation du Page Token pour la page ${pageId}`);
+      console.info(`[Meta] Utilisation du Page Token pour la page ${pageId}`);
     } else {
-      console.log(`[Meta] Page Token non trouvé pour ${pageId}, utilisation du System User Token`);
+      console.info(`[Meta] Page Token non trouvé pour ${pageId}, utilisation du System User Token`);
     }
   }
 
@@ -474,7 +474,7 @@ async function fetchLeadData(leadgenId: string, pageId?: string): Promise<MetaLe
       
       // Si le Page Token a échoué, essayer avec le System User Token
       if (token !== systemToken) {
-        console.log(`[Meta] Retry avec le System User Token`);
+        console.info(`[Meta] Retry avec le System User Token`);
         const retryUrl = `https://graph.facebook.com/${META_CONFIG.graphApiVersion}/${leadgenId}?access_token=${systemToken}`;
         const retryResponse = await fetch(retryUrl);
         if (retryResponse.ok) {
@@ -528,7 +528,7 @@ async function createLeadFromWebhookOnly(
     receivedAt: new Date(),
   });
 
-  console.log(`[Meta] Lead créé en fallback (ID: ${result.insertId}) - données minimales uniquement`);
+  console.info(`[Meta] Lead créé en fallback (ID: ${result.insertId}) - données minimales uniquement`);
   return { id: result.insertId };
 }
 
@@ -574,7 +574,7 @@ async function createLeadFromMeta(
   // Stocker les champs personnalisés
   const customFields = JSON.stringify(fields);
 
-  console.log(`[Meta] Lead parsed: CP=${postalCode}, formCountry=${formCountry}, phone=${phone}, resolvedCountry=${realCountry}`);
+  console.info(`[Meta] Lead parsed: CP=${postalCode}, formCountry=${formCountry}, phone=${phone}, resolvedCountry=${realCountry}`);
 
   const [result] = await db.insert(leads).values({
     firstName,
@@ -834,17 +834,17 @@ export async function distributeLeadToPartner(leadId: number): Promise<void> {
 
     // Si déjà assigné, ne pas réassigner
     if (lead.assignedPartnerId) {
-      console.log(`[LeadDistribution] Lead #${leadId} déjà assigné au partenaire #${lead.assignedPartnerId}`);
+      console.info(`[LeadDistribution] Lead #${leadId} déjà assigné au partenaire #${lead.assignedPartnerId}`);
       return;
     }
 
     // 2. Résoudre le pays
     const country = resolveCountry(lead.country || '', lead.phone || '');
-    console.log(`[LeadDistribution] Lead #${leadId}: CP=${lead.postalCode} Country=${country} Phone=${lead.phone}`);
+    console.info(`[LeadDistribution] Lead #${leadId}: CP=${lead.postalCode} Country=${country} Phone=${lead.phone}`);
 
     // 3. Chercher le partenaire via territories-db (source unique de vérité)
     if (!lead.postalCode) {
-      console.log(`[LeadDistribution] Lead #${leadId}: pas de code postal, assignation manuelle requise`);
+      console.info(`[LeadDistribution] Lead #${leadId}: pas de code postal, assignation manuelle requise`);
       return;
     }
 
@@ -869,7 +869,7 @@ export async function distributeLeadToPartner(leadId: number): Promise<void> {
         notes: `Assigné automatiquement à ${result.partnerName} (territoire: ${result.region}, ${result.country})`,
       });
 
-      console.log(`[LeadDistribution] Lead #${leadId} assigné à ${result.partnerName} (ID ${result.partnerId}) via territoire ${result.region}`);
+      console.info(`[LeadDistribution] Lead #${leadId} assigné à ${result.partnerName} (ID ${result.partnerId}) via territoire ${result.region}`);
 
       // Notifier tous les utilisateurs liés au partenaire
       try {
@@ -897,7 +897,7 @@ export async function distributeLeadToPartner(leadId: number): Promise<void> {
       }
     } else {
       // 5. Aucun partenaire trouvé → laisser en NEW
-      console.log(`[LeadDistribution] Lead #${leadId}: aucun partenaire pour CP ${lead.postalCode} (${country}), assignation manuelle requise`);
+      console.info(`[LeadDistribution] Lead #${leadId}: aucun partenaire pour CP ${lead.postalCode} (${country}), assignation manuelle requise`);
       
       await db.update(leads)
         .set({

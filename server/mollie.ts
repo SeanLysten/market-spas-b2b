@@ -9,7 +9,7 @@ export function getMollieClient() {
   if (!apiKey) {
     throw new Error("No Mollie API key configured. Set MOLLIE_API_KEY_TEST or MOLLIE_API_KEY_LIVE.");
   }
-  console.log(`[Mollie] Using ${apiKey.startsWith('test_') ? 'TEST' : 'LIVE'} mode`);
+  console.info(`[Mollie] Using ${apiKey.startsWith('test_') ? 'TEST' : 'LIVE'} mode`);
   return createMollieClient({ apiKey });
 }
 
@@ -55,7 +55,7 @@ export async function createMolliePayment(input: CreateMolliePaymentInput) {
     dueDate: dueDateStr,
   } as any);
 
-  console.log(`[Mollie] Payment created: ${payment.id} - Status: ${payment.status} - Amount: ${input.amount.toFixed(2)} EUR`);
+  console.info(`[Mollie] Payment created: ${payment.id} - Status: ${payment.status} - Amount: ${input.amount.toFixed(2)} EUR`);
 
   return {
     id: payment.id,

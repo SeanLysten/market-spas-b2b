@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ export default function Favorites() {
   const { data: favorites, isLoading, refetch } = trpc.products.getFavorites.useQuery();
   const addToCartMutation = trpc.cart.add.useMutation({
     onSuccess: () => {
-      alert("Produit ajouté au panier !");
+      toast.success("Produit ajouté au panier !");
     },
   });
   const removeFavoriteMutation = trpc.products.removeFavorite.useMutation({

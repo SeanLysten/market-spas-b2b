@@ -207,11 +207,11 @@ export default function AdminLeads() {
   // Mutation pour réassigner tous les leads
   const reassignMutation = trpc.admin.leads.reassignAll.useMutation({
     onSuccess: (result) => {
-      alert(`Réassignation terminée!\n\n✅ ${result.assigned} leads assignés\n❌ ${result.notFound} leads non assignés\n📊 Total: ${result.total} leads`);
+      toast.success(`Réassignation terminée! ✅ ${result.assigned} assignés, ❌ ${result.notFound} non assignés, 📊 Total: ${result.total}`);
       refetch();
     },
     onError: (error) => {
-      alert(`Erreur lors de la réassignation: ${error.message}`);
+      toast.error(`Erreur lors de la réassignation: ${error.message}`);
     },
   });
 
@@ -326,14 +326,14 @@ export default function AdminLeads() {
       setTimeout(() => {
         refetchMeta().then((result) => {
           if (result.data?.connected) {
-            alert("Compte publicitaire connecté avec succès ! Les campagnes sont en cours de chargement.");
+            toast.success("Compte publicitaire connecté avec succès ! Les campagnes sont en cours de chargement.");
           }
         });
       }, 500);
     },
     onError: (error) => {
       console.error("[Meta] Error connecting account:", error);
-      alert(`Erreur lors de la connexion du compte: ${error.message}`);
+      toast.error(`Erreur lors de la connexion du compte: ${error.message}`);
     },
   });
   const disconnectMutation = trpc.metaAds.disconnectAdAccount.useMutation({
@@ -397,7 +397,7 @@ export default function AdminLeads() {
     },
     onError: (error) => {
       console.error("[Google Ads] Connection error:", error);
-      alert(`Erreur lors de la connexion du compte Google Ads: ${error.message}`);
+      toast.error(`Erreur lors de la connexion du compte Google Ads: ${error.message}`);
     },
   });
   const disconnectGoogleMutation = trpc.googleAds.disconnectAdAccount.useMutation({
@@ -418,14 +418,14 @@ export default function AdminLeads() {
     // Handle OAuth errors
     if (metaError) {
       console.error("Meta OAuth error:", metaError);
-      alert(`Erreur de connexion Meta: ${decodeURIComponent(metaError)}`);
+      toast.error(`Erreur de connexion Meta: ${decodeURIComponent(metaError)}`);
       window.history.replaceState({}, "", window.location.pathname);
       return;
     }
     
     if (googleError) {
       console.error("Google Ads OAuth error:", googleError);
-      alert(`Erreur de connexion Google Ads: ${decodeURIComponent(googleError)}`);
+      toast.error(`Erreur de connexion Google Ads: ${decodeURIComponent(googleError)}`);
       window.history.replaceState({}, "", window.location.pathname);
       return;
     }
@@ -494,7 +494,7 @@ export default function AdminLeads() {
         setMetaConnecting(false);
       }).catch((err) => {
         console.error("[Meta OAuth] Token exchange error:", err);
-        alert(`Erreur lors de la connexion Meta: ${err.message}`);
+        toast.error(`Erreur lors de la connexion Meta: ${err.message}`);
         setMetaConnecting(false);
       });
     }

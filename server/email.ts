@@ -367,7 +367,7 @@ Cette invitation est personnelle et expire dans 7 jours.
       console.error('[Email] Error sending invitation:', error);
       throw new Error(`Failed to send invitation email: ${error.message}`);
     }
-    console.log('[Email] Invitation sent successfully:', data);
+    console.info('[Email] Invitation sent successfully:', data);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error('[Email] Exception sending invitation:', error);
@@ -570,7 +570,7 @@ Voir la commande : ${portalUrl}/admin/orders
         results.push({ email: adminEmail, success: false, error: error.message });
         allSuccess = false;
       } else {
-        console.log(`[Email] New order notification sent to ${adminEmail}:`, data?.id);
+        console.info(`[Email] New order notification sent to ${adminEmail}:`, data?.id);
         results.push({ email: adminEmail, success: true, messageId: data?.id });
       }
     } catch (error) {
@@ -743,7 +743,7 @@ Suivre ma commande : ${portalUrl}/order/${orderNumber}
       console.error(`[Email] Error sending order status change to ${partnerEmail}:`, error);
       return { success: false, error: error.message };
     }
-    console.log(`[Email] Order status change notification sent to ${partnerEmail}:`, data?.id);
+    console.info(`[Email] Order status change notification sent to ${partnerEmail}:`, data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error(`[Email] Exception sending order status change to ${partnerEmail}:`, error);
@@ -878,7 +878,7 @@ Payer : ${portalUrl}/order/${orderNumber}
       console.error(`[Email] Error sending deposit reminder to ${partnerEmail}:`, error);
       return { success: false, error: error.message };
     }
-    console.log(`[Email] Deposit reminder sent to ${partnerEmail}:`, data?.id);
+    console.info(`[Email] Deposit reminder sent to ${partnerEmail}:`, data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error(`[Email] Exception sending deposit reminder to ${partnerEmail}:`, error);
@@ -973,7 +973,7 @@ Si vous n'avez pas demand\u00e9 cette r\u00e9initialisation, ignorez cet email.
       console.error(`[Email] Error sending password reset to ${email}:`, error);
       return { success: false, error: error.message };
     }
-    console.log(`[Email] Password reset sent to ${email}:`, data?.id);
+    console.info(`[Email] Password reset sent to ${email}:`, data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error(`[Email] Exception sending password reset to ${email}:`, error);
@@ -1080,7 +1080,7 @@ Voir ma commande : ${ENV.siteUrl}/orders/${orderNumber}
       console.error(`[Email] Error sending payment confirmation to ${email}:`, error);
       return { success: false, error: error.message };
     }
-    console.log(`[Email] Payment confirmation sent to ${email}:`, data?.id);
+    console.info(`[Email] Payment confirmation sent to ${email}:`, data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error(`[Email] Exception sending payment confirmation to ${email}:`, error);
@@ -1182,7 +1182,7 @@ R\u00e9essayer : ${ENV.siteUrl}/orders/${orderNumber}
       console.error(`[Email] Error sending payment failure to ${email}:`, error);
       return { success: false, error: error.message };
     }
-    console.log(`[Email] Payment failure sent to ${email}:`, data?.id);
+    console.info(`[Email] Payment failure sent to ${email}:`, data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error(`[Email] Exception sending payment failure to ${email}:`, error);
@@ -1284,7 +1284,7 @@ Voir ma commande : ${ENV.siteUrl}/orders/${orderNumber}
       console.error(`[Email] Error sending refund confirmation to ${email}:`, error);
       return { success: false, error: error.message };
     }
-    console.log(`[Email] Refund confirmation sent to ${email}:`, data?.id);
+    console.info(`[Email] Refund confirmation sent to ${email}:`, data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error(`[Email] Exception sending refund confirmation to ${email}:`, error);
@@ -1322,7 +1322,7 @@ export async function sendNewsletterEmail(
           console.error(`[Email] Error sending newsletter to ${email}:`, error);
           return { email, success: false, error: error.message };
         }
-        console.log(`[Email] Newsletter sent to ${email}:`, data?.id);
+        console.info(`[Email] Newsletter sent to ${email}:`, data?.id);
         return { email, success: true, messageId: data?.id };
       } catch (error) {
         console.error(`[Email] Exception sending newsletter to ${email}:`, error);
@@ -1339,7 +1339,7 @@ export async function sendNewsletterEmail(
   }
 
   const successCount = results.filter(r => r.success).length;
-  console.log(`[Email] Newsletter sent: ${successCount}/${recipients.length} successful`);
+  console.info(`[Email] Newsletter sent: ${successCount}/${recipients.length} successful`);
 
   return { success: successCount > 0, results };
 }
@@ -1510,7 +1510,7 @@ Voir le catalogue : ${ENV.siteUrl}/catalog
       console.error(`[Email] Error sending order refused to ${email}:`, error);
       return { success: false, error: error.message };
     }
-    console.log(`[Email] Order refused email sent to ${email}:`, data?.id);
+    console.info(`[Email] Order refused email sent to ${email}:`, data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error(`[Email] Exception sending order refused to ${email}:`, error);

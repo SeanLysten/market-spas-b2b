@@ -73,7 +73,7 @@ export async function handleMollieWebhook(req: Request, res: Response) {
   try {
     const paymentId = req.body?.id;
     if (!paymentId) {
-      console.log("[Mollie Webhook] No payment ID in request body");
+      console.info("[Mollie Webhook] No payment ID in request body");
       const processingTimeMs = Date.now() - startTime;
       await logWebhookEvent({
         eventType: "error.missing_payment_id",
@@ -87,7 +87,7 @@ export async function handleMollieWebhook(req: Request, res: Response) {
       return res.status(400).json({ error: "Missing payment ID" });
     }
 
-    console.log(`[Mollie Webhook] Received notification for payment: ${paymentId}`);
+    console.info(`[Mollie Webhook] Received notification for payment: ${paymentId}`);
 
     // Fetch the payment details from Mollie
     let payment: any;
@@ -109,12 +109,12 @@ export async function handleMollieWebhook(req: Request, res: Response) {
       return res.status(500).json({ error: "Failed to fetch payment from Mollie" });
     }
 
-    console.log(`[Mollie Webhook] Payment ${paymentId} status: ${payment.status}`);
+    console.info(`[Mollie Webhook] Payment ${paymentId} status: ${payment.status}`);
     const mollieResponsePayload = JSON.stringify(payment);
 
     const metadata = payment.metadata as Record<string, string> | null;
     if (!metadata) {
-      console.log(`[Mollie Webhook] No metadata found for payment ${paymentId}`);
+      console.info(`[Mollie Webhook] No metadata found for payment ${paymentId}`);
       const processingTimeMs = Date.now() - startTime;
       await logWebhookEvent({
         molliePaymentId: paymentId,
@@ -262,7 +262,7 @@ async function handleOrderPaymentUpdate(
 
   const order = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
   if (order.length === 0) {
-    console.log(`[Mollie Webhook] Order ${orderId} not found`);
+    console.info(`[Mollie Webhook] Order ${orderId} not found`);
     return { newStatus: null };
   }
 
@@ -274,20 +274,20 @@ async function handleOrderPaymentUpdate(
     case MOLLIE_STATUS.PENDING:
       // Bank transfer initiated - status "En cours"
       newStatus = "PAYMENT_PENDING";
-      console.log(`[Mollie Webhook] Order ${orderId}: SEPA transfer pending (En cours)`);
+      console.info(`[Mollie Webhook] Order ${orderId}: SEPA transfer pending (En cours)`);
       break;
 
     case MOLLIE_STATUS.PAID:
       // Payment confirmed - status "Acompte paye"
       newStatus = "DEPOSIT_PAID";
       depositPaid = true;
-      console.log(`[Mollie Webhook] Order ${orderId}: Deposit paid (Acompte paye)`);
+      console.info(`[Mollie Webhook] Order ${orderId}: Deposit paid (Acompte paye)`);
 
       // Send payment received notification
       try {
         await notifyPaymentReceived(orderId, currentOrder.orderNumber, "deposit");
       } catch (e) {
-        console.log("[Mollie Webhook] notifyPaymentReceived skipped:", (e as any).message);
+        console.info("[Mollie Webhook] notifyPaymentReceived skipped:", (e as any).message);
       }
 
       // Send notification email
@@ -297,28 +297,28 @@ async function handleOrderPaymentUpdate(
           const { partners } = await import("../drizzle/schema");
           const partner = await db.select().from(partners).where(eq(partners.id, currentOrder.partnerId)).limit(1);
           if (partner.length > 0) {
-            console.log(`[Mollie Webhook] Sending payment confirmation email for order ${currentOrder.orderNumber}`);
+            console.info(`[Mollie Webhook] Sending payment confirmation email for order ${currentOrder.orderNumber}`);
           }
         }
       } catch (e) {
-        console.log("[Mollie Webhook] Email notification skipped:", (e as any).message);
+        console.info("[Mollie Webhook] Email notification skipped:", (e as any).message);
       }
 
       // Note: Pas de push sortant vers le fournisseur.
       // Le fournisseur récupère les commandes via GET /api/supplier/orders/export
-      console.log(`[Mollie Webhook] Order ${orderId}: Deposit paid, commande disponible pour le fournisseur via GET export`);
+      console.info(`[Mollie Webhook] Order ${orderId}: Deposit paid, commande disponible pour le fournisseur via GET export`);
       break;
 
     case MOLLIE_STATUS.FAILED:
     case MOLLIE_STATUS.EXPIRED:
       // Payment not received within deadline -> REFUSED + restore stock
       newStatus = "REFUSED";
-      console.log(`[Mollie Webhook] Order ${orderId}: Payment ${status} -> REFUSED`);
+      console.info(`[Mollie Webhook] Order ${orderId}: Payment ${status} -> REFUSED`);
 
       try {
         await notifyPaymentFailed(orderId, currentOrder.orderNumber, status);
       } catch (e) {
-        console.log("[Mollie Webhook] notifyPaymentFailed skipped:", (e as any).message);
+        console.info("[Mollie Webhook] notifyPaymentFailed skipped:", (e as any).message);
       }
 
       // Send order refused email to partner
@@ -340,7 +340,7 @@ async function handleOrderPaymentUpdate(
               partner[0].companyName
             );
           }
-          console.log(`[Mollie Webhook] Order ${orderId}: Refused email sent to ${emailTargets.length} recipient(s)`);
+          console.info(`[Mollie Webhook] Order ${orderId}: Refused email sent to ${emailTargets.length} recipient(s)`);
         }
       } catch (emailError: any) {
         console.error(`[Mollie Webhook] Order ${orderId}: Failed to send refused email:`, emailError.message);
@@ -350,7 +350,7 @@ async function handleOrderPaymentUpdate(
       try {
         const { restoreStockForOrder } = await import("./stock-management");
         await restoreStockForOrder(orderId);
-        console.log(`[Mollie Webhook] Order ${orderId}: Stock restored successfully`);
+        console.info(`[Mollie Webhook] Order ${orderId}: Stock restored successfully`);
       } catch (stockError: any) {
         console.error(`[Mollie Webhook] Order ${orderId}: Failed to restore stock:`, stockError.message);
       }
@@ -358,7 +358,7 @@ async function handleOrderPaymentUpdate(
 
     case MOLLIE_STATUS.CANCELLED:
       newStatus = "REFUSED";
-      console.log(`[Mollie Webhook] Order ${orderId}: Payment cancelled -> REFUSED`);
+      console.info(`[Mollie Webhook] Order ${orderId}: Payment cancelled -> REFUSED`);
 
       // Send order refused email for cancelled payments too
       try {
@@ -379,7 +379,7 @@ async function handleOrderPaymentUpdate(
               partnerData[0].companyName
             );
           }
-          console.log(`[Mollie Webhook] Order ${orderId}: Refused email sent after cancellation`);
+          console.info(`[Mollie Webhook] Order ${orderId}: Refused email sent after cancellation`);
         }
       } catch (emailError: any) {
         console.error(`[Mollie Webhook] Order ${orderId}: Failed to send refused email:`, emailError.message);
@@ -389,7 +389,7 @@ async function handleOrderPaymentUpdate(
       try {
         const { restoreStockForOrder: restoreStock } = await import("./stock-management");
         await restoreStock(orderId);
-        console.log(`[Mollie Webhook] Order ${orderId}: Stock restored after cancellation`);
+        console.info(`[Mollie Webhook] Order ${orderId}: Stock restored after cancellation`);
       } catch (stockError: any) {
         console.error(`[Mollie Webhook] Order ${orderId}: Failed to restore stock:`, stockError.message);
       }
@@ -397,7 +397,7 @@ async function handleOrderPaymentUpdate(
 
     case MOLLIE_STATUS.OPEN:
       // Payment created, waiting for customer - no status change needed
-      console.log(`[Mollie Webhook] Order ${orderId}: Payment open, awaiting customer action`);
+      console.info(`[Mollie Webhook] Order ${orderId}: Payment open, awaiting customer action`);
       break;
   }
 
@@ -421,7 +421,7 @@ async function handleOrderPaymentUpdate(
       note: `Mollie webhook: ${status} (Payment ID: ${molliePaymentId})`,
     });
 
-    console.log(`[Mollie Webhook] Order ${orderId}: Status updated ${currentOrder.status} -> ${newStatus}`);
+    console.info(`[Mollie Webhook] Order ${orderId}: Status updated ${currentOrder.status} -> ${newStatus}`);
   }
 
   return { newStatus };
@@ -445,13 +445,13 @@ async function handleSavPaymentUpdate(
         .update(afterSalesServices)
         .set({ status: "PAYMENT_CONFIRMED" })
         .where(eq(afterSalesServices.id, savId));
-      console.log(`[Mollie Webhook] SAV ${savId}: Payment confirmed`);
+      console.info(`[Mollie Webhook] SAV ${savId}: Payment confirmed`);
       break;
 
     case MOLLIE_STATUS.FAILED:
     case MOLLIE_STATUS.EXPIRED:
     case MOLLIE_STATUS.CANCELLED:
-      console.log(`[Mollie Webhook] SAV ${savId}: Payment ${status}`);
+      console.info(`[Mollie Webhook] SAV ${savId}: Payment ${status}`);
       break;
   }
 }

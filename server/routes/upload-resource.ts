@@ -48,7 +48,7 @@ async function compressImage(
 
       // Only use compressed version if it's actually smaller
       if (compressed.length < buffer.length * 0.9) {
-        console.log(`[compress] PNG→JPEG: ${(buffer.length / 1024 / 1024).toFixed(1)}MB → ${(compressed.length / 1024 / 1024).toFixed(1)}MB (${Math.round((1 - compressed.length / buffer.length) * 100)}% saved)`);
+        console.info(`[compress] PNG→JPEG: ${(buffer.length / 1024 / 1024).toFixed(1)}MB → ${(compressed.length / 1024 / 1024).toFixed(1)}MB (${Math.round((1 - compressed.length / buffer.length) * 100)}% saved)`);
         return { buffer: compressed, mimetype: "image/jpeg", wasCompressed: true };
       }
     }
@@ -60,7 +60,7 @@ async function compressImage(
         .toBuffer();
 
       if (compressed.length < buffer.length * 0.9) {
-        console.log(`[compress] JPEG optimized: ${(buffer.length / 1024 / 1024).toFixed(1)}MB → ${(compressed.length / 1024 / 1024).toFixed(1)}MB`);
+        console.info(`[compress] JPEG optimized: ${(buffer.length / 1024 / 1024).toFixed(1)}MB → ${(compressed.length / 1024 / 1024).toFixed(1)}MB`);
         return { buffer: compressed, mimetype: "image/jpeg", wasCompressed: true };
       }
     }
@@ -71,7 +71,7 @@ async function compressImage(
         .toBuffer();
 
       if (compressed.length < buffer.length * 0.9) {
-        console.log(`[compress] WebP optimized: ${(buffer.length / 1024 / 1024).toFixed(1)}MB → ${(compressed.length / 1024 / 1024).toFixed(1)}MB`);
+        console.info(`[compress] WebP optimized: ${(buffer.length / 1024 / 1024).toFixed(1)}MB → ${(compressed.length / 1024 / 1024).toFixed(1)}MB`);
         return { buffer: compressed, mimetype: "image/webp", wasCompressed: true };
       }
     }
@@ -127,12 +127,12 @@ async function processFileUpload(
 
   const originalSizeMB = (file.size / 1024 / 1024).toFixed(1);
   const finalSizeMB = (finalBuffer.length / 1024 / 1024).toFixed(1);
-  console.log(`[upload-resource] Uploading ${file.originalname} (${originalSizeMB}MB${wasCompressed ? ` → ${finalSizeMB}MB compressed` : ""}) to S3...`);
+  console.info(`[upload-resource] Uploading ${file.originalname} (${originalSizeMB}MB${wasCompressed ? ` → ${finalSizeMB}MB compressed` : ""}) to S3...`);
 
   // Upload to S3
   const { url } = await storagePut(fileKey, finalBuffer, finalMimetype);
 
-  console.log(`[upload-resource] S3 upload complete: ${url}`);
+  console.info(`[upload-resource] S3 upload complete: ${url}`);
 
   // Parse metadata from form fields
   const title = (body.title as string) || file.originalname.replace(/\.[^/.]+$/, "");
@@ -172,7 +172,7 @@ async function processFileUpload(
       .then(async (thumbUrl) => {
         try {
           await db.update(resources).set({ thumbnailUrl: thumbUrl }).where(eq(resources.id, insertId));
-          console.log(`[upload-resource] Thumbnail generated for resource ${insertId}`);
+          console.info(`[upload-resource] Thumbnail generated for resource ${insertId}`);
         } catch (err) {
           console.error(`[upload-resource] Failed to save thumbnail URL:`, err);
         }

@@ -50,7 +50,7 @@ async function processScheduledNewsletters() {
           failureCount,
         });
 
-        console.log(
+        console.info(
           `[Newsletter Cron] Sent newsletter #${nl.id} "${nl.subject}" to ${successCount}/${recipientEmails.length} recipients`
         );
       } catch (err: any) {
@@ -66,7 +66,7 @@ async function processScheduledNewsletters() {
 }
 
 export function startScheduledNewsletterJob() {
-  console.log("[Newsletter Cron] Started - checking every 60s");
+  console.info("[Newsletter Cron] Started - checking every 60s");
   setInterval(processScheduledNewsletters, INTERVAL_MS);
   // Also run once immediately
   processScheduledNewsletters();

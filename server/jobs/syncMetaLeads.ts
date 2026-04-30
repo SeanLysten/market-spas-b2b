@@ -19,7 +19,7 @@ const TOKEN_VALIDATION_CACHE_MS = 10 * 60 * 1000;
  */
 export async function runMetaLeadsSync() {
   if (isSyncing) {
-    console.log("[MetaLeadsSync] Sync déjà en cours, on passe");
+    console.info("[MetaLeadsSync] Sync déjà en cours, on passe");
     return { imported: 0, skipped: 0 };
   }
 
@@ -110,7 +110,7 @@ export async function runMetaLeadsSync() {
         const isPartner = isPartnerLead(fields);
         const leadType = isPartner ? 'PARTENARIAT' : 'VENTE';
 
-        console.log(`[MetaLeadsSync] Lead: ${firstName} ${lastName}, CP=${postalCode}, type=${leadType}, formCountry=${formCountry}, phone=${phone}, resolvedCountry=${country}`);
+        console.info(`[MetaLeadsSync] Lead: ${firstName} ${lastName}, CP=${postalCode}, type=${leadType}, formCountry=${formCountry}, phone=${phone}, resolvedCountry=${country}`);
 
         // Insérer le lead avec le bon pays, CP et leadType
         const [insertResult] = await conn.execute(
@@ -131,7 +131,7 @@ export async function runMetaLeadsSync() {
         if (isPartner) {
           // Lead partenariat : NE PAS assigner à un partenaire
           // Créer un candidat partenaire sur la carte du réseau
-          console.log(`[MetaLeadsSync] Lead partenariat ${newLeadId} - création candidat sur la carte du réseau`);
+          console.info(`[MetaLeadsSync] Lead partenariat ${newLeadId} - création candidat sur la carte du réseau`);
           try {
             const companyName = fields.company_name || fields.nom_de_votre_entreprise || fields.entreprise || `${firstName} ${lastName}`;
             const scoring = calculatePartnerScore(fields);
@@ -162,7 +162,7 @@ export async function runMetaLeadsSync() {
                   `Lead Meta importé automatiquement. Score: ${scoring.score}/8`
                 ]
               );
-              console.log(`[MetaLeadsSync] ✓ Candidat partenaire créé: ${companyName} (score: ${scoring.score}/8)`);
+              console.info(`[MetaLeadsSync] ✓ Candidat partenaire créé: ${companyName} (score: ${scoring.score}/8)`);
             }
           } catch (candidateErr) {
             console.error(`[MetaLeadsSync] Erreur création candidat pour lead ${newLeadId}:`, candidateErr);
@@ -180,7 +180,7 @@ export async function runMetaLeadsSync() {
                 'UPDATE leads SET assignedPartnerId = ?, assignedAt = NOW(), assignmentReason = ?, status = "ASSIGNED" WHERE id = ?',
                 [partner.partnerId, partner.reason, newLeadId]
               );
-              console.log(`[MetaLeadsSync] Lead VENTE ${newLeadId} assigné à ${partner.partnerName} (${partner.reason})`);
+              console.info(`[MetaLeadsSync] Lead VENTE ${newLeadId} assigné à ${partner.partnerName} (${partner.reason})`);
             }
           } catch (routingErr) {
             console.error(`[MetaLeadsSync] Erreur routing lead ${newLeadId}:`, routingErr);
@@ -188,14 +188,14 @@ export async function runMetaLeadsSync() {
         }
 
         imported++;
-        console.log(`[MetaLeadsSync] ✓ Nouveau lead importé: ${firstName} ${lastName} <${email}> (${country}, CP: ${postalCode}, type: ${leadType})`);
+        console.info(`[MetaLeadsSync] ✓ Nouveau lead importé: ${firstName} ${lastName} <${email}> (${country}, CP: ${postalCode}, type: ${leadType})`);
       }
     }
 
     await conn.end();
 
     if (imported > 0) {
-      console.log(`[MetaLeadsSync] ✓ ${imported} nouveau(x) lead(s) Meta importé(s)`);
+      console.info(`[MetaLeadsSync] ✓ ${imported} nouveau(x) lead(s) Meta importé(s)`);
       // Notifier les admins connectés via WebSocket
       try {
         const { notifyAdmins } = await import("../_core/index");
@@ -229,7 +229,7 @@ export function startMetaLeadsSyncJob() {
     runMetaLeadsSync().catch(console.error);
   }, 5 * 60 * 1000);
 
-  console.log("[MetaLeadsSync] Job périodique démarré (sync toutes les 5 minutes)");
+  console.info("[MetaLeadsSync] Job périodique démarré (sync toutes les 5 minutes)");
 
   return intervalId;
 }

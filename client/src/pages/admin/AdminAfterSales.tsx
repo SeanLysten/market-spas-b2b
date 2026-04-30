@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,33 +72,33 @@ function AdminManageDialog({ serviceId, open, onOpenChange, onSuccess }: {
 
   // Mutations
   const updateStatusMutation = trpc.afterSales.updateStatus.useMutation({
-    onSuccess: () => { alert("Statut mis à jour"); refetch(); onSuccess(); },
-    onError: (e) => alert(`Erreur: ${e.message}`),
+    onSuccess: () => { toast.success("Statut mis à jour"); refetch(); onSuccess(); },
+    onError: (e) => toast.error(`Erreur: ${e.message}`),
   });
 
   const updateWarrantyMutation = trpc.afterSales.updateWarrantyDecision.useMutation({
-    onSuccess: () => { alert("Garantie mise à jour"); refetch(); onSuccess(); },
-    onError: (e) => alert(`Erreur: ${e.message}`),
+    onSuccess: () => { toast.success("Garantie mise à jour"); refetch(); onSuccess(); },
+    onError: (e) => toast.error(`Erreur: ${e.message}`),
   });
 
   const linkPartMutation = trpc.afterSales.linkSparePart.useMutation({
-    onSuccess: () => { alert("Pièce ajoutée"); refetch(); onSuccess(); },
-    onError: (e) => alert(`Erreur: ${e.message}`),
+    onSuccess: () => { toast.success("Pièce ajoutée"); refetch(); onSuccess(); },
+    onError: (e) => toast.error(`Erreur: ${e.message}`),
   });
 
   const updateShippingMutation = trpc.afterSales.addTracking.useMutation({
-    onSuccess: () => { alert("Expédition mise à jour"); refetch(); onSuccess(); },
-    onError: (e) => alert(`Erreur: ${e.message}`),
+    onSuccess: () => { toast.success("Expédition mise à jour"); refetch(); onSuccess(); },
+    onError: (e) => toast.error(`Erreur: ${e.message}`),
   });
 
   const addNoteMutation = trpc.afterSales.addNote.useMutation({
-    onSuccess: () => { setAdminNote(""); alert("Note ajoutée"); refetch(); },
-    onError: (e) => alert(`Erreur: ${e.message}`),
+    onSuccess: () => { setAdminNote(""); toast.success("Note ajoutée"); refetch(); },
+    onError: (e) => toast.error(`Erreur: ${e.message}`),
   });
 
   const setShippingCostMutation = trpc.afterSales.setShippingCost.useMutation({
-    onSuccess: () => { alert("Devis envoyé au partenaire"); refetch(); onSuccess(); },
-    onError: (e) => alert(`Erreur: ${e.message}`),
+    onSuccess: () => { toast.success("Devis envoyé au partenaire"); refetch(); onSuccess(); },
+    onError: (e) => toast.error(`Erreur: ${e.message}`),
   });
 
   if (!serviceData) return null;
@@ -313,7 +314,7 @@ function AdminManageDialog({ serviceId, open, onOpenChange, onSuccess }: {
                         });
                       }
                       setSelectedParts([]);
-                      alert("Pièces ajoutées avec succès");
+                      toast.success("Pièces ajoutées avec succès");
                       refetch();
                       onSuccess();
                     }}

@@ -159,7 +159,7 @@ router.post("/api/mobile/auth/login", async (req: Request, res: Response) => {
       platform
     );
 
-    console.log(`[Mobile Auth] Login success for user #${user.id} (${user.email}) from ${platform || "unknown"}`);
+    console.info(`[Mobile Auth] Login success for user #${user.id} (${user.email}) from ${platform || "unknown"}`);
 
     return res.json({
       accessToken,
@@ -278,7 +278,7 @@ router.post("/api/mobile/auth/refresh", async (req: Request, res: Response) => {
     );
 
     // Update last used
-    console.log(`[Mobile Auth] Token refreshed for user #${user.id}`);
+    console.info(`[Mobile Auth] Token refreshed for user #${user.id}`);
 
     return res.json({
       accessToken: newAccessToken,
@@ -314,7 +314,7 @@ router.post("/api/mobile/auth/logout", async (req: Request, res: Response) => {
         .where(eq(mobileRefreshTokens.token, refreshToken));
     }
 
-    console.log("[Mobile Auth] Logout");
+    console.info("[Mobile Auth] Logout");
     return res.json({ success: true });
   } catch (err) {
     console.error("[Mobile Auth] Logout error:", err);
@@ -469,7 +469,7 @@ router.post("/api/mobile/push/register", async (req: Request, res: Response) => 
       });
     }
 
-    console.log(`[Mobile Push] Token registered for user #${userId} (${platform})`);
+    console.info(`[Mobile Push] Token registered for user #${userId} (${platform})`);
     return res.json({ success: true });
   } catch (err) {
     console.error("[Mobile Push] Register error:", err);
@@ -516,7 +516,7 @@ router.post("/api/mobile/push/unregister", async (req: Request, res: Response) =
         )
       );
 
-    console.log(`[Mobile Push] Token unregistered for user #${userId}`);
+    console.info(`[Mobile Push] Token unregistered for user #${userId}`);
     return res.json({ success: true });
   } catch (err) {
     console.error("[Mobile Push] Unregister error:", err);

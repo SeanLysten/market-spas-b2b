@@ -67,7 +67,7 @@ async function createCustomerSavTicket(params: {
         params.subject.substring(0, 500),
       ]
     );
-    console.log(`[CustomerSAV] Ticket créé: ${ticketNumber} (ID: ${result.insertId})`);
+    console.info(`[CustomerSAV] Ticket créé: ${ticketNumber} (ID: ${result.insertId})`);
     return result.insertId;
   } catch (err) {
     console.error('[CustomerSAV] Error creating ticket:', err);
@@ -142,7 +142,7 @@ inboundLeadsRouter.post('/api/leads/inbound', inboundLeadLimiter, async (req: Re
       return res.status(400).json({ error: 'At least one contact field required (email, phone, or firstName)' });
     }
 
-    console.log(`[InboundLead] Nouveau lead Shopify: ${firstName} ${lastName} <${email}> CP:${postalCode} Pays:${country} Projet:${resolvedProductInterest || 'N/A'}`);
+    console.info(`[InboundLead] Nouveau lead Shopify: ${firstName} ${lastName} <${email}> CP:${postalCode} Pays:${country} Projet:${resolvedProductInterest || 'N/A'}`);
 
     // ── Anti-doublon ──────────────────────────────────────────────────────────
     const existingLeadId = await findExistingLead({ email, phone });
@@ -154,7 +154,7 @@ inboundLeadsRouter.post('/api/leads/inbound', inboundLeadLimiter, async (req: Re
         metadata?.shopifyPage ? `Page: ${metadata.shopifyPage}` : '',
       ].filter(Boolean).join('\n');
       await enrichExistingLead(existingLeadId, { postalCode, city, country, productInterest: resolvedProductInterest, budget, message: enrichMessage || message });
-      console.log(`[InboundLead] Doublon détecté → enrichissement du lead #${existingLeadId}`);
+      console.info(`[InboundLead] Doublon détecté → enrichissement du lead #${existingLeadId}`);
       return res.status(200).json({
         success: true,
         duplicate: true,
@@ -203,7 +203,7 @@ inboundLeadsRouter.post('/api/leads/inbound', inboundLeadLimiter, async (req: Re
       await updateLeadAssignment(result.insertId, reason, partnerId);
     }
 
-    console.log(`[InboundLead] Lead créé ID:${result.insertId} → Partenaire:${partnerId || 'non assigné'} (${reason})`);
+    console.info(`[InboundLead] Lead créé ID:${result.insertId} → Partenaire:${partnerId || 'non assigné'} (${reason})`);
 
     return res.status(201).json({
       success: true,
@@ -228,7 +228,7 @@ inboundLeadsRouter.post('/api/webhooks/email-lead', emailWebhookLimiter, async (
     const body: string = payload?.text || payload?.html || payload?.body || '';
     const toEmail: string = (payload?.to || '').toLowerCase();
 
-    console.log(`[EmailLead] Email reçu de: ${fromEmail} → ${toEmail} | Sujet: "${subject}"`);
+    console.info(`[EmailLead] Email reçu de: ${fromEmail} → ${toEmail} | Sujet: "${subject}"`);
 
     // ── Filtres préliminaires ─────────────────────────────────────────────────
 
@@ -267,7 +267,7 @@ inboundLeadsRouter.post('/api/webhooks/email-lead', emailWebhookLimiter, async (
           customerPhone: parsed.phone,
           priority: 'NORMAL',
         });
-        console.log(`[EmailLead] Ticket SAV client créé: #${ticketId} | Sujet: "${subject}"`);
+        console.info(`[EmailLead] Ticket SAV client créé: #${ticketId} | Sujet: "${subject}"`);
         return res.status(200).json({
           success: true,
           savTicketId: ticketId,
@@ -276,7 +276,7 @@ inboundLeadsRouter.post('/api/webhooks/email-lead', emailWebhookLimiter, async (
         });
       }
 
-      console.log(`[EmailLead] Email ignoré — Catégorie: ${parsed.category} (${parsed.confidence}) | Sujet: "${subject}"`);
+      console.info(`[EmailLead] Email ignoré — Catégorie: ${parsed.category} (${parsed.confidence}) | Sujet: "${subject}"`);
       return res.status(200).json({
         ignored: true,
         reason: 'not_a_lead',
@@ -285,7 +285,7 @@ inboundLeadsRouter.post('/api/webhooks/email-lead', emailWebhookLimiter, async (
       });
     }
 
-    console.log(`[EmailLead] Lead détecté — Catégorie: ${parsed.category} (${parsed.confidence}) | De: ${fromEmail}`);
+    console.info(`[EmailLead] Lead détecté — Catégorie: ${parsed.category} (${parsed.confidence}) | De: ${fromEmail}`);
 
     // ── Anti-doublon ──────────────────────────────────────────────────────────
     const existingLeadId = await findExistingLead({ email: parsed.email, phone: parsed.phone });
@@ -298,7 +298,7 @@ inboundLeadsRouter.post('/api/webhooks/email-lead', emailWebhookLimiter, async (
         budget: parsed.budget,
         message: `[Email supplémentaire]\nDe: ${fromEmail}\nSujet: ${subject}\n\n${parsed.message}`,
       });
-      console.log(`[EmailLead] Doublon détecté → enrichissement du lead #${existingLeadId}`);
+      console.info(`[EmailLead] Doublon détecté → enrichissement du lead #${existingLeadId}`);
       return res.status(200).json({
         success: true,
         duplicate: true,
@@ -328,7 +328,7 @@ inboundLeadsRouter.post('/api/webhooks/email-lead', emailWebhookLimiter, async (
         await updateLeadAssignment(result.insertId, 'partnership_request_no_assignment', null);
       }
 
-      console.log(`[EmailLead] Lead PARTENARIAT créé ID:${result.insertId} → PAS assigné (carte du réseau)`);
+      console.info(`[EmailLead] Lead PARTENARIAT créé ID:${result.insertId} → PAS assigné (carte du réseau)`);
 
       return res.status(200).json({
         success: true,
@@ -367,7 +367,7 @@ inboundLeadsRouter.post('/api/webhooks/email-lead', emailWebhookLimiter, async (
       await updateLeadAssignment(result.insertId, reason, partnerId);
     }
 
-    console.log(`[EmailLead] Lead VENTE créé ID:${result.insertId} → Partenaire:${partnerId || 'non assigné'} (${reason})`);
+    console.info(`[EmailLead] Lead VENTE créé ID:${result.insertId} → Partenaire:${partnerId || 'non assigné'} (${reason})`);
 
     return res.status(200).json({
       success: true,

@@ -299,7 +299,7 @@ export const appRouter = router({
         // Pour des raisons de sécurité, toujours retourner success
         // même si l'email n'existe pas en base (ne pas révéler l'existence d'un compte)
         if (!user) {
-          console.log(`[Auth] Password reset requested for unknown email: ${input.email}`);
+          console.info(`[Auth] Password reset requested for unknown email: ${input.email}`);
           return { success: true };
         }
 
@@ -400,7 +400,10 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         // Vérifier la clé secrète
-        const CRON_SECRET = process.env.CRON_SECRET || 'default-secret-change-me';
+        const CRON_SECRET = process.env.CRON_SECRET;
+        if (!CRON_SECRET) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'CRON_SECRET environment variable is not configured' });
+        }
         if (input.secret !== CRON_SECRET) {
           throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid secret key' });
         }
@@ -417,7 +420,10 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         // Vérifier la clé secrète
-        const CRON_SECRET = process.env.CRON_SECRET || 'default-secret-change-me';
+        const CRON_SECRET = process.env.CRON_SECRET;
+        if (!CRON_SECRET) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'CRON_SECRET environment variable is not configured' });
+        }
         if (input.secret !== CRON_SECRET) {
           throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid secret key' });
         }
@@ -433,7 +439,10 @@ export const appRouter = router({
         secret: z.string(),
       }))
       .mutation(async ({ input }) => {
-        const CRON_SECRET = process.env.CRON_SECRET || 'default-secret-change-me';
+        const CRON_SECRET = process.env.CRON_SECRET;
+        if (!CRON_SECRET) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'CRON_SECRET environment variable is not configured' });
+        }
         if (input.secret !== CRON_SECRET) {
           throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid secret key' });
         }
@@ -453,7 +462,10 @@ export const appRouter = router({
         secret: z.string(),
       }))
       .mutation(async ({ input }) => {
-        const CRON_SECRET = process.env.CRON_SECRET || 'default-secret-change-me';
+        const CRON_SECRET = process.env.CRON_SECRET;
+        if (!CRON_SECRET) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'CRON_SECRET environment variable is not configured' });
+        }
         if (input.secret !== CRON_SECRET) {
           throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid secret key' });
         }

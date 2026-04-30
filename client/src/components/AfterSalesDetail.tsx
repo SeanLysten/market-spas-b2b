@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,10 +52,10 @@ export default function AfterSalesDetail({ serviceId, onClose }: AfterSalesDetai
     onSuccess: () => {
       setNewNote("");
       refetch();
-      alert("Note ajoutée avec succès");
+      toast.success("Note ajoutée avec succès");
     },
     onError: (error) => {
-      alert(`Erreur: ${error.message}`);
+      toast.error(`Erreur: ${error.message}`);
     },
   });
 
@@ -63,11 +64,11 @@ export default function AfterSalesDetail({ serviceId, onClose }: AfterSalesDetai
     onSuccess: (data) => {
       if (data.checkoutUrl) {
         window.open(data.checkoutUrl, "_blank");
-        alert("Vous allez être redirigé vers la page de paiement par virement SEPA.");
+        toast.info("Vous allez être redirigé vers la page de paiement par virement SEPA.");
       }
     },
     onError: (error) => {
-      alert(`Erreur de paiement: ${error.message}`);
+      toast.error(`Erreur de paiement: ${error.message}`);
     },
   });
 

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Download } from "lucide-react";
 import { useState } from "react";
 
@@ -18,7 +19,7 @@ export function ExportButton({ onExport, filename, label = "Exporter Excel", var
       const result = await onExport();
       
       if (!result.fileBase64) {
-        alert("Aucune donnée à exporter");
+        toast.warning("Aucune donnée à exporter");
         return;
       }
 
@@ -43,7 +44,7 @@ export function ExportButton({ onExport, filename, label = "Exporter Excel", var
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Export error:", error);
-      alert("Erreur lors de l'export");
+      toast.error("Erreur lors de l'export");
     } finally {
       setIsExporting(false);
     }

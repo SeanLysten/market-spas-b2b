@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { trpc } from "@/lib/trpc";
-// Note: Using alert for now, can be replaced with toast component
+import { toast } from "sonner";
 import { useState, useEffect, useCallback } from "react";
 import {
   User,
@@ -75,12 +75,12 @@ export default function Profile() {
   // Update company mutation
   const updateCompanyMutation = trpc.partners.updateMyPartner.useMutation({
     onSuccess: () => {
-      alert("Informations entreprise mises à jour avec succès!");
+      toast.success("Informations entreprise mises à jour avec succès!");
       setIsEditingCompany(false);
       refetchPartner();
     },
     onError: (error) => {
-      alert("Erreur lors de la mise à jour: " + error.message);
+      toast.error("Erreur lors de la mise à jour: " + error.message);
     },
   });
 
@@ -119,7 +119,7 @@ export default function Profile() {
 
   // Note: updateProfile mutation would need to be added to the router
   const handleSaveProfile = () => {
-    alert("Profil mis à jour avec succès!");
+    toast.success("Profil mis à jour avec succès!");
     setIsEditing(false);
   };
 
@@ -572,7 +572,7 @@ export default function Profile() {
                         className="gap-2"
                         onClick={() => {
                           resetOnboardingAll();
-                          alert("Les guides ont été réinitialisés. Ils se relanceront automatiquement lors de votre prochaine visite sur chaque page.");
+                          toast.success("Les guides ont été réinitialisés. Ils se relanceront automatiquement lors de votre prochaine visite sur chaque page.");
                         }}
                       >
                         <RotateCcw className="w-4 h-4" />

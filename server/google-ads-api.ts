@@ -31,7 +31,7 @@ async function googleAdsRequest(
   }
 
   const fullUrl = `${GOOGLE_ADS_BASE_URL}${endpoint}`;
-  console.log(`[Google Ads API] Request: ${options.method || 'GET'} ${fullUrl}`);
+  console.info(`[Google Ads API] Request: ${options.method || 'GET'} ${fullUrl}`);
   
   const response = await fetch(fullUrl, {
     method: options.method || 'GET',
@@ -60,7 +60,7 @@ async function googleAdsRequest(
 export async function listAccessibleCustomers(accessToken: string): Promise<string[]> {
   try {
     const data = await googleAdsRequest('/customers:listAccessibleCustomers', accessToken);
-    console.log('[Google Ads API] Accessible customers:', data);
+    console.info('[Google Ads API] Accessible customers:', data);
     
     // Returns { resourceNames: ["customers/1234567890", ...] }
     const customerIds = (data.resourceNames || []).map((rn: string) => rn.replace('customers/', ''));
@@ -123,7 +123,7 @@ export async function getAccessibleAccounts(refreshToken: string) {
     }
 
     const customerIds = await listAccessibleCustomers(tokens.accessToken);
-    console.log('[Google Ads API] All accessible customer IDs:', customerIds);
+    console.info('[Google Ads API] All accessible customer IDs:', customerIds);
     
     const accounts: Array<{
       id: string;
@@ -137,7 +137,7 @@ export async function getAccessibleAccounts(refreshToken: string) {
       const details = await getCustomerDetails(tokens.accessToken, customerId, customerId);
       if (details) {
         accounts.push(details);
-        console.log(`[Google Ads API] Account ${customerId}: ${details.name} (manager: ${details.isManager})`);
+        console.info(`[Google Ads API] Account ${customerId}: ${details.name} (manager: ${details.isManager})`);
       }
     }
 
@@ -167,10 +167,10 @@ export async function getCampaignsWithInsights(
     }
 
     const cleanId = customerId.replace(/-/g, '');
-    console.log(`[Google Ads API] Fetching campaigns for customer ID: ${cleanId}`);
-    console.log(`[Google Ads API] Date range: ${startDate} to ${endDate}`);
+    console.info(`[Google Ads API] Fetching campaigns for customer ID: ${cleanId}`);
+    console.info(`[Google Ads API] Date range: ${startDate} to ${endDate}`);
     if (loginCustomerId) {
-      console.log(`[Google Ads API] Using login-customer-id: ${loginCustomerId}`);
+      console.info(`[Google Ads API] Using login-customer-id: ${loginCustomerId}`);
     }
 
     // Use the non-streaming search endpoint (more reliable)

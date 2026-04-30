@@ -1196,7 +1196,7 @@ async function adjustStockReservation(productId: number, variantId: number | und
       })
       .where(eq(products.id, productId));
   }
-  console.log(`[Cart Reservation] Adjusted stock reservation for product ${productId}${variantId ? ` variant ${variantId}` : ''}: ${qtyDiff > 0 ? '+' : ''}${qtyDiff}`);
+  console.info(`[Cart Reservation] Adjusted stock reservation for product ${productId}${variantId ? ` variant ${variantId}` : ''}: ${qtyDiff > 0 ? '+' : ''}${qtyDiff}`);
 }
 
 export async function updateCartQuantity(userId: number, productId: number, quantity: number, variantId?: number) {
@@ -1707,7 +1707,7 @@ export async function processArrivedStock() {
       .where(eq(incomingStock.id, stock.id));
   }
 
-  console.log(`[processArrivedStock] ${arrivedStock.length} arrivage(s) traité(s).`);
+  console.info(`[processArrivedStock] ${arrivedStock.length} arrivage(s) traité(s).`);
   return { processed: arrivedStock.length };
 }
 
@@ -2240,7 +2240,7 @@ export async function cancelOrder(orderId: number, userId: number, reason?: stri
             stockQuantity: sql`${productVariants.stockQuantity} + ${item.quantity}`,
           })
           .where(eq(productVariants.id, item.variantId));
-        console.log(`[CancelOrder] Restored ${item.quantity} units to variant ${item.variantId} stockQuantity`);
+        console.info(`[CancelOrder] Restored ${item.quantity} units to variant ${item.variantId} stockQuantity`);
       } else {
         // Transit/preorder item: decrement stockReserved
         await db
@@ -2249,7 +2249,7 @@ export async function cancelOrder(orderId: number, userId: number, reason?: stri
             stockReserved: sql`GREATEST(0, ${productVariants.stockReserved} - ${item.quantity})`,
           })
           .where(eq(productVariants.id, item.variantId));
-        console.log(`[CancelOrder] Released ${item.quantity} reserved units from variant ${item.variantId}`);
+        console.info(`[CancelOrder] Released ${item.quantity} reserved units from variant ${item.variantId}`);
       }
     } else if (item.productId) {
       if (!isPreorder) {
@@ -2259,7 +2259,7 @@ export async function cancelOrder(orderId: number, userId: number, reason?: stri
             stockQuantity: sql`${products.stockQuantity} + ${item.quantity}`,
           })
           .where(eq(products.id, item.productId));
-        console.log(`[CancelOrder] Restored ${item.quantity} units to product ${item.productId} stockQuantity`);
+        console.info(`[CancelOrder] Restored ${item.quantity} units to product ${item.productId} stockQuantity`);
       } else {
         await db
           .update(products)
@@ -2267,7 +2267,7 @@ export async function cancelOrder(orderId: number, userId: number, reason?: stri
             stockReserved: sql`GREATEST(0, ${products.stockReserved} - ${item.quantity})`,
           })
           .where(eq(products.id, item.productId));
-        console.log(`[CancelOrder] Released ${item.quantity} reserved units from product ${item.productId}`);
+        console.info(`[CancelOrder] Released ${item.quantity} reserved units from product ${item.productId}`);
       }
     }
 
@@ -2297,7 +2297,7 @@ export async function cancelOrder(orderId: number, userId: number, reason?: stri
             quantity: sql`${incomingStock.quantity} + ${item.quantity}`,
           })
           .where(eq(incomingStock.id, incomingEntries[0].id));
-        console.log(`[CancelOrder] Restored ${item.quantity} units to incoming stock ${incomingEntries[0].id}`);
+        console.info(`[CancelOrder] Restored ${item.quantity} units to incoming stock ${incomingEntries[0].id}`);
       }
     }
   }
@@ -2322,7 +2322,7 @@ export async function cancelOrder(orderId: number, userId: number, reason?: stri
     })
     .where(eq(partners.id, currentOrder.partnerId));
 
-  console.log(`[CancelOrder] Order ${orderId} (${currentOrder.orderNumber}) cancelled by user ${userId}. Stock restored for ${items.length} items.`);
+  console.info(`[CancelOrder] Order ${orderId} (${currentOrder.orderNumber}) cancelled by user ${userId}. Stock restored for ${items.length} items.`);
 
   return { success: true, orderNumber: currentOrder.orderNumber };
 }

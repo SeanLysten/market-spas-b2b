@@ -78,7 +78,7 @@ export async function restoreStockForOrder(orderId: number): Promise<void> {
     }
   }
 
-  console.log(`[Stock] Restored stock for order ${orderId} (${items.length} items)`);
+  console.info(`[Stock] Restored stock for order ${orderId} (${items.length} items)`);
 }
 
 /**
@@ -146,21 +146,21 @@ export async function expireUnpaidOrders(): Promise<number> {
               partner[0].companyName
             );
           }
-          console.log(`[Stock] Order ${order.orderNumber}: Refused email sent to ${emailTargets.length} recipient(s)`);
+          console.info(`[Stock] Order ${order.orderNumber}: Refused email sent to ${emailTargets.length} recipient(s)`);
         }
       } catch (emailError: any) {
         console.error(`[Stock] Order ${order.orderNumber}: Failed to send refused email:`, emailError.message);
       }
 
       count++;
-      console.log(`[Stock] Order ${order.orderNumber} expired: PAYMENT_PENDING → REFUSED (stock restored)`);
+      console.info(`[Stock] Order ${order.orderNumber} expired: PAYMENT_PENDING → REFUSED (stock restored)`);
     } catch (error: any) {
       console.error(`[Stock] Error expiring order ${order.id}:`, error.message);
     }
   }
 
   if (count > 0) {
-    console.log(`[Stock] Expired ${count} unpaid orders`);
+    console.info(`[Stock] Expired ${count} unpaid orders`);
   }
 
   return count;

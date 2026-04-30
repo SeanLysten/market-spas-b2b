@@ -55,7 +55,7 @@ export async function releaseExpiredCartReservations(): Promise<number> {
       await db.delete(cartItems).where(eq(cartItems.id, item.id));
 
       releasedCount++;
-      console.log(
+      console.info(
         `[Cart Reservation] Released expired reservation: user ${item.userId}, product ${item.productId}${item.variantId ? ` variant ${item.variantId}` : ""}, qty ${item.quantity}`
       );
     } catch (error: any) {
@@ -67,7 +67,7 @@ export async function releaseExpiredCartReservations(): Promise<number> {
   }
 
   if (releasedCount > 0) {
-    console.log(
+    console.info(
       `[Cart Reservation] Released ${releasedCount} expired cart reservations`
     );
   }

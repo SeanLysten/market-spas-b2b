@@ -6,14 +6,14 @@ import { processArrivedStock } from "../db";
  */
 export async function runIncomingStockJob() {
   try {
-    console.log("[IncomingStockJob] Vérification des arrivages programmés...");
+    console.info("[IncomingStockJob] Vérification des arrivages programmés...");
     
     const result = await processArrivedStock();
     
     if (result.processed > 0) {
-      console.log(`[IncomingStockJob] ✓ ${result.processed} arrivage(s) traité(s) avec succès`);
+      console.info(`[IncomingStockJob] ✓ ${result.processed} arrivage(s) traité(s) avec succès`);
     } else {
-      console.log("[IncomingStockJob] Aucun arrivage à traiter");
+      console.info("[IncomingStockJob] Aucun arrivage à traiter");
     }
     
     return result;
@@ -35,7 +35,7 @@ export function startIncomingStockJob() {
     runIncomingStockJob().catch(console.error);
   }, 3600000);
   
-  console.log("[IncomingStockJob] Job périodique démarré (vérification toutes les heures)");
+  console.info("[IncomingStockJob] Job périodique démarré (vérification toutes les heures)");
   
   return intervalId;
 }

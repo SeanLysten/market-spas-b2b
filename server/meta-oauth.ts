@@ -463,7 +463,7 @@ export async function validateToken(accessToken: string): Promise<boolean> {
     if (!response.ok) {
       const body = await response.json().catch(() => ({}));
       if (body?.error?.code === 4 || body?.error?.is_transient) {
-        console.log("[Meta] Rate limited lors de la validation du token - on considère le token comme valide");
+        console.info("[Meta] Rate limited lors de la validation du token - on considère le token comme valide");
         tokenValidationCache.set(tokenKey, { valid: true, timestamp: Date.now() });
         return true;
       }

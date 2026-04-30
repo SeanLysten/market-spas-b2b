@@ -56,7 +56,7 @@ export async function createNotification(input: CreateNotificationInput) {
       linkText: input.linkText || null,
       isRead: false,
     });
-    console.log(`[Notifications] Created ${input.type} for user ${input.userId}: ${input.title}`);
+    console.info(`[Notifications] Created ${input.type} for user ${input.userId}: ${input.title}`);
   } catch (error) {
     console.error(`[Notifications] Failed to create notification:`, error);
   }

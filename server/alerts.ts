@@ -27,7 +27,7 @@ export async function checkLowStockAlerts() {
         content: `Les produits suivants ont un stock bas :\n\n${productList}\n\nAction recommandée : Vérifier les arrivages prévus ou passer commande.`,
       });
 
-      console.log(`[Alerts] Low stock alert sent for ${lowStockProducts.length} products`);
+      console.info(`[Alerts] Low stock alert sent for ${lowStockProducts.length} products`);
       return { success: true, count: lowStockProducts.length };
     }
 
@@ -55,7 +55,7 @@ export async function checkPendingPartnersAlert() {
         content: `Les partenaires suivants attendent validation :\n\n${partnerList}\n\nAction recommandée : Vérifier et approuver dans l'admin.`,
       });
 
-      console.log(`[Alerts] Pending partners alert sent for ${partners.length} partners`);
+      console.info(`[Alerts] Pending partners alert sent for ${partners.length} partners`);
       return { success: true, count: partners.length };
     }
 
@@ -117,7 +117,7 @@ export async function notifyOrderStatusChange(
           trackingCarrier: order.shippingCarrier || null,
           trackingUrl: order.trackingUrl || null,
         });
-        console.log(`[Alerts] Status history recorded for order ${orderId}: ${oldStatus} → ${newStatus}`);
+        console.info(`[Alerts] Status history recorded for order ${orderId}: ${oldStatus} → ${newStatus}`);
       } catch (err) {
         console.error("[Alerts] Failed to record status history:", err);
       }
@@ -161,9 +161,9 @@ export async function notifyOrderStatusChange(
           remainingBalance: remainingBal > 0 ? remainingBal.toFixed(2) : undefined,
           portalUrl,
         });
-        console.log(`[Alerts] Email notification sent to partner ${partnerEmail}:`, emailResult);
+        console.info(`[Alerts] Email notification sent to partner ${partnerEmail}:`, emailResult);
       } else {
-        console.log("[Alerts] No partner email found for notification");
+        console.info("[Alerts] No partner email found for notification");
       }
     } catch (err) {
       console.error("[Alerts] Failed to send email notification to partner:", err);
@@ -199,12 +199,12 @@ export async function notifyOrderStatusChange(
       for (const pu of partnerUsers) {
         await sendOrderStatusPush(pu.id, order.orderNumber, newStatus);
       }
-      console.log(`[Alerts] Push notifications sent to ${partnerUsers.length} partner users for order ${orderId}`);
+      console.info(`[Alerts] Push notifications sent to ${partnerUsers.length} partner users for order ${orderId}`);
     } catch (err) {
       console.error("[Alerts] Failed to send push notifications:", err);
     }
 
-    console.log(`[Alerts] Order status change notification sent for order ${orderId}`);
+    console.info(`[Alerts] Order status change notification sent for order ${orderId}`);
     return { success: true };
   } catch (error) {
     console.error("[Alerts] Error sending order status notification:", error);
@@ -283,9 +283,9 @@ export async function notifyNewOrder(orderId: number) {
           createdAt: order.createdAt,
           portalUrl,
         });
-        console.log(`[Alerts] Email notifications sent to ${adminEmails.length} admins:`, emailResult);
+        console.info(`[Alerts] Email notifications sent to ${adminEmails.length} admins:`, emailResult);
       } else {
-        console.log("[Alerts] No admin emails found for notification");
+        console.info("[Alerts] No admin emails found for notification");
       }
     } catch (err) {
       console.error("[Alerts] Failed to send email notification:", err);
@@ -298,7 +298,7 @@ export async function notifyNewOrder(orderId: number) {
       console.error("[Alerts] Failed to create persistent notification:", err);
     }
 
-    console.log(`[Alerts] New order notification sent for order ${orderId}`);
+    console.info(`[Alerts] New order notification sent for order ${orderId}`);
     return { success: true };
   } catch (error) {
     console.error("[Alerts] Error sending new order notification:", error);
@@ -317,11 +317,11 @@ export async function processDepositReminders(hoursThreshold: number = 48) {
     const pendingOrders = await db.getOrdersPendingDepositReminder(hoursThreshold);
     
     if (pendingOrders.length === 0) {
-      console.log("[Alerts] No orders pending deposit reminder");
+      console.info("[Alerts] No orders pending deposit reminder");
       return { success: true, processed: 0, sent: 0 };
     }
 
-    console.log(`[Alerts] Found ${pendingOrders.length} orders pending deposit reminder`);
+    console.info(`[Alerts] Found ${pendingOrders.length} orders pending deposit reminder`);
 
     const portalUrl = process.env.SITE_URL || process.env.VITE_APP_URL || 'https://marketspas.pro';
     let sentCount = 0;
@@ -363,7 +363,7 @@ export async function processDepositReminders(hoursThreshold: number = 48) {
           await db.markDepositReminderSent(order.id);
           sentCount++;
           results.push({ orderId: order.id, orderNumber: order.orderNumber, success: true });
-          console.log(`[Alerts] Deposit reminder sent for order ${order.orderNumber} to ${partnerEmail}`);
+          console.info(`[Alerts] Deposit reminder sent for order ${order.orderNumber} to ${partnerEmail}`);
 
           // Persistent DB notification for partner
           try {
@@ -390,7 +390,7 @@ export async function processDepositReminders(hoursThreshold: number = 48) {
       });
     }
 
-    console.log(`[Alerts] Deposit reminders processed: ${sentCount}/${pendingOrders.length} sent`);
+    console.info(`[Alerts] Deposit reminders processed: ${sentCount}/${pendingOrders.length} sent`);
     return { success: true, processed: pendingOrders.length, sent: sentCount, results };
   } catch (error) {
     console.error("[Alerts] Error processing deposit reminders:", error);

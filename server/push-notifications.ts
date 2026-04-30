@@ -111,7 +111,7 @@ export async function sendPushToUser(
     );
 
   if (tokens.length === 0) {
-    console.log(`[Push] No active tokens for user #${userId}`);
+    console.info(`[Push] No active tokens for user #${userId}`);
     return { sent: 0, failed: 0 };
   }
 
@@ -155,10 +155,10 @@ export async function sendPushToUser(
       .update(devicePushTokens)
       .set({ isActive: false })
       .where(inArray(devicePushTokens.id, tokensToDeactivate));
-    console.log(`[Push] Deactivated ${tokensToDeactivate.length} invalid tokens`);
+    console.info(`[Push] Deactivated ${tokensToDeactivate.length} invalid tokens`);
   }
 
-  console.log(`[Push] User #${userId}: ${sent} sent, ${failed} failed`);
+  console.info(`[Push] User #${userId}: ${sent} sent, ${failed} failed`);
   return { sent, failed };
 }
 

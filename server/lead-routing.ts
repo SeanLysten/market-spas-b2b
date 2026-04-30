@@ -190,7 +190,7 @@ export async function findExistingLead(params: {
         [normalizedEmail, since]
       );
       if (rows.length > 0) {
-        console.log(`[LeadDedup] Doublon détecté par email: ${normalizedEmail} → lead #${rows[0].id}`);
+        console.info(`[LeadDedup] Doublon détecté par email: ${normalizedEmail} → lead #${rows[0].id}`);
         return rows[0].id;
       }
     }
@@ -202,7 +202,7 @@ export async function findExistingLead(params: {
         [normalizedPhone, since]
       );
       if (rows.length > 0) {
-        console.log(`[LeadDedup] Doublon détecté par téléphone: ${normalizedPhone} → lead #${rows[0].id}`);
+        console.info(`[LeadDedup] Doublon détecté par téléphone: ${normalizedPhone} → lead #${rows[0].id}`);
         return rows[0].id;
       }
     }
@@ -268,7 +268,7 @@ export async function enrichExistingLead(leadId: number, newData: {
       values
     );
 
-    console.log(`[LeadDedup] Lead #${leadId} enrichi avec nouvelles données`);
+    console.info(`[LeadDedup] Lead #${leadId} enrichi avec nouvelles données`);
   } catch (err) {
     console.error('[LeadDedup] Error enriching lead:', err);
   } finally {
@@ -375,21 +375,21 @@ export async function findBestPartnerForLead(params: {
     }
   }
 
-  console.log(`[LeadRouting] Routing lead: CP=${postalCode} Country=${country} Phone=${phone}`);
+  console.info(`[LeadRouting] Routing lead: CP=${postalCode} Country=${country} Phone=${phone}`);
 
   // ── 2. Si on a un code postal, chercher via territories-db ─────────────────
   if (postalCode) {
     try {
       const result = await findBestPartnerForPostalCode(postalCode, country);
       if (result) {
-        console.log(`[LeadRouting] Match territoire: ${result.region} (${result.country}) → ${result.partnerName} (ID ${result.partnerId})`);
+        console.info(`[LeadRouting] Match territoire: ${result.region} (${result.country}) → ${result.partnerName} (ID ${result.partnerId})`);
         return {
           partnerId: result.partnerId,
           partnerName: result.partnerName,
           reason: `territory_${result.region}`,
         };
       }
-      console.log(`[LeadRouting] Aucun partenaire trouvé pour CP ${postalCode} (${country})`);
+      console.info(`[LeadRouting] Aucun partenaire trouvé pour CP ${postalCode} (${country})`);
     } catch (err) {
       console.error('[LeadRouting] Error finding partner by postal code:', err);
     }
@@ -397,6 +397,6 @@ export async function findBestPartnerForLead(params: {
 
   // ── 3. Aucun match → retourner null (pas de fallback hardcodé) ─────────────
   // L'admin pourra assigner manuellement le lead depuis le dashboard.
-  console.log(`[LeadRouting] Aucun partenaire trouvé, lead non assigné (assignation manuelle requise)`);
+  console.info(`[LeadRouting] Aucun partenaire trouvé, lead non assigné (assignation manuelle requise)`);
   return { partnerId: null, reason: 'no_territory_match' };
 }

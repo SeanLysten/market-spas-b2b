@@ -69,9 +69,9 @@ webhooksRouter.post('/facebook-leads', async (req, res) => {
         const partner = await findBestPartnerForPostalCode(postalCode, resolvedCountry || undefined);
         if (partner) {
           await db.assignLeadToPartner(leadId[0].insertId, partner.partnerId);
-          console.log(`[Webhook] Lead ${leadId[0].insertId} auto-assigné au partenaire ${partner.partnerName} (${partner.region}, ${partner.country})`);
+          console.info(`[Webhook] Lead ${leadId[0].insertId} auto-assigné au partenaire ${partner.partnerName} (${partner.region}, ${partner.country})`);
         } else {
-          console.log(`[Webhook] Aucun partenaire trouvé pour le code postal ${postalCode}`);
+          console.info(`[Webhook] Aucun partenaire trouvé pour le code postal ${postalCode}`);
         }
       } catch (error) {
         console.error('[Webhook] Erreur lors de l\'assignation automatique:', error);
@@ -139,7 +139,7 @@ webhooksRouter.post('/meta-ads-stats', async (req, res) => {
       spend: spend || 0,
       date: new Date(),
     });
-    console.log('Meta Ads stats saved:', { campaignId, campaignName, impressions, clicks, spend });
+    console.info('Meta Ads stats saved:', { campaignId, campaignName, impressions, clicks, spend });
 
     return res.status(200).json({ 
       success: true 

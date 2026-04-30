@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +26,7 @@ export function CSVImportDialog() {
       setIsParsing(false);
     },
     onError: (error) => {
-      alert("Erreur lors de l'analyse du fichier: " + error.message);
+      toast.error("Erreur lors de l'analyse du fichier: " + error.message);
       setIsParsing(false);
     },
   });
@@ -85,7 +86,7 @@ export function CSVImportDialog() {
       // TODO: Call addToCart mutation for each row
     });
 
-    alert(`${validRows.length} produits ajoutés au panier !`);
+    toast.success(`${validRows.length} produits ajoutés au panier !`);
     setOpen(false);
     setFile(null);
     setValidRows([]);

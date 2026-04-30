@@ -1,5 +1,6 @@
 
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -273,13 +274,13 @@ function CreateSavDialog({ open, onOpenChange, onSuccess, user, partners }: {
 
   const createMutation = trpc.afterSales.create.useMutation({
     onSuccess: () => {
-      alert("Demande SAV créée avec succès !");
+      toast.success("Demande SAV créée avec succès !");
       resetForm();
       onOpenChange(false);
       onSuccess();
     },
     onError: (error) => {
-      alert(`Erreur: ${error.message}`);
+      toast.error(`Erreur: ${error.message}`);
     },
   });
 
