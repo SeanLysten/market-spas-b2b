@@ -3867,3 +3867,10 @@
 - [x] Configurer manualChunks dans vite.config.ts — 8 vendor chunks: recharts, pdf, maps, html2canvas, socketio, datefns, radix, icons
 - [x] AdminLeads: 832 kB → 350 kB (-58%), index: 987 kB → 785 kB (-20%)
 - [x] Build + tests OK — 22 tests passent, serveur stable
+
+## Optimisation bundle — Découpe AfterSalesDetail (437 kB)
+- [x] Analyser la structure d'AfterSalesDetail — cause racine: jsPDF (~400 kB) importé statiquement via SAVPDFExport
+- [x] Convertir l'import de SAVPDFExport en import dynamique (async import()) — jsPDF chargé uniquement au clic "Export PDF"
+- [x] Ajouter jsPDF aux manualChunks dans vite.config.ts — vendor-jspdf (388 kB)
+- [x] AfterSalesDetail: 437 kB → 46.67 kB (-89%)
+- [x] Build + tests OK — 22 tests passent, serveur stable

@@ -27,6 +27,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // jsPDF (~400 kB) — used by SAVPDFExport (dynamic import from AfterSalesDetail)
+          if (id.includes('node_modules/jspdf')) {
+            return 'vendor-jspdf';
+          }
           // Recharts + D3 ecosystem (~300 kB) — used by AdminLeads, AdminGoogleAnalytics, AdminShopify
           if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-') || id.includes('node_modules/victory-vendor')) {
             return 'vendor-recharts';

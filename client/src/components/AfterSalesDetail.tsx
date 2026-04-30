@@ -9,7 +9,6 @@ import {
   Shield, ShieldCheck, ShieldX, ShieldAlert, Truck, CreditCard, Info, Eye,
   ExternalLink, Wrench
 } from "lucide-react";
-import { generateSAVPDF } from "@/components/SAVPDFExport";
 import { useState } from "react";
 
 interface AfterSalesDetailProps {
@@ -145,7 +144,10 @@ export default function AfterSalesDetail({ serviceId, onClose }: AfterSalesDetai
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => generateSAVPDF(serviceData)}>
+          <Button variant="outline" size="sm" onClick={async () => {
+            const { generateSAVPDF } = await import("@/components/SAVPDFExport");
+            generateSAVPDF(serviceData);
+          }}>
             <Download className="mr-2 h-4 w-4" /> Export PDF
           </Button>
         </div>
