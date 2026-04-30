@@ -37,6 +37,7 @@ export default function AcceptInvitation() {
 
     // Accept invitation
     acceptMutation.mutate({ token });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   return (
@@ -65,7 +66,9 @@ export default function AcceptInvitation() {
             {status === "success" && "Invitation acceptée !"}
             {status === "error" && "Erreur"}
           </CardTitle>
-          <CardDescription>{message}</CardDescription>
+          <CardDescription>
+            {status === "loading" && !message ? "Veuillez patienter pendant que nous validons votre invitation..." : message}
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
           {status === "success" && (

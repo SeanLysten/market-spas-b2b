@@ -28,7 +28,7 @@ import { useLocation } from "wouter";
 type Step = 1 | 2 | 3 | 4;
 
 export default function PartnerOnboarding() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -124,6 +124,19 @@ export default function PartnerOnboarding() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+            <p className="text-muted-foreground text-sm">Chargement de vos informations...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 py-12">
       <div className="container max-w-3xl">
@@ -190,7 +203,7 @@ export default function PartnerOnboarding() {
             {/* Step 1: Company Info */}
             {currentStep === 1 && (
               <>
-                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="companyName">Raison sociale *</Label>
                     <Input
@@ -211,7 +224,7 @@ export default function PartnerOnboarding() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="vatNumber">Numéro de TVA *</Label>
                     <Input
@@ -257,7 +270,7 @@ export default function PartnerOnboarding() {
             {/* Step 2: Contact Info */}
             {currentStep === 2 && (
               <>
-                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="contactName">Nom complet *</Label>
                     <div className="relative">
@@ -282,7 +295,7 @@ export default function PartnerOnboarding() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="contactEmail">Email professionnel *</Label>
                     <div className="relative">
@@ -337,7 +350,7 @@ export default function PartnerOnboarding() {
                   />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-2">
                     <Label htmlFor="postalCode">Code postal *</Label>
                     <Input
@@ -389,7 +402,7 @@ export default function PartnerOnboarding() {
                   />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="expectedVolume">Volume de commandes estimé</Label>
                     <Select value={formData.expectedVolume} onValueChange={(v) => updateFormData("expectedVolume", v)}>

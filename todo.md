@@ -3856,3 +3856,8 @@
 - [x] Vérifier qu'aucun fichier n'importe axios, streamdown, @radix-ui/react-navigation-menu — 0 références trouvées
 - [x] Supprimer les 3 dépendances du package.json — pnpm remove OK, -8 packages
 - [x] Vérifier build + tests après suppression — build OK, 22 tests passent, serveur stable
+
+## Correction LOW — États de chargement manquants + coherence-guard ciblé
+- [x] Ajouter état de chargement sur AcceptInvitation — texte descriptif pendant loading + eslint-disable useEffect
+- [x] Ajouter état de chargement sur PartnerOnboarding — loading screen complet quand useAuth en cours + fix 6 grids CSS redondants
+- [x] Audit coherence-guard ciblé — Suspense fallback déjà présent via PageLoader, pas de props manquantes, navigation OK
