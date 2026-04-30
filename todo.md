@@ -3851,3 +3851,8 @@
 
 ## Correction MEDIUM #3 — N+1 query création commande
 - [x] Remplacer la boucle N+1 par batch fetch (getProductsByIds + getProductVariantsByIds) dans routers.ts et mobile-api.ts — 16 tests passent
+
+## Correction MEDIUM #1 — Suppression dépendances inutilisées
+- [x] Vérifier qu'aucun fichier n'importe axios, streamdown, @radix-ui/react-navigation-menu — 0 références trouvées
+- [x] Supprimer les 3 dépendances du package.json — pnpm remove OK, -8 packages
+- [x] Vérifier build + tests après suppression — build OK, 22 tests passent, serveur stable
