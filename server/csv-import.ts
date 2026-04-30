@@ -1,5 +1,3 @@
-import * as XLSX from "xlsx";
-
 export interface CSVOrderRow {
   sku: string;
   quantity: number;
@@ -19,6 +17,7 @@ export async function parseOrderCSV(
   fileBuffer: Buffer,
   getProductBySKU: (sku: string) => Promise<any>
 ): Promise<CSVImportResult> {
+  const XLSX = await import("xlsx");
   const workbook = XLSX.read(fileBuffer, { type: "buffer" });
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
@@ -86,7 +85,8 @@ export async function parseOrderCSV(
 /**
  * Generate a CSV template for bulk orders
  */
-export function generateOrderTemplate(): Buffer {
+export async function generateOrderTemplate(): Promise<Buffer> {
+  const XLSX = await import("xlsx");
   const worksheet = XLSX.utils.aoa_to_sheet([
     ["SKU", "Quantity"],
     ["WELLIS-SPA-001", "2"],

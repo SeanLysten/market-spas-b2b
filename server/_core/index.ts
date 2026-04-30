@@ -26,6 +26,7 @@ import { mobileAuthRouter } from "../routes/mobile-auth";
 import { mobileApiRouter } from "../routes/mobile-api";
 import { mobileApiUserRouter } from "../routes/mobile-api-user";
 import { mobileApiAdminRouter } from "../routes/mobile-api-admin";
+import { initSentry, setupSentryExpressErrorHandler } from "../sentry";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -47,6 +48,9 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  // Initialize Sentry error monitoring (must be before everything else)
+  initSentry();
+
   // Validate environment variables at startup
   validateEnv();
 
@@ -546,6 +550,9 @@ async function startServer() {
   app.get("/terms", (_req, res) => {
     res.status(200).set({ "Content-Type": "text/html" }).send(getTermsHTML());
   });
+
+  // Sentry error handler (must be after all controllers and before Vite/static)
+  setupSentryExpressErrorHandler(app);
 
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {

@@ -3886,3 +3886,9 @@
 
 ## UX — Prefetch jsPDF au survol du bouton Export PDF
 - [x] Ajouter onMouseEnter pour prefetch le module SAVPDFExport (et donc jsPDF) au survol — import() sans await déclenche le téléchargement du chunk en arrière-plan
+
+## Améliorations performance + monitoring
+- [x] Prefetch CSV/Excel : export déjà côté serveur (pas de lib lourde client) — converti csv-import.ts en import dynamique xlsx + await generateOrderTemplate
+- [x] Service Worker : sw.js créé (cache-first pour vendor-*, fonts) + enregistrement conditionnel en prod dans main.tsx
+- [x] Sentry : DSN configuré, SDK @sentry/node + @sentry/react installés, server/sentry.ts + client/src/lib/sentry.ts créés, intégré dans index.ts et main.tsx, 5 tests passés
+- [x] Audit coherence-guard complet — imports Sentry cohérents (4 fichiers), SW en place, xlsx 100% dynamique (4 occurrences), build OK, 30 tests passés

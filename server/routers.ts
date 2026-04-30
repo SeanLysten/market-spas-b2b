@@ -1375,7 +1375,7 @@ export const appRouter = router({
     downloadTemplate: protectedProcedure
       .query(async () => {
         const { generateOrderTemplate } = await import("./csv-import");
-        const buffer = generateOrderTemplate();
+        const buffer = await generateOrderTemplate();
         return { fileBase64: buffer.toString("base64") };
       }),
 
