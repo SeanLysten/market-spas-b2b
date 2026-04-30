@@ -104,7 +104,8 @@ describe("OrderSummary Page", () => {
   it("should be registered as a route in App.tsx", () => {
     const appPath = path.resolve(__dirname, "../client/src/App.tsx");
     const content = fs.readFileSync(appPath, "utf-8");
-    expect(content).toContain('import OrderSummary from "./pages/OrderSummary"');
+    // Supports both static import and React.lazy dynamic import
+    expect(content).toContain('./pages/OrderSummary');
     expect(content).toContain('/order/:orderId/summary');
   });
 

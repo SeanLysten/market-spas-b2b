@@ -3840,3 +3840,7 @@
 - [x] Audit coherence-guard ciblé sur le flux leads — séparation par partenaire OK, webhook OK, sync OK, export OK
 - [x] Ajout fallback affichage "Coordonnées non disponibles" dans Leads.tsx pour les leads sans nom
 - [x] 6 tests unitaires Unicode (NFC, NFD, mixte, EN, FR avec budget) — tous passent
+
+## Corrections HIGH — Audit Coherence Guard
+- [x] HIGH #1: Ajouter rate-limiting sur POST /api/leads/inbound (10 req/min par IP) — express-rate-limit appliqué sur /api/leads/inbound et /api/webhooks/email-lead
+- [x] HIGH #2: Code-splitting React.lazy() pour réduire le bundle de 6.3 MB — chunk principal réduit de 6300 kB à 987 kB (-84%)

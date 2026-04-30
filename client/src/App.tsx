@@ -5,66 +5,87 @@ import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/DashboardLayout";
-import Home from "./pages/Home";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminResources from "./pages/admin/AdminResources";
-import AdminUsers from "./pages/admin/AdminUsers";
-import InvitePartner from "./pages/InvitePartner";
-import AdminProducts from "./pages/admin/AdminProducts";
-import AdminStockForecast from "./pages/admin/AdminStockForecast";
-import AdminTerritories from "./pages/admin/AdminTerritories";
-import AdminPartners from "@/pages/admin/AdminPartners";
-import AdminPartnerDetail from "@/pages/admin/AdminPartnerDetail";
-import AdminReports from "@/pages/admin/AdminReports";
-import AdminOrders from "@/pages/admin/AdminOrders";
-import AdminSettings from "@/pages/admin/AdminSettings";
-import AdminLeads from "@/pages/admin/AdminLeads";
-import AdminAfterSales from "@/pages/admin/AdminAfterSales";
-import AdminPartnerMap from "@/pages/admin/AdminPartnerMap";
-import AdminSpareParts from "@/pages/admin/AdminSpareParts";
-import AdminNewsletter from "@/pages/admin/AdminNewsletter";
-import AdminCalendar from "@/pages/admin/AdminCalendar";
-
-import AdminTechnicalResources from "@/pages/admin/TechnicalResources";
-import AdminSupplierIntegration from "@/pages/admin/AdminSupplierIntegration";
-import AdminShippingZones from "@/pages/admin/AdminShippingZones";
-import AdminWebhookLogs from "@/pages/admin/AdminWebhookLogs";
-import AdminSupplierLogs from "@/pages/admin/AdminSupplierLogs";
-
-import Dashboard from "./pages/Dashboard";
-import Catalog from "./pages/Catalog";
-import Orders from "./pages/Orders";
-import Resources from "./pages/Resources";
-import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
-import OrderConfirmation from "./pages/OrderConfirmation";
-import Profile from "./pages/Profile";
-import ProductDetail from "./pages/ProductDetail";
-import PartnerOnboarding from "./pages/PartnerOnboarding";
-import PartnerPending from "./pages/PartnerPending";
-import OrderTracking from "./pages/OrderTracking";
-import OrderSummary from "./pages/OrderSummary";
-import Favorites from "./pages/Favorites";
-import Calendar from "./pages/Calendar";
-import Leads from "./pages/Leads";
-import AfterSales from "./pages/AfterSales";
-import SpareParts from "./pages/SpareParts";
-import TechnicalResources from "./pages/TechnicalResources";
-import ForumNewTopic from "./pages/ForumNewTopic";
-import ForumTopicDetail from "./pages/ForumTopicDetail";
-import AcceptInvitation from "./pages/AcceptInvitation";
-import NotificationPreferences from "./pages/NotificationPreferences";
-import Notifications from "./pages/Notifications";
-import TeamManagement from "./pages/TeamManagement";
-import CompanyProfile from "./pages/CompanyProfile";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
 import { useWebSocket } from "./hooks/useWebSocket";
-import React from "react";
+import React, { Suspense } from "react";
+
+// ─── Critical path pages (loaded eagerly for instant navigation) ─────────────
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+
+// ─── Loading fallback ────────────────────────────────────────────────────────
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
+        <p className="text-sm text-muted-foreground">Chargement...</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Lazy-loaded pages (code-split into separate chunks) ─────────────────────
+// Auth pages
+const Register = React.lazy(() => import("./pages/Register"));
+const ForgotPassword = React.lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
+const Privacy = React.lazy(() => import("./pages/Privacy"));
+const Terms = React.lazy(() => import("./pages/Terms"));
+const AcceptInvitation = React.lazy(() => import("./pages/AcceptInvitation"));
+
+// Onboarding
+const PartnerOnboarding = React.lazy(() => import("./pages/PartnerOnboarding"));
+const PartnerPending = React.lazy(() => import("./pages/PartnerPending"));
+
+// Partner pages
+const Catalog = React.lazy(() => import("./pages/Catalog"));
+const Orders = React.lazy(() => import("./pages/Orders"));
+const Resources = React.lazy(() => import("./pages/Resources"));
+const Cart = React.lazy(() => import("./pages/Cart"));
+const Checkout = React.lazy(() => import("./pages/Checkout"));
+const OrderConfirmation = React.lazy(() => import("./pages/OrderConfirmation"));
+const Profile = React.lazy(() => import("./pages/Profile"));
+const ProductDetail = React.lazy(() => import("./pages/ProductDetail"));
+const OrderTracking = React.lazy(() => import("./pages/OrderTracking"));
+const OrderSummary = React.lazy(() => import("./pages/OrderSummary"));
+const Favorites = React.lazy(() => import("./pages/Favorites"));
+const Calendar = React.lazy(() => import("./pages/Calendar"));
+const Leads = React.lazy(() => import("./pages/Leads"));
+const AfterSales = React.lazy(() => import("./pages/AfterSales"));
+const SpareParts = React.lazy(() => import("./pages/SpareParts"));
+const TechnicalResources = React.lazy(() => import("./pages/TechnicalResources"));
+const ForumNewTopic = React.lazy(() => import("./pages/ForumNewTopic"));
+const ForumTopicDetail = React.lazy(() => import("./pages/ForumTopicDetail"));
+const Notifications = React.lazy(() => import("./pages/Notifications"));
+const NotificationPreferences = React.lazy(() => import("./pages/NotificationPreferences"));
+const TeamManagement = React.lazy(() => import("./pages/TeamManagement"));
+const CompanyProfile = React.lazy(() => import("./pages/CompanyProfile"));
+const InvitePartner = React.lazy(() => import("./pages/InvitePartner"));
+
+// Admin pages
+const AdminDashboard = React.lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminResources = React.lazy(() => import("./pages/admin/AdminResources"));
+const AdminUsers = React.lazy(() => import("./pages/admin/AdminUsers"));
+const AdminProducts = React.lazy(() => import("./pages/admin/AdminProducts"));
+const AdminStockForecast = React.lazy(() => import("./pages/admin/AdminStockForecast"));
+const AdminTerritories = React.lazy(() => import("./pages/admin/AdminTerritories"));
+const AdminPartners = React.lazy(() => import("./pages/admin/AdminPartners"));
+const AdminPartnerDetail = React.lazy(() => import("./pages/admin/AdminPartnerDetail"));
+const AdminReports = React.lazy(() => import("./pages/admin/AdminReports"));
+const AdminOrders = React.lazy(() => import("./pages/admin/AdminOrders"));
+const AdminSettings = React.lazy(() => import("./pages/admin/AdminSettings"));
+const AdminLeads = React.lazy(() => import("./pages/admin/AdminLeads"));
+const AdminAfterSales = React.lazy(() => import("./pages/admin/AdminAfterSales"));
+const AdminPartnerMap = React.lazy(() => import("./pages/admin/AdminPartnerMap"));
+const AdminSpareParts = React.lazy(() => import("./pages/admin/AdminSpareParts"));
+const AdminNewsletter = React.lazy(() => import("./pages/admin/AdminNewsletter"));
+const AdminCalendar = React.lazy(() => import("./pages/admin/AdminCalendar"));
+const AdminTechnicalResources = React.lazy(() => import("./pages/admin/TechnicalResources"));
+const AdminSupplierIntegration = React.lazy(() => import("./pages/admin/AdminSupplierIntegration"));
+const AdminShippingZones = React.lazy(() => import("./pages/admin/AdminShippingZones"));
+const AdminWebhookLogs = React.lazy(() => import("./pages/admin/AdminWebhookLogs"));
+const AdminSupplierLogs = React.lazy(() => import("./pages/admin/AdminSupplierLogs"));
 
 /**
  * CRITICAL FIX: Create wrapped components at MODULE level (outside any component).
@@ -77,7 +98,9 @@ function withDashboard(Component: React.ComponentType<any>) {
   const Wrapped = React.memo(function DashboardWrapped(props: any) {
     return (
       <DashboardLayout>
-        <Component {...props} />
+        <Suspense fallback={<PageLoader />}>
+          <Component {...props} />
+        </Suspense>
       </DashboardLayout>
     );
   });
@@ -117,17 +140,17 @@ function Router() {
     <Switch>
       {/* Authentication routes (no sidebar) */}
       <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
-      <Route path="/forgot-password" component={ForgotPassword} />
-      <Route path="/reset-password" component={ResetPassword} />
-      <Route path="/privacy" component={Privacy} />
-      <Route path="/terms" component={Terms} />
-      <Route path="/accept-invitation" component={AcceptInvitation} />
+      <Route path="/register">{(props: any) => <Suspense fallback={<PageLoader />}><Register {...props} /></Suspense>}</Route>
+      <Route path="/forgot-password">{(props: any) => <Suspense fallback={<PageLoader />}><ForgotPassword {...props} /></Suspense>}</Route>
+      <Route path="/reset-password">{(props: any) => <Suspense fallback={<PageLoader />}><ResetPassword {...props} /></Suspense>}</Route>
+      <Route path="/privacy">{(props: any) => <Suspense fallback={<PageLoader />}><Privacy {...props} /></Suspense>}</Route>
+      <Route path="/terms">{(props: any) => <Suspense fallback={<PageLoader />}><Terms {...props} /></Suspense>}</Route>
+      <Route path="/accept-invitation">{(props: any) => <Suspense fallback={<PageLoader />}><AcceptInvitation {...props} /></Suspense>}</Route>
       
       {/* Landing / onboarding (no sidebar) */}
       <Route path="/" component={Home} />
-      <Route path="/partner-onboarding" component={PartnerOnboarding} />
-      <Route path="/partner-pending" component={PartnerPending} />
+      <Route path="/partner-onboarding">{(props: any) => <Suspense fallback={<PageLoader />}><PartnerOnboarding {...props} /></Suspense>}</Route>
+      <Route path="/partner-pending">{(props: any) => <Suspense fallback={<PageLoader />}><PartnerPending {...props} /></Suspense>}</Route>
 
       {/* Partner pages (with sidebar) — using pre-created stable components */}
       <Route path="/dashboard" component={DashboardPage} />
@@ -156,32 +179,31 @@ function Router() {
       <Route path="/company-profile" component={CompanyProfilePage} />
 
       {/* Admin routes (admin has its own layout) */}
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/resources" component={AdminResources} />
-      <Route path="/admin/users" component={AdminUsers} />
-      <Route path="/admin/invite-partner" component={InvitePartner} />
-      <Route path="/admin/products" component={AdminProducts} />
-      <Route path="/admin/forecast" component={AdminStockForecast} />
-      <Route path="/admin/territories" component={AdminTerritories} />
-      <Route path="/admin/partners/:id" component={AdminPartnerDetail} />
-      <Route path="/admin/partners" component={AdminPartners} />
-      <Route path="/admin/reports" component={AdminReports} />
-      <Route path="/admin/orders/:id" component={AdminOrders} />
-      <Route path="/admin/orders" component={AdminOrders} />
-      <Route path="/admin/settings" component={AdminSettings} />
-      <Route path="/admin/leads" component={AdminLeads} />
-      <Route path="/admin/after-sales" component={AdminAfterSales} />
+      <Route path="/admin">{(props: any) => <Suspense fallback={<PageLoader />}><AdminDashboard {...props} /></Suspense>}</Route>
+      <Route path="/admin/resources">{(props: any) => <Suspense fallback={<PageLoader />}><AdminResources {...props} /></Suspense>}</Route>
+      <Route path="/admin/users">{(props: any) => <Suspense fallback={<PageLoader />}><AdminUsers {...props} /></Suspense>}</Route>
+      <Route path="/admin/invite-partner">{(props: any) => <Suspense fallback={<PageLoader />}><InvitePartner {...props} /></Suspense>}</Route>
+      <Route path="/admin/products">{(props: any) => <Suspense fallback={<PageLoader />}><AdminProducts {...props} /></Suspense>}</Route>
+      <Route path="/admin/forecast">{(props: any) => <Suspense fallback={<PageLoader />}><AdminStockForecast {...props} /></Suspense>}</Route>
+      <Route path="/admin/territories">{(props: any) => <Suspense fallback={<PageLoader />}><AdminTerritories {...props} /></Suspense>}</Route>
+      <Route path="/admin/partners/:id">{(props: any) => <Suspense fallback={<PageLoader />}><AdminPartnerDetail {...props} /></Suspense>}</Route>
+      <Route path="/admin/partners">{(props: any) => <Suspense fallback={<PageLoader />}><AdminPartners {...props} /></Suspense>}</Route>
+      <Route path="/admin/reports">{(props: any) => <Suspense fallback={<PageLoader />}><AdminReports {...props} /></Suspense>}</Route>
+      <Route path="/admin/orders/:id">{(props: any) => <Suspense fallback={<PageLoader />}><AdminOrders {...props} /></Suspense>}</Route>
+      <Route path="/admin/orders">{(props: any) => <Suspense fallback={<PageLoader />}><AdminOrders {...props} /></Suspense>}</Route>
+      <Route path="/admin/settings">{(props: any) => <Suspense fallback={<PageLoader />}><AdminSettings {...props} /></Suspense>}</Route>
+      <Route path="/admin/leads">{(props: any) => <Suspense fallback={<PageLoader />}><AdminLeads {...props} /></Suspense>}</Route>
+      <Route path="/admin/after-sales">{(props: any) => <Suspense fallback={<PageLoader />}><AdminAfterSales {...props} /></Suspense>}</Route>
       <Route path="/admin/sav">{() => <Redirect to="/admin/after-sales" />}</Route>
-      <Route path="/admin/partner-map" component={AdminPartnerMap} />
-      <Route path="/admin/spare-parts" component={AdminSpareParts} />
-      <Route path="/admin/newsletter" component={AdminNewsletter} />
-      <Route path="/admin/calendar" component={AdminCalendar} />
-      <Route path="/admin/supplier-integration" component={AdminSupplierIntegration} />
-      <Route path="/admin/shipping-zones" component={AdminShippingZones} />
-      <Route path="/admin/webhook-logs" component={AdminWebhookLogs} />
-      <Route path="/admin/supplier-logs" component={AdminSupplierLogs} />
-
-      <Route path="/admin/technical-resources" component={AdminTechnicalResources} />
+      <Route path="/admin/partner-map">{(props: any) => <Suspense fallback={<PageLoader />}><AdminPartnerMap {...props} /></Suspense>}</Route>
+      <Route path="/admin/spare-parts">{(props: any) => <Suspense fallback={<PageLoader />}><AdminSpareParts {...props} /></Suspense>}</Route>
+      <Route path="/admin/newsletter">{(props: any) => <Suspense fallback={<PageLoader />}><AdminNewsletter {...props} /></Suspense>}</Route>
+      <Route path="/admin/calendar">{(props: any) => <Suspense fallback={<PageLoader />}><AdminCalendar {...props} /></Suspense>}</Route>
+      <Route path="/admin/supplier-integration">{(props: any) => <Suspense fallback={<PageLoader />}><AdminSupplierIntegration {...props} /></Suspense>}</Route>
+      <Route path="/admin/shipping-zones">{(props: any) => <Suspense fallback={<PageLoader />}><AdminShippingZones {...props} /></Suspense>}</Route>
+      <Route path="/admin/webhook-logs">{(props: any) => <Suspense fallback={<PageLoader />}><AdminWebhookLogs {...props} /></Suspense>}</Route>
+      <Route path="/admin/supplier-logs">{(props: any) => <Suspense fallback={<PageLoader />}><AdminSupplierLogs {...props} /></Suspense>}</Route>
+      <Route path="/admin/technical-resources">{(props: any) => <Suspense fallback={<PageLoader />}><AdminTechnicalResources {...props} /></Suspense>}</Route>
 
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}

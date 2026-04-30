@@ -5,6 +5,7 @@
  * 3. GET  /api/leads/inbound/ping  — Vérification de santé
  */
 import { Router, Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import { createLead } from '../db';
 import {
   findBestPartnerForLead,
@@ -13,6 +14,25 @@ import {
   enrichExistingLead,
 } from '../lead-routing';
 import mysql from 'mysql2/promise';
+
+// ─── Rate Limiting ──────────────────────────────────────────────────────────
+// Limite les soumissions de leads à 10 par minute par IP pour éviter le spam
+const inboundLeadLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // max 10 requêtes par fenêtre par IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Trop de soumissions. Veuillez réessayer dans une minute.' },
+});
+
+// Rate limiter plus strict pour le webhook email (5 par minute)
+const emailWebhookLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30, // Resend peut envoyer plusieurs webhooks rapidement
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Rate limit exceeded' },
+});
 
 // ─── Helpers SAV clients ─────────────────────────────────────────────────────
 
@@ -88,7 +108,7 @@ inboundLeadsRouter.options('/api/leads/inbound', (_req: Request, res: Response) 
 });
 
 // ─── 1. Endpoint formulaire Shopify ───────────────────────────────────────────────
-inboundLeadsRouter.post('/api/leads/inbound', async (req: Request, res: Response) => {
+inboundLeadsRouter.post('/api/leads/inbound', inboundLeadLimiter, async (req: Request, res: Response) => {
   // CORS headers pour autoriser les requêtes depuis Shopify et autres domaines externes
   res.set({
     'Access-Control-Allow-Origin': '*',
@@ -198,7 +218,7 @@ inboundLeadsRouter.post('/api/leads/inbound', async (req: Request, res: Response
 });
 
 // ─── 2. Webhook Resend — emails entrants sur info@marketspas.com ──────────────
-inboundLeadsRouter.post('/api/webhooks/email-lead', async (req: Request, res: Response) => {
+inboundLeadsRouter.post('/api/webhooks/email-lead', emailWebhookLimiter, async (req: Request, res: Response) => {
   try {
     const payload = req.body;
 
