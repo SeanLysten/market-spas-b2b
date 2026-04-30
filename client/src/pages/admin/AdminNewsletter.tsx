@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { AdminLayout } from '@/components/AdminLayout';
+import DOMPurify from 'dompurify';
 import { trpc } from '../../lib/trpc';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -1387,7 +1388,7 @@ export default function AdminNewsletter() {
                             boxShadow: previewDevice === 'mobile' ? '0 4px 24px rgba(0,0,0,0.15)' : 'none',
                             minHeight: previewDevice === 'mobile' ? '667px' : 'auto',
                           }}
-                          dangerouslySetInnerHTML={{ __html: previewHtml }}
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewHtml) }}
                         />
                       </div>
                     </CardContent>
@@ -1445,7 +1446,7 @@ export default function AdminNewsletter() {
                           <strong>De :</strong> Market Spas &lt;noreply@marketspas.pro&gt;<br />
                           <strong>Sujet :</strong> {subject || '(aucun sujet)'}
                         </div>
-                        <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewHtml) }} />
                       </div>
                     </div>
                   </div>
@@ -1515,7 +1516,7 @@ export default function AdminNewsletter() {
                   <strong>De :</strong> Market Spas &lt;noreply@marketspas.pro&gt;<br />
                   <strong>Sujet :</strong> {subject || '(aucun sujet)'}
                 </div>
-                <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewHtml) }} />
               </div>
               {previewDevice === 'mobile' && (
                 <div className="bg-[#1e293b] flex justify-center py-2">

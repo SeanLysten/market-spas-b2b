@@ -3844,3 +3844,7 @@
 ## Corrections HIGH — Audit Coherence Guard
 - [x] HIGH #1: Ajouter rate-limiting sur POST /api/leads/inbound (10 req/min par IP) — express-rate-limit appliqué sur /api/leads/inbound et /api/webhooks/email-lead
 - [x] HIGH #2: Code-splitting React.lazy() pour réduire le bundle de 6.3 MB — chunk principal réduit de 6300 kB à 987 kB (-84%)
+
+## Correction MEDIUM #2 — DOMPurify newsletter
+- [x] Installer dompurify + @types/dompurify
+- [x] Sanitizer le HTML dans dangerouslySetInnerHTML de AdminNewsletter.tsx (3 occurrences)
