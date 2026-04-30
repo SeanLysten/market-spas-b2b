@@ -3898,3 +3898,13 @@
 - [x] Breadcrumbs client — 11 fonctions dans sentry-breadcrumbs.ts, intégrées dans ProductAddToCartDialog, Cart, Checkout
 - [x] Breadcrumbs serveur — 6 fonctions dans server/sentry-breadcrumbs.ts, intégrées dans routers.ts (createOrder, Mollie)
 - [x] Audit coherence-guard — 0 incohérence, build OK, 5 tests Sentry passent
+
+## Bug critique — Leads Shopify Form (30 avril)
+- [x] Pays incorrect : detectCountryFromPostalCode() surcharge le pays déclaré si CP incohérent (5500 → Belgium, +32)
+- [x] Leads dupliqués : déduplication en mémoire (Map + TTL 30s) bloque les soumissions simultanées + 3 doublons Alexandra supprimés
+- [x] Notes illisibles : message ne contient plus les coordonnées (sujet, projet, budget, message libre uniquement)
+- [x] Champs manquants dans la modale : customFields parsés et affichés (places, enterrement, design, délai, source découverte)
+- [x] Améliorer la distinction des sources : SHOPIFY_FORM ajouté dans LEAD_SOURCES ("Formulaire Shopify")
+- [x] Téléphone corrigé : normalizePhoneWithCountry() remplace +33 par +32 si pays détecté = Belgium
+- [x] 22 tests unitaires (detectCountryFromPostalCode + normalizePhoneWithCountry) — tous passent
+- [x] Pays affiché dans la modale lead (section Projet)

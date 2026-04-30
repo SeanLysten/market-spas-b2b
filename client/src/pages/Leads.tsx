@@ -42,11 +42,13 @@ interface Lead {
   phone: string | null;
   city: string | null;
   postalCode: string | null;
+  country: string | null;
   status: string;
   source: string;
   productInterest: string | null;
   budget: string | null;
   message: string | null;
+  customFields: string | null;
   contactAttempts: number;
   receivedAt: string;
   firstContactAt: string | null;
@@ -72,6 +74,7 @@ const LEAD_SOURCES = {
   META_ADS: "Facebook/Instagram",
   GOOGLE_ADS: "Google Ads",
   WEBSITE: "Site web",
+  SHOPIFY_FORM: "Formulaire Shopify",
   REFERRAL: "Recommandation",
   PHONE: "Téléphone",
   EMAIL: "Email",
@@ -165,11 +168,13 @@ export default function Leads() {
       phone: "+32 470 12 34 56",
       city: "Bruxelles",
       postalCode: "1000",
+      country: "Belgium",
       status: "NEW",
       source: "META_ADS",
       productInterest: "Jacuzzi 6 places",
       budget: "5000-10000€",
       message: "Je recherche un jacuzzi pour mon jardin, livraison possible ?",
+      customFields: null,
       contactAttempts: 0,
       receivedAt: new Date().toISOString(),
       firstContactAt: null,
@@ -184,11 +189,13 @@ export default function Leads() {
       phone: "+32 475 98 76 54",
       city: "Liège",
       postalCode: "4000",
+      country: "Belgium",
       status: "CONTACTED",
       source: "META_ADS",
       productInterest: "Sauna infrarouge",
       budget: "3000-5000€",
       message: "Intéressée par un sauna 2 places pour usage personnel",
+      customFields: null,
       contactAttempts: 2,
       receivedAt: new Date(Date.now() - 86400000).toISOString(),
       firstContactAt: new Date(Date.now() - 43200000).toISOString(),
@@ -203,11 +210,13 @@ export default function Leads() {
       phone: "+32 478 11 22 33",
       city: "Namur",
       postalCode: "5000",
+      country: "Belgium",
       status: "QUALIFIED",
       source: "META_ADS",
       productInterest: "Swim Spa",
       budget: "15000-20000€",
       message: "Projet de construction, besoin d'un swim spa pour la nouvelle maison",
+      customFields: null,
       contactAttempts: 3,
       receivedAt: new Date(Date.now() - 172800000).toISOString(),
       firstContactAt: new Date(Date.now() - 86400000).toISOString(),
@@ -503,7 +512,7 @@ export default function Leads() {
                       <h4 className="font-medium text-gray-900">Projet</h4>
                       {selectedLead.productInterest && (
                         <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">
-                          <strong>Produit :</strong> {selectedLead.productInterest}
+                          <strong>Type de projet :</strong> {selectedLead.productInterest}
                         </p>
                       )}
                       {selectedLead.budget && (
@@ -511,6 +520,38 @@ export default function Leads() {
                           <strong>Budget :</strong> {selectedLead.budget}
                         </p>
                       )}
+                      {selectedLead.country && (
+                        <p className="text-xs md:text-sm text-muted-foreground dark:text-muted-foreground">
+                          <strong>Pays :</strong> {selectedLead.country}
+                        </p>
+                      )}
+                      {/* Champs structurés depuis customFields */}
+                      {(() => {
+                        try {
+                          const cf = selectedLead.customFields ? JSON.parse(selectedLead.customFields) : null;
+                          if (!cf) return null;
+                          const fields: { label: string; value: string }[] = [];
+                          // Champs Meta Ads / Shopify Form
+                          if (cf.nombre_de_places || cf.places) fields.push({ label: 'Nombre de places', value: cf.nombre_de_places || cf.places });
+                          if (cf.enterrement || cf.encastrement) fields.push({ label: 'Enterrement/Encastrement', value: cf.enterrement || cf.encastrement });
+                          if (cf.design || cf.couleur) fields.push({ label: 'Design/Couleur', value: cf.design || cf.couleur });
+                          if (cf.votre_projet_concerne || cf.type_projet || cf.projectType) fields.push({ label: 'Concerne', value: cf.votre_projet_concerne || cf.type_projet || cf.projectType });
+                          if (cf.budget_envisagé || cf.budget_envisage) fields.push({ label: 'Budget envisagé', value: cf.budget_envisagé || cf.budget_envisage });
+                          if (cf.délai || cf.delai || cf.timeline) fields.push({ label: 'Délai', value: cf.délai || cf.delai || cf.timeline });
+                          if (cf.comment_nous_avez_vous_connu || cf.source_decouverte) fields.push({ label: 'Découverte', value: cf.comment_nous_avez_vous_connu || cf.source_decouverte });
+                          if (fields.length === 0) return null;
+                          return (
+                            <div className="mt-2 space-y-1 border-t pt-2">
+                              <p className="text-xs font-medium text-muted-foreground">Détails supplémentaires</p>
+                              {fields.map((f, i) => (
+                                <p key={i} className="text-xs md:text-sm text-muted-foreground">
+                                  <strong>{f.label} :</strong> {f.value}
+                                </p>
+                              ))}
+                            </div>
+                          );
+                        } catch { return null; }
+                      })()}
                     </div>
                   </div>
 

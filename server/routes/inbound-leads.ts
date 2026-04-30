@@ -15,6 +15,171 @@ import {
 } from '../lead-routing';
 import mysql from 'mysql2/promise';
 
+// ─── Détection pays par code postal ─────────────────────────────────────────
+
+/**
+ * Détecte le pays réel à partir du code postal.
+ * Surcharge le pays déclaré par le formulaire si incohérent.
+ * 
+ * Règles :
+ * - Belgique : 4 chiffres, 1000-9999
+ * - France : 5 chiffres
+ * - Luxembourg : 4 chiffres, 1000-9999 (préfixes spécifiques : 1xxx-6xxx)
+ * - Suisse : 4 chiffres, 1000-9999 (préfixes : 1xxx-9xxx)
+ * 
+ * Distinction BE/LU : Les CP luxembourgeois vont de 1000 à 9999 mais sont
+ * principalement dans les plages 1000-2999 et 4000-6999.
+ * Les CP belges couvrent 1000-9999 aussi.
+ * → On utilise le téléphone comme discriminant secondaire.
+ */
+export function detectCountryFromPostalCode(
+  postalCode: string | undefined,
+  declaredCountry: string | undefined,
+  phone: string | undefined
+): { country: string; phonePrefix: string } {
+  const cp = (postalCode || '').replace(/\s/g, '').replace(/^[A-Za-z]-?/, '');
+  const cleanPhone = (phone || '').replace(/[\s\-\.()]/g, '');
+  const declared = (declaredCountry || '').toLowerCase().trim();
+
+  // Défauts
+  let detectedCountry = declaredCountry || '';
+  let phonePrefix = '';
+
+  // ── Détection par code postal ─────────────────────────────────────────────
+  if (/^\d{5}$/.test(cp)) {
+    // 5 chiffres → France (ou DOM-TOM)
+    detectedCountry = 'France';
+    phonePrefix = '+33';
+  } else if (/^\d{4}$/.test(cp)) {
+    const cpNum = parseInt(cp, 10);
+    // 4 chiffres → Belgique, Luxembourg ou Suisse
+    // Discrimination par téléphone en priorité
+    if (cleanPhone.startsWith('+32') || cleanPhone.startsWith('0032')) {
+      detectedCountry = 'Belgium';
+      phonePrefix = '+32';
+    } else if (cleanPhone.startsWith('+352')) {
+      detectedCountry = 'Luxembourg';
+      phonePrefix = '+352';
+    } else if (cleanPhone.startsWith('+41') || cleanPhone.startsWith('0041')) {
+      detectedCountry = 'Switzerland';
+      phonePrefix = '+41';
+    } else if (cleanPhone.startsWith('+33') || cleanPhone.startsWith('0033')) {
+      // Téléphone français mais CP 4 chiffres → probablement une erreur
+      // On fait confiance au CP
+      detectedCountry = 'Belgium';
+      phonePrefix = '+32';
+    } else {
+      // Pas de préfixe international → analyser le format du numéro local
+      if (/^0[4-9]/.test(cleanPhone)) {
+        // Numéro belge local (04xx, 047x, 048x, 049x = mobile BE)
+        // Numéro français local (06xx, 07xx = mobile FR) mais CP 4 chiffres → BE
+        detectedCountry = 'Belgium';
+        phonePrefix = '+32';
+      } else if (/^[26]\d{5,}$/.test(cleanPhone)) {
+        // Luxembourg : commence par 2 ou 6 sans 0
+        detectedCountry = 'Luxembourg';
+        phonePrefix = '+352';
+      } else {
+        // Fallback : CP 4 chiffres dans la plage belge
+        if (cpNum >= 1000 && cpNum <= 9999) {
+          // Heuristique : si le pays déclaré est "Luxembourg" ou "Suisse", on le garde
+          if (declared === 'luxembourg') {
+            detectedCountry = 'Luxembourg';
+            phonePrefix = '+352';
+          } else if (declared === 'suisse' || declared === 'switzerland' || declared === 'schweiz') {
+            detectedCountry = 'Switzerland';
+            phonePrefix = '+41';
+          } else {
+            // Par défaut, 4 chiffres = Belgique (marché principal)
+            detectedCountry = 'Belgium';
+            phonePrefix = '+32';
+          }
+        }
+      }
+    }
+  }
+
+  return { country: detectedCountry, phonePrefix };
+}
+
+/**
+ * Normalise un numéro de téléphone avec le bon préfixe international.
+ * Supprime le +33 incorrect si le pays détecté est la Belgique.
+ */
+export function normalizePhoneWithCountry(
+  phone: string | undefined,
+  detectedPrefix: string
+): string {
+  if (!phone) return '';
+  let clean = phone.replace(/[\s\-\.()]/g, '');
+
+  // Si le numéro a déjà un préfixe international correct, le garder
+  if (clean.startsWith(detectedPrefix)) return phone;
+
+  // Si le numéro a un mauvais préfixe international, le corriger
+  const wrongPrefixes = ['+33', '+32', '+352', '+41', '+49', '+31'];
+  for (const wp of wrongPrefixes) {
+    if (clean.startsWith(wp) && wp !== detectedPrefix) {
+      // Retirer le mauvais préfixe et ajouter le bon
+      clean = clean.substring(wp.length);
+      // Si le numéro commence par 0, c'est un format local → garder tel quel avec préfixe
+      if (clean.startsWith('0')) {
+        return `${detectedPrefix} ${clean}`;
+      }
+      return `${detectedPrefix} ${clean}`;
+    }
+  }
+
+  // Si le numéro est local (commence par 0), ajouter le préfixe
+  if (clean.startsWith('0') && detectedPrefix) {
+    // Format : +32 0475222731 → garder le 0 pour la lisibilité locale
+    return `${detectedPrefix} ${clean}`;
+  }
+
+  // Sinon, retourner tel quel
+  return phone;
+}
+
+// ─── Déduplication en mémoire (fenêtre temporelle) ──────────────────────────
+
+/**
+ * Map en mémoire pour la déduplication des soumissions simultanées.
+ * Clé = email|source, Valeur = timestamp de la première soumission.
+ * TTL = 30 secondes.
+ */
+const recentSubmissions = new Map<string, number>();
+const DEDUP_WINDOW_MS = 30_000; // 30 secondes
+
+function isDuplicateSubmission(email?: string, phone?: string, source?: string): boolean {
+  const now = Date.now();
+  // Nettoyer les entrées expirées
+  recentSubmissions.forEach((ts, key) => {
+    if (now - ts > DEDUP_WINDOW_MS) {
+      recentSubmissions.delete(key);
+    }
+  });
+
+  // Vérifier par email
+  if (email) {
+    const emailKey = `${email.toLowerCase().trim()}|${source || ''}`;
+    if (recentSubmissions.has(emailKey)) {
+      return true;
+    }
+    recentSubmissions.set(emailKey, now);
+  }
+
+  // Vérifier par téléphone
+  if (phone) {
+    const phoneKey = `phone:${phone.replace(/[\s\-\.()]/g, '')}|${source || ''}`;
+    if (recentSubmissions.has(phoneKey)) {
+      return true;
+    }
+    recentSubmissions.set(phoneKey, now);
+  }
+
+  return false;
+}
+
 // ─── Rate Limiting ──────────────────────────────────────────────────────────
 // Limite les soumissions de leads à 10 par minute par IP pour éviter le spam
 const inboundLeadLimiter = rateLimit({
@@ -142,10 +307,32 @@ inboundLeadsRouter.post('/api/leads/inbound', inboundLeadLimiter, async (req: Re
       return res.status(400).json({ error: 'At least one contact field required (email, phone, or firstName)' });
     }
 
-    console.info(`[InboundLead] Nouveau lead Shopify: ${firstName} ${lastName} <${email}> CP:${postalCode} Pays:${country} Projet:${resolvedProductInterest || 'N/A'}`);
+    // ── Déduplication en mémoire (soumissions simultanées) ────────────────────
+    if (isDuplicateSubmission(email, phone, source)) {
+      console.info(`[InboundLead] Soumission simultanée bloquée: ${email} (${source})`);
+      return res.status(200).json({
+        success: true,
+        duplicate: true,
+        message: 'Duplicate submission blocked (same email/phone within 30s window)',
+      });
+    }
 
-    // ── Anti-doublon ──────────────────────────────────────────────────────────
-    const existingLeadId = await findExistingLead({ email, phone });
+    // ── Détection et correction du pays par code postal ───────────────────────
+    const { country: detectedCountry, phonePrefix } = detectCountryFromPostalCode(postalCode, country, phone);
+    const correctedPhone = normalizePhoneWithCountry(phone, phonePrefix);
+    const correctedCountry = detectedCountry || country;
+
+    if (correctedCountry !== country) {
+      console.info(`[InboundLead] Pays corrigé: "${country}" → "${correctedCountry}" (basé sur CP ${postalCode})`);
+    }
+    if (correctedPhone !== phone) {
+      console.info(`[InboundLead] Téléphone corrigé: "${phone}" → "${correctedPhone}" (préfixe ${phonePrefix})`);
+    }
+
+    console.info(`[InboundLead] Nouveau lead Shopify: ${firstName} ${lastName} <${email}> CP:${postalCode} Pays:${correctedCountry} Projet:${resolvedProductInterest || 'N/A'}`);
+
+    // ── Anti-doublon DB (leads existants dans les 60 jours) ───────────────────
+    const existingLeadId = await findExistingLead({ email, phone: correctedPhone });
     if (existingLeadId) {
       // Enrichir le lead existant sans le dupliquer
       const enrichMessage = [
@@ -153,7 +340,7 @@ inboundLeadsRouter.post('/api/leads/inbound', inboundLeadLimiter, async (req: Re
         message || '',
         metadata?.shopifyPage ? `Page: ${metadata.shopifyPage}` : '',
       ].filter(Boolean).join('\n');
-      await enrichExistingLead(existingLeadId, { postalCode, city, country, productInterest: resolvedProductInterest, budget, message: enrichMessage || message });
+      await enrichExistingLead(existingLeadId, { postalCode, city, country: correctedCountry, productInterest: resolvedProductInterest, budget, message: enrichMessage || message });
       console.info(`[InboundLead] Doublon détecté → enrichissement du lead #${existingLeadId}`);
       return res.status(200).json({
         success: true,
@@ -164,9 +351,9 @@ inboundLeadsRouter.post('/api/leads/inbound', inboundLeadLimiter, async (req: Re
     }
 
     // ── Attribution automatique au partenaire ─────────────────────────────────
-    const { partnerId, reason } = await findBestPartnerForLead({ postalCode, city, country, phone });
+    const { partnerId, reason } = await findBestPartnerForLead({ postalCode, city, country: correctedCountry, phone: correctedPhone });
 
-    // ── Construire le message enrichi avec les données Shopify ──────────────
+    // ── Construire le message enrichi (SANS les coordonnées, seulement le contenu) ──
     const messageParts: string[] = [];
     if (subject) messageParts.push(`Sujet: ${subject}`);
     if (resolvedProductInterest) messageParts.push(`Projet: ${resolvedProductInterest}`);
@@ -188,10 +375,10 @@ inboundLeadsRouter.post('/api/leads/inbound', inboundLeadLimiter, async (req: Re
       firstName,
       lastName,
       email,
-      phone,
+      phone: correctedPhone,
       postalCode,
       city,
-      country,
+      country: correctedCountry,
       source: source as any,
       productInterest: resolvedProductInterest,
       budget,
