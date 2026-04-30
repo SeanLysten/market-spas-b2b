@@ -3892,3 +3892,9 @@
 - [x] Service Worker : sw.js créé (cache-first pour vendor-*, fonts) + enregistrement conditionnel en prod dans main.tsx
 - [x] Sentry : DSN configuré, SDK @sentry/node + @sentry/react installés, server/sentry.ts + client/src/lib/sentry.ts créés, intégré dans index.ts et main.tsx, 5 tests passés
 - [x] Audit coherence-guard complet — imports Sentry cohérents (4 fichiers), SW en place, xlsx 100% dynamique (4 occurrences), build OK, 30 tests passés
+
+## Sentry Breadcrumbs — Parcours commande
+- [x] Identifier les étapes du parcours commande — 5 étapes: browse → cart → checkout → payment → confirmation
+- [x] Breadcrumbs client — 11 fonctions dans sentry-breadcrumbs.ts, intégrées dans ProductAddToCartDialog, Cart, Checkout
+- [x] Breadcrumbs serveur — 6 fonctions dans server/sentry-breadcrumbs.ts, intégrées dans routers.ts (createOrder, Mollie)
+- [x] Audit coherence-guard — 0 incohérence, build OK, 5 tests Sentry passent

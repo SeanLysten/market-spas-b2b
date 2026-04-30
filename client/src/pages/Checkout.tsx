@@ -13,6 +13,7 @@ import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { trackCheckoutStarted, trackCheckoutValidation, trackOrderSubmitted, trackPaymentRedirect, trackOrderSuccess, trackOrderError } from "@/lib/sentry-breadcrumbs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Build the list of selectable delivery dates
@@ -128,22 +129,27 @@ export default function Checkout() {
   // Validation before showing the confirmation modal
   const handleRequestConfirmation = () => {
     if (!deliveryAddress.street || !deliveryAddress.city || !deliveryAddress.postalCode) {
+      trackCheckoutValidation("address", "Adresse de livraison incomplète");
       toast.error("Veuillez remplir l'adresse de livraison complète");
       return;
     }
     if (!deliveryAddress.contactName || !deliveryAddress.contactPhone) {
+      trackCheckoutValidation("contact", "Nom ou téléphone manquant");
       toast.error("Veuillez fournir un nom et téléphone de contact");
       return;
     }
     if (cartItems.length === 0) {
+      trackCheckoutValidation("cart", "Panier vide");
       toast.error("Votre panier est vide");
       return;
     }
     if (!deliveryRequestedDate) {
+      trackCheckoutValidation("date", "Date de livraison manquante");
       toast.error("Veuillez choisir une date de livraison souhaitée");
       return;
     }
     // Show confirmation modal
+    trackCheckoutStarted(cartItems.length, cartItems.reduce((sum, i) => sum + (i.price * i.quantity), 0));
     setShowConfirmation(true);
   };
 
@@ -151,6 +157,7 @@ export default function Checkout() {
   const handleSubmitOrder = async () => {
     setShowConfirmation(false);
 
+    trackOrderSubmitted({ paymentMethod: "BANK_TRANSFER", deliveryCity: deliveryAddress.city });
     try {
       const result = await createOrderMutation.mutateAsync({
         items: cartItems.map(item => ({
@@ -176,14 +183,17 @@ export default function Checkout() {
 
       // If Mollie checkout URL is available, redirect to it
       if ((result as any).mollieCheckoutUrl) {
+        trackPaymentRedirect("Mollie", result.orderId?.toString() || "");
         toast.success("Commande créée ! Redirection vers la page de paiement...");
         window.open((result as any).mollieCheckoutUrl, "_blank");
         setLocation(`/order-confirmation/${result.orderId}`);
       } else {
+        trackOrderSuccess(result.orderId?.toString() || "");
         toast.success("Commande créée avec succès !");
         setLocation(`/order-confirmation/${result.orderId}`);
       }
     } catch (error: any) {
+      trackOrderError(error.message || "Erreur inconnue");
       toast.error(error.message || "Erreur lors de la création de la commande");
     }
   };

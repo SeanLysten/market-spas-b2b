@@ -10,6 +10,7 @@ import { Link } from "wouter";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { trackUpdateCartQuantity, trackRemoveFromCart, trackCartExpired } from "@/lib/sentry-breadcrumbs";
 
 export default function Cart() {
   const { user } = useAuth();
@@ -50,6 +51,7 @@ export default function Cart() {
   // When timer expires, show message and refetch cart (items will be removed by cron)
   useEffect(() => {
     if (expired) {
+      trackCartExpired();
       toast.error("Le temps de réservation de votre panier a expiré. Les produits ont été remis en stock.");
       // Refetch after a short delay to let the cron job clean up
       const timeout = setTimeout(() => refetch(), 3000);
@@ -72,6 +74,7 @@ export default function Cart() {
         toast.error(result.error || "Stock insuffisant");
         return;
       }
+      trackUpdateCartQuantity(productId, quantity);
       refetch();
       toast.success("Quantité mise à jour");
     } catch (error: any) {
@@ -82,6 +85,7 @@ export default function Cart() {
   const handleRemoveItem = async (productId: number, variantId?: number) => {
     try {
       await removeItemMutation.mutateAsync({ productId, variantId });
+      trackRemoveFromCart(productId, "Produit");
       toast.success("Produit retiré du panier");
       refetch();
     } catch (error: any) {

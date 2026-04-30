@@ -14,6 +14,7 @@ import { trpc } from "@/lib/trpc";
 import { useSafeQuery } from "@/hooks/useSafeQuery";
 import { toast } from "sonner";
 import { Package, Truck, ShoppingCart, CalendarClock, AlertTriangle, ChevronRight, ArrowLeft } from "lucide-react";
+import { trackAddToCart } from "@/lib/sentry-breadcrumbs";
 
 interface ProductAddToCartDialogProps {
   open: boolean;
@@ -92,6 +93,7 @@ export default function ProductAddToCartDialog({
         return;
       }
       const isReservation = selectedSource?.type === "transit";
+      trackAddToCart(product?.id || 0, product?.name || "", selectedQuantity, selectedVariant?.id);
       toast.success(isReservation ? "Produit réservé (en transit)" : "Produit ajouté au panier");
       utils.cart.get.invalidate();
       utils.cart.availableQuantity.invalidate();

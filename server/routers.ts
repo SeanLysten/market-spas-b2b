@@ -1200,6 +1200,17 @@ export const appRouter = router({
           deliveryRequestedDate: input.deliveryRequestedDate || null,
         });
 
+        // Track order creation in Sentry
+        const { trackOrderCreated } = await import("./sentry-breadcrumbs");
+        trackOrderCreated({
+          orderId: result.orderId,
+          orderNumber: result.orderNumber,
+          userId: ctx.user.id,
+          itemCount: orderItems.length,
+          totalHT: result.totalHT,
+          paymentMethod: input.paymentMethod,
+        });
+
         // Clear the cart after successful order
         await db.clearCart(ctx.user.id);
 
@@ -1228,6 +1239,14 @@ export const appRouter = router({
 
           mollieCheckoutUrl = molliePayment.checkoutUrl;
 
+          // Track payment initiation in Sentry
+          const { trackOrderPaymentInitiated } = await import("./sentry-breadcrumbs");
+          trackOrderPaymentInitiated({
+            orderNumber: result.orderNumber,
+            provider: "Mollie",
+            amount: paymentAmount,
+          });
+
           // Store Mollie payment in DB
           const { getDb } = await import("./db");
           const drizzleDb = await getDb();
@@ -1254,6 +1273,12 @@ export const appRouter = router({
           }
         } catch (mollieError: any) {
           console.error("[Orders] Mollie payment creation failed:", mollieError.message);
+          const { trackOrderPaymentFailed } = await import("./sentry-breadcrumbs");
+          trackOrderPaymentFailed({
+            orderNumber: result.orderNumber,
+            provider: "Mollie",
+            error: mollieError.message,
+          });
           // Order is still created, payment can be retried
         }
 
