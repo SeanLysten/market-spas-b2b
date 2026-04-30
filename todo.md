@@ -3879,3 +3879,7 @@
 - [x] HIGH: Supprimer le fallback CRON_SECRET — 4 procédures cron protégées, env var requise, test validé
 - [x] MEDIUM: Migrer les 36 alert() natifs vers toast() de Sonner — 0 alert() restants, 7 fichiers modifiés
 - [x] MEDIUM: Nettoyer les console.log du serveur — 143 console.log convertis en console.info pour logs structurés
+
+## UX — Indicateur de chargement Export PDF
+- [x] Ajouter un état loading + spinner sur le bouton "Export PDF" dans AfterSalesDetail — isExportingPDF state, spinner SVG animé, bouton disabled, toast success/error
+- [x] Audit coherence-guard ciblé — imports OK, export named correct, await sur import dynamique valide, pas d'incohérence
