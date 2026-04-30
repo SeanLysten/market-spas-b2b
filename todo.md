@@ -3883,3 +3883,6 @@
 ## UX — Indicateur de chargement Export PDF
 - [x] Ajouter un état loading + spinner sur le bouton "Export PDF" dans AfterSalesDetail — isExportingPDF state, spinner SVG animé, bouton disabled, toast success/error
 - [x] Audit coherence-guard ciblé — imports OK, export named correct, await sur import dynamique valide, pas d'incohérence
+
+## UX — Prefetch jsPDF au survol du bouton Export PDF
+- [x] Ajouter onMouseEnter pour prefetch le module SAVPDFExport (et donc jsPDF) au survol — import() sans await déclenche le téléchargement du chunk en arrière-plan

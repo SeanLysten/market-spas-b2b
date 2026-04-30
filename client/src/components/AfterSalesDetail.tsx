@@ -146,7 +146,10 @@ export default function AfterSalesDetail({ serviceId, onClose }: AfterSalesDetai
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" disabled={isExportingPDF} onClick={async () => {
+          <Button variant="outline" size="sm" disabled={isExportingPDF} onMouseEnter={() => {
+            // Prefetch jsPDF chunk au survol pour réduire la latence au clic
+            import("@/components/SAVPDFExport");
+          }} onClick={async () => {
             setIsExportingPDF(true);
             try {
               const { generateSAVPDF } = await import("@/components/SAVPDFExport");
