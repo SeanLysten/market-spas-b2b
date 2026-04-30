@@ -24,6 +24,44 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Recharts + D3 ecosystem (~300 kB) — used by AdminLeads, AdminGoogleAnalytics, AdminShopify
+          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-') || id.includes('node_modules/victory-vendor')) {
+            return 'vendor-recharts';
+          }
+          // react-pdf + pdfjs (~400 kB) — used by PDFViewer
+          if (id.includes('node_modules/react-pdf') || id.includes('node_modules/pdfjs-dist')) {
+            return 'vendor-pdf';
+          }
+          // Leaflet maps (~200 kB) — used by AdminPartnerMap
+          if (id.includes('node_modules/leaflet') || id.includes('node_modules/react-leaflet')) {
+            return 'vendor-maps';
+          }
+          // html2canvas (~200 kB) — used for PDF/image export
+          if (id.includes('node_modules/html2canvas')) {
+            return 'vendor-html2canvas';
+          }
+          // socket.io-client (~50 kB) — used by WebSocket hook, AdminLeads, AdminPartnerMap
+          if (id.includes('node_modules/socket.io') || id.includes('node_modules/engine.io')) {
+            return 'vendor-socketio';
+          }
+          // date-fns (~80 kB) — shared across many components
+          if (id.includes('node_modules/date-fns')) {
+            return 'vendor-datefns';
+          }
+          // Radix UI primitives — shared across all pages
+          if (id.includes('node_modules/@radix-ui')) {
+            return 'vendor-radix';
+          }
+          // lucide-react icons (~100 kB) — shared across all pages
+          if (id.includes('node_modules/lucide-react')) {
+            return 'vendor-icons';
+          }
+        },
+      },
+    },
   },
   server: {
     host: true,

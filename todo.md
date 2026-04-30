@@ -3861,3 +3861,9 @@
 - [x] Ajouter état de chargement sur AcceptInvitation — texte descriptif pendant loading + eslint-disable useEffect
 - [x] Ajouter état de chargement sur PartnerOnboarding — loading screen complet quand useAuth en cours + fix 6 grids CSS redondants
 - [x] Audit coherence-guard ciblé — Suspense fallback déjà présent via PageLoader, pas de props manquantes, navigation OK
+
+## Optimisation bundle — manualChunks AdminLeads (832 kB)
+- [x] Analyser les imports lourds d'AdminLeads — recharts+d3 (~300kB), AdminGoogleAnalytics (638L), AdminShopify (449L), socket.io
+- [x] Configurer manualChunks dans vite.config.ts — 8 vendor chunks: recharts, pdf, maps, html2canvas, socketio, datefns, radix, icons
+- [x] AdminLeads: 832 kB → 350 kB (-58%), index: 987 kB → 785 kB (-20%)
+- [x] Build + tests OK — 22 tests passent, serveur stable
